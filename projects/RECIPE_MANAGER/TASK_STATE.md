@@ -77,3 +77,12 @@
 - **Confirmed in this chat:** screenshot shows the Flet process still at `Packaging python app...`; a separate PowerShell process-check command ended with a trailing pipe and did not yield measurements. No terminal build result or artifact check is present.
 - **Existing PRs:** PR #10 records current-chat reconciliation; PR #11 records the unresolved packaging attempt. Both remain draft and unmerged according to repository state at time of review. CI checks for their current heads had succeeded before this continuation.
 - **Validation status for new changes:** fresh read-back and CI remain required. History remains PARTIAL.
+
+## Memory-only continuation: scanner/theme/water and recipe-search details (2026-10-12)
+- **Active task:** continue transferring unique confirmed material into `agent-knowledge-base`; do not switch back to Android troubleshooting.
+- **Added event records:** `EVT-20261012-010` records Build39–Build42 scanner/theme/water feedback; `EVT-20261012-011` captures the user's explicit dependency-tree/checkpoint/regression discipline.
+- **Added lessons:** `L-RM-013` through `L-RM-016` cover app-wide theme checks, preserving the old working scanner baseline, distinct water/product/shopping/scan-identity invariants, and tracking achievement/dependency state.
+- **Added specification:** `RECIPE_SEARCH_REQUIREMENTS.md` records the three search modes, local-first pipeline, shared normalizer, add/skip/search-again flow, and mandatory PDF import path. It is a specification only; implementation not confirmed.
+- **Validation required:** parse every non-empty `events.jsonl` line, verify unique event IDs and expected new records; read the modified documents back from GitHub; inspect PR diff and CI. The complete historical chat export and all original source attachments are not available, so this transfer cannot be labelled complete.
+- **Scope guard:** no app code/database change, no APK build, and no merge to `main` without explicit user approval.
+
