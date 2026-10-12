@@ -77,3 +77,25 @@ A separate later archive failure is recorded as `EVT-20261012-012`, with prevent
 The user explicitly confirmed the mandatory prevention canon: verify the exact saved artifact after editing; inspect contents, dependencies, and the actual consumer chain before claiming success; when a user followed the instructions and gets the same issue, check the assistant's artifact/instructions first; each error must change the process so the same class of failure is caught earlier. This is confirmed process policy, not proof of an app fix.
 
 Scope unchanged: memory transfer only; app code/DB untouched, no APK build performed. Transfer stays PARTIAL because complete chat exports and all historic attachment bytes are unavailable.
+
+
+## Additional reconciliation — 2026-10-12, continuation from PR #14
+
+### Already transferred; intentionally not duplicated
+- `EVT-20261012-010`: user-reported native scanner flows on Build39, unresolved old WebView white screen, theme mismatch, and duplicate-water report.
+- `EVT-20261012-011` / `L-RM-016`: explicit user requirement for dependency/achievement tracking, status markers, baseline preservation, cross-component regression, and final comparison to the original request.
+- `EVT-20261012-012` / `L-RM-017`: Build43 archive still had a relative extension dependency and pip failed; user-approved end-artifact verification rule.
+- `RECIPE_SEARCH_REQUIREMENTS.md`: local-first search, three modes, shared normalizer and PDF import as a requirement, not implementation evidence.
+
+### New structure finding
+The actual tree at HEAD `2f056046946bf1e5a16f54e858f71e7ee8ebd49a` contains `LESSONS.md` with L-RM-001..017 but no `lessons.jsonl`. Older handoff/validation text references the JSONL file. Without the historical commit/file this conflict cannot be resolved by assertion. The discrepancy is recorded, not silently repaired with a guessed schema.
+
+### Still unknown or unavailable
+- Source-level cause of old WebView white screen.
+- Implementation-level cause of duplicate water records and final behavior of Build41+ artifacts.
+- Device-confirmed results for Build40/41/42/43 across WebView/theme/water paths.
+- Exact diffs for every intermediate build, full project chat export and original binary attachment bytes.
+- Why `lessons.jsonl` was mentioned in earlier handoff records but is absent in current tree.
+
+### Scope and completion
+Memory transfer only; no application/database changes and no APK build. Status remains PARTIAL. No merge into `main` is authorized.
