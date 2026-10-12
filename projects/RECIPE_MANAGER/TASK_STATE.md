@@ -92,7 +92,7 @@
 - **Активная задача:** продолжить memory-only перенос; не отлаживать приложение, не менять БД и не собирать APK.
 - **Новое событие:** EVT-20261012-012. Архив, объявленный исправленным, при фактической инспекции содержал старую относительную dependency, а лог Flet показал соответствующую ошибку pip.
 - **Новый урок:** L-RM-017 в LESSONS.md — конечный артефакт нужно перечитывать после сохранения и проверять вместе с реальным путём потребления.
-- **Проверка полноты:** существующие темы HTML/SQLite, сборка, навигация, scanner/theme/water и ингредиенты уже записаны в хронологии; эту новую ошибку добавлять как отдельное событие, потому что есть новый архив и прямой лог. Не заменять и не переписывать старые события.
+- **Проверка полноты N99:** Android/Flet build, navigation, scanner/theme/water and data-preservation evidence belong here. Historical HTML/SQLite regressions are separate B77 evidence; do not add them as N99 defects. See `../B77_HTML_PWA/HTML_SQLITE_REGRESSION_2026-09-22.md`.
 - **Проверки этой итерации:** перечитать все изменённые файлы через GitHub API; разобрать каждый непустой JSONL event; проверить уникальность ID; проверить diff и актуальный CI для коммита PR.
 - **Границы истории:** полная выгрузка чатов и всех первичных вложений по-прежнему отсутствует; статус PARTIAL.
 
@@ -117,10 +117,10 @@
 - **Полнота:** PARTIAL, не COMPLETE. Не сливать в main без явного разрешения.
 
 
-## Memory-transfer continuation — HTML/SQLite candidate regressions (2026-10-12)
-- **New event/lesson:** `EVT-20261012-014` and `L-RM-019` record the current-chat user reports that database recipe addition and per-100g nutrition disappeared in a later HTML candidate, followed by a report that deletion and nutrition UI from the reference were missing.
-- **Deduplication:** original import/ingredient issues remain in `EVT-20260922-001` and `L-RM-009`; this is a later report tied to several newer named HTML candidates and a named reference file, so it is documented as a subsequent regression rather than replacing the earlier chronology.
-- **Validation gate:** compare the exact saved candidate against the reference and exercise SQLite load/add, per-100g kcal/protein/fat/carbs, delete/persistence, editing, and positive/negative ingredient-normalization cases. Finding function names or JavaScript syntax checking alone is insufficient.
+## Cross-project reference — HTML/SQLite regressions belong to B77 (2026-10-12)
+- **Scope correction:** the HTML candidate reports in `EVT-20261012-014` and `L-RM-019` concern the separate B77 HTML contour, not N99's Android APK. Keep this pointer for backward compatibility while treating the source event as cross-project HTML evidence.
+- **Deduplication:** early HTML/ingredient issues have been moved out of the N99 event chain; later HTML reports remain linked to the B77 regression record. Shared ingredient rules may be re-used only as requirements, not as evidence that N99 implementation passed.
+- **Validation gate (B77 only):** compare the exact saved HTML candidate against its reference and exercise SQLite load/add, per-100g kcal/protein/fat/carbs, delete/persistence, editing and positive/negative ingredient cases. This is not the active N99 Android task.
 - **Status:** user-reported regression confirmed; root cause and final HTML runtime result NOT VERIFIED. Full candidate diffs and complete chat export remain unavailable.
 - **Scope:** memory-only. No app source/HTML/database modification or APK build.
 
