@@ -76,3 +76,11 @@
 - **Unknown:** whether packaging was slow or hung, whether Git was installed or PATH changed, and whether an APK was eventually created.
 - **Validation note:** the separate `Get-Process ... | Select-Object ... |` command was incomplete and returned no usable process measurements.
 - **Outcome:** PARTIAL; APK artifact and runtime not verified. Keep separate from EVT-20261012-005 (build_number 5 and six Android navigation entries).
+
+
+## 2026-10-12 — Сверка видимого текущего чата с уже перенесённой памятью
+- **Цель пользователя:** только перенос опыта в `agent-knowledge-base`; отладку Android и упаковку APK не продолжать в рамках этой задачи.
+- **Наблюдение:** скриншот показывает `Packaging python app...`; в отдельном окне PowerShell оставлена команда мониторинга с завершающим `|`, поэтому измерений процессов нет.
+- **Дедупликация:** существующая `BUILD_PACKAGING_ATTEMPT_2026-09-22.md` / `EVT-20261012-008` уже описывает видимую последовательность упаковки и отсутствие результата. Не добавлять отдельное событие той же попытки без независимого подтверждения.
+- **Добавленная запись:** `EVT-20261012-009` — текущая сверка контекста и точных границ доступного источника.
+- **Статус:** PARTIAL; полные транскрипты, логи сборки и все исходные вложения недоступны. В этой задаче приложение не изменялось и APK не собирался.
