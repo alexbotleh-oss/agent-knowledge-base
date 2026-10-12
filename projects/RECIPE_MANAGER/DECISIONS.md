@@ -44,3 +44,12 @@
 - **Статус:** правило достоверности памяти.
 - **Основание:** история подтверждает пользовательские сообщения о неработающем добавлении из БД, потере удаления/КБЖУ и ошибке импорта, но не содержит полного diff финальных файлов.
 - **Решение:** хранить их как исторические инциденты с неустановленной причиной; не объявлять исправление подтверждённым по имени файла или факту последующей итерации.
+
+## DEC-RM-008 — Food/non-food assignment must be an explicit working user control
+- **Дата:** 2026-10-12
+- **Статус:** explicit user requirement; implementation unresolved
+- **Требование пользователя:** on manual product entry, the user must be able to choose a non-food category/classification; alternatively, the existing product UI must expose a functional checkbox/toggle to reclassify an existing item as non-food. The user reported that the current checkbox does not work.
+- **Expected behavior:** a household item such as “Туалетная бумага” must be classified as non-food by explicit user action, remain discoverable in the all-items view, and not appear in the food-only view. The selected classification must persist after save/reload and affect filtering consistently.
+- **Avoid:** assuming that changing a text category such as “Прочее” automatically decides food/non-food; claiming category editing is fixed without testing create, edit, persistence and both views.
+- **Evidence:** direct clarification in this chat, following failed v18/v19 category attempts.
+- **Status note:** this is a product requirement, not evidence that v19 implements it.
