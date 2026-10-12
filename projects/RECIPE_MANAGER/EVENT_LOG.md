@@ -67,3 +67,20 @@
 - **Добавлено:** симптомы импорта/добавления рецептов из БД, потери удаления/КБЖУ, требования к нормализации ингредиентов и импорту food.ru/1000.menu связаны с EVT-20261012-006.
 - **Источники:** доступная сводка проекта и отдельные сообщения о вложениях/ошибке. Полный экспорт всех чатов и вложений отсутствует.
 - **Статус:** PARTIAL; исправления, версии файлов и причины старых регрессий не подтверждены.
+
+## 2026-10-12 — HTML prototype product scope/category regression (v16–v19)
+- **Scope:** browser/HTML prototype review only. This is not evidence about active Flet Android code.
+- **User-visible facts from screenshots and direct user reports:**
+  - The user observed that expired butter was shown mid-list; after the v18 iteration the user reported expired items were now at the top and grouping appeared.
+  - A household item, “Туалетная бумага 8 рулонов”, was initially in the household/other context, then the user reported it had moved to “прочее продукты”; it was absent from “Продукты питания” but present in the all-items view.
+  - The user reported that the category menu did not allow category changes and that manual product entry did not provide a working way to assign/change food vs non-food classification.
+  - After an assistant response claimed v19 had repaired selection and category editing, the user clarified that the response still missed the request: either manual add must allow choosing a non-food category at creation, or the existing product UI must have a working checkbox/toggle to reclassify it as non-food. They explicitly said the checkbox does not work.
+- **Iteration history visible in this chat:**
+  - v16: file was audited; observed gaps included category naming inconsistency, no real camera scanner/OFF integration, partial V3 data model, and substring-style alias matching. These were audit observations, not full interaction-test results.
+  - v17: file name `Что_приготовить_v17_core_aligned.html`; static checks were reported as JavaScript syntax pass, 268 div pairs, 129 unique IDs, 138 inline handlers. Full Chromium runtime did not complete due environment/DBus; therefore no full browser interaction pass was established.
+  - v18: file `Что_приготовить_v18_product_scope_fix.html`; assistant reported expired-first sort and a migration for known household goods. The user later verified the expired-first behavior but reported the category selection/reclassification flow still did not work correctly.
+  - v19: file `Что_приготовить_v19_category_edit.html`; assistant claimed the category was written on create/add and editing had a message. No user confirmation of success exists. The user's immediate correction explicitly says the requirement was misunderstood and the checkbox still does not work.
+- **Status of fixes:** expiry ordering is user-confirmed improved; category assignment/reclassification remains FAIL by latest user report. No claim of end-to-end HTML test success is supported.
+- **Cause:** not established. Likely areas to inspect later are whether the manual-add form exposes/persists a classification control, whether the edit control is wired to the persisted `kind` field, and whether filter state hides an item after change. These are hypotheses, not confirmed code findings because the latest HTML wasn't re-opened and runtime-tested in this memory-only task.
+- **Evidence/provenance:** current chat dated 2026-10-12; attached phone screenshots showing food list and “Туалетная бумага 8 рулонов” under “Прочее”; user reports about v18/v19 behavior; attachment names v16, v17, v18, v19 visible in conversation/summaries.
+- **Important boundary:** the explicit current user task is to transfer memory to this repository; do not debug or change application files while performing this transfer.
