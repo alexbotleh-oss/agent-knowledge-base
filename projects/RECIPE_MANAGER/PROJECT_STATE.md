@@ -150,3 +150,8 @@ Events `EVT-20261012-010/011` and lessons `L-RM-013..016` preserve the newly rec
 - **Source completeness:** PARTIAL; full conversation export and all original attachments/inter-version diffs are unavailable.
 - **Scope guarantee for this task:** no app source, HTML/JS or database changed; no APK was built.
 
+### Сверка текущего HEAD переноса памяти — 2026-10-12
+- PR #20, ветка `memory/recipe-manager-current-chat-reconciliation-20261012`, HEAD `ef00acd23c7170fb94d35cc1c4e346c21de0eab8`.
+- CI Validate knowledge base PASS (run #76); `events.jsonl` — 19 валидных уникальных event ID; L-RM-022 присутствует; изменения только в семи файлах памяти проекта.
+- Технические события PWA/HTML/упаковки уже записаны в EVT-014..016; не дублировать. Процессная граница TASK — EVT-017/018.
+- История PARTIAL: полного экспорта чатов и всех исходных бинарных вложений/diff нет. App/HTML/DB не менялись, APK не собирался. PR Draft, не сливать без разрешения.
