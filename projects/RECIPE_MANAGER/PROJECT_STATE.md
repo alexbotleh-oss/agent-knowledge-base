@@ -144,7 +144,7 @@ Events `EVT-20261012-010/011` and lessons `L-RM-013..016` preserve the newly rec
 
 ## Memory-transfer task status — latest continuation (2026-10-12)
 - **Current task:** transfer experience into `alexbotleh-oss/agent-knowledge-base`; app debugging/building is explicitly out of scope.
-- **Process correction:** assistant switched to an app audit after «приступай»; user restored the memory-transfer task. See EVT-20261012-017/018 and L-RM-022.
+- **Process correction:** assistant switched to an app audit after «приступай»; user restored the memory-transfer task. See EVT-20261012-017/018 and L-RM-023.
 - **Deduplication:** PWA Products/Shopping evidence remains in EVT-20261012-016 / L-RM-021; do not record it again as a new app incident.
 - **Pending checks:** verify final branch read-back, unique JSONL IDs, lesson presence, cross-links, diff paths and CI for the new HEAD.
 - **Source completeness:** PARTIAL; full conversation export and all original attachments/inter-version diffs are unavailable.
@@ -152,11 +152,11 @@ Events `EVT-20261012-010/011` and lessons `L-RM-013..016` preserve the newly rec
 
 ### Сверка текущего HEAD переноса памяти — 2026-10-12
 - PR #20, ветка `memory/recipe-manager-current-chat-reconciliation-20261012`, HEAD `ef00acd23c7170fb94d35cc1c4e346c21de0eab8`.
-- CI Validate knowledge base PASS (run #76); `events.jsonl` — 19 валидных уникальных event ID; L-RM-022 присутствует; изменения только в семи файлах памяти проекта.
+- CI Validate knowledge base PASS (run #76); `events.jsonl` — 20 валидных уникальных event ID; L-RM-022 присутствует; изменения только в семи файлах памяти проекта.
 - Технические события PWA/HTML/упаковки уже записаны в EVT-014..016; не дублировать. Процессная граница TASK — EVT-017/018.
 - История PARTIAL: полного экспорта чатов и всех исходных бинарных вложений/diff нет. App/HTML/DB не менялись, APK не собирался. PR Draft, не сливать без разрешения.
 
 ### Консолидация параллельных lesson IDs — 2026-10-12
 - В исходных ветках PR #19 и PR #20 L-RM-022 обозначал разные уроки. В этой ветке L-RM-022 закреплён за camera/decode failure, а task-scope lesson перенумерован в L-RM-023.
-- EVT-20261012-017 отражён в events.jsonl и добавлен в EVENT_LOG.md; EVT-20261012-018 остаётся отдельным процессным событием.
+- EVT-20261012-017/018 — процессная граница задачи и продолжение переноса; camera decode записан как EVT-20261012-019 и L-RM-022.
 - Нумерационный пробел EVT-20261012-007 в доступной последовательности не объяснён; не придумывать отсутствующую запись.
