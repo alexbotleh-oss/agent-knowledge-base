@@ -61,3 +61,24 @@
 - Источники: доступный контекст проекта и сообщения о вложениях/traceback; полный экспорт отсутствует.
 - Полнота: PARTIAL, не COMPLETE.
 - В рамках memory-only задачи приложение не изменялось и Android-сборка не выполнялась.
+
+## Memory-transfer continuation — HTML/SQLite acceptance gap (2026-10-12)
+- **Scope:** transfer experience only. Do not debug/rewrite app code or build APK within this task.
+- **Confirmed requirement:** visible single-delete and delete-all for already-existing database recipes; changes must persist to a writable `recipes.db`. Distinguish DB-backed recipes from local user-created recipes and read-only file mode.
+- **Confirmed ingredient examples:** normalize to existing products: `мука` = `мука пшеничная`; `масло сливочное` = `сливочное масло`; `щепотка соли` = `соль`. Keep specialty flour and red/green onions distinct.
+- **Assistant claims:** the updated HTML was said to contain the deletion and matching changes, but no actual browser/runtime/regression evidence exists in this conversation. Status remains UNKNOWN/UNVERIFIED.
+- **Preventive inference:** same canonical product under different units is not sufficient evidence that the recipe quantity is in stock. Separate identity matching from unit conversion/quantity sufficiency.
+- **Acceptance scenarios for a later app task (not executed in this memory-only task):**
+  1. Delete one recipe from writable DB; reload UI and DB and confirm it remains deleted.
+  2. Delete all recipes with confirmation/count; reopen DB and confirm the empty state.
+  3. In read-only file mode, show that persistent deletion is unavailable.
+  4. Test `мука`/`мука пшеничная`, reordered/inflected butter names, and `щепотка соли`/`соль`.
+  5. Confirm specialty flour and onion varieties remain separate.
+  6. Test unit mismatch independently from amount sufficiency.
+
+## Текущее продолжение переноса памяти (2026-10-12) — HTML/SQLite acceptance gap
+- Только перенос памяти; приложение и APK не изменять.
+- DB-backed deletion: пользователь подтвердил необходимость удаления одной и всех записей `recipes.db`. Требуется persisted change, отдельный сценарий writable DB и честное обозначение read-only file mode.
+- Ingredient matching: `мука`/`мука пшеничная`, варианты сливочного масла по порядку слов/падежам, `щепотка соли`/`соль`. Не смешивать specialty flour и красный/зелёный лук.
+- Обновлённый HTML-файл заявлен ассистентом, но фактическая проверка отсутствует. Статус UNKNOWN/UNVERIFIED.
+- Важное разделение: совпадение продукта при другой единице не говорит о достаточном количестве. Future acceptance tests: DB delete-one/delete-all persistence after reload; read-only mode messaging; ingredient alias tests; separate tests for amount sufficiency.

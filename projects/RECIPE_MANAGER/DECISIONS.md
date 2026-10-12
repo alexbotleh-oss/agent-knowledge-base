@@ -44,3 +44,24 @@
 - **Статус:** правило достоверности памяти.
 - **Основание:** история подтверждает пользовательские сообщения о неработающем добавлении из БД, потере удаления/КБЖУ и ошибке импорта, но не содержит полного diff финальных файлов.
 - **Решение:** хранить их как исторические инциденты с неустановленной причиной; не объявлять исправление подтверждённым по имени файла или факту последующей итерации.
+
+## DEC-RM-008 — Database-backed recipe deletion is a separate acceptance path
+- **Date recorded:** 2026-10-12
+- **Status:** user requirement; implementation unresolved
+- **Requirement:** deletion must work for recipes originating in the persistent recipe database, not only user-created recipes. Single-delete and delete-all must act on the actual writable source. If a DB is opened as a read-only local file, state this limitation rather than implying rows were deleted.
+- **Evidence:** the user said the delete function remained invisible, then clarified that deletion of recipes already present in the DB was not offered.
+- **Acceptance:** delete one DB-backed recipe, reload UI and DB, and confirm the row remains deleted; for delete-all, verify count and persistent empty state after reopening. Hiding a card or removing only a local item is not DB deletion.
+
+## DEC-RM-009 — Ingredient identity matching and amount availability are separate
+- **Date recorded:** 2026-10-12
+- **Status:** user requirement plus preventive design constraint; implementation/test unresolved
+- **Requirement:** reconcile variants against the existing product catalog, e.g. `мука` ↔ `мука пшеничная`, `масло сливочное` ↔ `сливочное масло`, and `щепотка соли` ↔ `соль`, while preserving meaningful product distinctions.
+- **Important distinction:** matching names can identify the same product when units differ, but unit mismatch alone cannot prove sufficient quantity. Quantity sufficiency should remain unknown or be calculated using an explicit conversion rule.
+- **Evidence:** explicit user examples in the current conversation. The assistant-described patch was not verified with runtime tests.
+
+## DEC-RM-010 — Не путать заявление о фиксе с проверенным результатом
+- **Дата:** 2026-10-12
+- **Статус:** рабочее правило, основанное на факте переписки
+- **Основание:** в этой HTML-итерации ассистент дважды заявил, что удаление было добавлено; пользователь затем уточнил, что нужная функция для записей БД всё ещё не видна. Аналогично сопоставление ингредиентов было заявлено как готовое без тестового результата.
+- **Правило:** фиксировать отдельно намерение/предложение, патч в файле, проверку в runtime и подтверждение критерия. Наличие файла в качестве вложения не доказывает, что UI работает как ожидалось.
+- **Область:** Recipe Manager HTML/SQLite; применимо шире при работе с артефактами.

@@ -67,3 +67,20 @@
 - **Добавлено:** симптомы импорта/добавления рецептов из БД, потери удаления/КБЖУ, требования к нормализации ингредиентов и импорту food.ru/1000.menu связаны с EVT-20261012-006.
 - **Источники:** доступная сводка проекта и отдельные сообщения о вложениях/ошибке. Полный экспорт всех чатов и вложений отсутствует.
 - **Статус:** PARTIAL; исправления, версии файлов и причины старых регрессий не подтверждены.
+
+## 2026-10-12 — HTML/PWA iteration: database recipe deletion and ingredient matching
+
+- **Source:** directly visible user/assistant exchange and uploaded filenames in the current conversation. This is a memory-transfer task; no application code was edited or APK built in this turn.
+- **Confirmed user requirement:** provide visible single-delete and delete-all actions for recipes already stored in persistent `recipes.db`, not only locally user-created recipes. A local DB file opened read-only is not a writable DB connection and must not be presented as deletable.
+- **Observed interaction failure:** assistant first claimed an updated file included recipe-deletion controls; the user then said the delete function was still not visible and clarified that the UI did not offer deletion of recipes already in the database. This confirms the reported acceptance gap; it does not prove a particular source-code root cause.
+- **Ingredient requirement:** normalize recipe ingredient names against the existing product catalog, including `мука` ↔ `мука пшеничная`, word-order/case variants of `масло сливочное`, and `щепотка соли` ↔ stored `соль`. Preserve distinctions such as specialty flour and red/green onion.
+- **Verification state:** assistant subsequently claimed these mappings and unit-agnostic presence logic were added to `Что приготовить_обновлено.htm`. No browser/runtime test output or user confirmation of successful behavior is present in the available history. Mark the implementation as **claimed, unverified**, not PASS.
+- **Preventive inference, not confirmed defect:** a same-name match with different units can establish likely product identity, but it does not prove the required amount is available. The implementation should separate canonical identity matching from quantity sufficiency and use explicit conversions only where defensible.
+- **Evidence:** current conversation, 2026-10-12; available filenames include `Что приготовить (Copy).htm` and `Что приготовить_обновлено.htm`. No persisted DB/API configuration, browser screenshot, or regression log was available to validate the claimed patch.
+- **Outcome:** acceptance gap and verification lesson recorded; no app source, database or APK was modified/built for this memory-only task.
+
+## 2026-10-12 — Reconciliation note for the newest HTML acceptance feedback
+- This is a follow-up note to the existing HTML/PWA acceptance-gap entry above and historical event EVT-20261012-006; it does not create a second machine event for the same feedback.
+- Confirmed user correction: the needed delete action must target recipes already in the database, not only user recipes. The assistant's prior assertions are not proof of successful implementation.
+- Confirmed examples for product-catalog normalization are retained in DEC-RM-009 and EVT-20261012-007. Tests have not been run in a browser against the updated HTML/database.
+- Task boundary: this pass transfers memory only; no app-code changes or APK build.
