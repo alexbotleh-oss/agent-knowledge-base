@@ -59,3 +59,11 @@
 - Требования к ингредиентам, импорту food.ru/1000.menu, удалению и КБЖУ являются пользовательскими требованиями/сообщёнными симптомами; реализация и окончательные проверки старых фиксов не подтверждены.
 - Полная история остаётся PARTIAL: доступны сводка и отдельные сообщения/имена файлов, но не все первичные исторические материалы.
 - **Memory follow-up (2026-10-12):** the separate Flet packaging attempt is documented in `BUILD_PACKAGING_ATTEMPT_2026-09-22.md` and `EVT-20261012-008`. The attempt reached `Packaging python app...` after an earlier `git`/engine-version failure, but no terminal build success or APK artifact was confirmed. Do not treat this as the earlier `build_number 5`/Android-navigation attempt.
+
+
+## Memory-transfer continuation — current chat reconciliation (2026-10-12)
+- **Current task:** transfer all available project experience from the present chat to `agent-knowledge-base`; this is a memory-only task, not Android troubleshooting.
+- **Source status:** PARTIAL. The currently attached `Сборка APK продолжается.txt` only provides a limited continuity excerpt; the complete conversation export and all prior binary/source attachments are not available in this session.
+- **Screenshot evidence:** one PowerShell window showed `Packaging python app...`; a second window held an unfinished `Get-Process ... |` pipeline. The command did not produce process measurements, so CPU/activity and whether the build was hung remain unknown.
+- **Deduplication:** do not create a second packaging incident for the same apparent screenshot chain unless primary chronology establishes it is distinct. Existing `EVT-20261012-008` and `L-RM-011` remain the canonical record; current transfer boundaries are recorded in `EVT-20261012-009`.
+- **User boundary:** do not modify application code/data or build an APK during memory transfer. Do not merge these memory PRs without explicit approval.
