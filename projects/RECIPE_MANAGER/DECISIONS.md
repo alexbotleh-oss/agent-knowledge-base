@@ -58,3 +58,10 @@
 - **Requirement:** reconcile variants against the existing product catalog, e.g. `мука` ↔ `мука пшеничная`, `масло сливочное` ↔ `сливочное масло`, and `щепотка соли` ↔ `соль`, while preserving meaningful product distinctions.
 - **Important distinction:** matching names can identify the same product when units differ, but unit mismatch alone cannot prove sufficient quantity. Quantity sufficiency should remain unknown or be calculated using an explicit conversion rule.
 - **Evidence:** explicit user examples in the current conversation. The assistant-described patch was not verified with runtime tests.
+
+## DEC-RM-010 — Не путать заявление о фиксе с проверенным результатом
+- **Дата:** 2026-10-12
+- **Статус:** рабочее правило, основанное на факте переписки
+- **Основание:** в этой HTML-итерации ассистент дважды заявил, что удаление было добавлено; пользователь затем уточнил, что нужная функция для записей БД всё ещё не видна. Аналогично сопоставление ингредиентов было заявлено как готовое без тестового результата.
+- **Правило:** фиксировать отдельно намерение/предложение, патч в файле, проверку в runtime и подтверждение критерия. Наличие файла в качестве вложения не доказывает, что UI работает как ожидалось.
+- **Область:** Recipe Manager HTML/SQLite; применимо шире при работе с артефактами.
