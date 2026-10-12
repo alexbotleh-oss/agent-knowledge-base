@@ -67,3 +67,14 @@
 - **Screenshot evidence:** one PowerShell window showed `Packaging python app...`; a second window held an unfinished `Get-Process ... |` pipeline. The command did not produce process measurements, so CPU/activity and whether the build was hung remain unknown.
 - **Deduplication:** do not create a second packaging incident for the same apparent screenshot chain unless primary chronology establishes it is distinct. Existing `EVT-20261012-008` and `L-RM-011` remain the canonical record; current transfer boundaries are recorded in `EVT-20261012-009`.
 - **User boundary:** do not modify application code/data or build an APK during memory transfer. Do not merge these memory PRs without explicit approval.
+
+## Memory follow-up: scanner, theme, water and recipe-search scope (2026-10-12)
+- **Source completeness:** PARTIAL. The current available chat includes the user's direct narrative and Build39 screenshots, plus a summary of preceding Build29–Build42 interactions. Exact source diffs for all intermediate builds are not all present here.
+- **User-verified native scanner paths:** Build39 feedback confirms scan → ask/add prompt → add/edit form, repeat scan finds existing product for editing, and automatic-add mode increments quantity. These are scenario reports from that version, not proof about a later APK.
+- **Unresolved scanner issue:** legacy WebView opened a white screen after changing scanner engine; Build40's return to prior SCANNER_HTML was asserted, but no confirmed device test is available. Do not mark the old scanner fixed until tested.
+- **Water regression:** user reported three separate «Вода» entries after repeat scans. Keep the distinct rules: water can be stored in Products; water should not automatically generate a shopping item; repeat scan should find the existing product. Root cause and fix remain UNKNOWN/NOT VERIFIED.
+- **UI theme regression:** Build39 screenshots showed a dark work area/top application bar but a white bottom app NavigationBar. The user explicitly corrected the bottom-only analysis: audit every menu, app bar, content/cards/forms/dialogs, Android status bar, app navigation bar and Android system navigation area. Exact low-level cause remains unverified.
+- **User process rule:** use a dependency/achievement tree and persistent status markers; preserve verified baselines; test old working paths before replacing them; inspect component layers and intersections; test all related UI/menu states and regressions; compare final results against every initial requirement before reporting done.
+- **Recipe search/PDF import:** detailed in `RECIPE_SEARCH_REQUIREMENTS.md`. These are requirements, not implemented features. The requested interactive HTML workflow prototype was not created/verified in the available history.
+- **Scope:** memory transfer only. No app source/database was edited and no APK was built for this transfer.
+
