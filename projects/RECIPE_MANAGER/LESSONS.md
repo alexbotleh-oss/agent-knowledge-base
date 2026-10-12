@@ -61,3 +61,18 @@
 - **Причина:** UNKNOWN; доступная история не содержит полного diff и финального набора файлов.
 - **Правило:** проверять фактическую запись/повторное чтение БД, удаление, отображение КБЖУ и набор примеров ингредиентов с вариациями регистра/словоформ/порядка слов; сохранять исходную БД.
 - **Статус:** candidate, confidence medium. Не переносить причинные выводы на Android/Flet без доказательств.
+
+## L-RM-010 — Test delete paths by recipe source, not just by local recipe
+- **Source:** current conversation, 2026-10-12.
+- **Observation:** the user twice clarified that the delete action was not visible because the target was already-existing `recipes.db` entries. A `delR` function or button for user-created recipes does not establish that DB-backed recipe deletion is available.
+- **Failed approach/communication:** the assistant claimed that the button had been added without confirming the DB-backed path, then described a further fix as complete without browser/runtime evidence.
+- **Rule:** test built-in, user-created and DB-backed recipe sources separately; cover delete-one, clear-database and read-only-file modes. Do not claim a fix based on source-code presence or generated attachment alone; verify persistent state after reload.
+- **Root cause:** unknown; the full diff and UI test are unavailable.
+- **Status:** candidate; user feedback confirmed, root cause and fix unverified.
+
+## L-RM-011 — Match product identity separately from quantity and units
+- **Source:** explicit ingredient examples in this conversation, related to historical normalization requirements in EVT-20261012-006.
+- **Requirement:** normalize case, inflection, word order and synonyms, e.g. `мука`/`мука пшеничная`, `масло сливочное`/`сливочное масло`, `щепотка соли`/`соль`; do not merge distinct product types without a rule.
+- **Risk in the assistant-proposed behavior:** marking an ingredient fully available solely because its canonical name matches despite incompatible units confuses identity with amount. One gram in stock does not prove sufficiency for a recipe requiring 100 grams.
+- **Rule:** represent canonical product identity, unit dimension, available amount and required amount separately. Convert only compatible units using explicit rules; for pinch/spoon/piece conversions without a known rule, preserve uncertainty. A name match alone must not mean 100% recipe readiness.
+- **Status:** candidate/preventive inference; examples are user-confirmed, proposed HTML patch is untested.
