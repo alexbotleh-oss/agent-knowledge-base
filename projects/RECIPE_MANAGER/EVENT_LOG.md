@@ -157,7 +157,7 @@
 
 ## Проверка текущего переноса памяти (2026-10-12)
 - **Подтверждено в репозитории:** PR #20, ветка `memory/recipe-manager-current-chat-reconciliation-20261012`, HEAD `ef00acd23c7170fb94d35cc1c4e346c21de0eab8`.
-- **Проверки:** GitHub Actions Validate knowledge base — PASS, run #76: https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38296083071. `events.jsonl`: 20 строк, все 20 разбираются как JSON; 20 уникальных `event_id`; дубликатов нет; EVT-017/018 по одной записи. В `LESSONS.md` присутствует L-RM-022.
+- **Проверки:** GitHub Actions Validate knowledge base — PASS, run #76: https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38296083071. `events.jsonl`: после консолидации 26 строк; повторная JSONL-проверка текущего финального HEAD проводится отдельно. EVT-017/018/019 должны быть по одной записи. В `LESSONS.md` присутствует L-RM-022.
 - **Diff:** десять коммитов относительно родительского HEAD, только семь файлов в `projects/RECIPE_MANAGER/`; удалений нет. Содержимое приложения и БД не изменялось.
 - **Ограничение:** данные текущего чата и доступные сводки перенесены частично; полного экспорта всех чатов/исходных бинарных приложений и полных межверсионных diff нет. Полнота истории = PARTIAL.
 - **Состояние PR:** открыт как Draft; слияние в `main` не выполнялось и запрещено без явного разрешения пользователя.
