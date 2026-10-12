@@ -85,3 +85,17 @@
 - Process lesson from user: do not solve only the most visible widget; keep dependency/achievement markers and previous known-good baselines, inspect component/layer intersections, run full related regressions and re-check against the original request.
 - Search workflow requirements, including mandatory PDF import, are in `RECIPE_SEARCH_REQUIREMENTS.md`; this records desired behavior only, not implementation status.
 
+## Verification status map for current memory transfer
+| Item | Status | Evidence / open condition |
+|---|---|---|
+| Build39 native scanner paths (ask/add/edit/repeat/add-quantity) | USER-REPORTED PASS for that build only | EVT-20261012-010; not extrapolated to later builds |
+| Old WebView scanner | NOT VERIFIED / prior failure reported | White screen after engine change; Build40 rollback was not device-confirmed |
+| Theme across all UI/system layers | FAIL / NOT VERIFIED | Dark screenshot showed white app NavigationBar; full layer matrix not tested |
+| Water product persistence | Prior desired fix claimed, incomplete outcome | Repeat scans produced three separate entries |
+| Water excluded from Shopping | Existing requirement; current APK behavior not re-tested | Must test independently of Products presence |
+| Repeat-scan product identity/deduplication | FAIL by user report | Same water code/name was added as multiple entries |
+| Recipe search modes and PDF import | SPECIFIED, IMPLEMENTATION NOT VERIFIED | `RECIPE_SEARCH_REQUIREMENTS.md` |
+| Complete chat/binary source export | NOT AVAILABLE | Transfer remains PARTIAL |
+
+Events `EVT-20261012-010/011` and lessons `L-RM-013..016` preserve the newly reconciled details and process rule. No app test/build was run for this documentation-only continuation.
+
