@@ -75,3 +75,10 @@
   4. Test `мука`/`мука пшеничная`, reordered/inflected butter names, and `щепотка соли`/`соль`.
   5. Confirm specialty flour and onion varieties remain separate.
   6. Test unit mismatch independently from amount sufficiency.
+
+## Текущее продолжение переноса памяти (2026-10-12) — HTML/SQLite acceptance gap
+- Только перенос памяти; приложение и APK не изменять.
+- DB-backed deletion: пользователь подтвердил необходимость удаления одной и всех записей `recipes.db`. Требуется persisted change, отдельный сценарий writable DB и честное обозначение read-only file mode.
+- Ingredient matching: `мука`/`мука пшеничная`, варианты сливочного масла по порядку слов/падежам, `щепотка соли`/`соль`. Не смешивать specialty flour и красный/зелёный лук.
+- Обновлённый HTML-файл заявлен ассистентом, но фактическая проверка отсутствует. Статус UNKNOWN/UNVERIFIED.
+- Важное разделение: совпадение продукта при другой единице не говорит о достаточном количестве. Future acceptance tests: DB delete-one/delete-all persistence after reload; read-only mode messaging; ingredient alias tests; separate tests for amount sufficiency.
