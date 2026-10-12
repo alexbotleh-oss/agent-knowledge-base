@@ -24,8 +24,7 @@
       "display_name": "Flet",
       "priority": 90,
       "path_exists": [
-        "requirements.txt",
-        "pyproject.toml"
+        "flet.toml"
       ],
       "glob_exists": [],
       "content_contains": [
