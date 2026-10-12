@@ -99,3 +99,20 @@ The actual tree at HEAD `2f056046946bf1e5a16f54e858f71e7ee8ebd49a` contains `LES
 
 ### Scope and completion
 Memory transfer only; no application/database changes and no APK build. Status remains PARTIAL. No merge into `main` is authorized.
+
+
+## Additional unique evidence — HTML/SQLite regressions and ingredient normalization (2026-10-12)
+
+The available current-chat segment includes later user-reported regressions not to be confused with the earlier September baseline event:
+- The latest HTML candidate no longer added recipes from DB and no longer displayed per-100g nutrition.
+- The user separately asked to restore recipe deletion and kcal/protein/fat/carbs display from the reference `index_db_path(5).html`.
+- Multiple HTML variants and `recipes(3).db` were attached/named in the source. Full inter-version diffs and an independently verified runtime result for the latest supplied file are not available here.
+- The reference HTML contains nutrition rendering and recipe deletion paths, but that fact does not prove these features worked in the later candidate.
+
+The user's explicit ingredient lookup contract:
+- `лук`, `белый лук`, `репчатый лук` → `репчатый лук`; `красный лук` and `зелёный лук` remain separate.
+- generic `рис` → long-grain rice; `рис для плова` and explicit parboiled rice → parboiled rice.
+- account for case, `ё/е`, word order, and grammatical endings; test `яйцо/яйца/яйцом` and forms of olive oil.
+- avoid false matches such as `рис` → `рисовая мука` or `рисовое масло`; show original recipe ingredient wording while using a normalized lookup key.
+
+The reports are captured as EVT-20261012-014 and prevention lesson L-RM-019. Root causes remain unknown and HTML behavior NOT VERIFIED. This update does not diagnose or modify the app.
