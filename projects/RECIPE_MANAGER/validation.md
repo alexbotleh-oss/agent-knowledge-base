@@ -12,8 +12,8 @@
 - **Статический аудит содержимого:** PASS на уровне ручной сверки доступного источника. Документы не пустые; SOURCE/provenance и partial/unverified статусы присутствуют; в добавляемых файлах не обнаружены очевидные токены API по простым шаблонам.
 - **Количество записей:** EVENT_LOG.md — 7 событий; DECISIONS.md — 6 решений/требований; LESSONS.md — 5 уроков.
 - **Проверка приложения:** OUT OF SCOPE по явному требованию пользователя; никакой код приложения не менялся, APK не собирался.
-- **Автоматический валидатор knowledge base:** NOT RUN locally. Доступный интерфейс GitHub API в этой операции не предоставляет исполнение произвольных команд в контейнере репозитория. CI после открытия PR нужно проверить отдельно.
-- **Юнит-тесты/CI:** PENDING PR. Нельзя объявлять PASS до фактического результата GitHub Actions.
+- **Автоматический валидатор knowledge base:** PASS in GitHub Actions (run 38256363073), including `tools/validate_memory.py`.
+- **Юнит-тесты/CI:** PASS. Workflow step `Validate memory protocol and records` and `Validate knowledge base and detected stacks` both succeeded.
 - **Функциональные тесты Recipe Manager:** NOT RUN и не являются частью этого переноса.
 
 ## Пробелы исходных материалов
