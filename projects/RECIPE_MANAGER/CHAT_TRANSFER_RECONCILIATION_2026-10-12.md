@@ -54,3 +54,17 @@
 ## Происхождение
 - Источник: текущий доступный чат от 2026-10-12, существующие записи `projects/RECIPE_MANAGER/*` и `projects/RECIPE_MANAGER/events.jsonl` / `lessons.jsonl` на ветке `handoff/recipe-manager-chat-continuation-20261012`.
 - Время: 2026-10-12, Europe/Riga.
+
+## Additional unique evidence from scanner/theme/water and recipe-search discussion
+
+The available chat fragment contains new material not recorded by the earlier packaging reconciliation:
+
+- Build39's native barcode path was reported working by the user: ask prompt, add/edit form, repeated scan finding existing product, and automatic quantity accumulation. This is only verified for the reported Build39 scenarios.
+- The old WebView scanner showed a white screen after a scanner-engine change. Build40 was described as reverting the old HTML to a known baseline, but no later successful device validation is present in the available history.
+- After an assistant stated that water was allowed again, the user reported that a subsequent scan failed to find it and created three separate «Вода» entries. The cause is unknown and the claimed water fix did not satisfy the repeated-scan requirement.
+- Build39 screenshots show a light/dark theme mismatch: in dark mode the work surface/top bar are dark while the app's bottom NavigationBar is white. The user explicitly said this is not only a bottom-bar issue and must be audited throughout all menus and UI/system layers. The subsequent bottom-only focus (Build42 proposal) was criticized as too narrow; Build42 is not confirmed fixed or device-tested in this material.
+- The user requires a persistent dependency/achievement tree, done/not-done markers, preservation of earlier known-good implementations, analysis of component layers/intersections, related regression checks, and a final comparison against the original request before claiming completion.
+- The recipe-search UX specification, including automatic/semi-automatic/professional modes and mandatory PDF import, is now preserved in `RECIPE_SEARCH_REQUIREMENTS.md`. It describes requested behavior, not implementation proof. The requested interactive HTML prototype remains unverified as created.
+
+These are recorded as EVT-20261012-010/011 and L-RM-013..016. Earlier HTML/SQLite, recipe import and Flet packaging facts were not duplicated. Exact intermediate-build diffs and the complete project chat export are still unavailable; the transfer remains PARTIAL.
+
