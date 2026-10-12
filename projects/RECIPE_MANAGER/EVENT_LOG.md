@@ -155,13 +155,6 @@ The Shopping/Products behavior concerns the HTML/PWA contour and is now recorded
 
 The mobile HTTPS/PWA camera video and decode failure is now recorded as `EVT-20261012-019` in `projects/B77_HTML_PWA/events.jsonl`. Do not mix this browser/PWA scanner path with N99's native Android scanner history.
 
-
-
-- User-reported: HTTPS/PWA requested camera permission and displayed live video; after a code was presented, decode did not recognize it and camera kept running.
-- Camera permission/video: PASS for this reported attempt. Decode: FAIL. Stop-after-success: NOT VERIFIED because no successful detection occurred. Root cause: UNKNOWN.
-- Keep separate from Android native scanner and local content:// probes. Full diagnostic JSON and complete source chat are unavailable.
-- Provenance: PR #19 branch memory/recipe-manager-chat-extension-html-pwa-diagnostics-20261012.
-
 ## EVT-RM-20260930-001 — Core Lite baseline и diagnostic path (историческая запись)
 - В прежней сводке указан baseline ZIP RecipeManager_CAMERA_DIAGNOSTIC_v3_1_12_3_COMPLETE_20260930(1).zip, SHA-256 85850905c12f367d53fc311f34db4efef8db56804d7c18d68e49acea0bdb886b; main.py SHA-256 20987d735c60b21ab08d7fc915990e088ce1e5bf41b901f40eaf4dc039e6e191; build_number 45.
 - Для Core Lite ZIP указан SHA-256 d6e11128fd94c224b12d0eefd0fc0ff661da9d0da4beade42494e7fc8dc7ece7. Сводка сообщала ZIP test/Core Lite C1–C9+C6b и targeted py_compile PASS; полный py_compile был прерван после 60 секунд.
