@@ -185,3 +185,9 @@ An additional build-attempt chain was saved as `BUILD_PACKAGING_ATTEMPT_2026-09-
 - CI PASS on exact HEAD: https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38296083071.
 - Read-back: JSONL 19/19 valid and unique, no duplicate event IDs; EVT-017/018 exist once; L-RM-022 exists. Diff only touches seven `projects/RECIPE_MANAGER` memory files and deletes nothing.
 - Do not duplicate EVT-014..016 technical evidence. Source completeness is PARTIAL: missing full conversation export, original binary attachments and complete inter-version diffs. No app/HTML/DB change or APK build under this task.
+
+## Consolidated memory transfer — 2026-10-12
+- Both EVT-20261012-017 (HTTPS/PWA camera video worked, decode failed) and EVT-20261012-018 (task-boundary incident) are retained separately.
+- Parallel source branches assigned L-RM-022 to two different lessons. This branch reserves L-RM-022 for camera decode and renumbers the task-boundary lesson to L-RM-023.
+- Event ID EVT-20261012-007 is not present in the accessible sequence; its meaning is unknown.
+- The rollup is memory-only, remains PARTIAL, and does not merge or close the source PRs. No app code/DB/HTML was changed and no APK was built.
