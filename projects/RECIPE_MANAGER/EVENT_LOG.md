@@ -52,7 +52,8 @@
 - **Источник:** пользовательский `diagnostics_probe3.json`.
 
 ## EVT-RM-20261012-001 — Перенос опыта в память
-- **Статус:** in progress until PR checks.
+- **Статус:** PR открыт; проверки успешны; ожидается пользовательский review/решение о merge.
 - **Событие:** в main был `projects/CARD`, но отсутствовал `projects/RECIPE_MANAGER`.
-- **Действие:** создана ветка `memory/recipe-manager-experience-20261012`; проектная память пишется туда. main не меняется.
+- **Действие:** создана ветка `memory/recipe-manager-experience-20261012`; PR #17 открыт: https://github.com/alexbotleh-oss/agent-knowledge-base/pull/17.
+- **Результат:** workflow `Validate knowledge base` завершился success (run 38285407579); все семь новых файлов подтверждены в changed-file list; compare показывает 7 commits ahead, 0 behind. PR открыт и не слит.
 - **Пробел:** полная история и не все исторические вложения доступны.
