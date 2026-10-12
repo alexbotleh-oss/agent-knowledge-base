@@ -8,7 +8,7 @@
 - **Предпосылки:** GitHub connector имеет права записи; история доступна частично через текущий контекст и сохранённую сводку.
 - **План:** осмотреть дерево и протокол; проверить дубли; добавить пакет RECIPE_MANAGER; валидировать файлы; открыть и перепроверить PR.
 - **Выполнено и подтверждено:** в main были projects/CARD, но не projects/RECIPE_MANAGER. Прочитаны README, протоколы, memory model, templates, validator и CI workflow. Создана ветка memory/recipe-manager-experience-20261012.
-- **Проверки:** начальный осмотр структуры PASS; автоматическая проверка нового пакета пока не выполнена.
+- **Проверки:** начальный осмотр структуры PASS; GitHub Actions `Validate knowledge base` PASS (run 38285407579, job validate: memory validation and tests + project/stack validation); seven new files re-read; event IDs unique; PR changed-file list matches intended package.
 - **Неудачные попытки приложения:** сохранены в EVENT_LOG.md; приложение в рамках этой задачи не запускалось и не менялось.
 - **Блокер полноты:** нет полной выгрузки чата и полного набора ранних HTML/DB/PY/ZIP. Переносится всё доступное с явной фиксацией пробелов.
 - **Осталось:** проверить файлы, открыть PR, проверить changed files и CI.
