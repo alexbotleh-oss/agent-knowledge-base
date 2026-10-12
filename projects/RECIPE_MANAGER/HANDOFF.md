@@ -175,7 +175,7 @@ An additional build-attempt chain was saved as `BUILD_PACKAGING_ATTEMPT_2026-09-
 ## Handoff — task-scope correction (2026-10-12)
 - Continue the memory-transfer task only in `agent-knowledge-base`; do not resume app auditing or APK work unless the user starts a new task.
 - Branch: `memory/recipe-manager-current-chat-reconciliation-20261012`, based on the current memory continuation branch from PR #18. Retrieve current live HEAD from GitHub before applying further changes.
-- New process records: EVT-20261012-017/018 and L-RM-022. The app interaction evidence itself remains EVT-20261012-016/L-RM-021; don't duplicate it.
+- Process events: EVT-20261012-017/018 and lesson L-RM-023. Camera/decode event: EVT-20261012-019 and lesson L-RM-022. The app interaction evidence itself remains EVT-20261012-016/L-RM-021; don't duplicate it.
 - Before declaring transfer validated, perform read-back of all written files, parse `events.jsonl`, check unique IDs and cross-references, inspect changed paths, and verify CI for exact new HEAD.
 - Source remains PARTIAL: full chat export and complete binary/inter-version artifacts aren't available. Do not merge into `main` without explicit user permission.
 
@@ -183,11 +183,11 @@ An additional build-attempt chain was saved as `BUILD_PACKAGING_ATTEMPT_2026-09-
 - Resume memory-transfer work only, branch `memory/recipe-manager-current-chat-reconciliation-20261012`; live HEAD was `ef00acd23c7170fb94d35cc1c4e346c21de0eab8` at last verification. Re-fetch before future writes.
 - PR #20: https://github.com/alexbotleh-oss/agent-knowledge-base/pull/20 — Draft/open/unmerged. Do not merge without explicit permission.
 - CI PASS on exact HEAD: https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38296083071.
-- Read-back: JSONL 19/19 valid and unique, no duplicate event IDs; EVT-017/018 exist once; L-RM-022 exists. Diff only touches seven `projects/RECIPE_MANAGER` memory files and deletes nothing.
+- Read-back: JSONL 20/20 valid and unique, no duplicate event IDs; EVT-017/018/019 exist once; L-RM-022 exists. Diff only touches seven `projects/RECIPE_MANAGER` memory files and deletes nothing.
 - Do not duplicate EVT-014..016 technical evidence. Source completeness is PARTIAL: missing full conversation export, original binary attachments and complete inter-version diffs. No app/HTML/DB change or APK build under this task.
 
 ## Consolidated memory transfer — 2026-10-12
-- Both EVT-20261012-017 (HTTPS/PWA camera video worked, decode failed) and EVT-20261012-018 (task-boundary incident) are retained separately.
+- EVT-20261012-019 records HTTPS/PWA camera video with failed decode; EVT-20261012-017/018 record the separate task-boundary incident and continuation.
 - Parallel source branches assigned L-RM-022 to two different lessons. This branch reserves L-RM-022 for camera decode and renumbers the task-boundary lesson to L-RM-023.
 - Event ID EVT-20261012-007 is not present in the accessible sequence; its meaning is unknown.
 - The rollup is memory-only, remains PARTIAL, and does not merge or close the source PRs. No app code/DB/HTML was changed and no APK was built.
