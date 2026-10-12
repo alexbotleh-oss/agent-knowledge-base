@@ -168,3 +168,31 @@
 - Camera permission/video: PASS for this reported attempt. Decode: FAIL. Stop-after-success: NOT VERIFIED because no successful detection occurred. Root cause: UNKNOWN.
 - Keep separate from Android native scanner and local content:// probes. Full diagnostic JSON and complete source chat are unavailable.
 - Provenance: PR #19 branch memory/recipe-manager-chat-extension-html-pwa-diagnostics-20261012.
+
+## EVT-RM-20260930-001 — Core Lite baseline и diagnostic path (историческая запись)
+- В прежней сводке указан baseline ZIP RecipeManager_CAMERA_DIAGNOSTIC_v3_1_12_3_COMPLETE_20260930(1).zip, SHA-256 85850905c12f367d53fc311f34db4efef8db56804d7c18d68e49acea0bdb886b; main.py SHA-256 20987d735c60b21ab08d7fc915990e088ce1e5bf41b901f40eaf4dc039e6e191; build_number 45.
+- Для Core Lite ZIP указан SHA-256 d6e11128fd94c224b12d0eefd0fc0ff661da9d0da4beade42494e7fc8dc7ece7. Сводка сообщала ZIP test/Core Lite C1–C9+C6b и targeted py_compile PASS; полный py_compile был прерван после 60 секунд.
+- Baseline и исходные ZIP в этой консолидации заново не скачивались. Это историческая сводка, не подтверждение текущего приложения.
+
+## EVT-RM-20260930-002 — JNI FIX1 APK build (историческая запись)
+- В прежней сводке build failed из-за JNI mismatch: generated bindings требовали jni ^1.1.0, а override фиксировал 1.0.0. Затем override изменили на jni 1.1.0, build number 47 → 48.
+- Build log ранее сообщал jni 1.1.0 (overridden), mobile_scanner 7.4.2 и созданный app-release.apk размером 151.9MB. Это APK_BUILD_CONFIRMED по тому отчёту, не DEVICE_VERIFIED.
+- Источник: прежний transfer PR #17 и сообщение, названное Вставленный текст(10).txt; исходник заново не перечитан.
+
+## EVT-RM-20261001-001 — ORIGIN probe и белый экран legacy WebView
+- В прежней сводке: CAMERA permission GRANTED, WebView created, local HTML load с base_url https://unpkg.com/ и URL event about:blank; camera-denied, scan и native fallback не наблюдались.
+- Гипотеза о влиянии HTTPS-like base origin на getUserMedia не подтверждена. Фактический HTML render не доказан; root cause белого экрана unknown.
+
+## EVT-RM-20261001-002 — PROBE1 невалиден для проверки рендера
+- Сводка diagnostics_probe1.json: SCANNER_HTML_LOAD_FAILED, отсутствующий локальный html5-qrcode bundle и рекомендация запустить PREPARE_LEGACY_SCANNER.ps1.
+- Ожидаемый HTML не был загружен, поэтому этот probe не диагностировал render engine.
+
+## EVT-RM-20261001-003 — PROBE2 достиг WebView load path
+- Предыдущий отчёт указывал session cfddc99adaa8, Android 16 arm64, Flet 1.0.3, PermissionStatus.GRANTED, SCANNER_VIEW_OBJECT_CREATED, SCANNER_PAGE_UPDATE_DONE, SCANNER_LOAD_TASK_STARTED и SCANNER_WEBVIEW_RENDER_PROBE; URL events включали https://unpkg.com/ и about:blank.
+- Это подтверждает лишь permission/view/load markers в том JSON. Видимый HTML render не подтверждён; diagnostics_probe2 (1).json в этой консолидации повторно не открывался.
+
+## EVT-RM-20261001-004 — PROBE3 marker events отсутствуют
+- Предыдущий отчёт указывал session 6afcf0d623e8, GRANTED, view creation, page.update, load start и SCANNER_WEBVIEW_RENDER_PROBE, но не находил SCANNER_HOST_MARKER_START/ADDED/UPDATED в diagnostics_probe3.json.
+- Несовпадение исходника/сборки/APK остаётся гипотезой. Причина белого экрана и отсутствия marker events неизвестна; JSON в текущей консолидации повторно не открывался.
+
+Provenance: поздно перенесено из PR #17 как исторические события; recorded_at 2026-10-12, event_time сохранён по исходной сводке.
