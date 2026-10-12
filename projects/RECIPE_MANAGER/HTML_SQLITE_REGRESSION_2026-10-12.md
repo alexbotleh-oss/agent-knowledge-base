@@ -1,35 +1,11 @@
-# HTML/SQLite regression evidence — 2026-10-12
+# Cross-project pointer — historical HTML/SQLite regressions
 
-## Scope
-This record transfers only the available experience from the «Что приготовить» HTML/SQLite discussion. It does not diagnose or modify the application. No database write or APK build was performed for this memory-transfer task.
+This document used to sit under `projects/RECIPE_MANAGER`, but its subject is the separate HTML/SQLite application contour, not the N99 Android APK. It is retained here as a navigation pointer so older references do not break conceptually.
 
-## Confirmed user reports
-- The user attached several successive HTML candidates: `Что приготовить 22_готово_база_и_ингредиенты.htm`, `Что приготовить 22_исправлена_логика_ингредиентов(2).htm`, `Что приготовить 22_с_расширенной_нормализацией.htm`, a reference `index_db_path(5).html`, and `recipes(3).db`.
-- The user said adding recipes from the database stopped working in the latest file and nutrition values disappeared.
-- The user separately reported that the recipe-deletion function and display of kcal/100g, protein, fat, and carbohydrates from the reference had disappeared.
-- The supplied reference HTML includes a recipe card rendering path for nutrition fields and a deletion path including API deletion for records with a database ID. This is evidence about the reference file only, not proof of the delivered candidate's runtime behavior.
+**Correct project location:** [B77 HTML/PWA historical regression record](../B77_HTML_PWA/HTML_SQLITE_REGRESSION_2026-09-22.md)
 
-## Ingredient normalization requirements
-- Default `лук`, `белый лук`, `репчатый лук` resolve to pantry item `репчатый лук`; explicitly red and green onion stay distinct.
-- Generic `рис` resolves to long-grain rice; `рис для плова` and explicitly parboiled rice resolve to parboiled rice.
-- Normalize case, `ё/е`, grammatical forms and word order. Examples requested: `яйцо/яйца/яйцом`, `оливковое масло/масло оливковое/оливкового масла`.
-- Avoid false prefix matches: `рис` must not match `рисовая мука` or `рисовое масло`.
-- Preserve original wording in recipe display; normalization is for pantry lookup.
+The source archive directly confirms HTML-file work, SQLite database-path handling, ingredient normalization, recipe-list/import regression, missing kcal/BJU display and recipe deletion, plus Shopping-list requirements in the September 22 conversations. The user clarified that N99 is the Android APK while B77 is the separate HTML/WMA prototype and iPhone web version in `alexbotleh-oss/LK`.
 
-## Facts vs hypotheses
-**Confirmed:** user-reported regressions and existence of the named attachments.  
-**Not confirmed:** root cause of database-add/import failure or missing nutrition; whether the latest supplied HTML was runtime-tested after its latest link; whether the proposed local SQL.js deletion/download workflow actually persisted correctly. No complete diffs or runtime trace covering the candidates is available in this fragment.
+Do not treat the HTML reports below as evidence of an Android APK defect. Requirements that are explicitly applicable to both projects may be referenced separately, but the project histories, event IDs, code versions and runtime acceptance states remain independent.
 
-## Required future regression gate if HTML work is reopened
-1. Compare the exact target candidate with the accepted `index_db_path.html` reference.
-2. Import/load recipes from SQLite and add database recipes to the displayed set.
-3. Display kcal, protein, fat and carbohydrates per 100 g for records with values; handle missing values explicitly.
-4. Delete a database recipe through the correct source (API or local in-memory SQLite) and verify persisted result separately.
-5. Verify editing/save/reload and recipe data integrity.
-6. Run normalization cases for onions, rice, eggs, oils, case, word order and inflections, plus negative cases preventing rice-flour/oil false matches.
-7. Re-read the exact saved artifact and report static, runtime, and persistence checks separately.
-
-Do not call an HTML candidate fixed based solely on JavaScript syntax, finding a function in source text, or generating a download link.
-
-## Provenance and completeness
-Source: messages and named attachments in the available project chat on 2026-10-12. The complete export of all related chats, the full binary history of each HTML/database candidate, and the exact candidate-to-candidate diffs are not available here. Status: **PARTIAL**. See event `EVT-20261012-014` and lesson `L-RM-019`.
+The older source record was created from earlier excerpts and named attachments; it was not a full artifact diff. See the B77 record for exact source conversation IDs, confidence and unresolved attachment gaps.
