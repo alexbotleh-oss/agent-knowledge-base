@@ -134,3 +134,30 @@ The latest user request explicitly redirects work back to memory transfer and pr
 - The PR head/base relationships should remain explicit: #16 is a stacked PR based on #15's branch, not a direct-to-main PR. Keep it unmerged pending user review/permission.
 
 This is a source-coverage and verification note, not evidence that the application itself was repaired.
+
+
+## Additional evidence — Flet local-extension dependency gate (2026-10-12)
+
+### Confirmed by the latest user log
+- At about 19:49:53 the user ran `flet build apk --verbose` from `C:\RecipeManager_FIX_PLUS`.
+- Flet found the entrypoint, created the app shell, identified Flutter 3.44.8, JDK 17 and Android SDK, and started the `serious_python package` path.
+- Installation invoked `flet-barcode-scanner @ ./flet_barcode_scanner_ext` and pip aborted with `Invalid URL './flet_barcode_scanner_ext': No scheme supplied`.
+- No successful APK compilation or artifact verification appears in this log. Assistant admitted that actual extension installation was not tested before calling the package ready.
+
+### Facts versus hypotheses
+- The log does not prove the extension directory is missing or establish whether the cause is its structure, project manifest, path resolution or pip/packaging behavior. Root cause = UNKNOWN.
+- This is a dependency-packaging failure before confirmed APK; do not classify it as a device scanner runtime test.
+
+### User-required prevention
+1. Inventory all inputs and select the canonical source/baseline.
+2. Resolve direct and transitive local dependency/resource closure.
+3. Manifest added/changed/excluded files; any excluded required file blocks release.
+4. Read back the exact saved artifact; compare SHA-256, complete file tree and required hashes; check duplicate entrypoints/config files.
+5. Test actual downstream dependency installation/build consumer path. If not run, mark NOT VERIFIED and do not call the package build-ready.
+6. Any mandatory FAIL/BLOCKED means STOP; do an evidence-based minimal correction or ask the user for the exact missing input. Do not bypass controls by deleting dependencies or altering architecture.
+7. For every change log file path, line range/stable context, before/after, reason, related event/lesson, dependencies, and validation results.
+
+New records `EVT-20261012-015` and `L-RM-020` are a distinct follow-on to `EVT-20261012-012` / `L-RM-017`, not a replacement.
+
+### Scope and completeness
+Memory transfer only. No app code, extension or product database was changed and no APK was built in this task. Full chat export and exact persisted archive/directory are unavailable to this memory pass; status remains **PARTIAL**.
