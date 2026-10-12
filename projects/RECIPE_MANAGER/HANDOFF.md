@@ -161,3 +161,13 @@ An additional build-attempt chain was saved as `BUILD_PACKAGING_ATTEMPT_2026-09-
 - STOP on any required FAIL/BLOCKED. If no safe evidence-based fix or material missing, identify exact blocker and ask user. Never remove dependencies or change scanner architecture to get past a guard.
 - Per-change provenance: file, changed line range or stable context, before/after, reason, linked event/lesson, dependency impact, test results. Root cause of the current pip error remains UNKNOWN.
 - Source completeness PARTIAL; do not merge to main without explicit permission.
+
+## Handoff continuation — PWA Products/Shopping report (2026-10-12)
+
+- Continue memory transfer to agent-knowledge-base only under this task. Do not patch HTML/JS or build APK.
+- New record: EVT-20261012-016 and lesson L-RM-021.
+- User-confirmed: after core32, displayed Shopping unit labels remained Russian after filtering in the shown scenario.
+- Open failure: in Products, category/sort sheets show options, but selecting a row does not produce a filtered/sorted list; the latest report after core34 says no effect. Exact root cause unknown.
+- In a separate authorized UI task, trace the exact delivered artifact's event path UI → handler → state → filter/sort → render and run runtime interaction/regression checks. Do not add another listener by guesswork.
+- Source completeness remains PARTIAL; full export and complete core30–core34 diffs are not verified available.
+- Do not merge into main without explicit user permission.

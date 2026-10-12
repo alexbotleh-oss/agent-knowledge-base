@@ -141,3 +141,13 @@
 - Any required gate FAIL/BLOCKED means STOP. If cause or required materials cannot safely be resolved from evidence, ask for the exact missing input. Do not delete/replace dependency or alter architecture to bypass a gate. Each change must record files and line ranges/stable context, before/after, reason, dependencies and tests.
 - Root cause of pip's relative URL failure remains UNKNOWN; the log does not prove the extension directory is absent.
 - Memory only: no application/extension/database change and no APK build. Source transfer remains PARTIAL.
+
+## Memory-transfer continuation — PWA Products/Shopping regressions (2026-10-12)
+
+- **Активная задача:** только перенос доступного опыта в agent-knowledge-base; не отлаживать приложение, не менять HTML/JS/БД, не собирать APK.
+- **Новое событие:** EVT-20261012-016; новый урок: L-RM-021.
+- **Подтверждено пользователем:** после core32 в показанном сценарии фильтрации Покупок подписи единиц стали русскими. В Продуктах после core33/core34 шторки открываются и показывают варианты, но выбор не меняет список/сортировку.
+- **Причина отказа выбора в Products неизвестна.** В этой memory-only итерации runtime trace и исходник core34 не исследовались; диагностические варианты не записывать как факты.
+- **Пробелы:** полный экспорт чатов, доступность всех HTML-кандидатов и полный diff core30–core34 не подтверждены; причины UI failure нет.
+- **Область:** app code, HTML, database не изменялись; APK не собирался.
+- **Перед закрытием:** перечитать точные файлы, проверить JSONL parse и уникальность ID, event/lesson ID, changed paths/diff и CI на текущем HEAD. PR оставить неслитым без явного разрешения.

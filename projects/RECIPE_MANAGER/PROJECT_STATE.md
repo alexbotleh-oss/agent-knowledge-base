@@ -133,3 +133,11 @@ Events `EVT-20261012-010/011` and lessons `L-RM-013..016` preserve the newly rec
 - Newly reinforced required controls: source/input inventory; dependency closure; exact artifact read-back; SHA/file-manifest comparison; include/exclude accounting; real consumer-path test; STOP on mandatory FAIL/BLOCKED; request missing source when unresolved; per-change file/line/context provenance.
 - Root cause UNKNOWN. No application source, extension, database or APK changed in this memory transfer.
 - Completeness remains PARTIAL because full chat export and complete binary/archive history are not available.
+
+## Memory-transfer update — PWA Products/Shopping interaction regression (2026-10-12)
+
+- **Confirmed user report:** after filtering Shopping, unit labels appeared in Latin; the user confirmed core32 corrected the labels in the demonstrated scenario. No claim is made for all unit cases.
+- **Current failure from the latest direct user report:** Products category/sort sheets display options, but tapping an option does not produce the expected filtered/sorted list. The user reported this after core33 and again after core34; prior assistant claims that it was fixed are unverified.
+- **Root cause:** UNKNOWN. No runtime event trace or code diagnosis was performed in this memory-only task.
+- **State:** Shopping display fix = USER-CONFIRMED for shown scenario; Products selection = FAIL; cause = UNKNOWN.
+- **Scope:** memory transfer only; no PWA/HTML/JS/database change and no APK build.
