@@ -157,3 +157,10 @@
 - **Связи:** EVT-20261012-011 / L-RM-016 (карта зависимостей и регрессия), EVT-20261012-014 / L-RM-019 (не объявлять HTML рабочим только по синтаксису), EVT-20261012-015 / L-RM-020 (проверка точного артефакта и пути потребителя).
 - **Статус:** Products category/sort selection = FAIL по последнему сообщению; причина не установлена. Shopping unit-label regression в показанном сценарии = USER-CONFIRMED FIX в core32.
 - **Область:** только память; HTML/JS/БД не изменялись, APK не собирался.
+
+## EVT-20261012-017 — HTTPS/PWA scanner did not recognize presented code
+- Direct user report on 2026-10-12: mobile page obtained camera permission and showed live image; code presented to camera was not recognized and camera continued running.
+- Recognition FAIL for that attempt. Successful code-detection event is not evidenced; therefore stop-on-detection remains NOT VERIFIED. Root cause UNKNOWN.
+- Follow-up, only in a separate authorized debugging task: use exact-page diagnostics to trace API support/formats → video readiness → detect invocation/results/rawValue → stop event. Do not infer the failing component without evidence.
+- Related: `EVT-20261012-010` (different Build39 native scanner history), `EVT-20261012-016` (Products dropdown regression). Not the same incident.
+- Memory-only change; app code, HTML/DB and APK untouched.
