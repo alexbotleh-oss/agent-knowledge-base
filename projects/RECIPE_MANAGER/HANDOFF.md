@@ -75,11 +75,11 @@
 
 ### Что дополнено
 - EVT-20261012-006 связывает доступные сообщения о рецептах из БД, нормализации ингредиентов, импорте food.ru/1000.menu, удалении/КБЖУ и ошибке Flet от 2026-09-27 с первичными event IDs без дублирования исходных записей.
-- LESSON-RM-009 фиксирует регрессионные сценарии импорта/сопоставления ингредиентов. Причины старых HTML-регрессий оставлены UNKNOWN.
+- LESSON-RM-009 сохраняет переносимые сценарии сопоставления ингредиентов как требования. HTML/SQLite регрессии относятся к B77; причины остаются UNKNOWN.
 
 ### Источники и пробелы
 - Доступны текущие сообщения, сохранённая сводка, имена нескольких вложений и текст ошибки; полного экспорта всех чатов и бинарных вложений нет.
-- Недоступны для независимой проверки: полные исторические версии index_db_path*.html, Что приготовить 22*.htm, все recipes*.db, полные логи импорта и окончательный diff, показывающий какие исправления вошли в финальный файл.
+- Недоступны для независимой проверки N99: точные текущие Android/Python исходники, сборочные логи и APK runtime. Исторические `index_db_path*.html`, `Что приготовить 22*.htm` и `recipes*.db` относятся к B77 HTML/SQLite контуру; см. `../B77_HTML_PWA/HTML_SQLITE_REGRESSION_2026-09-22.md`.
 - Перенос имеет статус PARTIAL, не COMPLETE. Не реконструировать причины и итог старых фиксов по косвенным упоминаниям.
 
 ### Граница текущей задачи
@@ -132,10 +132,10 @@ An additional build-attempt chain was saved as `BUILD_PACKAGING_ATTEMPT_2026-09-
 - Next: validate this memory-only PR (read-back, JSONL schema/IDs, diff, CI); do not merge without explicit user approval.
 
 
-## Handoff continuation — HTML/SQLite regression reports (2026-10-12)
+## Cross-project handoff note — B77 HTML/SQLite regression reports (2026-10-12)
 - Continue the memory-transfer task only; do not switch into HTML/Android debugging unless the user starts that as a separate task.
-- New records: `EVT-20261012-014`, `L-RM-019`, and `HTML_SQLITE_REGRESSION_2026-10-12.md`.
-- Confirmed user reports: database recipe addition and KБЖУ disappeared in the latest HTML candidate; delete-recipe and per-100g kcal/protein/fat/carbs also had to be restored relative to `index_db_path(5).html`.
+- The HTML report formerly stored here is now a navigation pointer to `projects/B77_HTML_PWA/HTML_SQLITE_REGRESSION_2026-09-22.md`. Preserve references to `EVT-20261012-014`/`L-RM-019` as legacy transfer IDs, but do not interpret them as N99 APK incidents.
+- Confirmed user reports about database recipe addition, nutrition and deletion concern the separate HTML contour. They are not evidence of N99 Android runtime behavior.
 - User normalization contract: generic/white/bulb onion → bulb onion; red/green onion remain distinct; generic rice → long-grain; pilaf/parboiled rice → parboiled; normalize case, ё/е, grammatical cases and word order without false matches against rice flour/oil. Preserve display text separate from pantry lookup key.
 - Do not state that a candidate is fixed based only on syntax or static source inspection. Report artifact read-back, runtime, and persistence separately.
 - Source completeness remains **PARTIAL**: no complete project chat export, exact diffs between every HTML variant, or independent runtime/persistence evidence for the last link is available.
