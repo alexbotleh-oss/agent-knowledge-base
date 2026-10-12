@@ -118,16 +118,11 @@
 - **Область:** только память; приложение/БД не изменялись, APK не собирался.
 
 
-## EVT-20261012-014 — Повторная HTML/SQLite-регрессия и сверка переноса
+## Cross-project pointer — EVT-20261012-014 belongs to B77 HTML/PWA
 
-- **Источник:** сообщения пользователя и имена вложений из чата «Что приготовить» от 2026-10-12; HTML-эталон `index_db_path(5).html`.
-- **Подтверждено пользователем:** в последнем кандидате перестало выполняться добавление рецептов из базы и исчезло КБЖУ; отдельно пользователь отметил исчезновение удаления рецепта и показателей kcal/100g, белков, жиров и углеводов, которые были в эталонном файле.
-- **Материалы, названные/приложенные в чате:** несколько HTML-кандидатов, эталон `index_db_path(5).html`, база `recipes(3).db`. Наличие вложений подтверждено; полный diff между кандидатами и runtime-проверки в этой задаче недоступны.
-- **Не смешивать факт и гипотезу:** причина регрессии добавления/КБЖУ не установлена. Также нет подтверждения, что последний выданный файл был функционально проверен после его сохранения.
-- **Требования нормализации, подтверждённые пользователем:** общий/белый/репчатый лук → репчатый; красный/зелёный остаются отдельными; обычный рис → длиннозерный; рис для плова/пропаренный → пропаренный; учитывать регистр, падежи и порядок слов, но избегать совпадений вроде рисовой муки/рисового масла.
-- **Связи:** исходная история HTML/SQLite `EVT-20260922-001`; reconciliation `EVT-20261012-013`; новый урок `L-RM-019`.
-- **Статус:** HTML functionality NOT VERIFIED; source completeness PARTIAL. В рамках переноса памятью код/БД приложения не менялись, APK не собирался.
-
+- The HTML/SQLite regression record is now maintained under `projects/B77_HTML_PWA/HTML_SQLITE_REGRESSION_2026-09-22.md` and structured event `EVT-20261012-014` in `projects/B77_HTML_PWA/events.jsonl`.
+- Do not treat the reported HTML candidate failures as N99 Android APK defects. This pointer remains for backward compatibility with older transfer notes.
+- The transferable lesson is to verify the exact saved artifact and downstream behavior; its HTML source provenance remains B77.
 
 ## EVT-20261012-015 — Flet package gate omitted before delivery (2026-10-12)
 - **Источник:** пользовательский лог `flet build apk --verbose` около 19:49:53–19:50:06 и признание ассистента.
@@ -138,15 +133,9 @@
 - **Меры:** обязательны input/source manifest, dependency closure, список включённых/изменённых/исключённых файлов, read-back exact ZIP, SHA-256 и source-vs-staging сверка, затем проверка реальным downstream consumer. Любой обязательный FAIL/BLOCKED = STOP; при неустранимом дефиците запросить файл/материал у пользователя. Все изменения документировать по пути и строкам/контексту.
 - **Область:** только перенос памяти; приложение/extension/БД не менялись, APK не собирался в рамках этой задачи.
 
-## EVT-20261012-016 — PWA: отображение единиц в Покупках исправлено, выбор категорий/сортировки Продуктов не работает
+## Cross-project pointer — EVT-20261012-016 belongs to B77 HTML/PWA
 
-- **Источник:** пользовательские сообщения и скриншоты текущего продолжения 2026-10-12; кандидаты core30–core34.
-- **Подтверждено:** пользователь подтвердил, что после фильтрации список Покупок сохраняет русские подписи единиц в core32. В Продуктах шторки категорий и сортировки отображают варианты, но выбор не меняет результат; после двух последующих попыток пользователь снова сообщил об отсутствии эффекта.
-- **Причина:** UNKNOWN. Нет инструментально зафиксированного event/console trace, который указывал бы на точный дефект.
-- **Не делать:** не считать core33/core34 исправленными; в этой memory-only задаче не менять приложение.
-- **Связи:** EVT-20261012-011 / L-RM-016 (карта зависимостей и регрессия), EVT-20261012-014 / L-RM-019 (не объявлять HTML рабочим только по синтаксису), EVT-20261012-015 / L-RM-020 (проверка точного артефакта и пути потребителя).
-- **Статус:** Products category/sort selection = FAIL по последнему сообщению; причина не установлена. Shopping unit-label regression в показанном сценарии = USER-CONFIRMED FIX в core32.
-- **Область:** только память; HTML/JS/БД не изменялись, APK не собирался.
+The Shopping/Products behavior concerns the HTML/PWA contour and is now recorded as `EVT-20261012-016` in `projects/B77_HTML_PWA/events.jsonl`. It is not an N99 Android event. Preserve its partial/failure status; no successful fix is inferred.
 
 ## EVT-20261012-018 — Восстановление границы задачи переноса памяти
 - **Источник:** текущий чат 2026-10-12 и live-ветка репозитория agent-knowledge-base.
@@ -162,7 +151,11 @@
 - **Ограничение:** данные текущего чата и доступные сводки перенесены частично; полного экспорта всех чатов/исходных бинарных приложений и полных межверсионных diff нет. Полнота истории = PARTIAL.
 - **Состояние PR:** открыт как Draft; слияние в `main` не выполнялось и запрещено без явного разрешения пользователя.
 
-## EVT-20261012-019 — HTTPS/PWA camera decode attempt
+## Cross-project pointer — EVT-20261012-019 belongs to B77 HTML/PWA
+
+The mobile HTTPS/PWA camera video and decode failure is now recorded as `EVT-20261012-019` in `projects/B77_HTML_PWA/events.jsonl`. Do not mix this browser/PWA scanner path with N99's native Android scanner history.
+
+
 
 - User-reported: HTTPS/PWA requested camera permission and displayed live video; after a code was presented, decode did not recognize it and camera kept running.
 - Camera permission/video: PASS for this reported attempt. Decode: FAIL. Stop-after-success: NOT VERIFIED because no successful detection occurred. Root cause: UNKNOWN.
