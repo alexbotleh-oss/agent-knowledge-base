@@ -155,14 +155,14 @@
 - **Ограничение источника:** полный экспорт чата и все исходные бинарные вложения/diffs не доступны; полнота остаётся PARTIAL.
 - **Статус:** процессный факт подтверждён; это не технический фикс приложения.
 
-## EVT-20261012-018 — Верификация текущего переноса памяти (2026-10-12)
+## Проверка текущего переноса памяти (2026-10-12)
 - **Подтверждено в репозитории:** PR #20, ветка `memory/recipe-manager-current-chat-reconciliation-20261012`, HEAD `ef00acd23c7170fb94d35cc1c4e346c21de0eab8`.
-- **Проверки:** GitHub Actions Validate knowledge base — PASS, run #76: https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38296083071. `events.jsonl`: 19 строк, все 19 разбираются как JSON; 19 уникальных `event_id`; дубликатов нет; EVT-017/018 по одной записи. В `LESSONS.md` присутствует L-RM-022.
+- **Проверки:** GitHub Actions Validate knowledge base — PASS, run #76: https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38296083071. `events.jsonl`: 20 строк, все 20 разбираются как JSON; 20 уникальных `event_id`; дубликатов нет; EVT-017/018 по одной записи. В `LESSONS.md` присутствует L-RM-022.
 - **Diff:** десять коммитов относительно родительского HEAD, только семь файлов в `projects/RECIPE_MANAGER/`; удалений нет. Содержимое приложения и БД не изменялось.
 - **Ограничение:** данные текущего чата и доступные сводки перенесены частично; полного экспорта всех чатов/исходных бинарных приложений и полных межверсионных diff нет. Полнота истории = PARTIAL.
 - **Состояние PR:** открыт как Draft; слияние в `main` не выполнялось и запрещено без явного разрешения пользователя.
 
-## EVT-20261012-017 — HTTPS/PWA camera decode attempt
+## EVT-20261012-019 — HTTPS/PWA camera decode attempt
 
 - User-reported: HTTPS/PWA requested camera permission and displayed live video; after a code was presented, decode did not recognize it and camera kept running.
 - Camera permission/video: PASS for this reported attempt. Decode: FAIL. Stop-after-success: NOT VERIFIED because no successful detection occurred. Root cause: UNKNOWN.
