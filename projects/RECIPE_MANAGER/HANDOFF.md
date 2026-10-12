@@ -91,3 +91,12 @@
 An additional build-attempt chain was saved as `BUILD_PACKAGING_ATTEMPT_2026-09-22.md`, `EVT-20261012-008`, and `L-RM-011`. In the user's screenshots, an initial call had an entry-point/root error, a later call reported that `git` was not recognized and could not determine the Flutter engine version, and a later attempt after `flet clean` stayed on `Packaging python app...` for approximately ten minutes by user report. The attempted process-monitoring command was incomplete, so no CPU/working-set or build-directory trend was established.
 
 **Do not infer:** the APK was built, the build was definitely hung, Git was definitely installed, or the application launched. This sequence is distinct from the earlier APK build 5/navigation issue. History remains PARTIAL because complete build logs, final artifact listing, full chat export, and all historical attachment bytes are not available.
+
+
+## Handoff — продолжение переноса опыта по текущему чату (2026-10-12)
+- **Текущая задача:** memory-only перенос истории «Что приготовить» в `agent-knowledge-base`.
+- **Подтверждено:** доступный скриншот показывает незавершённый этап `Packaging python app...`; процессная команда не завершена из-за trailing pipe, поэтому нагрузка/активность процесса неизвестна.
+- **Уже сохранено ранее:** отдельный эпизод упаковки — `BUILD_PACKAGING_ATTEMPT_2026-09-22.md`, `EVT-20261012-008`, `L-RM-011`. Не плодить дубликаты; текущая сверка записана в `EVT-20261012-009`.
+- **Ограничения:** не запускать сборку, не редактировать приложение/БД; не сливать открытые PR без явного разрешения.
+- **Пробелы:** полный экспорт чата и все исходные вложения не доступны; идентичность текущего скриншота и ранее записанной попытки не доказана окончательно. Статус памяти PARTIAL.
+- **Следующий шаг:** проверить диффы PR #10/#11 и повторный CI после последних изменений; сообщить пользователю, какие файлы/записи реально включены и какие источники нужно добавить для полноты.
