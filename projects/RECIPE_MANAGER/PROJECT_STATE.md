@@ -149,3 +149,9 @@ Events `EVT-20261012-010/011` and lessons `L-RM-013..016` preserve the newly rec
 - **Root cause:** UNKNOWN. No runtime event trace or code diagnosis was performed in this memory-only task.
 - **State:** Shopping display fix = USER-CONFIRMED for shown scenario; Products selection = FAIL; cause = UNKNOWN.
 - **Scope:** memory transfer only; no PWA/HTML/JS/database change and no APK build.
+
+## Stage14 HTTPS/PWA camera — transfer status (2026-10-12)
+- Latest direct report now recorded as `EVT-20261012-017`, process lesson `L-RM-022`.
+- User confirmed camera permission and live video; presenting a code produced no recognition and the camera continued running. Detection = FAIL for this attempt; stop-after-success = NOT VERIFIED; root cause UNKNOWN.
+- Do not conflate this with Android Build39 scanner evidence or core33/core34 Products selection failure. Earlier Stage14 interactions were confirmed on a pre-camera candidate only.
+- No application code or APK changed in this memory task; full history remains PARTIAL.
