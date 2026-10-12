@@ -166,3 +166,8 @@
 - Read-back/structural checks: `events.jsonl` 19/19 parse, 19 unique IDs, no duplicates; EVT-017/018 each present once; L-RM-022 present in `LESSONS.md`.
 - Compare: ten commits ahead of parent, seven changed paths, all under `projects/RECIPE_MANAGER/`, zero deletions. No app code/HTML/JS/DB changes, no APK build.
 - Completeness remains PARTIAL: full chat export, original binary attachments and all historical inter-version diffs unavailable. PR #20 is Draft/unmerged; wait for user's explicit merge permission.
+
+### Consolidated IDs — 2026-10-12
+- L-RM-022 is the camera decode lesson; the separate task-scope lesson is L-RM-023 in this consolidated branch. This resolves a collision across parallel source PRs.
+- EVT-20261012-017 is the HTTPS/PWA camera decode attempt; EVT-20261012-018 is the task-scope correction. They are separate events.
+- EVT-20261012-007 is absent from the available sequence; treat this as an unexplained numbering gap, not as proof of a missing event.
