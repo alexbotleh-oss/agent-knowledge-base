@@ -197,3 +197,11 @@ The final visible source segment contributes a distinct camera observation; it m
 
 ### Scope and completeness
 Memory-only; no PWA/HTML/JS/application database modification and no APK build. Source completeness remains PARTIAL.
+
+## Additional reconciliation — event EVT-20261012-017 (2026-10-12)
+- Added the user-confirmed HTTPS/PWA camera observation to event log as `EVT-20261012-017` and lesson `L-RM-022`.
+- Exact scope: permission/video PASS, presented-code recognition FAIL, stop-after-detection NOT VERIFIED, root cause UNKNOWN. Earlier content:// startup diagnostics did not test HTTPS camera decode.
+- No duplicate event was added for Android Build39 or Products core33/core34. The new event is a distinct live PWA camera attempt.
+- Validation read back all updated files: 18 JSONL events parsed, 18 unique event IDs; L-RM-022 exists once, 21 unique Markdown lesson IDs.
+- Source remains PARTIAL: no complete chat export, diagnostic JSON from the mobile page, full intermediate HTML candidates/diffs or all attachment bytes.
+- App files and database were not changed; no APK was built. Do not merge to main without explicit user approval.
