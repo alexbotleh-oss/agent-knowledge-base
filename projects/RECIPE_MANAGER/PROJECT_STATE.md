@@ -141,3 +141,12 @@ Events `EVT-20261012-010/011` and lessons `L-RM-013..016` preserve the newly rec
 - **Root cause:** UNKNOWN. No runtime event trace or code diagnosis was performed in this memory-only task.
 - **State:** Shopping display fix = USER-CONFIRMED for shown scenario; Products selection = FAIL; cause = UNKNOWN.
 - **Scope:** memory transfer only; no PWA/HTML/JS/database change and no APK build.
+
+## Memory-transfer task status — latest continuation (2026-10-12)
+- **Current task:** transfer experience into `alexbotleh-oss/agent-knowledge-base`; app debugging/building is explicitly out of scope.
+- **Process correction:** assistant switched to an app audit after «приступай»; user restored the memory-transfer task. See EVT-20261012-017/018 and L-RM-022.
+- **Deduplication:** PWA Products/Shopping evidence remains in EVT-20261012-016 / L-RM-021; do not record it again as a new app incident.
+- **Pending checks:** verify final branch read-back, unique JSONL IDs, lesson presence, cross-links, diff paths and CI for the new HEAD.
+- **Source completeness:** PARTIAL; full conversation export and all original attachments/inter-version diffs are unavailable.
+- **Scope guarantee for this task:** no app source, HTML/JS or database changed; no APK was built.
+
