@@ -107,3 +107,12 @@ Events `EVT-20261012-010/011` and lessons `L-RM-013..016` preserve the newly rec
 - Required future behavior: inspect exact persisted artifact, SHA/content/dependencies and the actual consumer command before claiming it fixed; state unverified runtime separately.
 - App code/build remains out of scope for this memory transfer.
 - Transfer completeness remains PARTIAL; full archive of all chats and all historic binary attachments unavailable.
+
+
+## Статус memory transfer — 2026-10-12
+- Текущая активность в этом чате — перенос памяти, не отладка приложения. Пользователь явно вернул задачу в `agent-knowledge-base`.
+- Источник PARTIAL: доступный фрагмент чата/сводка, два скриншота Build39, отдельные имена/архивы и документы памяти; не полный экспорт всех разговоров и бинарных приложений.
+- Открытые статусы для будущей отдельной работы: old WebView white screen не решён/не проверен; полная тема не считается исправленной правкой только нижней панели; вода в каталоге, исключение из покупок и идентичность при повторном сканировании — разные инварианты, при повторном скане пользователь сообщил о дублях. См. EVT-20261012-010 и L-RM-013..016.
+- Структурное наблюдение: фактическое дерево содержит `LESSONS.md`, но не `lessons.jsonl`; записано в EVT-20261012-013/L-RM-018.
+- Ни одну заявленную правку старого сканера/темы/воды не считать подтверждённой без прямого результата.
+- Код приложения, продуктовая БД и APK не изменялись/не собирались.
