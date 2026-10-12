@@ -161,3 +161,26 @@ New records `EVT-20261012-015` and `L-RM-020` are a distinct follow-on to `EVT-2
 
 ### Scope and completeness
 Memory transfer only. No app code, extension or product database was changed and no APK was built in this task. Full chat export and exact persisted archive/directory are unavailable to this memory pass; status remains **PARTIAL**.
+
+## Additional continuation — PWA Products/Shopping interaction regression (2026-10-12)
+
+### What this chat segment adds
+- The user requested visual consistency of the Add Product/Add Shopping windows, a gray input border with an inset text position, a top-level Add action and moving the Shopping source filter into a sheet.
+- The user rejected adding sorting by name/quantity/status in Shopping; the required control to move under a sheet was the source filter «Все / Из рецептов / Ручные / Куплено».
+- The user's core31 screenshot shows the intended Shopping header «Откуда» alongside «＋ Добавить».
+- After filtering Shopping, the user reported Latin unit labels; they explicitly confirmed that core32 fixed labels in the demonstrated scenario. This is not a blanket assertion that all unit scenarios are correct.
+- Products category and sort sheets displayed options in the user screenshots, but selecting failed. After core33 the user said a tap only highlights and does not change the list; after core34 the user said selection still produces no result.
+
+### Confirmed vs unknown
+- Confirmed: the user's report of the Shopping unit-label fix for the shown scenario.
+- Confirmed failure: Products category/sort selection does not apply according to the latest user message.
+- Unknown: exact code-level cause. No runtime trace or console evidence establishing a handler/state/render defect was captured in this memory-only task.
+- The assistant's statements that core33/core34 were fixed are not evidence; subsequent user feedback contradicts the claimed outcome.
+
+### Deduplication and provenance
+- This is follow-on evidence after earlier package and HTML/SQLite transfers; it does not duplicate the recipe DB/nutrition incident EVT-20261012-014 or package incident EVT-20261012-015.
+- Linked lesson: L-RM-021; event: EVT-20261012-016.
+- Candidate references core30–core34 appear in the conversation, but availability of each exact file and complete inter-version diffs was not verified here.
+
+### Scope and completeness
+Memory-only; no PWA/HTML/JS/application database modification and no APK build. Source completeness remains PARTIAL.
