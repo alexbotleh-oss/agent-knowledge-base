@@ -1,0 +1,198 @@
+{
+  "version": 1,
+  "description": "Stack detection and adapter routing; all matching stacks are validated (monorepo support).",
+  "detection": "Any configured path_exists or glob_exists signature matches; content_contains enables content-based detection.",
+  "stacks": [
+    {
+      "id": "flutter",
+      "display_name": "Flutter",
+      "priority": 100,
+      "path_exists": [
+        "pubspec.yaml"
+      ],
+      "glob_exists": [
+        "lib/**/*.dart"
+      ],
+      "adapters": {
+        "lint": "stacks/flutter/lint.sh",
+        "test": "stacks/flutter/test.sh",
+        "build": "stacks/flutter/build.sh"
+      }
+    },
+    {
+      "id": "flet",
+      "display_name": "Flet",
+      "priority": 90,
+      "path_exists": [
+        "flet.toml"
+      ],
+      "glob_exists": [],
+      "content_contains": [
+        {
+          "file_glob": "**/*.py",
+          "pattern": "import flet|from flet"
+        }
+      ],
+      "adapters": {
+        "lint": "stacks/flet/lint.sh",
+        "test": "stacks/flet/test.sh",
+        "build": "stacks/flet/build.sh"
+      }
+    },
+    {
+      "id": "python",
+      "display_name": "Python",
+      "priority": 80,
+      "path_exists": [
+        "pyproject.toml",
+        "setup.py",
+        "requirements.txt",
+        "pytest.ini"
+      ],
+      "glob_exists": [
+        "**/*.py"
+      ],
+      "adapters": {
+        "lint": "stacks/python/lint.sh",
+        "test": "stacks/python/test.sh",
+        "build": "stacks/python/build.sh"
+      }
+    },
+    {
+      "id": "java",
+      "display_name": "Java",
+      "priority": 80,
+      "path_exists": [
+        "pom.xml",
+        "build.gradle",
+        "build.gradle.kts",
+        "gradlew"
+      ],
+      "glob_exists": [
+        "**/*.java"
+      ],
+      "adapters": {
+        "lint": "stacks/java/lint.sh",
+        "test": "stacks/java/test.sh",
+        "build": "stacks/java/build.sh"
+      }
+    },
+    {
+      "id": "html-pwa",
+      "display_name": "HTML/PWA",
+      "priority": 80,
+      "path_exists": [
+        "manifest.json",
+        "site.webmanifest",
+        "service-worker.js",
+        "sw.js"
+      ],
+      "glob_exists": [
+        "**/*.html"
+      ],
+      "adapters": {
+        "lint": "stacks/html-pwa/lint.sh",
+        "test": "stacks/html-pwa/test.sh",
+        "build": "stacks/html-pwa/build.sh"
+      }
+    },
+    {
+      "id": "cpp",
+      "display_name": "C++",
+      "priority": 80,
+      "path_exists": [
+        "CMakeLists.txt",
+        "Makefile",
+        "meson.build"
+      ],
+      "glob_exists": [
+        "**/*.cpp",
+        "**/*.cc",
+        "**/*.cxx",
+        "**/*.hpp",
+        "**/*.h"
+      ],
+      "adapters": {
+        "lint": "stacks/cpp/lint.sh",
+        "test": "stacks/cpp/test.sh",
+        "build": "stacks/cpp/build.sh"
+      }
+    },
+    {
+      "id": "csharp",
+      "display_name": "C#",
+      "priority": 80,
+      "path_exists": [
+        "global.json"
+      ],
+      "glob_exists": [
+        "*.sln",
+        "*.csproj",
+        "**/*.cs"
+      ],
+      "adapters": {
+        "lint": "stacks/csharp/lint.sh",
+        "test": "stacks/csharp/test.sh",
+        "build": "stacks/csharp/build.sh"
+      }
+    },
+    {
+      "id": "rust",
+      "display_name": "Rust",
+      "priority": 80,
+      "path_exists": [
+        "Cargo.toml",
+        "Cargo.lock"
+      ],
+      "glob_exists": [
+        "**/*.rs"
+      ],
+      "adapters": {
+        "lint": "stacks/rust/lint.sh",
+        "test": "stacks/rust/test.sh",
+        "build": "stacks/rust/build.sh"
+      }
+    },
+    {
+      "id": "js",
+      "display_name": "JavaScript / TypeScript",
+      "priority": 80,
+      "path_exists": [
+        "package.json",
+        "pnpm-lock.yaml",
+        "yarn.lock",
+        "package-lock.json",
+        "bun.lockb",
+        "bun.lock"
+      ],
+      "glob_exists": [
+        "**/*.js",
+        "**/*.jsx",
+        "**/*.mjs",
+        "**/*.ts",
+        "**/*.tsx"
+      ],
+      "adapters": {
+        "lint": "stacks/js/lint.sh",
+        "test": "stacks/js/test.sh",
+        "build": "stacks/js/build.sh"
+      }
+    },
+    {
+      "id": "go",
+      "display_name": "Go",
+      "priority": 80,
+      "path_exists": [
+        "go.mod"
+      ],
+      "glob_exists": [
+        "**/*.go"
+      ],
+      "adapters": {
+        "lint": "stacks/go/lint.sh",
+        "test": "stacks/go/test.sh",
+        "build": "stacks/go/build.sh"
+      }
+    }
+  ]
+}

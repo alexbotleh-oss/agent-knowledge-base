@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+set -uo pipefail
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+P="${1:-.}"
+P="$(cd "$P" 2>/dev/null && pwd)" || { echo "ERROR: project path not found: $P" >&2; exit 2; }
+source "$ROOT/core/validation_rules.sh"
+if [[ -f "$P/go.mod" ]] && command -v go >/dev/null 2>&1; then cd "$P" && go build ./...; else skip_check "Go build" "go/go.mod missing"; fi
