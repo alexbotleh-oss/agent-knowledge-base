@@ -58,3 +58,9 @@
 - Доступная реконструкция сентябрьских проблем HTML/SQLite дополнена событием EVT-20261012-006, ссылающимся на EVT-20260922-001 и EVT-20260927-001.
 - Требования к ингредиентам, импорту food.ru/1000.menu, удалению и КБЖУ являются пользовательскими требованиями/сообщёнными симптомами; реализация и окончательные проверки старых фиксов не подтверждены.
 - Полная история остаётся PARTIAL: доступны сводка и отдельные сообщения/имена файлов, но не все первичные исторические материалы.
+
+## Additional current-context status — HTML prototype (2026-10-12; distinct from current Android task)
+- The current chat also contains a separate HTML-prototype regression sequence v16–v19. It must not be mistaken for current Android/Flet runtime status.
+- Latest user-confirmed results: expired goods now appear at the top and product grouping appeared; food/non-food category selection/reclassification remains broken.
+- User's explicit acceptance condition is recorded as DEC-RM-008. See the 2026-10-12 HTML incident in EVENT_LOG.md and L-RM-010 in LESSONS.md.
+- This state is a memory-transfer addition only; no application changes/builds were performed here.
