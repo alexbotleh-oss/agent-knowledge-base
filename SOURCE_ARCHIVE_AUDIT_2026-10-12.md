@@ -6,7 +6,18 @@
 - Distinct message IDs: **10,034** (7,446 assistant-role records and 2,588 user-role records in the mappings).
 - User messages whose serialized text includes an attachment marker: **485**. These markers do **not** mean the binary attachment contents were included in this ZIP.
 - Conversation creation timestamps span **2026-09-21 through 2026-10-07 UTC**; latest conversation update timestamp is 2026-10-07 UTC.
-- The supplied ZIP does not include `chat.html`, `export_manifest.json`, `conversation_asset_file_names.json`, or the separate attachment assets shown in the user's Yandex Disk folder screenshot.
+- The supplied ZIP itself contains only `conversations.json`; however, `export_manifest.json` and `conversation_asset_file_names.json` were separately attached to this conversation and have now also been inspected. `chat.html` and the separate binary attachment assets were not attached as standalone files.
+
+## Follow-up audit — manifest and asset-name index received
+
+The two files previously expected are present as separate conversation attachments and have now been inspected:
+
+- `export_manifest.json`: version 1; **1,374** entries in both `export_files` and `logical_files`. Listed payload size totals **274,874,971 bytes** (~262 MiB). It lists `conversations.json` (42,997,976 bytes), `chat.html` (37,413,992 bytes), and `conversation_asset_file_names.json` (72,110 bytes), plus 1,364 `.dat` files and other JSON payloads. The manifest does not list itself among `export_files`, which is consistent with the manifest being an index of the export payload.
+- `conversation_asset_file_names.json`: **876** filename-to-friendly-name mappings. Every key in this map also appears in the manifest. The manifest contains **498** additional paths not present in this name map; those files are not necessarily missing, because the name map is an index of friendly names rather than a complete duplicate of the manifest.
+- `conversations.zip`: contains exactly one member, `conversations.json`; it does not contain the full 1,374-file export.
+- The raw `conversations.json` has **37** conversation objects, **10,034** message-bearing nodes with distinct message IDs (7,446 assistant and 2,588 user), and spans 2026-09-21 through 2026-10-07 UTC.
+
+**Completeness conclusion:** the manifest and asset-name index are now accounted for, but they do not resolve the earlier “74 chats / 10,034 messages” note. The evidence available here still contains 37 conversation objects. Do not claim that 74 conversations have been restored. The 1,374-file manifest shows that the full export contains many assets not included in the uploaded ZIP; original asset bytes and `chat.html` still need separate access if they are to be inspected.
 
 ## What this changes
 This is direct inspection of raw conversation JSON, not merely a prior summary. It improves provenance for the period covered by these 37 conversation objects. It does **not** establish that the entire ChatGPT export is represented: the user's folder showed many more export items, and the JSON alone does not include the separately stored attachment files. A previous note described an archive/search gap of 74 chats / 10,034 messages; this supplied artifact contains 37 conversation objects but the same 10,034 distinct message IDs. Treat the mismatch (37 vs 74 conversations) as **unresolved**, not as proof that either count is wrong or that the archive is complete.
@@ -42,5 +53,5 @@ These are separate project identities despite the shared product name and overla
 1. Reconcile each event in `projects/RECIPE_MANAGER/events.jsonl` against the actual user-message evidence, especially HTML/SQLite entries.
 2. Review mixed N99/B77 conversations message-by-message and attach the original conversation ID/title/timestamp to each imported event.
 3. Add earlier B77 HTML events only with explicit confidence and attribution notes.
-4. Reconcile the 37-conversation count against the 74-chat note and inspect the export manifest / asset index and original attachments if supplied.
+4. Manifest and asset index have now been inspected. Continue reconciling the 37-conversation count against the 74-chat note; obtain `chat.html` and selected original attachment bytes if their content is needed for a deeper audit.
 5. Re-run validation after any changes and confirm the exact PR head/CI result. Keep PR #22 draft and unmerged until the user explicitly authorizes merging.
