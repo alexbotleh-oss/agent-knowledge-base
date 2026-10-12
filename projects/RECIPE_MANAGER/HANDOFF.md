@@ -180,3 +180,7 @@ An additional build-attempt chain was saved as `BUILD_PACKAGING_ATTEMPT_2026-09-
 - In a separate authorized UI task, trace the exact delivered artifact's event path UI → handler → state → filter/sort → render and run runtime interaction/regression checks. Do not add another listener by guesswork.
 - Source completeness remains PARTIAL; full export and complete core30–core34 diffs are not verified available.
 - Do not merge into main without explicit user permission.
+
+## Handoff — latest camera observation (2026-10-12)
+- Newly indexed: `EVT-20261012-017`, `L-RM-022`. The live HTTPS camera permission/video succeeded but the displayed code was not recognized; no decode trace is available, so root cause is UNKNOWN.
+- Continue memory verification only. If separately authorized to debug app, capture diagnostic export first; don't patch blindly. No app/HTML/DB edit and no APK build in this transfer.
