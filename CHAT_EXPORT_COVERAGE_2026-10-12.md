@@ -65,12 +65,13 @@ These are separate projects despite sharing a product name and recipe domain. Do
 
 ## Validation checklist
 - [x] Read back all 46 paths from the original consolidation branch; each returned non-empty content before the new source-audit file was added.
-- [x] Parsed the six existing JSONL files during the original consolidation: RECIPE_MANAGER events 26/26 unique; CARD111 events 6/6 and lessons 4/4 unique; ORGANISM events 7/7 and lessons 5/5 unique; global lessons 5/5 unique.
+- [x] Parsed the six existing JSONL files during the original consolidation: RECIPE_MANAGER events 22/22 unique; CARD111 events 6/6 and lessons 4/4 unique; ORGANISM events 7/7 and lessons 5/5 unique; B77 HTML/PWA events 6/6 unique; global lessons 5/5 unique.
 - [x] Reconciled original event/lesson ID collisions: EVT-20261012-017/018 are task-scope/transfer events, EVT-20261012-019 is PWA camera decode; L-RM-022 is camera decode, L-RM-023 is task boundary.
 - [x] Compared original branch with main: 46 changed paths, all memory/core documentation; no app source, HTML/JS project code, databases, or APKs.
 - [x] Draft PR #22 remains open and unmerged: https://github.com/alexbotleh-oss/agent-knowledge-base/pull/22.
 - [ ] Re-run validation/CI after the source audit and coverage updates; the earlier CI PASS applied to an earlier PR head, not the resulting new head.
-- [ ] Reconcile HTML/SQLite events and mixed N99/B77 conversations message-by-message before treating the project histories as complete.
+- [x] Moved clearly HTML/PWA-specific source events out of N99's event chain: early HTML/SQLite regressions, EVT-20261012-014, PWA Shopping/Products EVT-20261012-016 and browser camera decode EVT-20261012-019 now live under B77. Early September attribution to B77 remains medium confidence where the source conversation does not name the project.
+- [ ] Continue message-by-message review of remaining mixed N99/B77 conversations before treating the project histories as complete.
 
 ## Known limitations
 - The supplied ZIP improves raw-source access for 37 conversations, but does not prove full-export completeness and lacks the separate binary attachments.
