@@ -1,4 +1,4 @@
-name: Validate project
+name: Validate knowledge base
 on:
   pull_request:
   push:
@@ -10,6 +10,10 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install common runtime
         run: sudo apt-get update && sudo apt-get install -y python3
+      - name: Validate memory protocol and records
+        run: |
+          python3 tools/validate_memory.py
+          python3 -m unittest discover -s tests
       - name: Validate knowledge base and detected stacks
         run: |
           chmod +x core/*.sh tools/*.sh stacks/*/*.sh
