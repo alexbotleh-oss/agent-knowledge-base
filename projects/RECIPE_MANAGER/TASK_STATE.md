@@ -115,3 +115,11 @@
 - **Статусная карта:** native scanner Build39 — USER-REPORTED PASS только для этой версии; old WebView — FAIL/NOT VERIFIED; полная тема — FAIL/NOT VERIFIED; повторный скан воды без дублей — FAIL по пользовательскому сообщению; поиск/PDF — SPECIFIED, implementation NOT VERIFIED; полный архив чатов и бинарных источников — UNAVAILABLE.
 - **Проверки этой итерации:** read-back всех изменённых файлов; JSONL parse/уникальность event_id; проверка новых lesson ID; фактическое дерево; diff и CI.
 - **Полнота:** PARTIAL, не COMPLETE. Не сливать в main без явного разрешения.
+
+
+## Memory-transfer continuation — HTML/SQLite candidate regressions (2026-10-12)
+- **New event/lesson:** `EVT-20261012-014` and `L-RM-019` record the current-chat user reports that database recipe addition and per-100g nutrition disappeared in a later HTML candidate, followed by a report that deletion and nutrition UI from the reference were missing.
+- **Deduplication:** original import/ingredient issues remain in `EVT-20260922-001` and `L-RM-009`; this is a later report tied to several newer named HTML candidates and a named reference file, so it is documented as a subsequent regression rather than replacing the earlier chronology.
+- **Validation gate:** compare the exact saved candidate against the reference and exercise SQLite load/add, per-100g kcal/protein/fat/carbs, delete/persistence, editing, and positive/negative ingredient-normalization cases. Finding function names or JavaScript syntax checking alone is insufficient.
+- **Status:** user-reported regression confirmed; root cause and final HTML runtime result NOT VERIFIED. Full candidate diffs and complete chat export remain unavailable.
+- **Scope:** memory-only. No app source/HTML/database modification or APK build.
