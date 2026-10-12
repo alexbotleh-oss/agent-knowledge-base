@@ -164,7 +164,7 @@
 - Branch `memory/recipe-manager-current-chat-reconciliation-20261012`; HEAD `ef00acd23c7170fb94d35cc1c4e346c21de0eab8`.
 - CI: PASS, run #76 — https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38296083071.
 - Read-back/structural checks: `events.jsonl` 26/26 parse, 26 unique IDs, no duplicates; EVT-017/018/019 each present once; L-RM-022 present in `LESSONS.md`.
-- Compare: ten commits ahead of parent, seven changed paths, all under `projects/RECIPE_MANAGER/`, zero deletions. No app code/HTML/JS/DB changes, no APK build.
+- Source PR #20 had ten commits ahead of its parent and seven changed paths; these figures do not describe the current cross-project rollup branch. No app code/HTML/JS/DB changes, no APK build.
 - Completeness remains PARTIAL: full chat export, original binary attachments and all historical inter-version diffs unavailable. PR #20 is Draft/unmerged; wait for user's explicit merge permission.
 
 ### Consolidated IDs — 2026-10-12
