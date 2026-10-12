@@ -151,3 +151,18 @@
 - **Пробелы:** полный экспорт чатов, доступность всех HTML-кандидатов и полный diff core30–core34 не подтверждены; причины UI failure нет.
 - **Область:** app code, HTML, database не изменялись; APK не собирался.
 - **Перед закрытием:** перечитать точные файлы, проверить JSONL parse и уникальность ID, event/lesson ID, changed paths/diff и CI на текущем HEAD. PR оставить неслитым без явного разрешения.
+
+## Memory-transfer continuation — scope correction and branch verification (2026-10-12)
+- **Active task:** memory transfer only. Do not debug the Android/PWA application, modify HTML/JS/app DB, or build APK in this task.
+- **New records:** EVT-20261012-017 records the observed scope drift; EVT-20261012-018 records continuation and deduplication; L-RM-022 states the prevention rule.
+- **Existing technical memory preserved:** EVT-20261012-016/L-RM-021 already covers the core32 Shopping unit-label result and the unresolved Products category/sort interaction failure. Do not duplicate those symptoms.
+- **Branch:** `memory/recipe-manager-current-chat-reconciliation-20261012`, based on the existing PR #18 memory branch. Changes remain isolated from `main`.
+- **Validation still required:** read back all writes on the final HEAD; parse JSONL; check unique event/lesson IDs and links; compare branch diff and CI.
+- **Completeness:** PARTIAL. Full export and all historical attachment bytes/diffs are not available in the current context.
+
+### Verified status — PR #20 current HEAD (2026-10-12)
+- Branch `memory/recipe-manager-current-chat-reconciliation-20261012`; HEAD `ef00acd23c7170fb94d35cc1c4e346c21de0eab8`.
+- CI: PASS, run #76 — https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38296083071.
+- Read-back/structural checks: `events.jsonl` 19/19 parse, 19 unique IDs, no duplicates; EVT-017/018 each present once; L-RM-022 present in `LESSONS.md`.
+- Compare: ten commits ahead of parent, seven changed paths, all under `projects/RECIPE_MANAGER/`, zero deletions. No app code/HTML/JS/DB changes, no APK build.
+- Completeness remains PARTIAL: full chat export, original binary attachments and all historical inter-version diffs unavailable. PR #20 is Draft/unmerged; wait for user's explicit merge permission.

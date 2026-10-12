@@ -171,3 +171,17 @@ An additional build-attempt chain was saved as `BUILD_PACKAGING_ATTEMPT_2026-09-
 - In a separate authorized UI task, trace the exact delivered artifact's event path UI → handler → state → filter/sort → render and run runtime interaction/regression checks. Do not add another listener by guesswork.
 - Source completeness remains PARTIAL; full export and complete core30–core34 diffs are not verified available.
 - Do not merge into main without explicit user permission.
+
+## Handoff — task-scope correction (2026-10-12)
+- Continue the memory-transfer task only in `agent-knowledge-base`; do not resume app auditing or APK work unless the user starts a new task.
+- Branch: `memory/recipe-manager-current-chat-reconciliation-20261012`, based on the current memory continuation branch from PR #18. Retrieve current live HEAD from GitHub before applying further changes.
+- New process records: EVT-20261012-017/018 and L-RM-022. The app interaction evidence itself remains EVT-20261012-016/L-RM-021; don't duplicate it.
+- Before declaring transfer validated, perform read-back of all written files, parse `events.jsonl`, check unique IDs and cross-references, inspect changed paths, and verify CI for exact new HEAD.
+- Source remains PARTIAL: full chat export and complete binary/inter-version artifacts aren't available. Do not merge into `main` without explicit user permission.
+
+## Verified handoff — PR #20 current HEAD (2026-10-12)
+- Resume memory-transfer work only, branch `memory/recipe-manager-current-chat-reconciliation-20261012`; live HEAD was `ef00acd23c7170fb94d35cc1c4e346c21de0eab8` at last verification. Re-fetch before future writes.
+- PR #20: https://github.com/alexbotleh-oss/agent-knowledge-base/pull/20 — Draft/open/unmerged. Do not merge without explicit permission.
+- CI PASS on exact HEAD: https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38296083071.
+- Read-back: JSONL 19/19 valid and unique, no duplicate event IDs; EVT-017/018 exist once; L-RM-022 exists. Diff only touches seven `projects/RECIPE_MANAGER` memory files and deletes nothing.
+- Do not duplicate EVT-014..016 technical evidence. Source completeness is PARTIAL: missing full conversation export, original binary attachments and complete inter-version diffs. No app/HTML/DB change or APK build under this task.

@@ -141,3 +141,17 @@ Events `EVT-20261012-010/011` and lessons `L-RM-013..016` preserve the newly rec
 - **Root cause:** UNKNOWN. No runtime event trace or code diagnosis was performed in this memory-only task.
 - **State:** Shopping display fix = USER-CONFIRMED for shown scenario; Products selection = FAIL; cause = UNKNOWN.
 - **Scope:** memory transfer only; no PWA/HTML/JS/database change and no APK build.
+
+## Memory-transfer task status — latest continuation (2026-10-12)
+- **Current task:** transfer experience into `alexbotleh-oss/agent-knowledge-base`; app debugging/building is explicitly out of scope.
+- **Process correction:** assistant switched to an app audit after «приступай»; user restored the memory-transfer task. See EVT-20261012-017/018 and L-RM-022.
+- **Deduplication:** PWA Products/Shopping evidence remains in EVT-20261012-016 / L-RM-021; do not record it again as a new app incident.
+- **Pending checks:** verify final branch read-back, unique JSONL IDs, lesson presence, cross-links, diff paths and CI for the new HEAD.
+- **Source completeness:** PARTIAL; full conversation export and all original attachments/inter-version diffs are unavailable.
+- **Scope guarantee for this task:** no app source, HTML/JS or database changed; no APK was built.
+
+### Сверка текущего HEAD переноса памяти — 2026-10-12
+- PR #20, ветка `memory/recipe-manager-current-chat-reconciliation-20261012`, HEAD `ef00acd23c7170fb94d35cc1c4e346c21de0eab8`.
+- CI Validate knowledge base PASS (run #76); `events.jsonl` — 19 валидных уникальных event ID; L-RM-022 присутствует; изменения только в семи файлах памяти проекта.
+- Технические события PWA/HTML/упаковки уже записаны в EVT-014..016; не дублировать. Процессная граница TASK — EVT-017/018.
+- История PARTIAL: полного экспорта чатов и всех исходных бинарных вложений/diff нет. App/HTML/DB не менялись, APK не собирался. PR Draft, не сливать без разрешения.
