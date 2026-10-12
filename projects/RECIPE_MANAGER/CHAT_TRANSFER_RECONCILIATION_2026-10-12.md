@@ -116,3 +116,21 @@ The user's explicit ingredient lookup contract:
 - avoid false matches such as `рис` → `рисовая мука` or `рисовое масло`; show original recipe ingredient wording while using a normalized lookup key.
 
 The reports are captured as EVT-20261012-014 and prevention lesson L-RM-019. Root causes remain unknown and HTML behavior NOT VERIFIED. This update does not diagnose or modify the app.
+
+## Additional verification — this chat's final memory-transfer request (2026-10-12)
+
+The latest user request explicitly redirects work back to memory transfer and prohibits HTML/Android debugging or APK building in this task. The already-open Draft PR #16 is the canonical place for the current chat's HTML/SQLite regression evidence, so no duplicate event or second PR is needed unless new primary evidence appears.
+
+### What was verified during this continuation
+- The repository root and `core/guardrails.md`, `core/universal_instructions.md`, and `README.md` were read from `main`; the project-specific transfer files were read back from PR #16's head branch.
+- The actual `projects/RECIPE_MANAGER` tree on PR #16 contains `PROJECT_STATE.md`, `TASK_STATE.md`, `EVENT_LOG.md`, `DECISIONS.md`, `LESSONS.md`, `HANDOFF.md`, `events.jsonl`, `RECIPE_SEARCH_REQUIREMENTS.md`, `BUILD_PACKAGING_ATTEMPT_2026-09-22.md`, `CHAT_TRANSFER_RECONCILIATION_2026-10-12.md`, and `HTML_SQLITE_REGRESSION_2026-10-12.md`. It does **not** contain `lessons.jsonl`; do not generate it using an assumed schema.
+- `events.jsonl` has 15 records with unique IDs through `EVT-20261012-014`. `LESSONS.md` has L-RM-019. This chat's requirements and the user's reports are already represented; duplicating them would reduce chronology quality.
+- GitHub Actions validation run #61 for head `587eff3816652a661210bf9393c655103ff0d5d3` completed successfully: https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38278032266.
+- PR #16 is currently open as Draft and unmerged. No changes were made to the app, HTML candidates, SQLite product database, or APK in this continuation.
+
+### Remaining gaps
+- The full exported source conversation and original binary attachments for all previous HTML candidates are unavailable; source history stays PARTIAL.
+- Candidate-to-candidate diffs and independent browser/runtime/persistence evidence for the last HTML artifact are missing. The import, delete, edit, nutrition, and normalization behavior remains NOT VERIFIED.
+- The PR head/base relationships should remain explicit: #16 is a stacked PR based on #15's branch, not a direct-to-main PR. Keep it unmerged pending user review/permission.
+
+This is a source-coverage and verification note, not evidence that the application itself was repaired.
