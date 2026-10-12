@@ -84,3 +84,19 @@ Full source-based details: `projects/B77_HTML_PWA/HTML_SQLITE_REGRESSION_2026-09
 - Commit timestamps are evidence of when commits were created, not absolute proof of when a symptom first occurred or when a fix was first attempted.
 - A later-discovered historical source must be inserted by its event time and linked to its source; it must not be appended as though it were the newest project event merely because it was imported later.
 - Unknown dates and uncertain causal links stay explicitly unknown.
+
+## 2026-10-12 — PWA Shopping/Products and mobile camera decode issues
+
+### EVT-20261012-016 — Shopping units and Products filters
+- **Source:** user reports and screenshots in the HTML/PWA project continuation; exact source chat ID not retained in the earlier summary.
+- **Reported result:** unit labels in Shopping appeared fixed after filtering in core32, but category/sort selections in Products still did not change the result after subsequent attempts.
+- **Status:** partial regression report; root cause unknown and final behavior not verified.
+- **Confidence:** high that the event concerns the HTML/PWA contour; exact timestamp and complete source-message chain remain incomplete.
+
+### EVT-20261012-019 — HTTPS/PWA camera video did not decode the code
+- **Source:** user reports/screenshots in the mobile HTTPS/PWA page context; exact source chat ID not retained in the earlier summary.
+- **Observed:** browser camera permission was granted and video appeared, but the code was not recognized while the camera continued running.
+- **Status:** decode failure reported; exact code format, camera/browser details and final fix are not verified.
+- **Boundary:** this is the browser/PWA camera pipeline, not the native Android scanner implementation in N99.
+
+Both events were moved out of the N99 event chain after the user's explicit clarification that B77 is the separate HTML/WMA/iPhone web project. Preserve uncertainty where original message-level provenance is missing.
