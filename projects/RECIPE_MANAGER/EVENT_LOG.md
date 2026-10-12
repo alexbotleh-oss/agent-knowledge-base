@@ -138,6 +138,16 @@
 - **Меры:** обязательны input/source manifest, dependency closure, список включённых/изменённых/исключённых файлов, read-back exact ZIP, SHA-256 и source-vs-staging сверка, затем проверка реальным downstream consumer. Любой обязательный FAIL/BLOCKED = STOP; при неустранимом дефиците запросить файл/материал у пользователя. Все изменения документировать по пути и строкам/контексту.
 - **Область:** только перенос памяти; приложение/extension/БД не менялись, APK не собирался в рамках этой задачи.
 
+## 2026-10-12 — Stage14 HTTPS/PWA camera: permission/video succeeds, code not recognized
+- **Source:** direct user report in current chat after testing the camera on the mobile HTTPS/PWA page.
+- **User-observed sequence:** camera requested enablement; a live picture appeared; the user held a code in front of the camera; it was not recognized and camera continued operating.
+- **Confirmed:** permission prompt and video display worked on the tested device/page.
+- **Failure status:** recognition FAIL for the demonstrated code; no evidence that `code-detected` fired. Stop-on-success behavior was therefore not exercised and remains NOT VERIFIED.
+- **Root cause:** UNKNOWN. No downloaded diagnostic report, `BarcodeDetector.detect()` trace, console output or exact code-format metadata was provided in this transfer. Detector support/format mismatch/frame loop/result extraction are only possible investigation areas, not findings.
+- **Prior diagnostics:** local `content://` V5–V9 boot logs had fast DOM readiness/completion, one active home screen and no recorded JS exceptions; toggling Tailwind and Service Worker did not prove a cause. Those diagnostics do not test camera decoding on HTTPS.
+- **Next step (separate authorized app-debug task):** inspect camera diagnostic export from exact deployed HTTPS page and trace API availability/formats → video frame → `detect()` → returned results/rawValue → event/stop. No blind patch.
+- **Scope:** memory transfer only; no source code, HTML, DB or APK was modified/built for this event.
+
 ## EVT-20261012-016 — PWA: отображение единиц в Покупках исправлено, выбор категорий/сортировки Продуктов не работает
 
 - **Источник:** пользовательские сообщения и скриншоты текущего продолжения 2026-10-12; кандидаты core30–core34.
