@@ -132,3 +132,12 @@
 - **Validation:** `events.jsonl` parses as 15 JSONL records and event IDs are unique; L-RM-019 appears in LESSONS.md; tree confirmed `lessons.jsonl` absent. GitHub Actions run #61 passed for PR #16 head. PR #16 remains Draft, open, unmerged.
 - **Status:** all additional facts available in the current user-visible segment are covered by existing memory. This continuation adds an audit note, not a duplicate incident. Transfer remains **PARTIAL** because complete chat export/binary history and runtime evidence are unavailable.
 - **Scope guard:** do not edit HTML/application/database or build APK within this transfer task; do not merge to `main` without explicit user approval.
+
+
+## Memory-transfer continuation — Flet package verification failure (2026-10-12)
+- New `EVT-20261012-015`: user's log shows Flet found `main.py` and initialized the app shell/toolchain, but pip rejected `flet-barcode-scanner @ ./flet_barcode_scanner_ext`. No successful APK build was confirmed.
+- This is related to, but distinct from, `EVT-20261012-012`: a new timestamped log plus the assistant's admission that the real extension install path had not been exercised before calling the archive ready.
+- New `L-RM-020` mandates source/input inventory, transitive dependency closure, explicit include/change/exclude manifest, read-back/hash/tree check of the exact artifact and a test of the actual consumer path before asserting readiness.
+- Any required gate FAIL/BLOCKED means STOP. If cause or required materials cannot safely be resolved from evidence, ask for the exact missing input. Do not delete/replace dependency or alter architecture to bypass a gate. Each change must record files and line ranges/stable context, before/after, reason, dependencies and tests.
+- Root cause of pip's relative URL failure remains UNKNOWN; the log does not prove the extension directory is absent.
+- Memory only: no application/extension/database change and no APK build. Source transfer remains PARTIAL.
