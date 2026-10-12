@@ -120,3 +120,13 @@ An additional build-attempt chain was saved as `BUILD_PACKAGING_ATTEMPT_2026-09-
 - **User-approved mandatory canon:** inspect the exact saved artifact after modification; validate dependencies and consumer path; do not ask user to repeat completed steps before checking own artifact/instructions; each failure must strengthen the preventive verification process.
 - **Not done in this memory-only task:** no app edit, no APK build, no new APK claim.
 - **Completeness:** PARTIAL because full historical chat export and all original attachment bytes/intermediate diffs are unavailable.
+
+
+## Handoff — memory continuation / cross-cutting regressions (2026-10-12)
+- Continue only the transfer to `agent-knowledge-base`; do not debug the app, edit application/database code, or build an APK.
+- User's process requirement: maintain a dependency/achievement map with done/not-done markers; preserve known-good baselines; inspect the full related component/layer graph; test both the reported issue and adjacent previously working flows; compare the final result to the original request.
+- Existing canonical records (do not duplicate): EVT-20261012-010 (scanner/theme/water reports), EVT-20261012-011 (process rule), EVT-20261012-012 (bad archive dependency); lessons L-RM-013..017 in `LESSONS.md`.
+- `RECIPE_SEARCH_REQUIREMENTS.md` documents three modes, local-first search, shared normalizer, add/skip/search-again and mandatory PDF import. It is a specification, not proof of implementation; requested interactive HTML prototype remains uncreated/unverified in available evidence.
+- New EVT-20261012-013/L-RM-018 records a structural mismatch: actual tree contains `LESSONS.md`, no `lessons.jsonl`, despite older handoff references.
+- Source completeness remains PARTIAL: full chat export, all original binary attachments and exact diffs for every intermediate build are not available.
+- Next: validate this memory-only PR (read-back, JSONL schema/IDs, diff, CI); do not merge without explicit user approval.
