@@ -68,3 +68,11 @@
 - Process monitoring did not produce usable measurements because the command ended with an incomplete pipe (`|`).
 - Outcome: APK presence, build completion, install and runtime are **NOT VERIFIED**. Do not claim either success or a confirmed hang.
 - Scope: memory only; no app code/database edits and no APK build in this memory-transfer task.
+
+
+## Memory-transfer task — current chat (2026-10-12)
+- **Task intent:** continue transferring available RECIPE_MANAGER project experience into `agent-knowledge-base`, with deduplication, provenance, factual/hypothesis separation, validation and a separate PR.
+- **Explicit constraints:** do not continue Android debugging, do not edit app code or database, do not build APK, and do not merge to `main` without user approval.
+- **Confirmed in this chat:** screenshot shows the Flet process still at `Packaging python app...`; a separate PowerShell process-check command ended with a trailing pipe and did not yield measurements. No terminal build result or artifact check is present.
+- **Existing PRs:** PR #10 records current-chat reconciliation; PR #11 records the unresolved packaging attempt. Both remain draft and unmerged according to repository state at time of review. CI checks for their current heads had succeeded before this continuation.
+- **Validation status for new changes:** fresh read-back and CI remain required. History remains PARTIAL.
