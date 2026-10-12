@@ -100,3 +100,14 @@ An additional build-attempt chain was saved as `BUILD_PACKAGING_ATTEMPT_2026-09-
 - **Ограничения:** не запускать сборку, не редактировать приложение/БД; не сливать открытые PR без явного разрешения.
 - **Пробелы:** полный экспорт чата и все исходные вложения не доступны; идентичность текущего скриншота и ранее записанной попытки не доказана окончательно. Статус памяти PARTIAL.
 - **Следующий шаг:** проверить диффы PR #10/#11 и повторный CI после последних изменений; сообщить пользователю, какие файлы/записи реально включены и какие источники нужно добавить для полноты.
+
+## Handoff continuation — scanner/theme/water and search requirements (2026-10-12)
+- Current task remains **memory transfer only**. Do not debug the Android app or build an APK in this task.
+- Read `PROJECT_STATE.md`, `TASK_STATE.md`, latest `EVENT_LOG.md` additions and `events.jsonl` events `EVT-20261012-010/011`, `LESSONS.md` IDs `L-RM-013..016`, and `RECIPE_SEARCH_REQUIREMENTS.md`.
+- **Confirmed from user feedback for Build39:** native barcode scanning → ask prompt → add/edit form works; repeat scan finds an existing product; auto mode increments quantity. This does not establish later builds still work.
+- **Open/NOT VERIFIED:** old WebView scanner white screen; the proposed Build40 rollback to baseline HTML has no confirmed device result; full app-wide WHITE/DARK consistency across status bar, app bar, pages, dialogs, menus, app navigation and Android navigation; repeated scanning should not create duplicate “Вода” entries. User reported three separate Water entries, so this must not be called fixed.
+- **Critical distinctions:** water is allowed in the Products catalog; water should not be automatically inserted into Shopping; repeat scan should resolve the existing product. Track these as three separate invariants.
+- **Process requirement from user:** carry a dependency/achievement map and done/not-done markers; compare against the known-good baseline before swapping technology; inspect layering/intersections; run the exact acceptance test plus regression tests for previous successes; re-read the original request before reporting completion.
+- Recipe search modes and the local-first/search/normalize/validate/add/ingredients/shopping/search-again pipeline, including PDF import, are specified in `RECIPE_SEARCH_REQUIREMENTS.md` but are **not verified as implemented**. The requested interactive HTML prototype is still uncreated/unverified.
+- **Source gaps:** full export of all project chats and all historic binaries/diffs/build logs is not available here. Keep memory status PARTIAL. Preserve hypotheses as hypotheses.
+
