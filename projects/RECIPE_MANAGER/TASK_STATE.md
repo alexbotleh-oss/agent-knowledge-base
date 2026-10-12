@@ -123,3 +123,12 @@
 - **Validation gate:** compare the exact saved candidate against the reference and exercise SQLite load/add, per-100g kcal/protein/fat/carbs, delete/persistence, editing, and positive/negative ingredient-normalization cases. Finding function names or JavaScript syntax checking alone is insufficient.
 - **Status:** user-reported regression confirmed; root cause and final HTML runtime result NOT VERIFIED. Full candidate diffs and complete chat export remain unavailable.
 - **Scope:** memory-only. No app source/HTML/database modification or APK build.
+
+## Memory-only continuation after PR #16 validation — 2026-10-12
+
+- **Task:** reconcile the current «Что приготовить» chat into `agent-knowledge-base`, specifically `projects/RECIPE_MANAGER`; not app debugging.
+- **Prior memory:** PR #16 already records the current chat's user-reported HTML/SQLite regressions as `EVT-20261012-014`, process lesson `L-RM-019`, and `HTML_SQLITE_REGRESSION_2026-10-12.md`. Do not append a duplicate for the same facts.
+- **Repository/instruction checks:** read `README.md`, `core/guardrails.md`, `core/universal_instructions.md`, and project transfer files at PR #16 head `587eff3816652a661210bf9393c655103ff0d5d3`.
+- **Validation:** `events.jsonl` parses as 15 JSONL records and event IDs are unique; L-RM-019 appears in LESSONS.md; tree confirmed `lessons.jsonl` absent. GitHub Actions run #61 passed for PR #16 head. PR #16 remains Draft, open, unmerged.
+- **Status:** all additional facts available in the current user-visible segment are covered by existing memory. This continuation adds an audit note, not a duplicate incident. Transfer remains **PARTIAL** because complete chat export/binary history and runtime evidence are unavailable.
+- **Scope guard:** do not edit HTML/application/database or build APK within this transfer task; do not merge to `main` without explicit user approval.
