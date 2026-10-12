@@ -151,3 +151,12 @@
 - **Пробелы:** полный экспорт чатов, доступность всех HTML-кандидатов и полный diff core30–core34 не подтверждены; причины UI failure нет.
 - **Область:** app code, HTML, database не изменялись; APK не собирался.
 - **Перед закрытием:** перечитать точные файлы, проверить JSONL parse и уникальность ID, event/lesson ID, changed paths/diff и CI на текущем HEAD. PR оставить неслитым без явного разрешения.
+
+## Memory-transfer continuation — scope correction and branch verification (2026-10-12)
+- **Active task:** memory transfer only. Do not debug the Android/PWA application, modify HTML/JS/app DB, or build APK in this task.
+- **New records:** EVT-20261012-017 records the observed scope drift; EVT-20261012-018 records continuation and deduplication; L-RM-022 states the prevention rule.
+- **Existing technical memory preserved:** EVT-20261012-016/L-RM-021 already covers the core32 Shopping unit-label result and the unresolved Products category/sort interaction failure. Do not duplicate those symptoms.
+- **Branch:** `memory/recipe-manager-current-chat-reconciliation-20261012`, based on the existing PR #18 memory branch. Changes remain isolated from `main`.
+- **Validation still required:** read back all writes on the final HEAD; parse JSONL; check unique event/lesson IDs and links; compare branch diff and CI.
+- **Completeness:** PARTIAL. Full export and all historical attachment bytes/diffs are not available in the current context.
+
