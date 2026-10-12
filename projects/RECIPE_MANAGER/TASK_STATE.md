@@ -160,3 +160,7 @@
 - **Пробелы:** полный экспорт чатов, доступность всех HTML-кандидатов и полный diff core30–core34 не подтверждены; причины UI failure нет.
 - **Область:** app code, HTML, database не изменялись; APK не собирался.
 - **Перед закрытием:** перечитать точные файлы, проверить JSONL parse и уникальность ID, event/lesson ID, changed paths/diff и CI на текущем HEAD. PR оставить неслитым без явного разрешения.
+
+### Memory continuation — HTTPS/PWA camera event
+- App behavior is only recorded as evidence; no app debugging occurs under this task. Event `EVT-20261012-017` and lesson `L-RM-022` distinguish successful video from failed recognition.
+- Diagnostic JSON/source export for the deployed mobile page is unavailable; root cause UNKNOWN. Full chat and all HTML candidate diffs remain absent.
