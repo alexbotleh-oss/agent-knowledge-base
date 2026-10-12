@@ -161,3 +161,10 @@
 - **Diff:** десять коммитов относительно родительского HEAD, только семь файлов в `projects/RECIPE_MANAGER/`; удалений нет. Содержимое приложения и БД не изменялось.
 - **Ограничение:** данные текущего чата и доступные сводки перенесены частично; полного экспорта всех чатов/исходных бинарных приложений и полных межверсионных diff нет. Полнота истории = PARTIAL.
 - **Состояние PR:** открыт как Draft; слияние в `main` не выполнялось и запрещено без явного разрешения пользователя.
+
+## EVT-20261012-017 — HTTPS/PWA camera decode attempt
+
+- User-reported: HTTPS/PWA requested camera permission and displayed live video; after a code was presented, decode did not recognize it and camera kept running.
+- Camera permission/video: PASS for this reported attempt. Decode: FAIL. Stop-after-success: NOT VERIFIED because no successful detection occurred. Root cause: UNKNOWN.
+- Keep separate from Android native scanner and local content:// probes. Full diagnostic JSON and complete source chat are unavailable.
+- Provenance: PR #19 branch memory/recipe-manager-chat-extension-html-pwa-diagnostics-20261012.
