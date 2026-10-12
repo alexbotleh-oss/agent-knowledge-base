@@ -78,3 +78,9 @@
 - **Preventive inference, not confirmed defect:** a same-name match with different units can establish likely product identity, but it does not prove the required amount is available. The implementation should separate canonical identity matching from quantity sufficiency and use explicit conversions only where defensible.
 - **Evidence:** current conversation, 2026-10-12; available filenames include `Что приготовить (Copy).htm` and `Что приготовить_обновлено.htm`. No persisted DB/API configuration, browser screenshot, or regression log was available to validate the claimed patch.
 - **Outcome:** acceptance gap and verification lesson recorded; no app source, database or APK was modified/built for this memory-only task.
+
+## 2026-10-12 — Reconciliation note for the newest HTML acceptance feedback
+- This is a follow-up note to the existing HTML/PWA acceptance-gap entry above and historical event EVT-20261012-006; it does not create a second machine event for the same feedback.
+- Confirmed user correction: the needed delete action must target recipes already in the database, not only user recipes. The assistant's prior assertions are not proof of successful implementation.
+- Confirmed examples for product-catalog normalization are retained in DEC-RM-009 and EVT-20261012-007. Tests have not been run in a browser against the updated HTML/database.
+- Task boundary: this pass transfers memory only; no app-code changes or APK build.
