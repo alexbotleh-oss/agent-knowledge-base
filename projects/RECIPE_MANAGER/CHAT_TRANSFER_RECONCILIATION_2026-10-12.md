@@ -204,7 +204,7 @@ Memory only. No application source, HTML/JS or SQLite product DB changed; no APK
 
 - Exact checked head: `ef00acd23c7170fb94d35cc1c4e346c21de0eab8` on `memory/recipe-manager-current-chat-reconciliation-20261012`.
 - CI Validate knowledge base PASS (run #76): https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38296083071.
-- `events.jsonl`: 20 non-empty lines, 20 JSON parses, 20 unique event IDs, no duplicates; EVT-20261012-017/018/019 each once. `LESSONS.md` contains L-RM-022.
+- `events.jsonl`: 26 non-empty lines, 26 JSON parses, 26 unique event IDs, no duplicates; EVT-20261012-017/018/019 each once. `LESSONS.md` contains L-RM-022.
 - Branch compare against parent `b4fbbe90c5fa22368f54ea8e68a9929f0164635d`: ten commits ahead; seven changed files, all within `projects/RECIPE_MANAGER/`; no deleted paths.
 - PR #20 remains Draft and unmerged; no merge to `main` without explicit user approval.
 - **Completeness PARTIAL:** no full export of all relevant chats, all original binary attachments, or full candidate-to-candidate diffs/runtime logs. This PR preserves accessible history, not a claim of exhaustive recovery.
