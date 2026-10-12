@@ -1,1 +1,34 @@
-{"event_id":"EVT-YYYYMMDD-001","project_id":"PROJECT_ID","timestamp":"ISO-8601-or-unknown","type":"observation|action|decision|test|incident|lesson|handoff","summary":"Краткое описание события","status":"observed|proposed|confirmed|failed|superseded|unknown","facts":[],"hypotheses":[],"action_taken":"Что реально сделано или unknown","outcome":"Наблюдаемый результат или unknown","evidence":[{"kind":"file|commit|test|screenshot|chat|url","ref":"путь, SHA, ссылка или описание источника"}],"related_event_ids":[],"next_action":"Следующий логичный шаг или none","confidence":"high|medium|low","notes":"Не включать секреты; не выдавать гипотезы за факты"}
+{
+  "event_id": "EVT-YYYYMMDD-001",
+  "project_id": "PROJECT_ID",
+  "event_time": "ISO-8601-or-unknown",
+  "source_time": "ISO-8601-or-unknown",
+  "recorded_at": "ISO-8601-or-unknown",
+  "time_precision": "exact|day|month|year|range|unknown",
+  "temporal_basis": "message_timestamp|artifact_timestamp|git_history|user_report|reconstruction|unknown",
+  "type": "observation|action|decision|test|incident|lesson|handoff",
+  "summary": "Краткое описание события",
+  "status": "observed|reported|inferred|verified|proposed|confirmed|failed|superseded|unknown",
+  "facts": [],
+  "hypotheses": [],
+  "action_taken": "Что реально сделано или unknown",
+  "outcome": "Наблюдаемый результат или unknown",
+  "evidence": [
+    {
+      "kind": "file|commit|test|screenshot|chat|url",
+      "ref": "путь, SHA, ссылка или описание источника",
+      "source_created_at": "ISO-8601-or-unknown"
+    }
+  ],
+  "related_event_ids": [],
+  "relations": [
+    {
+      "type": "preceded_by|followed_by|caused_by|attempted_to_fix|verified_by|reverted_by|superseded_by|contradicts|derived_from",
+      "event_id": "EVENT_ID",
+      "basis": "evidence|inference|unknown"
+    }
+  ],
+  "next_action": "Следующий логичный шаг или none",
+  "confidence": "high|medium|low",
+  "notes": "Не включать секреты; не выдавать гипотезы за факты; порядок импорта не равен хронологии событий"
+}
