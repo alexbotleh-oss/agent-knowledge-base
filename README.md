@@ -4,6 +4,14 @@
 
 **Границы названий:** этот репозиторий называется `agent-knowledge-base`. ORGANISM и другие пользовательские проекты ведутся как отдельные проектные цепочки внутри общей системы памяти; они не являются альтернативными названиями репозитория. Все изменения инфраструктуры памяти и универсальных протоколов относятся к `agent-knowledge-base`. См. [`core/repository_scope.md`](core/repository_scope.md).
 
+## Обязательные протоколы непрерывной работы
+- [Начало/окончание чата](core/chat_lifecycle_protocol.md) — START GATE, CONTINUITY GATE и END GATE.
+- [Контроль внешних изменений](core/external_change_control.md) — версии, release notes, совместимость, безопасность и миграции.
+- [Каталог навыков](core/skill_catalog.md) — 40 повторно используемых навыков.
+- [Шаблон спецификации навыка](core/skill_spec_template.md) — контракт, предусловия, тесты и восстановление.
+- [Проверка каждого шага](core/stepwise_verification_protocol.md) — baseline, изменение, проверка и доказательство.
+- [Шаблон реестра внешних изменений](core/external_change_registry_template.md) — версии и решения по проектным зависимостям.
+
 ## Основные протоколы
 - [`core/continuous_agent_architecture.md`](core/continuous_agent_architecture.md) — целевая архитектура памяти, навыков, окружения, планирования, контроля отклонений и мультимодальной проверки.
 - [`core/source_ingestion_protocol.md`](core/source_ingestion_protocol.md) — безопасный приём источников и аудит полноты.
