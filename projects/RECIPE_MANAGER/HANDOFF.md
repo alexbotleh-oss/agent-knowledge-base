@@ -84,3 +84,21 @@
 
 ### Граница текущей задачи
 Задача текущего чата — перенос опыта в agent-knowledge-base; изменения приложения и сборка APK не выполнялись. PR #6 остаётся без слияния. Не подменять задачу памяти новой отладкой Android.
+
+## Handoff addition — HTML/SQLite deletion and ingredient matching (2026-10-12)
+
+### Confirmed requirements and interaction history
+- The user clarified that deletion must be available for recipes already in the database, not only user-created recipes. After assistant claims that a delete action was added, the user still could not see it and explained that existing DB recipes were not offered for deletion.
+- Provide clearly distinct DB-backed delete-one and delete-all flows. Persist changes to a writable database; if a local DB file is read-only, state that limitation.
+- Match recipe ingredient names against the existing product catalog: `мука`/`мука пшеничная`, reordered/inflected butter names, `щепотка соли`/`соль`. Preserve meaningful distinctions such as specialty flour and red/green onion.
+
+### Confidence and warnings
+- **Confirmed:** the requirement and user feedback that the DB-backed delete path was not exposed.
+- **Unconfirmed:** whether the assistant-generated `Что приготовить_обновлено.htm` actually fixes the UI or matching. No browser, DB or regression test was run in the available turn.
+- **Preventive inference:** product identity match with an incompatible unit does not guarantee sufficient stock. Keep name matching and amount sufficiency separate; do not mark recipe readiness 100% on name match alone.
+
+### Sources and gaps
+- Available filenames/content include `Что приготовить (Copy).htm`, `Что приготовить_обновлено.htm` and HTML snippets from this conversation.
+- The current turn has no independently validated DB/API configuration, test logs or result screenshot.
+- History remains **PARTIAL**: current messages and saved summaries are available, but not a full export of all chats and binary attachments.
+- Keep this PR focused on memory transfer; do not replace it with application debugging.
