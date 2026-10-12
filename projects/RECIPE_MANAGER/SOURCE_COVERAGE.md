@@ -10,6 +10,7 @@
 - Сообщённые регрессии, Flet API error и профилактические уроки — DECISIONS.md, LESSONS.md.
 - Core Lite baseline hashes, diagnostics path, границы py_compile, JNI conflict/fix1 build, невалидный PROBE1 и наблюдения PROBE2/PROBE3 — EVENT_LOG.md.
 - Состояние и точка продолжения — PROJECT_STATE.md, TASK_STATE.md, HANDOFF.md.
+- Ветка и PR: `memory/recipe-manager-experience-20261012`, PR #17; GitHub Actions run 38285407579 завершился success.
 
 ## Пробелы
 1. Полная выгрузка чата недоступна; это перенос всего материала, доступного сейчас, а не гарантированно полная архивная миграция.
