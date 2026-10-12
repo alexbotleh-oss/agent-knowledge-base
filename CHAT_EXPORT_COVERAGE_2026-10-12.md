@@ -52,8 +52,8 @@ This is a consolidated memory-only export of all project experience recoverable 
 - [x] Parsed all six JSONL files: RECIPE_MANAGER events 26/26 unique; CARD111 events 6/6 and lessons 4/4 unique; ORGANISM events 7/7 and lessons 5/5 unique; global lessons 5/5 unique.
 - [x] Reconciled event/lesson ID collisions: EVT-20261012-017/018 are task-scope/transfer events, EVT-20261012-019 is PWA camera decode; L-RM-022 is camera decode, L-RM-023 is task boundary.
 - [x] Compared branch with main: 46 changed paths, all memory/core documentation; no app source, HTML/JS project code, databases, or APKs.
-- [ ] GitHub Actions for the exact final rollup HEAD must be checked after opening the PR; CI from source branches is not proof for this rollup.
-- [ ] Open a Draft PR and leave it unmerged pending explicit user permission.
+- [x] GitHub Actions Validate knowledge base passed on the first PR head, run #86: https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38304244094. Because this coverage note is being updated afterward, rerun CI for the resulting HEAD before claiming final PASS.
+- [x] Draft PR #22 opened: https://github.com/alexbotleh-oss/agent-knowledge-base/pull/22; it remains unmerged pending explicit user permission.
 
 ## Known limitations
 - This rollup cannot recover raw chats that are not exposed in the current context or accessible repository branches.
