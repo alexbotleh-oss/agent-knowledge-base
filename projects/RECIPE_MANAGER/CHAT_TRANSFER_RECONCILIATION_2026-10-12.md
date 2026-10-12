@@ -209,3 +209,9 @@ Memory only. No application source, HTML/JS or SQLite product DB changed; no APK
 - PR #20 remains Draft and unmerged; no merge to `main` without explicit user approval.
 - **Completeness PARTIAL:** no full export of all relevant chats, all original binary attachments, or full candidate-to-candidate diffs/runtime logs. This PR preserves accessible history, not a claim of exhaustive recovery.
 - Scope boundary: memory/docs only; no application code, HTML/JS, database changes, or APK build.
+
+## Consolidated branch audit — 2026-10-12
+- The rollup uses the current accessible RECIPE_MANAGER memory from PR #20 and cross-checks parallel PR #19. EVT-20261012-017 is preserved as the HTTPS/PWA camera decode failure and added to EVENT_LOG.md; EVT-20261012-018 remains the separate task-scope incident.
+- L-RM-022 collided across the two source PRs. This branch assigns L-RM-022 to camera/decode and renames the task-scope lesson L-RM-023. No source PR was rewritten.
+- events.jsonl contains 19 valid unique event IDs. EVT-20261012-007 is not present in the available source sequence; the gap is unresolved and is not filled by invention.
+- Completeness remains PARTIAL: complete raw chat export, all binary attachments, exact inter-version diffs and some device/runtime logs are unavailable.
