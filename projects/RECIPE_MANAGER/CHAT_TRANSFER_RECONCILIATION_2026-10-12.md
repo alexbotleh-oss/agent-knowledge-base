@@ -162,6 +162,19 @@ New records `EVT-20261012-015` and `L-RM-020` are a distinct follow-on to `EVT-2
 ### Scope and completeness
 Memory transfer only. No app code, extension or product database was changed and no APK was built in this task. Full chat export and exact persisted archive/directory are unavailable to this memory pass; status remains **PARTIAL**.
 
+## Additional continuation — Stage14 camera test on HTTPS/PWA (2026-10-12)
+
+The final visible source segment contributes a distinct camera observation; it must not be blended into prior Android Build39–Build43 scanner history or the Products core33/core34 interaction event.
+
+- **User report:** the deployed mobile HTTPS/PWA page asked for camera permission and then displayed a live picture. When the user presented a code, it was not recognized and the camera kept running.
+- **Confirmed scope:** permission request and video rendering work for this device/session. Recognition did not work for the code presented in this attempt.
+- **Not established:** whether `BarcodeDetector` was unavailable, `detect()` did not execute, detection returned zero results, code format was unsupported, raw-value handling failed, or the stop handler failed. Without a diagnostic export/event trace, root cause is UNKNOWN.
+- **Evidence distinction:** no `code-detected` event is known, therefore this attempt does not establish that stop-on-success is broken; it establishes that the user saw no recognition and camera kept going.
+- **Earlier diagnostic tests:** local `content://` variants V5–V9 showed quick DOM boot/completion, active home screen and no JS error in captured logs; turning Tailwind and Service Worker on/off did not establish a root cause. Those tests did not exercise camera decoding on the deployed HTTPS page.
+- **Known-good scope:** product-menu event fix, Shopping actions, recipe long press and swipe navigation were confirmed on the pre-camera Stage14 candidate. Do not overgeneralize those tests to a camera-enabled follow-up artifact.
+- **Follow-up (separate authorized app task):** obtain the actual diagnostic export from the exact HTTPS page and inspect API availability, supported formats, video readiness, `detect()` call/result/errors and rawValue path before an evidence-based minimal patch.
+- **Memory-task boundary:** no app code/HTML/DB was changed and no APK was built. Transfer is **PARTIAL**, because no full chat export, camera diagnostic JSON, or complete set of exact intermediate HTML candidates/diffs is available.
+
 ## Additional continuation — PWA Products/Shopping interaction regression (2026-10-12)
 
 ### What this chat segment adds
