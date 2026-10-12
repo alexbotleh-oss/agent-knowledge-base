@@ -130,3 +130,12 @@ An additional build-attempt chain was saved as `BUILD_PACKAGING_ATTEMPT_2026-09-
 - New EVT-20261012-013/L-RM-018 records a structural mismatch: actual tree contains `LESSONS.md`, no `lessons.jsonl`, despite older handoff references.
 - Source completeness remains PARTIAL: full chat export, all original binary attachments and exact diffs for every intermediate build are not available.
 - Next: validate this memory-only PR (read-back, JSONL schema/IDs, diff, CI); do not merge without explicit user approval.
+
+
+## Handoff continuation — HTML/SQLite regression reports (2026-10-12)
+- Continue the memory-transfer task only; do not switch into HTML/Android debugging unless the user starts that as a separate task.
+- New records: `EVT-20261012-014`, `L-RM-019`, and `HTML_SQLITE_REGRESSION_2026-10-12.md`.
+- Confirmed user reports: database recipe addition and KБЖУ disappeared in the latest HTML candidate; delete-recipe and per-100g kcal/protein/fat/carbs also had to be restored relative to `index_db_path(5).html`.
+- User normalization contract: generic/white/bulb onion → bulb onion; red/green onion remain distinct; generic rice → long-grain; pilaf/parboiled rice → parboiled; normalize case, ё/е, grammatical cases and word order without false matches against rice flour/oil. Preserve display text separate from pantry lookup key.
+- Do not state that a candidate is fixed based only on syntax or static source inspection. Report artifact read-back, runtime, and persistence separately.
+- Source completeness remains **PARTIAL**: no complete project chat export, exact diffs between every HTML variant, or independent runtime/persistence evidence for the last link is available.
