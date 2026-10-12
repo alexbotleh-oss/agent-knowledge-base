@@ -116,3 +116,20 @@ Events `EVT-20261012-010/011` and lessons `L-RM-013..016` preserve the newly rec
 - Структурное наблюдение: фактическое дерево содержит `LESSONS.md`, но не `lessons.jsonl`; записано в EVT-20261012-013/L-RM-018.
 - Ни одну заявленную правку старого сканера/темы/воды не считать подтверждённой без прямого результата.
 - Код приложения, продуктовая БД и APK не изменялись/не собирались.
+
+
+## Memory-transfer update — HTML/SQLite regressions (2026-10-12)
+- Event `EVT-20261012-014` records the latest user-reported loss of database recipe addition and nutrition display, plus the request to restore delete recipe and per-100g nutrition from `index_db_path(5).html`.
+- Lesson `L-RM-019` requires the exact saved HTML candidate to be checked against the reference and the real import/add, delete/persistence, edit and nutrition paths; syntax/static inspection alone is not sufficient.
+- Ingredient matching requirements are listed in the new event and `HTML_SQLITE_REGRESSION_2026-10-12.md`; do not infer the code now implements them.
+- Source history remains PARTIAL: full chat export and all intermediate candidate diffs/runtime evidence are unavailable.
+- This memory-transfer task made no HTML/database/application changes and did not build an APK.
+
+
+## Memory-only status — package validation incident (2026-10-12)
+- Added `EVT-20261012-015` and `L-RM-020`.
+- User's Flet log fails during pip installation of local extension; no APK success. Assistant admits it called the archive ready without testing actual extension install through the Flet consumer path.
+- Related to but distinct from `EVT-20261012-012`; preserve both chronology entries.
+- Newly reinforced required controls: source/input inventory; dependency closure; exact artifact read-back; SHA/file-manifest comparison; include/exclude accounting; real consumer-path test; STOP on mandatory FAIL/BLOCKED; request missing source when unresolved; per-change file/line/context provenance.
+- Root cause UNKNOWN. No application source, extension, database or APK changed in this memory transfer.
+- Completeness remains PARTIAL because full chat export and complete binary/archive history are not available.

@@ -130,3 +130,34 @@ An additional build-attempt chain was saved as `BUILD_PACKAGING_ATTEMPT_2026-09-
 - New EVT-20261012-013/L-RM-018 records a structural mismatch: actual tree contains `LESSONS.md`, no `lessons.jsonl`, despite older handoff references.
 - Source completeness remains PARTIAL: full chat export, all original binary attachments and exact diffs for every intermediate build are not available.
 - Next: validate this memory-only PR (read-back, JSONL schema/IDs, diff, CI); do not merge without explicit user approval.
+
+
+## Handoff continuation — HTML/SQLite regression reports (2026-10-12)
+- Continue the memory-transfer task only; do not switch into HTML/Android debugging unless the user starts that as a separate task.
+- New records: `EVT-20261012-014`, `L-RM-019`, and `HTML_SQLITE_REGRESSION_2026-10-12.md`.
+- Confirmed user reports: database recipe addition and KБЖУ disappeared in the latest HTML candidate; delete-recipe and per-100g kcal/protein/fat/carbs also had to be restored relative to `index_db_path(5).html`.
+- User normalization contract: generic/white/bulb onion → bulb onion; red/green onion remain distinct; generic rice → long-grain; pilaf/parboiled rice → parboiled; normalize case, ё/е, grammatical cases and word order without false matches against rice flour/oil. Preserve display text separate from pantry lookup key.
+- Do not state that a candidate is fixed based only on syntax or static source inspection. Report artifact read-back, runtime, and persistence separately.
+- Source completeness remains **PARTIAL**: no complete project chat export, exact diffs between every HTML variant, or independent runtime/persistence evidence for the last link is available.
+
+## Memory-transfer handoff — after PR #16 validation (2026-10-12)
+
+**Resume this memory-transfer task only.** Do not switch to HTML repair or Android/APK work under this task.
+
+- Canonical memory change remains PR #16, branch `memory/recipe-manager-crosschat-html-db-kbju-20261012`; Draft/open/unmerged. At the next handoff, retrieve the live head from PR metadata rather than pinning a self-referential SHA in this file.
+- Current chat's reported recipe DB-add and nutrition regressions and missing deletion/KБЖУ functions are recorded in `EVT-20261012-014`/`L-RM-019` and `HTML_SQLITE_REGRESSION_2026-10-12.md`; do not duplicate them.
+- New Flet package verification episode is recorded as `EVT-20261012-015` and preventive lesson `L-RM-020`; keep separate from earlier `EVT-20261012-012`/`L-RM-017`.
+- The knowledge-base validation workflow passed after the previous memory update: https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38282528702. Always match CI to the live branch head before relying on it for a later change.
+- Project tree contains `LESSONS.md`, not `lessons.jsonl`; do not invent or reconstruct the absent JSONL without historical evidence/schema.
+- Source remains partial: full exported chats, all candidate binaries and complete inter-version diffs/runtime traces are not available. Do not mark application functionality fixed from source inspection alone.
+- Before any future merge, wait for explicit user approval. No app/DB/extension changes or APK build were made under this memory-transfer task.
+
+
+## Handoff continuation — package gate and change provenance (2026-10-12)
+- Continue memory transfer only; do not debug app/build APK under this task.
+- New `EVT-20261012-015` and `L-RM-020`, related to `EVT-20261012-012` / `L-RM-017`.
+- Confirmed log: Flet found entrypoint and toolchain but pip stopped on `flet-barcode-scanner @ ./flet_barcode_scanner_ext` with `Invalid URL ... No scheme supplied`. APK success is NOT CONFIRMED.
+- Required gate: inventory inputs/baseline; resolve direct and transitive dependency closure; log included, changed, excluded files; compare source/staging; reread exact artifact; check SHA-256/tree/required files/duplicates; test actual downstream installer/build consumer; state PASS/FAIL/NOT RUN for each stage.
+- STOP on any required FAIL/BLOCKED. If no safe evidence-based fix or material missing, identify exact blocker and ask user. Never remove dependencies or change scanner architecture to get past a guard.
+- Per-change provenance: file, changed line range or stable context, before/after, reason, linked event/lesson, dependency impact, test results. Root cause of the current pip error remains UNKNOWN.
+- Source completeness PARTIAL; do not merge to main without explicit permission.

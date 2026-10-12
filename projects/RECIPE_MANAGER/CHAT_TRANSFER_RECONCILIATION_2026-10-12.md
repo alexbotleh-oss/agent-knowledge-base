@@ -99,3 +99,65 @@ The actual tree at HEAD `2f056046946bf1e5a16f54e858f71e7ee8ebd49a` contains `LES
 
 ### Scope and completion
 Memory transfer only; no application/database changes and no APK build. Status remains PARTIAL. No merge into `main` is authorized.
+
+
+## Additional unique evidence — HTML/SQLite regressions and ingredient normalization (2026-10-12)
+
+The available current-chat segment includes later user-reported regressions not to be confused with the earlier September baseline event:
+- The latest HTML candidate no longer added recipes from DB and no longer displayed per-100g nutrition.
+- The user separately asked to restore recipe deletion and kcal/protein/fat/carbs display from the reference `index_db_path(5).html`.
+- Multiple HTML variants and `recipes(3).db` were attached/named in the source. Full inter-version diffs and an independently verified runtime result for the latest supplied file are not available here.
+- The reference HTML contains nutrition rendering and recipe deletion paths, but that fact does not prove these features worked in the later candidate.
+
+The user's explicit ingredient lookup contract:
+- `лук`, `белый лук`, `репчатый лук` → `репчатый лук`; `красный лук` and `зелёный лук` remain separate.
+- generic `рис` → long-grain rice; `рис для плова` and explicit parboiled rice → parboiled rice.
+- account for case, `ё/е`, word order, and grammatical endings; test `яйцо/яйца/яйцом` and forms of olive oil.
+- avoid false matches such as `рис` → `рисовая мука` or `рисовое масло`; show original recipe ingredient wording while using a normalized lookup key.
+
+The reports are captured as EVT-20261012-014 and prevention lesson L-RM-019. Root causes remain unknown and HTML behavior NOT VERIFIED. This update does not diagnose or modify the app.
+
+## Additional verification — this chat's final memory-transfer request (2026-10-12)
+
+The latest user request explicitly redirects work back to memory transfer and prohibits HTML/Android debugging or APK building in this task. The already-open Draft PR #16 is the canonical place for the current chat's HTML/SQLite regression evidence, so no duplicate event or second PR is needed unless new primary evidence appears.
+
+### What was verified during this continuation
+- The repository root and `core/guardrails.md`, `core/universal_instructions.md`, and `README.md` were read from `main`; the project-specific transfer files were read back from PR #16's head branch.
+- The actual `projects/RECIPE_MANAGER` tree on PR #16 contains `PROJECT_STATE.md`, `TASK_STATE.md`, `EVENT_LOG.md`, `DECISIONS.md`, `LESSONS.md`, `HANDOFF.md`, `events.jsonl`, `RECIPE_SEARCH_REQUIREMENTS.md`, `BUILD_PACKAGING_ATTEMPT_2026-09-22.md`, `CHAT_TRANSFER_RECONCILIATION_2026-10-12.md`, and `HTML_SQLITE_REGRESSION_2026-10-12.md`. It does **not** contain `lessons.jsonl`; do not generate it using an assumed schema.
+- `events.jsonl` has 15 records with unique IDs through `EVT-20261012-014`. `LESSONS.md` has L-RM-019. This chat's requirements and the user's reports are already represented; duplicating them would reduce chronology quality.
+- GitHub Actions validation run #61 for head `587eff3816652a661210bf9393c655103ff0d5d3` completed successfully: https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38278032266.
+- PR #16 is currently open as Draft and unmerged. No changes were made to the app, HTML candidates, SQLite product database, or APK in this continuation.
+
+### Remaining gaps
+- The full exported source conversation and original binary attachments for all previous HTML candidates are unavailable; source history stays PARTIAL.
+- Candidate-to-candidate diffs and independent browser/runtime/persistence evidence for the last HTML artifact are missing. The import, delete, edit, nutrition, and normalization behavior remains NOT VERIFIED.
+- The PR head/base relationships should remain explicit: #16 is a stacked PR based on #15's branch, not a direct-to-main PR. Keep it unmerged pending user review/permission.
+
+This is a source-coverage and verification note, not evidence that the application itself was repaired.
+
+
+## Additional evidence — Flet local-extension dependency gate (2026-10-12)
+
+### Confirmed by the latest user log
+- At about 19:49:53 the user ran `flet build apk --verbose` from `C:\RecipeManager_FIX_PLUS`.
+- Flet found the entrypoint, created the app shell, identified Flutter 3.44.8, JDK 17 and Android SDK, and started the `serious_python package` path.
+- Installation invoked `flet-barcode-scanner @ ./flet_barcode_scanner_ext` and pip aborted with `Invalid URL './flet_barcode_scanner_ext': No scheme supplied`.
+- No successful APK compilation or artifact verification appears in this log. Assistant admitted that actual extension installation was not tested before calling the package ready.
+
+### Facts versus hypotheses
+- The log does not prove the extension directory is missing or establish whether the cause is its structure, project manifest, path resolution or pip/packaging behavior. Root cause = UNKNOWN.
+- This is a dependency-packaging failure before confirmed APK; do not classify it as a device scanner runtime test.
+
+### User-required prevention
+1. Inventory all inputs and select the canonical source/baseline.
+2. Resolve direct and transitive local dependency/resource closure.
+3. Manifest added/changed/excluded files; any excluded required file blocks release.
+4. Read back the exact saved artifact; compare SHA-256, complete file tree and required hashes; check duplicate entrypoints/config files.
+5. Test actual downstream dependency installation/build consumer path. If not run, mark NOT VERIFIED and do not call the package build-ready.
+6. Any mandatory FAIL/BLOCKED means STOP; do an evidence-based minimal correction or ask the user for the exact missing input. Do not bypass controls by deleting dependencies or altering architecture.
+7. For every change log file path, line range/stable context, before/after, reason, related event/lesson, dependencies, and validation results.
+
+New records `EVT-20261012-015` and `L-RM-020` are a distinct follow-on to `EVT-20261012-012` / `L-RM-017`, not a replacement.
+
+### Scope and completeness
+Memory transfer only. No app code, extension or product database was changed and no APK was built in this task. Full chat export and exact persisted archive/directory are unavailable to this memory pass; status remains **PARTIAL**.
