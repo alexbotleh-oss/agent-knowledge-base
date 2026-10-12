@@ -48,12 +48,12 @@ This is a consolidated memory-only export of all project experience recoverable 
 - Other older RECIPE_MANAGER PRs remain open. This rollup does not merge, close or rewrite any source PR. Review consolidation before any merge.
 
 ## Validation checklist
-- [ ] Read back all newly created/updated files from this branch.
-- [ ] Parse every JSONL file and confirm unique event/lesson IDs within each project and global lesson store.
-- [ ] Verify event references in Markdown agree with events.jsonl; specifically EVT-017/018 are task-scope events, EVT-019 is PWA camera decode, L-RM-022 is camera decode, L-RM-023 is task boundary.
-- [ ] Check branch diff for intended memory/core docs only and zero application-code changes.
-- [ ] Check GitHub Actions on the exact final branch HEAD; earlier CI runs on source branches are not proof for this rollup.
-- [ ] Open a PR and leave it unmerged pending explicit user permission.
+- [x] Read back all 46 changed paths from this branch; each returned non-empty content.
+- [x] Parsed all six JSONL files: RECIPE_MANAGER events 26/26 unique; CARD111 events 6/6 and lessons 4/4 unique; ORGANISM events 7/7 and lessons 5/5 unique; global lessons 5/5 unique.
+- [x] Reconciled event/lesson ID collisions: EVT-20261012-017/018 are task-scope/transfer events, EVT-20261012-019 is PWA camera decode; L-RM-022 is camera decode, L-RM-023 is task boundary.
+- [x] Compared branch with main: 46 changed paths, all memory/core documentation; no app source, HTML/JS project code, databases, or APKs.
+- [ ] GitHub Actions for the exact final rollup HEAD must be checked after opening the PR; CI from source branches is not proof for this rollup.
+- [ ] Open a Draft PR and leave it unmerged pending explicit user permission.
 
 ## Known limitations
 - This rollup cannot recover raw chats that are not exposed in the current context or accessible repository branches.
