@@ -46,5 +46,5 @@
 - PC runtime: PASS по сообщению пользователя «запустилось» после `python .\main.py`.
 - APK package: PASS по логу `flet build apk`: «Successfully built your .apk for Android!» и копирование в `build\apk`.
 - Android navigation: FAIL — пользователь запустил APK 5 и сообщил, что внизу осталось шесть кнопок.
-- Build number: команда сообщила, что выставила 5, но содержимое `pyproject.toml) после записи не было независимо прочитано; отметка статуса — reported, not independently verified.
+- Build number: команда сообщила, что выставила 5, но содержимое `pyproject.toml` после записи не было независимо прочитано; отметка статуса — reported, not independently verified.
 - **Текущая memory-only задача:** перенести эти события и результаты в `agent-knowledge-base`; приложение не изменялось в ходе этого запроса и APK повторно не собирался.
