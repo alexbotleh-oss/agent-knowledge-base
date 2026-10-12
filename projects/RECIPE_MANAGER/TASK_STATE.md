@@ -105,3 +105,13 @@
 - **Статусная карта:** Build39 native scanner — USER-REPORTED PASS только для этого набора сценариев/версии; old WebView — FAIL/NOT VERIFIED; полная тема — FAIL/NOT VERIFIED; повторный скан воды без дублей — FAIL по пользовательскому сообщению; поиск/PDF — SPECIFIED, implementation NOT VERIFIED; полный архив чатов и бинарных источников — UNAVAILABLE.
 - **Проверки этой итерации:** read-back каждого изменённого файла; синтаксическая проверка JSONL и уникальности event IDs; проверка lesson ID; фактическое дерево; diff и CI.
 - **Полнота:** PARTIAL, не COMPLETE. Не сливать в main без явного разрешения.
+
+
+## Сверка переноса — 2026-10-12
+- **Активная задача:** перенос доступного опыта в `alexbotleh-oss/agent-knowledge-base`; приложение не отлаживать, код/БД не менять, APK не собирать.
+- **Точка продолжения:** `memory/recipe-manager-crosscutting-regressions-20261012`, создана поверх memory-ветки PR #14 (базовый commit `2f056046946bf1e5a16f54e858f71e7ee8ebd49a`).
+- **Уже перенесено, не дублировать:** EVT-20261012-010/011/012, L-RM-013..017 и `RECIPE_SEARCH_REQUIREMENTS.md`.
+- **Новая запись:** EVT-20261012-013/L-RM-018 отмечают факт сверки и структурный пробел: `LESSONS.md` присутствует, `lessons.jsonl` отсутствует вопреки старым ссылкам.
+- **Статусная карта:** native scanner Build39 — USER-REPORTED PASS только для этой версии; old WebView — FAIL/NOT VERIFIED; полная тема — FAIL/NOT VERIFIED; повторный скан воды без дублей — FAIL по пользовательскому сообщению; поиск/PDF — SPECIFIED, implementation NOT VERIFIED; полный архив чатов и бинарных источников — UNAVAILABLE.
+- **Проверки этой итерации:** read-back всех изменённых файлов; JSONL parse/уникальность event_id; проверка новых lesson ID; фактическое дерево; diff и CI.
+- **Полнота:** PARTIAL, не COMPLETE. Не сливать в main без явного разрешения.
