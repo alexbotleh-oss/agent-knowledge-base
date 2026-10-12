@@ -69,7 +69,7 @@ These are separate projects despite sharing a product name and recipe domain. Do
 - [x] Reconciled original event/lesson ID collisions: EVT-20261012-017/018 are task-scope/transfer events, EVT-20261012-019 is PWA camera decode; L-RM-022 is camera decode, L-RM-023 is task boundary.
 - [x] Compared original branch with main: 46 changed paths, all memory/core documentation; no app source, HTML/JS project code, databases, or APKs.
 - [x] Draft PR #22 remains open and unmerged: https://github.com/alexbotleh-oss/agent-knowledge-base/pull/22.
-- [x] GitHub Actions Validate knowledge base PASS on the current PR head `2d26c705c21890ed0673f32dc14f00ffbe7e168a`, run #103: https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38307344072.
+- [x] GitHub Actions Validate knowledge base passed on consolidation head `2d26c705c21890ed0673f32dc14f00ffbe7e168a`, run #103, and on subsequent coverage-update head `e0ba9626c3096df8589a9ca1251b7136e2387788`, run #104: https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38307427058. These results apply to their stated SHAs; check the latest head's run before merging.
 - [x] Moved clearly HTML/PWA-specific source events out of N99's event chain: early HTML/SQLite regressions, EVT-20261012-014, PWA Shopping/Products EVT-20261012-016 and browser camera decode EVT-20261012-019 now live under B77. Early September attribution to B77 remains medium confidence where the source conversation does not name the project.
 - [ ] Continue message-by-message review of remaining mixed N99/B77 conversations before treating the project histories as complete.
 
