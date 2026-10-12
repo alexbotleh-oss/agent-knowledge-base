@@ -78,3 +78,10 @@
 - **Recipe search/PDF import:** detailed in `RECIPE_SEARCH_REQUIREMENTS.md`. These are requirements, not implemented features. The requested interactive HTML workflow prototype was not created/verified in the available history.
 - **Scope:** memory transfer only. No app source/database was edited and no APK was built for this transfer.
 
+## Unique experience from the Build39–Build42 discussion (2026-10-12 transfer)
+- User-verified for Build39 only: native scanner scan/ask/add/edit/repeat-scan/automatic-increment flow worked according to user feedback.
+- Still unverified: legacy WebView white screen after engine switch; Build40 intended rollback to canonical old scanner HTML but lacks a successful device test; app-wide theme behavior across all menus and Android system chrome; repeat scan deduplication for water.
+- Observed failure: user reported three separate `Вода` entries after repeated scanning. Keep catalog inclusion, shopping exclusion, and repeat-scan identity resolution as separate requirements.
+- Process lesson from user: do not solve only the most visible widget; keep dependency/achievement markers and previous known-good baselines, inspect component/layer intersections, run full related regressions and re-check against the original request.
+- Search workflow requirements, including mandatory PDF import, are in `RECIPE_SEARCH_REQUIREMENTS.md`; this records desired behavior only, not implementation status.
+
