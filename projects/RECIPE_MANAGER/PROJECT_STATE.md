@@ -124,3 +124,12 @@ Events `EVT-20261012-010/011` and lessons `L-RM-013..016` preserve the newly rec
 - Ingredient matching requirements are listed in the new event and `HTML_SQLITE_REGRESSION_2026-10-12.md`; do not infer the code now implements them.
 - Source history remains PARTIAL: full chat export and all intermediate candidate diffs/runtime evidence are unavailable.
 - This memory-transfer task made no HTML/database/application changes and did not build an APK.
+
+
+## Memory-only status — package validation incident (2026-10-12)
+- Added `EVT-20261012-015` and `L-RM-020`.
+- User's Flet log fails during pip installation of local extension; no APK success. Assistant admits it called the archive ready without testing actual extension install through the Flet consumer path.
+- Related to but distinct from `EVT-20261012-012`; preserve both chronology entries.
+- Newly reinforced required controls: source/input inventory; dependency closure; exact artifact read-back; SHA/file-manifest comparison; include/exclude accounting; real consumer-path test; STOP on mandatory FAIL/BLOCKED; request missing source when unresolved; per-change file/line/context provenance.
+- Root cause UNKNOWN. No application source, extension, database or APK changed in this memory transfer.
+- Completeness remains PARTIAL because full chat export and complete binary/archive history are not available.
