@@ -68,3 +68,12 @@ The available chat fragment contains new material not recorded by the earlier pa
 
 These are recorded as EVT-20261012-010/011 and L-RM-013..016. Earlier HTML/SQLite, recipe import and Flet packaging facts were not duplicated. Exact intermediate-build diffs and the complete project chat export are still unavailable; the transfer remains PARTIAL.
 
+
+
+## Additional current-chat event — archive verification failure and user-approved canon (2026-10-12)
+
+A separate later archive failure is recorded as `EVT-20261012-012`, with preventative lesson `L-RM-017`. The assistant claimed the delivered Build43 archive had the local extension dependency fixed. Inspection of the delivered ZIP subsequently found `flet-barcode-scanner @ ./flet_barcode_scanner_ext` remained in its `pyproject.toml`. User then ran `flet build apk --verbose` from the copied project, and pip rejected that exact argument with `Invalid URL './flet_barcode_scanner_ext': No scheme supplied`.
+
+The user explicitly confirmed the mandatory prevention canon: verify the exact saved artifact after editing; inspect contents, dependencies, and the actual consumer chain before claiming success; when a user followed the instructions and gets the same issue, check the assistant's artifact/instructions first; each error must change the process so the same class of failure is caught earlier. This is confirmed process policy, not proof of an app fix.
+
+Scope unchanged: memory transfer only; app code/DB untouched, no APK build performed. Transfer stays PARTIAL because complete chat exports and all historic attachment bytes are unavailable.

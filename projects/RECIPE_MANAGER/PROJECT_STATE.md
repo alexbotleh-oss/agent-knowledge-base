@@ -99,3 +99,11 @@
 
 Events `EVT-20261012-010/011` and lessons `L-RM-013..016` preserve the newly reconciled details and process rule. No app test/build was run for this documentation-only continuation.
 
+
+
+## Memory transfer update — confirmed packaging/archive regression (2026-10-12)
+- New incident/canon is recorded as `EVT-20261012-012`; prevention lesson `L-RM-017`.
+- Confirmed from archived `pyproject.toml` inspection and user's build output: the artifact still supplied the relative extension path to pip, causing packaging failure before APK compilation.
+- Required future behavior: inspect exact persisted artifact, SHA/content/dependencies and the actual consumer command before claiming it fixed; state unverified runtime separately.
+- App code/build remains out of scope for this memory transfer.
+- Transfer completeness remains PARTIAL; full archive of all chats and all historic binary attachments unavailable.

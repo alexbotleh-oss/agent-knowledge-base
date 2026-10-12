@@ -86,3 +86,12 @@
 - **Validation required:** parse every non-empty `events.jsonl` line, verify unique event IDs and expected new records; read the modified documents back from GitHub; inspect PR diff and CI. The complete historical chat export and all original source attachments are not available, so this transfer cannot be labelled complete.
 - **Scope guard:** no app code/database change, no APK build, and no merge to `main` without explicit user approval.
 
+
+
+## Дополнение — проверка архива и передача опыта (2026-10-12)
+- **Активная задача:** продолжить memory-only перенос; не отлаживать приложение, не менять БД и не собирать APK.
+- **Новое событие:** EVT-20261012-012. Архив, объявленный исправленным, при фактической инспекции содержал старую относительную dependency, а лог Flet показал соответствующую ошибку pip.
+- **Новый урок:** L-RM-017 в LESSONS.md — конечный артефакт нужно перечитывать после сохранения и проверять вместе с реальным путём потребления.
+- **Проверка полноты:** существующие темы HTML/SQLite, сборка, навигация, scanner/theme/water и ингредиенты уже записаны в хронологии; эту новую ошибку добавлять как отдельное событие, потому что есть новый архив и прямой лог. Не заменять и не переписывать старые события.
+- **Проверки этой итерации:** перечитать все изменённые файлы через GitHub API; разобрать каждый непустой JSONL event; проверить уникальность ID; проверить diff и актуальный CI для коммита PR.
+- **Границы истории:** полная выгрузка чатов и всех первичных вложений по-прежнему отсутствует; статус PARTIAL.

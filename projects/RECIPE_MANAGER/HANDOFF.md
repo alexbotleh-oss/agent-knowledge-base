@@ -111,3 +111,12 @@ An additional build-attempt chain was saved as `BUILD_PACKAGING_ATTEMPT_2026-09-
 - Recipe search modes and the local-first/search/normalize/validate/add/ingredients/shopping/search-again pipeline, including PDF import, are specified in `RECIPE_SEARCH_REQUIREMENTS.md` but are **not verified as implemented**. The requested interactive HTML prototype is still uncreated/unverified.
 - **Source gaps:** full export of all project chats and all historic binaries/diffs/build logs is not available here. Keep memory status PARTIAL. Preserve hypotheses as hypotheses.
 
+
+
+## Handoff update — artifact-verification canon (2026-10-12)
+- **Current task:** memory transfer only into `agent-knowledge-base`; do not debug app or build APK.
+- **New event:** `EVT-20261012-012`; new process lesson: `L-RM-017`.
+- **Confirmed new failure:** the issued Build43 ZIP still held `flet-barcode-scanner @ ./flet_barcode_scanner_ext`; user’s actual Flet build log surfaced the same argument and pip rejected it with `Invalid URL ... No scheme supplied`.
+- **User-approved mandatory canon:** inspect the exact saved artifact after modification; validate dependencies and consumer path; do not ask user to repeat completed steps before checking own artifact/instructions; each failure must strengthen the preventive verification process.
+- **Not done in this memory-only task:** no app edit, no APK build, no new APK claim.
+- **Completeness:** PARTIAL because full historical chat export and all original attachment bytes/intermediate diffs are unavailable.
