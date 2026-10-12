@@ -61,3 +61,9 @@
 - **Причина:** UNKNOWN; доступная история не содержит полного diff и финального набора файлов.
 - **Правило:** проверять фактическую запись/повторное чтение БД, удаление, отображение КБЖУ и набор примеров ингредиентов с вариациями регистра/словоформ/порядка слов; сохранять исходную БД.
 - **Статус:** candidate, confidence medium. Не переносить причинные выводы на Android/Flet без доказательств.
+
+## L-RM-010 — User correction overrides an assistant's interpretation of UX
+- **Evidence:** HTML prototype iterations v18/v19; user explicitly corrected the assistant after it claimed category editing worked.
+- **Observed failure:** assistant implemented/explained a category model that the user still could not operate. User clarified the actual acceptance condition: classification selection must be exposed and functional during manual creation and/or as a working checkbox on the existing product.
+- **Rule:** when a user says the control does not work, do not restate intended behavior as a fix. Record the report as FAIL; identify the actual user control and persistence path; verify create → choose food/non-food → save → reload → test food-only/all-items views; then verify editing an existing item. Require observed evidence before marking PASS.
+- **Status:** candidate, project-specific; the causal code defect remains unknown because no successful runtime trace or current-file audit was completed here.

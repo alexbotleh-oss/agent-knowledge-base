@@ -84,3 +84,12 @@
 
 ### Граница текущей задачи
 Задача текущего чата — перенос опыта в agent-knowledge-base; изменения приложения и сборка APK не выполнялись. PR #6 остаётся без слияния. Не подменять задачу памяти новой отладкой Android.
+
+## Memory-only handoff — HTML category regression, 2026-10-12
+- **Current explicit request in this chat:** continue experience transfer to `agent-knowledge-base`; do not keep debugging the Android app, edit app code, or build an APK for this task.
+- **HTML macro-model status from latest user report:** expired items are now sorted to the top and grouping appeared; category assignment/reclassification still does not work as requested.
+- **User's actual acceptance condition:** manual add must allow choosing food/non-food (e.g. a household category), or an existing product row must expose a working checkbox/toggle to reclassify it. The user said this checkbox does not work. Do not infer the fix is complete from the assistant's v19 explanation.
+- **Files referenced but not runtime-revalidated here:** `Что_приготовить_v16.html`, `Что_приготовить_v17_core_aligned.html`, `Что_приготовить_v18_product_scope_fix.html`, `Что_приготовить_v19_category_edit.html`. v17 static checks were noted earlier, but Chromium UI runtime was blocked/hung in the earlier environment.
+- **Next step if the project debugging task is resumed later:** open exact v19 (and predecessor) and inspect the form field, persisted product classification field, edit control event wiring, and view filters. Add a behavioral test for manual creation and reclassification. Keep the product change separate from Android/Flet until approved HTML behavior is established.
+- **No app changes or APK builds were performed in this memory-transfer task.**
+- **History completeness:** partial. These findings come from this visible chat and attached screenshots/user reports; no full export of every message and all binary attachments was available.

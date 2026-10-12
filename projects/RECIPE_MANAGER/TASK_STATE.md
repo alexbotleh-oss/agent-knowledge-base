@@ -61,3 +61,9 @@
 - Источники: доступный контекст проекта и сообщения о вложениях/traceback; полный экспорт отсутствует.
 - Полнота: PARTIAL, не COMPLETE.
 - В рамках memory-only задачи приложение не изменялось и Android-сборка не выполнялась.
+
+## Separate memory-transfer task — HTML prototype experience (2026-10-12)
+- **Requested purpose:** transfer the experience from the current «Что приготовить» chat into `agent-knowledge-base`; this is not an instruction to continue application debugging in this turn.
+- **Outcome in scope:** preserve the chronology and failed attempt details for HTML versions v16–v19; record the true user acceptance requirement for food/non-food classification and the latest FAIL status.
+- **Not performed:** application code editing, HTML patching, APK packaging, Android device testing.
+- **Evidence limitation:** screenshots and direct user reports are available; a complete browser-runtime execution for v17 was blocked earlier, and there is no successful user report for v19 category editing.
