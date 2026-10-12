@@ -144,12 +144,13 @@ An additional build-attempt chain was saved as `BUILD_PACKAGING_ATTEMPT_2026-09-
 
 **Resume this memory-transfer task only.** Do not switch to HTML repair or Android/APK work under this task.
 
-- Canonical existing memory change: PR #16, branch `memory/recipe-manager-crosschat-html-db-kbju-20261012`, head `587eff3816652a661210bf9393c655103ff0d5d3`; Draft/open/unmerged.
-- Current chat's reported recipe DB-add and nutrition regressions and the missing deletion/KБЖУ functions are already recorded in `EVT-20261012-014`/`L-RM-019` and `HTML_SQLITE_REGRESSION_2026-10-12.md`. Do not duplicate.
-- CI: Validate knowledge base run #61 passed for that exact head. Re-check if any commit changes the branch.
-- Project tree contains `LESSONS.md`, not `lessons.jsonl`; don't invent or reconstruct the absent JSONL without historical evidence/schema.
-- The source remains partial: full exported chats, all candidate binaries and complete inter-version diffs/runtime traces are not available. Do not mark HTML functionality as fixed.
-- Before any future merge, wait for explicit user approval. No app/DB changes or APK build were made for this task.
+- Canonical memory change remains PR #16, branch `memory/recipe-manager-crosschat-html-db-kbju-20261012`, current head `41ebf992ea58f7d5905e84aaf5afe31903367f87`; Draft/open/unmerged. PR body was refreshed after the latest memory commit.
+- Current chat's reported recipe DB-add and nutrition regressions and missing deletion/KБЖУ functions are recorded in `EVT-20261012-014`/`L-RM-019` and `HTML_SQLITE_REGRESSION_2026-10-12.md`; do not duplicate them.
+- New Flet package verification episode is recorded as `EVT-20261012-015` and preventive lesson `L-RM-020`; keep separate from earlier `EVT-20261012-012`/`L-RM-017`.
+- Validation run #66 passed for exact code HEAD `41ebf992ea58f7d5905e84aaf5afe31903367f87`: https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38281826996.
+- Project tree contains `LESSONS.md`, not `lessons.jsonl`; do not invent or reconstruct the absent JSONL without historical evidence/schema.
+- Source remains partial: full exported chats, all candidate binaries and complete inter-version diffs/runtime traces are not available. Do not mark application functionality fixed from source inspection alone.
+- Before any future merge, wait for explicit user approval. No app/DB/extension changes or APK build were made under this memory-transfer task.
 
 
 ## Handoff continuation — package gate and change provenance (2026-10-12)
