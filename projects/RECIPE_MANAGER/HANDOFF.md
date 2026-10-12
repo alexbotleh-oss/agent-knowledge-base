@@ -139,3 +139,14 @@ An additional build-attempt chain was saved as `BUILD_PACKAGING_ATTEMPT_2026-09-
 - User normalization contract: generic/white/bulb onion → bulb onion; red/green onion remain distinct; generic rice → long-grain; pilaf/parboiled rice → parboiled; normalize case, ё/е, grammatical cases and word order without false matches against rice flour/oil. Preserve display text separate from pantry lookup key.
 - Do not state that a candidate is fixed based only on syntax or static source inspection. Report artifact read-back, runtime, and persistence separately.
 - Source completeness remains **PARTIAL**: no complete project chat export, exact diffs between every HTML variant, or independent runtime/persistence evidence for the last link is available.
+
+## Memory-transfer handoff — after PR #16 validation (2026-10-12)
+
+**Resume this memory-transfer task only.** Do not switch to HTML repair or Android/APK work under this task.
+
+- Canonical existing memory change: PR #16, branch `memory/recipe-manager-crosschat-html-db-kbju-20261012`, head `587eff3816652a661210bf9393c655103ff0d5d3`; Draft/open/unmerged.
+- Current chat's reported recipe DB-add and nutrition regressions and the missing deletion/KБЖУ functions are already recorded in `EVT-20261012-014`/`L-RM-019` and `HTML_SQLITE_REGRESSION_2026-10-12.md`. Do not duplicate.
+- CI: Validate knowledge base run #61 passed for that exact head. Re-check if any commit changes the branch.
+- Project tree contains `LESSONS.md`, not `lessons.jsonl`; don't invent or reconstruct the absent JSONL without historical evidence/schema.
+- The source remains partial: full exported chats, all candidate binaries and complete inter-version diffs/runtime traces are not available. Do not mark HTML functionality as fixed.
+- Before any future merge, wait for explicit user approval. No app/DB changes or APK build were made for this task.
