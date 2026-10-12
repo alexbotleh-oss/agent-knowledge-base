@@ -2,6 +2,29 @@
 
 This is a partial reconstruction from Git history, the B77 continuity report, and user statements. The date a record is added to memory is not treated as the date its event occurred. Times below are GitHub commit timestamps (UTC) when available; they describe commit order, not necessarily the full order of work or when a change was first attempted.
 
+## 2026-09-22 — Earlier HTML/SQLite regression history recovered from source archive
+
+### EVT-B77-20260922-001 — Ingredient normalization and database access
+- **Source conversations:** `Нормализация ингредиентов` (`6ab2bc6a-1e38-83ed-9cd7-dec0af9324aa`) and `Исправление логики продуктов` (`6ab2c00e-82b8-83eb-afae-c73d36ece59c`).
+- **Observed:** user specified ingredient equivalence/canonicalization rules and reported false product matches; later reported broken database access and asked to follow `index_db_path.html`.
+- **Status:** user requirements and symptoms confirmed from raw source messages; implementation outcome and root cause unknown.
+- **Confidence:** high that these are HTML-contour events; medium that the individual September 22 conversations specifically belong to B77 because those chat titles/messages do not all name B77. User's explicit later boundary identifies B77 as the separate HTML/WMA project.
+
+### EVT-B77-20260922-002 — Recipe-list, nutrition and deletion regression
+- **Source conversations:** `Продолжение разговора` (`6ab2cc8d-6770-83ed-b215-496904f80b77`) and `Восстановление файлов чата` (`6ab2ce9f-df74-83eb-9412-8bf2174dca04`).
+- **Observed:** user reported recipe list no longer populating after database additions, then reported loss of recipe import, kcal/100 g and BJU display, and recipe deletion.
+- **Status:** reported symptoms confirmed; root cause, exact candidate diff and final fix unknown.
+- **Confidence:** high for HTML-contour attribution; medium for exact B77 attribution.
+
+### EVT-B77-20260922-003 — Recipe deletion and Shopping-to-Products flow
+- **Source conversation:** `Обновление рецептов и покупок` (`6ab2de4d-12f0-83ed-be6e-6212b0fdf4ad`).
+- **Observed:** user requested delete-one/delete-all recipes, marking purchased entries in a shopping-list file and returning status to Products; added flour/butter/salt equivalence requirements.
+- **Status:** requirement confirmed; implementation and persistence unverified.
+- **Confidence:** high for HTML-contour attribution; medium for exact B77 attribution.
+
+Full source-based details: `projects/B77_HTML_PWA/HTML_SQLITE_REGRESSION_2026-09-22.md`.
+
+
 ## 2026-10-05 — verified baseline and scanner iterations
 
 ### EVT-B77-20261005-001 — Stage14 baseline
