@@ -144,10 +144,10 @@ An additional build-attempt chain was saved as `BUILD_PACKAGING_ATTEMPT_2026-09-
 
 **Resume this memory-transfer task only.** Do not switch to HTML repair or Android/APK work under this task.
 
-- Canonical memory change remains PR #16, branch `memory/recipe-manager-crosschat-html-db-kbju-20261012`, current head `41ebf992ea58f7d5905e84aaf5afe31903367f87`; Draft/open/unmerged. PR body was refreshed after the latest memory commit.
+- Canonical memory change remains PR #16, branch `memory/recipe-manager-crosschat-html-db-kbju-20261012`; Draft/open/unmerged. At the next handoff, retrieve the live head from PR metadata rather than pinning a self-referential SHA in this file.
 - Current chat's reported recipe DB-add and nutrition regressions and missing deletion/KБЖУ functions are recorded in `EVT-20261012-014`/`L-RM-019` and `HTML_SQLITE_REGRESSION_2026-10-12.md`; do not duplicate them.
 - New Flet package verification episode is recorded as `EVT-20261012-015` and preventive lesson `L-RM-020`; keep separate from earlier `EVT-20261012-012`/`L-RM-017`.
-- Validation run #66 passed for exact code HEAD `41ebf992ea58f7d5905e84aaf5afe31903367f87`: https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38281826996.
+- The knowledge-base validation workflow passed after the previous memory update: https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38282528702. Always match CI to the live branch head before relying on it for a later change.
 - Project tree contains `LESSONS.md`, not `lessons.jsonl`; do not invent or reconstruct the absent JSONL without historical evidence/schema.
 - Source remains partial: full exported chats, all candidate binaries and complete inter-version diffs/runtime traces are not available. Do not mark application functionality fixed from source inspection alone.
 - Before any future merge, wait for explicit user approval. No app/DB/extension changes or APK build were made under this memory-transfer task.
