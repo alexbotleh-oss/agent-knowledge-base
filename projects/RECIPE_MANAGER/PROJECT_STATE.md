@@ -134,6 +134,14 @@ Events `EVT-20261012-010/011` and lessons `L-RM-013..016` preserve the newly rec
 - Root cause UNKNOWN. No application source, extension, database or APK changed in this memory transfer.
 - Completeness remains PARTIAL because full chat export and complete binary/archive history are not available.
 
+## Memory-transfer continuation — Stage14 recipe-manager HTML/PWA and scanner boundary (2026-10-12)
+- **Current task for this branch:** memory-only transfer. Do not continue app debugging, edit HTML/JS/DB, or build APK in this task.
+- **Source distinction:** Stage14 is a UI/mechanics reference; its six recipe-card names/data are generated placeholders. User clarified that actual recipe content should come from v21 (web-derived data). Do not use the generated Stage14 card labels as canonical recipe semantics.
+- **Confirmed Stage14 interaction tests from prior user responses:** product-context-menu actions work after the event-handler fix; Shopping interactions, recipe long-press/context menu, and swipe navigation were reported working on the verified Stage14 candidate. The exact immutable local snapshot was documented with SHA-256 `a535f15973fc5d8672654296824d89c7aa3958901882af6ff45cd63ae26cd387`; the later remote main camera patch is a separate artifact and must not be treated as covered by that earlier E3 confirmation.
+- **Camera attempt status:** user reported on the live HTTPS/PWA page that it requested camera permission and showed an image, but presenting a code did not result in recognition and the camera kept running. Camera permission and video display are confirmed; decoding and stop-on-detection are FAIL/UNVERIFIED. Exact failure point is unknown because no camera diagnostic export or decode trace was captured. No fix is established.
+- **Known diagnostic exploration:** local Android `content://` variants V5–V9 loaded quickly and reported no JS exceptions; diagnostic logs showed one active home screen. Tailwind toggling and Service Worker off/on did not establish a cause. This was not proof of camera decode correctness. Next step in any separate authorized debugging task: capture the actual HTTPS page's camera diagnostics and inspect `BarcodeDetector` support/formats, detected-result count/rawValue and error events before changing code.
+- **History completeness:** PARTIAL. All original intermediate HTML candidates/diffs and full chat export are not available in this transfer. Preserve this as an additional chronological fact; don't replace earlier core30–34 events.
+
 ## Memory-transfer update — PWA Products/Shopping interaction regression (2026-10-12)
 
 - **Confirmed user report:** after filtering Shopping, unit labels appeared in Latin; the user confirmed core32 corrected the labels in the demonstrated scenario. No claim is made for all unit cases.
@@ -141,3 +149,9 @@ Events `EVT-20261012-010/011` and lessons `L-RM-013..016` preserve the newly rec
 - **Root cause:** UNKNOWN. No runtime event trace or code diagnosis was performed in this memory-only task.
 - **State:** Shopping display fix = USER-CONFIRMED for shown scenario; Products selection = FAIL; cause = UNKNOWN.
 - **Scope:** memory transfer only; no PWA/HTML/JS/database change and no APK build.
+
+## Stage14 HTTPS/PWA camera — transfer status (2026-10-12)
+- Latest direct report now recorded as `EVT-20261012-017`, process lesson `L-RM-022`.
+- User confirmed camera permission and live video; presenting a code produced no recognition and the camera continued running. Detection = FAIL for this attempt; stop-after-success = NOT VERIFIED; root cause UNKNOWN.
+- Do not conflate this with Android Build39 scanner evidence or core33/core34 Products selection failure. Earlier Stage14 interactions were confirmed on a pre-camera candidate only.
+- No application code or APK changed in this memory task; full history remains PARTIAL.

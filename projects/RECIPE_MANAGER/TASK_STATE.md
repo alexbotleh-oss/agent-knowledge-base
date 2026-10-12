@@ -142,6 +142,15 @@
 - Root cause of pip's relative URL failure remains UNKNOWN; the log does not prove the extension directory is absent.
 - Memory only: no application/extension/database change and no APK build. Source transfer remains PARTIAL.
 
+## Memory-transfer continuation — Stage14 camera diagnostic status (2026-10-12)
+- **Active task:** transfer available chat experience to `agent-knowledge-base`; no app debugging/code/HTML/DB edits or APK build.
+- **New confirmed user observation to preserve:** the live HTTPS/PWA camera prompt was granted and video appeared; when a code was presented, it was not recognized and camera kept running.
+- **Facts / status:** permission and video stream = USER-CONFIRMED PASS; barcode/QR decoding = FAIL in the observed attempt; stop-on-code = NOT REACHED/NOT VERIFIED because no successful decode event was recorded; exact root cause = UNKNOWN.
+- **Hypotheses only:** unsupported/unavailable detector, unsupported code format, frame/decode loop issue, or result handling. Do not promote these possibilities to findings without diagnostic log.
+- **Previous successful baseline scope:** Stage14 product-menu event fix and user-confirmed Shopping/recipe long-press/swipe behavior do not validate the subsequently added camera extension.
+- **No corrective patch was made in response to this failure in this memory-transfer task.**
+- **Remaining source gap:** the user did not provide/export camera diagnostic JSON from the mobile HTTPS session; full chat history and all exact intermediate HTML files remain unavailable.
+
 ## Memory-transfer continuation — PWA Products/Shopping regressions (2026-10-12)
 
 - **Активная задача:** только перенос доступного опыта в agent-knowledge-base; не отлаживать приложение, не менять HTML/JS/БД, не собирать APK.
@@ -151,3 +160,7 @@
 - **Пробелы:** полный экспорт чатов, доступность всех HTML-кандидатов и полный diff core30–core34 не подтверждены; причины UI failure нет.
 - **Область:** app code, HTML, database не изменялись; APK не собирался.
 - **Перед закрытием:** перечитать точные файлы, проверить JSONL parse и уникальность ID, event/lesson ID, changed paths/diff и CI на текущем HEAD. PR оставить неслитым без явного разрешения.
+
+### Memory continuation — HTTPS/PWA camera event
+- App behavior is only recorded as evidence; no app debugging occurs under this task. Event `EVT-20261012-017` and lesson `L-RM-022` distinguish successful video from failed recognition.
+- Diagnostic JSON/source export for the deployed mobile page is unavailable; root cause UNKNOWN. Full chat and all HTML candidate diffs remain absent.

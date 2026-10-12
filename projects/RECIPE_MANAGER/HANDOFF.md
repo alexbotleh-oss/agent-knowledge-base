@@ -162,6 +162,15 @@ An additional build-attempt chain was saved as `BUILD_PACKAGING_ATTEMPT_2026-09-
 - Per-change provenance: file, changed line range or stable context, before/after, reason, linked event/lesson, dependency impact, test results. Root cause of the current pip error remains UNKNOWN.
 - Source completeness PARTIAL; do not merge to main without explicit permission.
 
+## Handoff continuation — Stage14 HTML/PWA camera not decoding (2026-10-12)
+- Resume the **memory transfer task**, not app debugging. No HTML/JS/DB change and no APK build in the current task.
+- New observation: user tested the mobile HTTPS/PWA camera patch; permission request succeeded and video appeared, but after presenting a code, it was not recognized and the camera continued running.
+- State split: camera permission/video = confirmed; detector/decode = observed FAIL; stop after recognition = not exercised; root cause UNKNOWN. No camera diagnostic JSON or console/event trace is available.
+- In a separate authorized UI-debugging task, request/inspect the diagnostic export from the exact deployed page, check API support and formats, `detect()` calls/result length/rawValue/errors, then patch only the proven failure point. Don't assume the stop method is defective when no detection occurred.
+- Stage14 earlier user-confirmed product menu, Shopping, recipe long-press and swipe behavior remains scoped to the prior pre-camera artifact; don't transfer that success to the camera-enabled artifact.
+- Source remains PARTIAL; full chat export and all candidate diffs/binaries were not available.
+- Do not merge to `main` without explicit user approval.
+
 ## Handoff continuation — PWA Products/Shopping report (2026-10-12)
 
 - Continue memory transfer to agent-knowledge-base only under this task. Do not patch HTML/JS or build APK.
@@ -171,3 +180,7 @@ An additional build-attempt chain was saved as `BUILD_PACKAGING_ATTEMPT_2026-09-
 - In a separate authorized UI task, trace the exact delivered artifact's event path UI → handler → state → filter/sort → render and run runtime interaction/regression checks. Do not add another listener by guesswork.
 - Source completeness remains PARTIAL; full export and complete core30–core34 diffs are not verified available.
 - Do not merge into main without explicit user permission.
+
+## Handoff — latest camera observation (2026-10-12)
+- Newly indexed: `EVT-20261012-017`, `L-RM-022`. The live HTTPS camera permission/video succeeded but the displayed code was not recognized; no decode trace is available, so root cause is UNKNOWN.
+- Continue memory verification only. If separately authorized to debug app, capture diagnostic export first; don't patch blindly. No app/HTML/DB edit and no APK build in this transfer.
