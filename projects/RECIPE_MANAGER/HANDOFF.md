@@ -150,3 +150,13 @@ An additional build-attempt chain was saved as `BUILD_PACKAGING_ATTEMPT_2026-09-
 - Project tree contains `LESSONS.md`, not `lessons.jsonl`; don't invent or reconstruct the absent JSONL without historical evidence/schema.
 - The source remains partial: full exported chats, all candidate binaries and complete inter-version diffs/runtime traces are not available. Do not mark HTML functionality as fixed.
 - Before any future merge, wait for explicit user approval. No app/DB changes or APK build were made for this task.
+
+
+## Handoff continuation — package gate and change provenance (2026-10-12)
+- Continue memory transfer only; do not debug app/build APK under this task.
+- New `EVT-20261012-015` and `L-RM-020`, related to `EVT-20261012-012` / `L-RM-017`.
+- Confirmed log: Flet found entrypoint and toolchain but pip stopped on `flet-barcode-scanner @ ./flet_barcode_scanner_ext` with `Invalid URL ... No scheme supplied`. APK success is NOT CONFIRMED.
+- Required gate: inventory inputs/baseline; resolve direct and transitive dependency closure; log included, changed, excluded files; compare source/staging; reread exact artifact; check SHA-256/tree/required files/duplicates; test actual downstream installer/build consumer; state PASS/FAIL/NOT RUN for each stage.
+- STOP on any required FAIL/BLOCKED. If no safe evidence-based fix or material missing, identify exact blocker and ask user. Never remove dependencies or change scanner architecture to get past a guard.
+- Per-change provenance: file, changed line range or stable context, before/after, reason, linked event/lesson, dependency impact, test results. Root cause of the current pip error remains UNKNOWN.
+- Source completeness PARTIAL; do not merge to main without explicit permission.
