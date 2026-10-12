@@ -189,7 +189,7 @@ Memory-only; no PWA/HTML/JS/application database modification and no APK build. 
 
 ### Confirmed
 - The user explicitly redirected the active work to transfer of experience into `alexbotleh-oss/agent-knowledge-base`; app debugging and APK build were forbidden in this task.
-- The assistant briefly drifted to an unrelated application audit; the user corrected this. This process event is stored as EVT-20261012-017 and the continuation as EVT-20261012-018, with lesson L-RM-022.
+- The assistant briefly drifted to an unrelated application audit; the user corrected this. The process event is EVT-20261012-017, continuation is EVT-20261012-018, and the task-boundary lesson is L-RM-023.
 - The existing PWA result/failure details are already recorded in EVT-20261012-016/L-RM-021 and are not duplicated.
 - The separate memory branch is `memory/recipe-manager-current-chat-reconciliation-20261012`, based on the previous memory continuation.
 
@@ -204,14 +204,14 @@ Memory only. No application source, HTML/JS or SQLite product DB changed; no APK
 
 - Exact checked head: `ef00acd23c7170fb94d35cc1c4e346c21de0eab8` on `memory/recipe-manager-current-chat-reconciliation-20261012`.
 - CI Validate knowledge base PASS (run #76): https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38296083071.
-- `events.jsonl`: 19 non-empty lines, 19 JSON parses, 19 unique event IDs, no duplicates; EVT-20261012-017 and EVT-20261012-018 each once. `LESSONS.md` contains L-RM-022.
+- `events.jsonl`: 20 non-empty lines, 20 JSON parses, 20 unique event IDs, no duplicates; EVT-20261012-017/018/019 each once. `LESSONS.md` contains L-RM-022.
 - Branch compare against parent `b4fbbe90c5fa22368f54ea8e68a9929f0164635d`: ten commits ahead; seven changed files, all within `projects/RECIPE_MANAGER/`; no deleted paths.
 - PR #20 remains Draft and unmerged; no merge to `main` without explicit user approval.
 - **Completeness PARTIAL:** no full export of all relevant chats, all original binary attachments, or full candidate-to-candidate diffs/runtime logs. This PR preserves accessible history, not a claim of exhaustive recovery.
 - Scope boundary: memory/docs only; no application code, HTML/JS, database changes, or APK build.
 
 ## Consolidated branch audit — 2026-10-12
-- The rollup uses the current accessible RECIPE_MANAGER memory from PR #20 and cross-checks parallel PR #19. EVT-20261012-017 is preserved as the HTTPS/PWA camera decode failure and added to EVENT_LOG.md; EVT-20261012-018 remains the separate task-scope incident.
+- The rollup uses the current accessible RECIPE_MANAGER memory from PR #20 and cross-checks parallel PR #19. EVT-20261012-019 is preserved as the HTTPS/PWA camera decode failure and added to EVENT_LOG.md; EVT-20261012-017/018 remain the separate task-scope/transfer events.
 - L-RM-022 collided across the two source PRs. This branch assigns L-RM-022 to camera/decode and renames the task-scope lesson L-RM-023. No source PR was rewritten.
 - events.jsonl contains 19 valid unique event IDs. EVT-20261012-007 is not present in the available source sequence; the gap is unresolved and is not filled by invention.
 - Completeness remains PARTIAL: complete raw chat export, all binary attachments, exact inter-version diffs and some device/runtime logs are unavailable.
