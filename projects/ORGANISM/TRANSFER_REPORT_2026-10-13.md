@@ -23,3 +23,14 @@ No attempt was made to copy ORGANISM source code or the whole app into the memor
 - Run the repository's documented memory validator and unit tests if accessible via connector or local source; if unavailable, record BLOCKED, not PASS.
 - Verify branch and exact commit URLs.
 - Do not merge this branch to main.
+
+
+## Addendum: OAuth return-flow symptom from later message (2026-10-13)
+
+The user supplied a new screenshot and clarified that auth.openai.com stays on a spinner after consent and does not return automatically to ORGANISM; manually switching back makes the app show connected. This is a distinct event from the earlier 2026-10-10 DNS failure and the separate usage-limit error.
+
+Verified source on fix/oauth-diagnostic-trace-20261009 has AuthTrace and a Settings trace viewer. MainActivity.signIn() binds a loopback HTTP server, launches the provider authorization page, waits up to 120 seconds, checks state/code, exchanges the code, validates ID token/scope and persists credentials with trace markers. Branch HEAD at inspection: 2f67f6b817b065acaa8b9f4bd0e0a77e6b73d7ce; file blob IDs recorded in SOURCES.jsonl. The manifest has no custom callback-scheme filter in this branch; callback handoff uses a local HTTP page plus intent link.
+
+Causality is unknown until a fresh device trace is collected. Use the final stage to localize the issue; do not infer callback success from the app status alone. The usage-limit message is independent and must not be bypassed.
+
+Coverage remains PARTIAL: this is extracted from available chat context, one screenshot, selected project records and live source reads, not a complete raw-chat export. No code changes, build, device trace capture or OAuth fix were performed in this memory transfer. No user data was changed. Do not merge this branch to main.
