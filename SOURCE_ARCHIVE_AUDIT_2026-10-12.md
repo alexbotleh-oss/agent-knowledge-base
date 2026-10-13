@@ -71,3 +71,13 @@ The raw export contains additional CARD111 source messages dated October 5–6 t
 3. Continue checking for additional B77 event gaps. The nine narrative-only event IDs have been reconciled, and five more distinct October 3–5 B77 incident chains were added from raw user messages with conversation/message IDs. Any further additions must retain explicit confidence and attribution notes.
 4. The supplied archive count is now directly verified: 37 conversation objects and 10,034 distinct message IDs. The older “74 chats / 10,034 messages” note is not supported by the inspected archive or the supplied report text; its origin remains unresolved, so retain it as an unverified historical count rather than using it as the current archive count. Obtain `chat.html` and selected original attachment bytes if their content is needed for a deeper audit.
 5. Re-run validation after any changes and confirm the exact PR head/CI result. Keep PR #22 draft and unmerged until the user explicitly authorizes merging.
+
+
+## Bounded N99/B77 ownership recheck — 2026-10-13
+
+- Re-read the canonical B77 structured records and event log for `EVT-B77-20260922-001/002` and `EVT-20261012-014/016/019`, plus the legacy RECIPE_MANAGER HTML/SQLite pointer.
+- **Confirmed boundary:** September 22 ingredient-normalization, SQLite/database-path, recipe-list/import, nutrition and deletion reports are HTML-contour evidence. Exact B77 ownership for the two September source conversations remains **medium confidence** because those conversations do not explicitly name B77.
+- **Confirmed canonical location:** later HTML/PWA events `EVT-20261012-014/016/019` are stored in B77's `events.jsonl` and `EVENT_LOG.md`. The RECIPE_MANAGER `HTML_SQLITE_REGRESSION_2026-10-12.md` is only a cross-project navigation pointer, not a second canonical event chain.
+- **Provenance retained:** the later events point to the available user reports, named HTML candidates, SQLite artifact references and/or the explicit user task boundary. They do not claim the original attachment bytes or full candidate diffs were re-inspected in this pass.
+- **Not established:** no root cause for ingredient matching, database access, missing nutrition/deletion, Products category/sort, or HTTPS camera decode was inferred. Runtime acceptance of the candidate HTML files remains unverified.
+- This bounded pass resolves the current memory-location/ownership check for these named events; it does not complete message-by-message reconciliation of all mixed N99/B77 conversations or make source completeness COMPLETE.
