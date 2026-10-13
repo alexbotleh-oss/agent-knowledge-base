@@ -13,3 +13,9 @@
 - **Проверки, которые были сообщены:** статические JS/source checks для части коммитов; E3 phone validation явно не выполнялась в одной из ранних итераций. Текущая публикация и runtime не проверялись в этой задаче.
 - **Критерий завершения разработки (не экспорта):** проверить на реальном опубликованном приложении add/edit/template flow, live preview, crop/position, gallery import, scanner, barcode/QR readability, сохранность карт и данных.
 - **Пробелы:** нет полного исходного чата, полного diff всех коммитов, логов устройства и независимой проверки Pages deployment.
+
+
+### Raw-source reconciliation progress — 2026-10-13
+- Added nine structured CARD111 events for 2026-10-05/06 based on source conversation IDs and message IDs; see EVENT_LOG.md and events.jsonl.
+- Added lessons L-CARD111-005 (storage read errors must not appear as an empty wallet) and L-CARD111-006 (preserve symbology with decoded value).
+- **Remaining:** verify whether the raw source reports additional CARD111 incidents not yet represented; compare all candidate/restore commits and published Pages state only if the original artifacts are available. This is not an application implementation task.
