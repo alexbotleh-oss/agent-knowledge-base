@@ -190,6 +190,13 @@ Provenance: поздно перенесено из PR #17 как историч�
 - **Текущий статус:** подтверждена историческая постановка задачи; факт полной реализации/проверки HTML-макета не подтверждён. Более поздний DEC-RM-001 от 2026-10-12 задаёт отладку Android как ближайший приоритет.
 
 
+## 2026-10-12 — Общий Flet UI и платформенные различия
+- **Событие:** `EVT-20261012-007`; восстановлено из открытого Draft PR #8 (`handoff/recipe-manager-ui-platform-memory-20261012`), который содержал структурированную запись и кандидатный урок.
+- **Наблюдение:** исторический `main(9).py` показывал выбор шести destinations на ПК и пяти на Android/iOS, а NavigationBar оставался светлым даже при DARK. Позднейшие сведения об общем UI Design System, теме и Clipboard взяты из сохранённой сводки, а не из свежего сравнения текущего исходника.
+- **Риск:** общие цвета, размеры и компоненты потенциально влияют на обе платформы. Фактическая регрессия ПК не подтверждена.
+- **Проверка:** перед будущей UI-правкой получить актуальный исходник и проверить ПК/Android отдельно; в текущей задаче приложение не менялось и APK не собирался.
+- **Происхождение/ограничение:** первичное сообщение 2026-10-12 отсутствует в проверенном raw ZIP; запись сохранена как partial, confidence medium, по содержимому PR #8 и отчёта об извлечении.
+
 ## Structured-event traceability reconciliation — 2026-10-13
 
 A comparison of the current canonical `events.jsonl` against this narrative log found 24 valid, uniquely identified RECIPE_MANAGER event records. Fourteen have dedicated dated/event sections; ten records do not have their own standalone heading. This is a narrative-index gap, not proof that their structured records are missing. To make the links auditable without copying full event payloads or creating new events, the following index points to the existing record meanings:
