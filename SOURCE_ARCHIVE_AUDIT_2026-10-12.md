@@ -53,5 +53,5 @@ These are separate project identities despite the shared product name and overla
 1. Reconcile each event in `projects/RECIPE_MANAGER/events.jsonl` against the actual user-message evidence, especially HTML/SQLite entries.
 2. Review mixed N99/B77 conversations message-by-message and attach the original conversation ID/title/timestamp to each imported event.
 3. Add earlier B77 HTML events only with explicit confidence and attribution notes.
-4. Manifest and asset index have now been inspected. Continue reconciling the 37-conversation count against the 74-chat note; obtain `chat.html` and selected original attachment bytes if their content is needed for a deeper audit.
+4. The supplied archive count is now directly verified: 37 conversation objects and 10,034 distinct message IDs. The older “74 chats / 10,034 messages” note is not supported by the inspected archive or the supplied report text; its origin remains unresolved, so retain it as an unverified historical count rather than using it as the current archive count. Obtain `chat.html` and selected original attachment bytes if their content is needed for a deeper audit.
 5. Re-run validation after any changes and confirm the exact PR head/CI result. Keep PR #22 draft and unmerged until the user explicitly authorizes merging.
