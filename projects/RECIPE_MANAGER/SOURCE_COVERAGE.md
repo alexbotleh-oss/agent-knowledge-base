@@ -28,3 +28,7 @@
 4. EVT-20261012-007 отсутствует в доступной последовательности событий; это пробел нумерации, не доказательство потери записи.
 5. Исходные PR #17/#19/#20/#21 остаются открытыми и не переписаны; этот rollup — отдельная консолидированная ветка.
 - **Structured lessons gap:** the consolidated RECIPE_MANAGER chain keeps LESSONS.md as the canonical human-readable lesson index. No lessons.jsonl was synthesized: older branches disagree about its presence/content, and generating 24 structured records from summaries without a source-aligned mapping would create unsupported precision. This is an explicit gap for a later schema-backed conversion.
+
+## Additional raw-source requirement — 2026-10-02
+- EVT-RM-20261002-001 records the user's report that an already saved product expiry date could not be edited and the proposal to move Add Product above the list.
+- This is a user-reported gap and proposed UI change; earlier acceptance status and the current data model have not been verified. Do not treat it as a settled implementation decision.
