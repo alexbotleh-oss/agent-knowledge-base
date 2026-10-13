@@ -238,3 +238,11 @@ No other PR #8 lesson payload was found to be absent after these mappings. The P
 Live GitHub recheck: PR #22 is still Draft/open/unmerged against `main`; its exact HEAD is `e3557497f757b8377a4c01a5e7d1f7ab4fbbafba`, with 60 changed paths. The compare API reports 263 commits ahead and 0 behind. GitHub Actions `Validate knowledge base` passed on this exact HEAD, run #38364347001: https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38364347001.
 
 The 60 paths were fetched and scope-reviewed in bounded batches. This does not mean every sentence has been semantically matched against every primary message or binary attachment. The remaining source-to-memory comparison is still PARTIAL. The latest PR #21 lesson reconciliation added B77-L-011 and B77-L-012, and corrected the B77 EVT-20261012-014 lesson references; these changes are included in the successful HEAD above.
+
+## Recheck after lesson reconciliation — 2026-10-13 07:43 UTC
+
+Live branch ref currently resolves to eca56274378f54dfecedb52d301cce7e0b5c65f7. GitHub compare reports 266 commits ahead of main, 0 behind, and 60 changed paths. PR #22 remains Draft/open/unmerged.
+
+CI status is recorded precisely: run #38364347001 passed on exact branch head e3557497f757b8377a4c01a5e7d1f7ab4fbbafba. A later completed run #38364455942 reports success for SHA 82b96bc5ee29ca6d65ebd7322cb4f9ca0bcc450f, which did not match the branch ref when rechecked. Therefore the current branch head eca56274378f54dfecedb52d301cce7e0b5c65f7 does not yet have an independently confirmed matching CI result in this read-back. Do not represent a different SHA's successful run as proof for this head.
+
+The latest source-memory additions (B77-L-011/012, RECIPE_MANAGER cross-pointers, corrected B77 EVT-20261012-014 lesson references, report duplicate line ranges and PR #21 event/lesson collision mappings) were read back from their canonical branch files. Overall semantic source coverage remains PARTIAL.
