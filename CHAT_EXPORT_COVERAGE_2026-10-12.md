@@ -85,7 +85,7 @@ These are separate projects despite sharing a product name and recipe domain. Do
 - [x] Structured reference audit found and repaired stale `EVT-20260922-001` references to canonical B77 event `EVT-B77-20260922-001`; re-read seven JSONL files: 69 events + 16 lessons parsed, no parse errors/duplicate IDs/unresolved structured event references. Details in `SOURCE_REPORTS_AUDIT_2026-10-13.md`.
 - [ ] Continue message-by-message review of remaining mixed N99/B77 conversations before treating the project histories as complete.
 
-- [x] Historical checkpoint after adding the control-matrix audit: 230 commits ahead of `main`, 0 behind, 60 changed files. The current GitHub comparison on head `0f1fc098b3d51803dd46c970843bcce027d7fecc` reports 230 commits ahead, 0 behind, and 60 changed files. The earlier 208-entry/152-subject commit-message review predates later commits and is not a complete review of the current commit history.
+- [x] Historical checkpoint after adding the control-matrix audit: comparison reported 230 commits ahead of `main`, 0 behind, and 60 changed files. This is a dated checkpoint, not the latest branch count; see PR #22 for the current head and comparison. The earlier 208-entry/152-subject commit-message review predates later commits and is not a complete review of the current commit history.
 
 ## Known limitations
 - The supplied ZIP contains exactly 37 conversation objects and 10,034 distinct message IDs. The older 74-chat note is not substantiated by this archive or the supplied report text; its origin remains unresolved. The ZIP does not prove full-export completeness and lacks the separate binary attachment bytes.
