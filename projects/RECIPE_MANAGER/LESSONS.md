@@ -61,7 +61,7 @@
 - **Причина:** UNKNOWN; доступная история не содержит полного diff и финального набора файлов.
 - **Правило:** проверять фактическую запись/повторное чтение БД, удаление, отображение КБЖУ и набор примеров ингредиентов с вариациями регистра/словоформ/порядка слов; сохранять исходную БД.
 - **Статус:** candidate, confidence medium. Не переносить причинные выводы на Android/Flet без доказательств.
-- **Cross-project pointer:** detailed HTML-contour normalization lesson is canonicalized as B77-L-011 in projects/B77_HTML_PWA/LESSONS.md. PR #21's legacy L-RM-008 referred to that ingredient lesson, but this canonical RECIPE_MANAGER L-RM-008 is already the separate Android navigation/packaging lesson; do not reuse the colliding ID. DEC-RM-006 remains the accepted requirement record, not evidence of implementation.
+- **Cross-project pointers:** detailed HTML-contour ingredient normalization is canonicalized as B77-L-011, and the end-to-end HTML/SQLite regression gate as B77-L-012, in projects/B77_HTML_PWA/LESSONS.md. PR #21's legacy L-RM-008/LESSON-RM-008 and LESSON-RM-009 refer to these web-contour lessons, but the canonical RECIPE_MANAGER L-RM-008 is already assigned to the separate Android navigation/packaging lesson. Do not reuse the colliding IDs. DEC-RM-006 remains the accepted domain requirement record, not evidence of implementation.
 
 ## L-RM-010 — Общие UI-токены не заменяют платформенную адаптацию ПК/Android
 - **Основание:** `EVT-20261012-007`; recovered from open Draft PR #8 (`handoff/recipe-manager-ui-platform-memory-20261012`), whose structured source used legacy ID `LESSON-RM-010`.
