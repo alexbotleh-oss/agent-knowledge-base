@@ -44,6 +44,24 @@ Status labels: **validated** means the described event/result is supported by a 
 - **Evidence:** repository records contain commits and diagnostic changes, while this memory does not contain a complete device test record for every change.
 - **Rule:** state separately what was edited, statically checked, deployed, and actually exercised on the target device. Do not call a feature PASS from a commit, syntax check, or successful CI alone.
 
+## B77-L-008 — Compare every HTML candidate against the known working reference
+- **Status:** validated as a required prevention rule from repeated user-reported regressions; latest candidate outcome remains unverified.
+- **Evidence:** EVT-B77-20260922-002, EVT-B77-20260922-003 and EVT-20261012-014; the user repeatedly reported that database import, recipe deletion and kcal/100 g / BJU display disappeared in later HTML candidates despite being present in a reference.
+- **Rule:** name the exact working baseline and candidate; compare the final saved artifact and test SQLite import/add, edit, delete, nutrition display, ingredient matching and persistence. Syntax checks, a link, or a claim that a function exists are not runtime evidence.
+- **Limit:** do not attribute this HTML regression to N99 Android/Flet without separate source evidence.
+
+## B77-L-009 — Trace a visible-but-ineffective control through the existing event chain
+- **Status:** validated user-reported symptom; code-level root cause remains unknown.
+- **Evidence:** EVT-B77-20261004-001 and EVT-20261012-016; Products category/sort options were visible, but choosing them did not apply the filter/sort. Shopping sorting also had a reported unit-display side effect before a narrow recovery was reported.
+- **Rule:** trace control → handler → state/key → filter/sort → render. Verify the resulting list, each option, reset-to-all behavior and unchanged quantity/unit values. Do not add another listener or declare success merely because the option highlights.
+- **Limit:** this is a diagnostic method, not a claim that the original code cause was found.
+
+## B77-L-010 — Camera video is not proof of successful code decoding
+- **Status:** validated distinction from user reports; decoder root cause remains unknown.
+- **Evidence:** EVT-B77-20261005-002, EVT-B77-20261005-004 and EVT-20261012-019; camera access/video appeared in browser/PWA contexts, but the code was not recognized or saved.
+- **Rule:** verify separately: secure context and permission → video/frame availability → decoder invocation → decoded value and symbology → callback/business handler → persistence → stop behavior after a successful decode. Do not diagnose a stop-after-success failure when no successful decode was observed.
+- **Limit:** the browser/PWA pipeline is distinct from the native N99/Flet scanner.
+
 ## Cross-project candidates to compare against RECIPE_MANAGER
 1. Context recovery should precede new work.
 2. One bounded change per iteration, followed by a reverse-diff and regression checks.
