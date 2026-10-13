@@ -25,7 +25,7 @@
 1. Полная выгрузка всех чатов и всех бинарных вложений не доступна; статус PARTIAL, не COMPLETE.
 2. Причины Android/WebView white screen, отсутствия PROBE3 markers, scanner decode failure и package path errors остаются UNKNOWN там, где нет прямого доказательства. HTML/SQLite регрессии принадлежат отдельному HTML-контуру и не должны описываться как дефекты APK.
 3. Успешный syntax/targeted check/CI/build не приравнивается к end-to-end runtime на ПК/телефоне.
-4. EVT-20261012-007 отсутствует в доступной последовательности событий; это пробел нумерации, не доказательство потери записи.
+4. EVT-20261012-007 is recovered from open Draft PR #8 (`handoff/recipe-manager-ui-platform-memory-20261012`) and the extraction report. It records a partial/medium-confidence observation about shared Flet UI tokens and PC/Android platform-specific navigation; candidate lesson restored as `L-RM-010` (legacy source ID `LESSON-RM-010`). The original 2026-10-12 message is absent from the inspected raw ZIP, so current app behavior remains unverified.
 5. Исходные PR #17/#19/#20/#21 остаются открытыми и не переписаны; этот rollup — отдельная консолидированная ветка.
 - **Structured lessons gap:** the consolidated RECIPE_MANAGER chain keeps LESSONS.md as the canonical human-readable lesson index. No lessons.jsonl was synthesized: older branches disagree about its presence/content, and generating 24 structured records from summaries without a source-aligned mapping would create unsupported precision. This is an explicit gap for a later schema-backed conversion.
 
