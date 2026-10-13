@@ -97,7 +97,8 @@
           "size_bytes": 6211
         }
       ],
-      "status": "exact_payload_identity_found_in_library_not_yet_copied"
+      "status": "copied_to_repo; exact file ID also found in Library",
+      "copied_to_repo_path": "projects/CARD111/source_history/supplementary/initial_project_proposal.md"
     },
     {
       "attachment_id": "file_000000000c0481f4a966960840224e5c",
@@ -467,7 +468,8 @@
           "size_bytes": 2753
         }
       ],
-      "status": "exact_payload_identity_found_in_library_not_yet_copied"
+      "status": "copied_to_repo; exact file ID also found in Library",
+      "copied_to_repo_path": "projects/CARD111/source_history/supplementary/CARD_TRANSFER_STATE_2026-10-05.txt"
     },
     {
       "attachment_id": "file_000000009c6c81f4b61fbff155f9a537",
@@ -3731,7 +3733,8 @@
           "size_bytes": 22252
         }
       ],
-      "status": "exact_payload_identity_found_in_library_not_yet_copied"
+      "status": "copied_to_repo; exact file ID also found in Library",
+      "copied_to_repo_path": "projects/CARD111/source_history/supplementary/EXPERIMENT_3_REQUEST_FULL_CHAT_EXTRACTION.md"
     },
     {
       "attachment_id": "file_000000007944824697c1cec66989eb7c",
@@ -3935,7 +3938,8 @@
           "size_bytes": 13629
         }
       ],
-      "status": "exact_payload_identity_found_in_library_not_yet_copied"
+      "status": "copied_to_repo; exact file ID also found in Library",
+      "copied_to_repo_path": "projects/CARD111/source_history/reports/CARD111_FULL_REPORT_2026-10-06.md"
     },
     {
       "attachment_id": "file_00000000383081f48765c4e2fed07ced",
@@ -5262,7 +5266,8 @@
           "size_bytes": 3515
         }
       ],
-      "status": "exact_payload_identity_found_in_library_not_yet_copied"
+      "status": "copied_to_repo; exact file ID also found in Library",
+      "copied_to_repo_path": "projects/CARD111/source_history/supplementary/EXPERIMENT_4_TASK_MEMORY_TRANSFER.txt"
     },
     {
       "attachment_id": "file_000000009f708246b71b672cd7aaa12a",
@@ -5379,5 +5384,16 @@
       ],
       "status": "exact_payload_identity_found_in_library_not_yet_copied"
     }
-  ]
+  ],
+  "repo_copy_summary": {
+    "copied_source_attachment_ids": 5,
+    "source_files": [
+      "projects/CARD111/source_history/reports/CARD111_FULL_REPORT_2026-10-06.md",
+      "projects/CARD111/source_history/supplementary/initial_project_proposal.md",
+      "projects/CARD111/source_history/supplementary/CARD_TRANSFER_STATE_2026-10-05.txt",
+      "projects/CARD111/source_history/supplementary/EXPERIMENT_3_REQUEST_FULL_CHAT_EXTRACTION.md",
+      "projects/CARD111/source_history/supplementary/EXPERIMENT_4_TASK_MEMORY_TRANSFER.txt"
+    ],
+    "not_copied": "All other binary attachments remain in Library; their exact file IDs are indexed but payloads were not copied into this repository in this pass. This includes screenshots/HTML artifacts and generic CORE version files; no missing or name-only matches were found in the Library inventory."
+  }
 }
