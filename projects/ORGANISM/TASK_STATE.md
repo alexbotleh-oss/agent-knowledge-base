@@ -39,3 +39,8 @@ Finish writing/re-reading memory records and run validators available in agent-k
 - Unknown: whether installed APK matches that branch/head; whether callback reaches the listener; whether token exchange completes before the status is shown.
 - Not done: fresh device trace, patch, build and device retest.
 - Next: request one sanitized auth trace from a controlled attempt and fix only the stage localized by its final event. Preserve app data and credentials.
+
+ 
+## Transfer audit correction (2026-10-13)
+
+The branch discovery performed in this transfer found the already-existing branch `memory/organism-current-chat-20261013` and its existing ORGANISM memory records before the addendum writes. The earlier line in this file saying the branch “was not present” is superseded and was inaccurate; the transfer did not create that branch. This transfer updated existing records in place, preserving their history by appending addenda. No source project files were written.
