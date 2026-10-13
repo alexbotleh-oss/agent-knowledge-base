@@ -111,7 +111,7 @@ This structural check does not establish semantic completeness of every source c
 ## Next reconciliation steps
 
 1. Continue message-by-message matching of report claims against source chat messages and current event/lesson records.
-2. Complete file-by-file read-back of all 59 changed paths and verify that each change remains within memory/core-documentation scope.
+2. Complete line-by-line semantic reconciliation of the 59 already retrieved/scope-reviewed files against primary messages and attachments; the file retrieval/scope review is complete, but semantic source coverage is not.
 3. Inspect whether every report claim is present in the PR branch and distinguish it from claims present only in older PRs or reports.
 4. Resolve or explicitly preserve the 37-versus-74 conversation count discrepancy using actual export evidence.
 5. Keep source completeness `PARTIAL` until primary-source coverage and missing artifacts are accounted for.
