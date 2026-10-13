@@ -44,3 +44,12 @@ Project-specific observations stay linked to ORGANISM events. Only the generaliz
 - **Rule:** Do not advise clearing app data, uninstalling, deleting the RAW archive or re-importing as a first-line test. Establish recovery and permission before destructive steps.
 - **Confidence:** High.
 - **Portable candidate:** Yes — any app with user-owned persistent data.
+
+
+## L-ORG-007 — Diagnose OAuth handoff at the redirect boundary
+
+- Origin event: E-ORG-010.
+- Observed: consent screen can remain on a spinner while the app later appears connected after manual switching. Screenshot alone does not prove callback receipt or token persistence.
+- Rule: trace launch, callback-listener readiness, browser handoff, callback receipt/timeout, state/code checks, token exchange, token validation, persistence and foreground return. Let the last confirmed stage determine the next investigation; do not patch OAuth/browser code before locating the boundary.
+- Privacy: record sanitized stage/outcome and presence/absence only; never log credential values, codes, tokens, cookies or full URLs.
+- Portable candidate: mobile OAuth/browser handoff flows.
