@@ -57,3 +57,12 @@
 - Instruction changes were appended to `core/universal_instructions.md` and `core/agent_runtime_protocol.md`. Write commits returned successfully; read-back and exact-head CI still need checking.
 - Accepted report finding remains accepted: supplied agent reports were reviewed and confirmed that similar information/errors had been merged, obscuring distinct source dialogue/episode provenance. Do not redo that reconciliation without new contradictory evidence.
 - **Next action:** read back the instruction changes, check current PR/CI status, then test the smallest practical continuity path using existing repository structures before designing any additional machinery.
+
+
+## Handoff update — 2026-10-13: instruction verification
+
+- Re-read `core/universal_instructions.md` and `core/agent_runtime_protocol.md` on the active PR branch; the accepted minimal-continuity instructions are present.
+- Live PR #22 head: `8112a41eea8cb7b03b403748567fb5faa60d8d3c`; exact-head CI run 38416426765 completed successfully. This is a CI PASS only, not proof of complete memory transfer or tested runtime recovery.
+- PR #22 remains Draft/open/unmerged and is explicitly not scope-clean; preserve that boundary.
+- ChatGPT Project instructions do not need editing for this correction: they already require context restoration and checkpoints. Keep the repository protocol as the detailed source, and read it at the start of relevant work rather than assuming it loads automatically.
+- **Next single action:** inspect existing event/source/decision/task-state schemas and use the smallest existing format for a real continuity record; add a template only if none is suitable, then perform a new-context recovery test.
