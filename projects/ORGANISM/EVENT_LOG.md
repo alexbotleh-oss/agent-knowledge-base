@@ -126,3 +126,12 @@ Append-only event history. Dates refer to event/artifact dates when known; the m
 - **Observed refs:** main → 6835e00ba03a3bef3206eb49c924f80604c1da17; fix/oauth-diagnostic-trace-20261009 → 2f67f6b817b065acaa8b9f4bd0e0a77e6b73d7ce; fix/zip-import-crash-and-archive-restore → c201c730604575bd799971accff486ff0e51bb22.
 - **Conflict:** PROJECT_INSTRUCTIONS / handoff text still points to fix/zip-import-crash-and-archive-restore, while the inspected fix/oauth-diagnostic-trace-20261009 branch has a later commit timestamp. GitHub branch refs establish these branch heads, but cannot establish which branch is checked out in a user's local working tree.
 - **Status:** conflicting project metadata preserved; no local-worktree branch is asserted.
+
+
+## E-ORG-017 — Direct database source read confirms an existing SQLite schema
+- **Observation date:** 2026-10-13.
+- **Source:** S-ORG-032.
+- **Observed:** Db.java extends Android SQLiteOpenHelper and defines existing tables for projects, project_states, tasks, sources, events, actions, results, verifications, memory_objects, memory_search, memory_tags, relations, experiences, rejected_paths, loss_coverage, sessions, availability_log, change_log and system_params.
+- **Interpretation:** the current app already contains a substantial SQLite schema aligned with several architecture concepts. This is source-level evidence of schema code, not proof that every table or workflow is fully exercised or correct at runtime.
+- **Correction:** a proposal to introduce Kotlin + Room without inspecting this existing database would risk unnecessary migration and duplication. Continue from the existing Db.java schema and test the required workflows before redesigning it.
+- **Status:** source inspected; no app code or database was changed.

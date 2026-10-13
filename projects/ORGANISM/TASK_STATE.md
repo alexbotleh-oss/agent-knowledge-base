@@ -66,3 +66,7 @@ The branch discovery performed in this transfer found the already-existing branc
 - Draft PR #24 opened against memory/organism-current-chat-20261013; no merge to main. PR #23 was left unchanged.
 - Coverage remains PARTIAL because complete raw chat history and exhaustive attachment audit are unavailable.
 - The report-only verification follow-up does not change source evidence or memory schema; its exact branch HEAD and CI result must be checked before the final status is reported.
+
+
+### Additional source readback — 2026-10-13
+After the initial transfer validation, Db.java was fetched from the inspected source branch. It confirms an existing SQLiteOpenHelper schema with project/task, source/provenance, event/action/result/verification, memory/relations/experience, rejected-path, loss-coverage, session and change-log tables. This source fact is recorded as E-ORG-017 / S-ORG-032; runtime behavior remains untested.

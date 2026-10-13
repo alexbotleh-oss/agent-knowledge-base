@@ -118,3 +118,8 @@ Causal links are stated only where directly supported. In particular, no claim i
 - **Review PR:** draft PR #24, https://github.com/alexbotleh-oss/agent-knowledge-base/pull/24, targets the existing memory branch memory/organism-current-chat-20261013. It remains unmerged. Existing PR #23 was not modified.
 - **Main/data safety:** target main remains at a0c12ba849a3416f50e1289d8f0dd20844e1e51f in the observed ref; no merge or deletion was performed. No ORGANISM application code or user data was changed.
 - **Remaining:** source/chat coverage is PARTIAL; the final report-only follow-up commit still requires its own CI status check; independent review has not occurred.
+
+
+## Additional source verification — 2026-10-13
+
+A subsequent direct read of [Db.java](https://github.com/alexbotleh-oss/organism/blob/fix/oauth-diagnostic-trace-20261009/app/src/main/java/com/organism/app/Db.java) found blob SHA 8c3936cfa3726c792cca068a4545d61e0dfde233. The class extends SQLiteOpenHelper and defines a substantial existing schema covering projects/states/tasks, sources, events/actions/results/verifications, memory objects/search/tags, relations, experiences, rejected paths, loss coverage, sessions, availability and change logs. This strengthens the correction in E-ORG-014: do not propose Kotlin/Room or a database redesign without first evaluating the existing implementation. Schema declarations are source evidence, not runtime verification. No application code or database was changed.

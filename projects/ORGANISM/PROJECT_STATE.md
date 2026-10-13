@@ -79,3 +79,7 @@ The inspected PlatformWebActivity.java contains a separate composer that copies 
 
 ### Status
 Architecture/design: documented. Existing Android app: present in source. Automatic browser send/receive, reliable context restoration, and loop-control acceptance tests: NOT VERIFIED by this architecture conversation. This transfer did not modify the ORGANISM source repository or run an APK/device test.
+
+
+### Database-source confirmation — 2026-10-13
+A direct read of Db.java at source blob 8c3936cfa3726c792cca068a4545d61e0dfde233 confirms the app already uses Android SQLiteOpenHelper and defines schema for projects, states, tasks, sources, events, actions, results, verifications, memory objects, relations, experiences, rejected paths, loss coverage, sessions, availability and change logs, among others. This is evidence that the schema code exists; it does not prove every path is runtime-tested. The earlier Kotlin/Room suggestion should not be treated as a migration decision.
