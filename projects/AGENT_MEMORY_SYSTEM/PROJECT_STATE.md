@@ -16,3 +16,11 @@
 - **New continuity records:** TASK_STATE.md, EVENT_LOG.md, events.jsonl, DECISIONS.md, LESSONS.md, HANDOFF.md. Event EVT-AGMS-20261013-001 records the baseline PR audit.
 - **Next step:** audit all changed PR paths against the user’s scope, retain only directly relevant memory-system evidence without destroying source history, correct the PR description against fresh metadata, and confirm CI for the final exact HEAD.
 - **HEAD note:** latest known branch tip before this PROJECT_STATE update: 5d339c9dbde3f509afec7ef6d7c923c947afc210; obtain the post-update tip from live PR metadata rather than treating this value as self-referential.
+
+## Обновление 2026-10-13 — PR topology and scope
+
+- Live GitHub search returned 20 open PRs #3–#22; checked PRs are unmerged. Several use other unmerged PR branches as their base.
+- PR #22 at HEAD 6becb0ac6f482750434afb9d598c7c7628a11aa3 was 308 commits ahead of main, 0 behind, with 81 changed paths. This is a dependency/scope risk, not proof that the paths are duplicates.
+- PR #22 description now states current metadata, CI result for that SHA, partial source coverage, scope-review requirement, and no-merge rule.
+- The exact current HEAD will move as these state/event updates are committed; retrieve live PR metadata before reporting it. CI must be checked again for the resulting final HEAD.
+- **Next step:** path-by-path scope review and compare overlapping PR branches. Do not delete project history or merge without user review/permission.
