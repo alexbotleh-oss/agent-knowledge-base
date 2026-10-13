@@ -54,3 +54,28 @@ The visible blocker is a repeated OAuth consent-page spinner and failure to retu
 On branch fix/oauth-diagnostic-trace-20261009, source has an in-app copyable auth trace and a loopback listener. It launches auth.openai.com, waits up to 120 seconds, checks state/code, exchanges the code, validates ID token/scope, saves credentials and records outcomes. The inspected manifest has no custom-scheme callback filter; the source relies on an HTTP loopback callback page and an intent link. The installed APK identity remains unknown.
 
 Next step: clear only the auth trace immediately before one controlled attempt, approve once, and copy the trace after the spinner stalls. CALLBACK_WAIT/TIMEOUT points to no callback reaching the listener; CALLBACK_RECEIVED followed by a later failure localizes the problem further; AUTH_COMPLETE/SUCCESS with spinner still visible suggests an issue after successful exchange, subject to confirming the installed APK matches inspected source. If previous trace events remain, separate them by timestamps and a fresh AUTH_START marker. Do not collect or share credentials, codes, tokens, cookies or full authorization URLs. The separate subscription_sharing_usage_limit_exceeded message remains a usage-limit issue.
+
+
+## Architecture-chat reconciliation addendum — 2026-10-13
+
+This addendum records a separate architecture-focused conversation and must not be conflated with the earlier OAuth/file-upload diagnostic chat.
+
+### Architecture baseline from available artifacts
+- ORGANISM_CURRENT_STATE_v0.1_2026-10-08.md and the master architecture v0.3 place continuity proof first; preserve RAW/provenance; use SQLite as the initial local store; maintain append-only event history; separate CORE from MEMORY; and keep the AI model replaceable.
+- The 2026-10-07/08 documents describe a design/specification lineage. They are not evidence that every described subsystem exists in runtime.
+- The user explicitly restated on 2026-10-13: Android phone first; embed the AI provider web interface; maximize autonomy within constraints. The detailed requirement also includes app-mediated input, response reading where supported, persistent chat history, context restoration and loop detection.
+- The assistant's proposal of Kotlin + Room was premature: it was made before checking the source tree. Current source already uses Java application classes and a SQLite-backed design. Do not migrate the existing app merely to match that proposal.
+
+### Live repository references observed during this transfer
+- Repository: https://github.com/alexbotleh-oss/organism
+- main: 6835e00ba03a3bef3206eb49c924f80604c1da17 (2026-10-09T11:10:06Z).
+- fix/oauth-diagnostic-trace-20261009: 2f67f6b817b065acaa8b9f4bd0e0a77e6b73d7ce (2026-10-10T08:03:12Z); current inspected PlatformWebActivity.java blob: 64719a041ac899884bb6abb462b2e536a8088528.
+- fix/zip-import-crash-and-archive-restore: c201c730604575bd799971accff486ff0e51bb22 (2026-10-09T15:28:36Z).
+- Successful historical CI APK run: https://github.com/alexbotleh-oss/organism/actions/runs/37987076157, source SHA 08cb9dafdbc2eae918808886adfa310b178d5a6e; this is not the current source branch HEAD and does not establish device verification of later code.
+- The repository instructions/handoff branch pointer and the observed branch refs disagree about the active working branch. The local checkout state is unknown; do not claim a local branch was inspected.
+
+### Implementation boundary
+The inspected PlatformWebActivity.java contains a separate composer that copies prompt text to the clipboard. The source readback does not prove an automatic send/receive loop or response ingestion. The current branch file has setAllowContentAccess(true); the earlier transfer's setAllowContentAccess(false) observation is retained as historical and must not be reused as a current root-cause claim.
+
+### Status
+Architecture/design: documented. Existing Android app: present in source. Automatic browser send/receive, reliable context restoration, and loop-control acceptance tests: NOT VERIFIED by this architecture conversation. This transfer did not modify the ORGANISM source repository or run an APK/device test.

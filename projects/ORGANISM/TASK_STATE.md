@@ -44,3 +44,15 @@ Finish writing/re-reading memory records and run validators available in agent-k
 ## Transfer audit correction (2026-10-13)
 
 The branch discovery performed in this transfer found the already-existing branch `memory/organism-current-chat-20261013` and its existing ORGANISM memory records before the addendum writes. The earlier line in this file saying the branch “was not present” is superseded and was inaccurate; the transfer did not create that branch. This transfer updated existing records in place, preserving their history by appending addenda. No source project files were written.
+
+
+## Architecture-chat transfer scope — 2026-10-13
+
+- **Scope:** extract the architecture decisions, design evolution, user requirements and evidence boundaries from the current ORGANISM architecture conversation; do not continue the separate OAuth/file-upload debugging task.
+- **Source coverage:** selected current-chat messages and available uploads were reviewed, including the current-state note, master architecture v0.3, ORGANISM_SOLUTION v0.2, memory/history pipeline, memory-experience task, independent pipeline task and round-2 architecture attack. A complete raw chronological export with stable message IDs is not available.
+- **Repository reconciliation:** source branch refs and relevant files were fetched from GitHub. The actual local checkout branch is unknown. Branch/source conflicts and the stale WebView access observation are recorded as separate events rather than silently reconciled.
+- **Changes planned in this memory delta:** append events E-ORG-011–E-ORG-016; add user requirement D-ORG-008; add transferable lessons L-ORG-008–L-ORG-010; append source IDs S-ORG-017 onward; create TRANSFER_REPORT_2026-10-13_ARCHITECTURE_CHAT.md.
+- **Not included:** no ORGANISM application code changes, no migration, no APK build, no device test, no deletion/reset of user data, and no claim that automatic WebView send/receive is implemented.
+- **Acceptance:** re-read every changed file from GitHub; parse every non-empty line in SOURCES.jsonl as JSON; validate event/source IDs and paths; run available target-repository checks through CI if available. Keep the PR unmerged.
+- **Status before verification:** PARTIAL; report and changes require post-write readback and checks.
+- **Next:** complete readback/validation on the exact transfer commit, open a review PR against the existing ORGANISM memory branch, and leave independent verification to the separate reviewer.

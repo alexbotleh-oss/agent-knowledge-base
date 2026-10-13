@@ -33,3 +33,15 @@ User screenshot shows auth.openai.com consent page with the primary action stuck
 Branch fix/oauth-diagnostic-trace-20261009 had HEAD 2f67f6b817b065acaa8b9f4bd0e0a77e6b73d7ce when checked. Source has an OAuth trace UI and loopback callback listener with a 120-second timeout. Start with one fresh in-app auth trace; do not clear app data or credentials. Use the last trace stage to localize the next step. The installed APK/source SHA is not known, so do not assume it exactly matches inspected branch.
 
 Suggested single-attempt procedure: open Settings → Журнал диагностики авторизации; clear only that trace; start Connect; approve once; when the spinner stalls, return to ORGANISM and copy the trace. Review it for sensitive values before sharing. This provides evidence to tell no callback from post-callback failure. Root cause remains unknown.
+
+
+## Separate architecture-chat handoff — 2026-10-13
+
+This section covers the architecture conversation only. It is not a replacement for the separate OAuth/attachment engineering handoff above.
+
+- **User goal:** Android-first ORGANISM; embedded provider web UI; persistent chat history; context restoration across chat limits/transitions; experience-informed prompt construction; loop detection; maximum autonomy within defined safeguards.
+- **Established design baseline:** continuity-first; preserve RAW/provenance; SQLite as the first local store; append-only events; Context/Resume Engine; CORE separate from MEMORY; replaceable model/provider adapters; loss/coverage and claim-vs-verification distinctions.
+- **Correction to the assistant's previous architecture proposal:** Kotlin + Room was proposed before source inspection and is not an accepted decision. The existing source tree is a Java Android application with Db.java, ImportPipeline.java, ContextEngine.java, ExperienceEngine.java, ReflexEngine.java, and PlatformWebActivity.java. Continue from this implementation unless a migration is justified by evidence.
+- **Current interaction limit:** inspected WebView composer copies prompt text to clipboard. Automatic provider send/receive and response ingestion remain NOT VERIFIED. A successful CI build for an older source SHA is not device verification.
+- **Source branch ambiguity:** GitHub refs show fix/oauth-diagnostic-trace-20261009 at 2f67f6b817b065acaa8b9f4bd0e0a77e6b73d7ce; handoff text still names fix/zip-import-crash-and-archive-restore at c201c730604575bd799971accff486ff0e51bb22. The actual local checkout is unknown.
+- **Next action for the memory transfer:** independently review the new architecture-chat transfer report, verify source links and event chronology, and check the exact transfer branch/commit. Do not infer that architecture plans have been implemented or tested.

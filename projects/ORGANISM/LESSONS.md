@@ -53,3 +53,25 @@ Project-specific observations stay linked to ORGANISM events. Only the generaliz
 - Rule: trace launch, callback-listener readiness, browser handoff, callback receipt/timeout, state/code checks, token exchange, token validation, persistence and foreground return. Let the last confirmed stage determine the next investigation; do not patch OAuth/browser code before locating the boundary.
 - Privacy: record sanitized stage/outcome and presence/absence only; never log credential values, codes, tokens, cookies or full URLs.
 - Portable candidate: mobile OAuth/browser handoff flows.
+
+
+## L-ORG-008 — Inspect the existing implementation before recommending a new stack
+- **Origin event:** E-ORG-014; counter-evidence in E-ORG-015.
+- **Observed mistake:** the architecture response proposed Kotlin + Room before inspecting the live repository. The source already contains a Java Android application and SQLite-related modules (Db.java, ImportPipeline.java, ContextEngine.java, ExperienceEngine.java, ReflexEngine.java, PlatformWebActivity.java).
+- **Prevention rule:** before recommending a language, framework, database migration or project restart, inspect the current repository tree, build files, branch, HEAD and existing implementation. Mark a stack suggestion as PROPOSED until reconciled with source and user decisions. Prefer incremental continuation over migration without a demonstrated need.
+- **Confidence:** High for the observed premature recommendation and the current source inventory.
+- **Portable candidate:** Yes — existing software projects.
+
+## L-ORG-009 — An embedded web page is not proof of an automated connector
+- **Origin events:** E-ORG-013, E-ORG-014, E-ORG-015; source S-ORG-029.
+- **Observed boundary:** the current Android screen has a separate prompt composer that copies text to the clipboard. This does not establish automatic send, response extraction, or response persistence.
+- **Prevention rule:** test and report each boundary separately: provider page opens → user/session is valid → input is submitted through a supported mechanism → response completion is detected → response is read → response is persisted → history/context is reconciled. Do not describe a manual clipboard flow as integrated automation.
+- **Confidence:** High for the distinction; automatic provider interaction remains unverified.
+- **Portable candidate:** Yes — embedded third-party web experiences and browser automation.
+
+## L-ORG-010 — Pin source observations to immutable commits or blob SHAs
+- **Origin event:** E-ORG-015; prior mutable-path observation S-ORG-002 and current blob S-ORG-029.
+- **Observed risk:** a file URL on a branch can show different contents after that branch advances. An earlier note described setAllowContentAccess(false), while the current branch file blob 64719a041ac899884bb6abb462b2e536a8088528 has it enabled.
+- **Prevention rule:** store branch HEAD and file blob SHA/commit with every important source observation. When a later read disagrees, append a correction event and keep the old observation as historical evidence; do not overwrite history or assume the branch path is immutable.
+- **Confidence:** High for this repository-state discrepancy.
+- **Portable candidate:** Yes — repository investigations and memory provenance.
