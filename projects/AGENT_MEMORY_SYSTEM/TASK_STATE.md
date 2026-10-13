@@ -81,3 +81,15 @@
 - **Project instruction for ChatGPT:** a paste-ready amendment will be returned to the user; the live ChatGPT Project instruction itself has not been edited by repository changes.
 - **Constraints unchanged:** PR #22 stays Draft/open/unmerged; no main-branch changes; do not claim automatic background return/notifications.
 - **Next step:** read back each changed file, check exact current PR head and CI, then report verified status and provide the proposed ChatGPT Project instruction amendment.
+
+
+## Implementation checkpoint — 2026-10-13 23:40 local
+
+- User instruction: continue the existing work; architecture feedback is that repeated principles-only documentation is insufficient. Prefer small executable capabilities with tests and evidence over another prose-only restatement.
+- Live PR #22 rechecked after writes: OPEN / DRAFT / UNMERGED; current HEAD `484eacb048caa2c7c5a6d28c9c68d8bf2d93d308`; 103 changed files. Do not merge. PR description is known to lag live metadata and still needs refresh after scope work.
+- Added `tools/temporal_memory_model.py` (commit `d9d1c498b7152f21e84d60f01303cc053a59b1f6`) with dependency-free primitives for snapshot validation, scope-aware snapshot comparison, assertion validation, as-of views and transitive downstream impact discovery.
+- Added `tests/test_temporal_memory_model.py` (commit `484eacb048caa2c7c5a6d28c9c68d8bf2d93d308`) with seven targeted tests covering: 37→74 count delta without calling it corruption; incomparable counting units; missing scope; temporal as-of views; preserving superseded claims; transitive/cycle-safe impact; and timezone/provenance validation.
+- These primitives are additive and are not yet integrated into the canonical registry, migration flow, or automatic revision/overlay application. They do not prove end-to-end memory continuity.
+- Exact-HEAD CI run #38464705063 was observed for this SHA and was `in_progress` at last check. No PASS claim yet. Local test execution has not been performed in this step.
+- Scope audit remains blocking: project-specific histories and two application-history reports are present in PR #22 contrary to its direct memory-system scope; do not delete them without a verified preservation destination. Full source reconciliation remains PARTIAL.
+- Next: check exact-head CI conclusion and test logs; fix any failures; add a small versioned schema/fixture and compatibility checks only after this baseline is green; then continue scope/preservation work and refresh task/handoff/PR metadata.
