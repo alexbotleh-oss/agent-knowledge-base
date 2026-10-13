@@ -69,3 +69,15 @@
 - **CI:** workflow run 38416426765 (“Validate knowledge base”, run #318) for that exact head completed with conclusion `success` (PASS for that CI workflow only). This does not prove source-history completeness or the runtime interruption/resume behavior.
 - **ChatGPT Project instructions:** no change is required for this correction: the active project instructions already require context recovery, source verification, checkpointing, honest statuses, and a concrete next step before repository work. Repository protocols remain the detailed implementation reference; they are not automatically loaded in every chat, so the start gate must continue to direct the agent to read them.
 - **Next action:** inspect existing memory schemas/registries and reuse them if suitable; only add a compact event/checkpoint template if a real gap is confirmed. Then test a real handoff/recovery path. No new runtime importer or automatic chat autosave is claimed.
+
+
+## Checkpoint 2026-10-13 — accepted attention/return-stack architecture
+
+- **User-approved requirement:** preserve context when conversation branches away from the current goal; on return, account for why the branch occurred and what it changed, so returning to the old task does not itself derail the conversation again.
+- **Architecture recorded:** section 10 in `core/continuous_agent_architecture.md` defines intent classes, separate active task/return stack/deferred ideas/switch history, required causal fields, context-aware return protocol, pre-response attention check and minimum verification tests.
+- **Instruction updated:** `core/universal_instructions.md` now requires context-aware branching and return, separate deferred ideas, checking whether the original goal remains current, and honest limits where no persistent scheduler/storage is available.
+- **Decision recorded:** DEC-AGMS-20261013-003 in `DECISIONS.md`.
+- **Status:** documentation changes written; read-back and exact-head CI are pending. This is an architecture/instruction change only. Runtime implementation and behavior tests are not claimed.
+- **Project instruction for ChatGPT:** a paste-ready amendment will be returned to the user; the live ChatGPT Project instruction itself has not been edited by repository changes.
+- **Constraints unchanged:** PR #22 stays Draft/open/unmerged; no main-branch changes; do not claim automatic background return/notifications.
+- **Next step:** read back each changed file, check exact current PR head and CI, then report verified status and provide the proposed ChatGPT Project instruction amendment.
