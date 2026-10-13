@@ -170,7 +170,7 @@
 ### Consolidated IDs — 2026-10-12
 - L-RM-022 is the camera decode lesson; the separate task-scope lesson is L-RM-023 in this consolidated branch. This resolves a collision across parallel source PRs.
 - EVT-20261012-017 records task-scope drift; EVT-20261012-018 records continuation; EVT-20261012-019 records HTTPS/PWA camera decode. They are separate events.
-- EVT-20261012-007 is absent from the available sequence; treat this as an unexplained numbering gap, not as proof of a missing event.
+- EVT-20261012-007 is recovered from open Draft PR #8 (`handoff/recipe-manager-ui-platform-memory-20261012`) and the extraction report. It records a partial/medium-confidence observation about shared Flet UI tokens and PC/Android platform-specific navigation; candidate lesson restored as `L-RM-010` (legacy source ID `LESSON-RM-010`). The original 2026-10-12 message is absent from the inspected raw ZIP, so current app behavior remains unverified.
 
 
 ## Raw-source memory addition — 2026-10-13
