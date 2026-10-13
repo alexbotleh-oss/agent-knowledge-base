@@ -24,3 +24,12 @@ Continue the Android ORGANISM project in `alexbotleh-oss/organism`, not another 
 - No patch was applied in the prior attempt: the GitHub write tool was blocked by a security filter.
 - No new APK was built; no device verification was performed during this transfer.
 - This is a partial memory handoff, not proof that all historical chat messages/files were extracted.
+
+
+## New highest-priority issue — OAuth browser never returns automatically (2026-10-13)
+
+User screenshot shows auth.openai.com consent page with the primary action stuck on a spinner. User reports that the browser stays open and they must manually switch to ORGANISM; the app then displays connected as it has since the first use. This is separate from subscription_sharing_usage_limit_exceeded.
+
+Branch fix/oauth-diagnostic-trace-20261009 had HEAD 2f67f6b817b065acaa8b9f4bd0e0a77e6b73d7ce when checked. Source has an OAuth trace UI and loopback callback listener with a 120-second timeout. Start with one fresh in-app auth trace; do not clear app data or credentials. Use the last trace stage to localize the next step. The installed APK/source SHA is not known, so do not assume it exactly matches inspected branch.
+
+Suggested single-attempt procedure: open Settings → Журнал диагностики авторизации; clear only that trace; start Connect; approve once; when the spinner stalls, return to ORGANISM and copy the trace. Review it for sensitive values before sharing. This provides evidence to tell no callback from post-callback failure. Root cause remains unknown.
