@@ -171,3 +171,9 @@
 - L-RM-022 is the camera decode lesson; the separate task-scope lesson is L-RM-023 in this consolidated branch. This resolves a collision across parallel source PRs.
 - EVT-20261012-017 records task-scope drift; EVT-20261012-018 records continuation; EVT-20261012-019 records HTTPS/PWA camera decode. They are separate events.
 - EVT-20261012-007 is absent from the available sequence; treat this as an unexplained numbering gap, not as proof of a missing event.
+
+
+## Raw-source memory addition — 2026-10-13
+- Added EVT-RM-20261002-001 for the user-reported inability to edit an expiry date after saving and the proposed Add Product button placement.
+- DEC-RM-008 records this as an open requirement for source reconciliation, not an accepted code change.
+- No app code/database was modified; this task remains memory transfer only.
