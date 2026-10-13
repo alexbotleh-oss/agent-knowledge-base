@@ -62,6 +62,15 @@
 - **Правило:** проверять фактическую запись/повторное чтение БД, удаление, отображение КБЖУ и набор примеров ингредиентов с вариациями регистра/словоформ/порядка слов; сохранять исходную БД.
 - **Статус:** candidate, confidence medium. Не переносить причинные выводы на Android/Flet без доказательств.
 
+## L-RM-010 — Общие UI-токены не заменяют платформенную адаптацию ПК/Android
+- **Основание:** `EVT-20261012-007`; recovered from open Draft PR #8 (`handoff/recipe-manager-ui-platform-memory-20261012`), whose structured source used legacy ID `LESSON-RM-010`.
+- **Наблюдение:** исторический `main(9).py` had platform-dependent navigation (PC: six destinations; Android/iOS: five). A later project summary described shared UI tokens and theme changes; current source was not independently verified in that report.
+- **Риск:** shared colors, sizes, navigation, and input components may affect both desktop and mobile when they share a codebase. A concrete PC regression is **not confirmed**.
+- **Правило:** before changing a shared UI helper/token, inspect the current source and identify all platform call paths; test PC and Android separately in light/dark themes and navigation.
+- **Не утверждать:** the current app still has the historical implementation; that PC is broken or unaffected; or that a reported clipboard/theme fix passed runtime verification.
+- **Статус:** candidate, confidence medium. The event is restored from an older PR/secondary report; the original 2026-10-12 message is not present in the inspected raw ZIP.
+- **Применимость:** RECIPE_MANAGER Flet desktop/mobile shared UI; broader use requires checking that the other app also shares the same code/tokens.
+
 ## L-RM-011 — Долгая упаковка без нового вывода не доказывает ни прогресс, ни зависание
 - **Свидетельство:** EVT-20261012-008: Windows build после `flet clean` дошёл до `Packaging python app...` и оставался на этом сообщении примерно 10 минут. Команда проверки процессов не выполнилась корректно из-за завершающего `|`, поэтому CPU/память и изменение размера артефактов не измерены.
 - **Что подтверждено:** раннее сообщение `git is not recognized` / `Unable to determine engine version` встречалось в предыдущей попытке; более поздняя попытка достигла этапа упаковки Python.
