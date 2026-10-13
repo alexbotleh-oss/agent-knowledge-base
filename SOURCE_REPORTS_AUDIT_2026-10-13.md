@@ -87,7 +87,7 @@ The user supplied an additional text extract, `Последние дествия
 - The supplied note described the earlier PR #22 checkpoint at head `879fb70c8f24175dbe7404902bae9a76c73b9475`; GitHub Actions `Validate knowledge base` passed on that exact head, run #123: https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38355846764.
 - During this continuation, all 59 PR paths were individually retrieved and scope-reviewed; raw archive counts were verified; stale structured event references were repaired; 16 B77 event records, nine CARD111 event records, and one N99 product-expiry event were added from narrative/raw chat sources; two CARD111 lessons and three canonical B77 lessons were added; the duplicate RECIPE_MANAGER EVT-20261012-013 narrative block was deduplicated; and lesson evidence paths were checked against the canonical event files. PR #22 head `2e7183c71dec3906ecb3df22f6ad318050e6ee19` passed GitHub Actions `Validate knowledge base`, run #182: https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38362213710.
 - PR #22 remains Draft, open, and unmerged; base is `main`.
-- GitHub reports 59 changed files. The comparison against `main` shows all 59 are memory, protocol, audit, template, or project-memory files; no app source, HTML/JS app code, database, or APK files are included. Line-by-line semantic reconciliation of every source claim remains incomplete.
+- GitHub reports 60 changed files. The comparison against `main` shows all 60 are memory, protocol, audit, template, or project-memory files; no app source, HTML/JS app code, database, or APK files are included. Line-by-line semantic reconciliation of every source claim remains incomplete.
 
 ## Structured cross-reference and event-coverage audit — 2026-10-13
 
@@ -121,6 +121,12 @@ A provenance check across lesson records found that global lesson `G-LESSON-004`
 A targeted pass over the October 2 mixed-scope source conversation recovered two earlier B77/PWA incidents absent from the current event chain: repeated IndexedDB backing-store open errors during the scan action, and the separate scanner-mode/camera/stop/decode failure. These are now EVT-B77-20261002-001/002, linked to later B77 scanner events but retained as a distinct earlier occurrence. The same conversation also contains a separate N99 product-list requirement, EVT-RM-20261002-001, recording that a saved expiry date could not be edited and that the user proposed moving Add Product above the list; the proposed UI change remains pending source/decision reconciliation.
 
 GitHub's compare API reports PR #22 as 206 commits ahead of `main`, 0 behind, with 59 changed files. The PR commit endpoint returned 208 commit entries across its paginated result; all 152 unique commit subjects were reviewed and are export/docs/memory-oriented, with no subject indicating application-code changes. The final changed-path set contains only memory/core documentation, templates, and project records. This subject review is not a full diff review of every historical commit. Keep the PR Draft/open and do not merge without explicit user permission.
+
+## Master control matrix artifacts recovered from Library — 2026-10-13
+
+A Library inventory found five dated control-matrix workbooks under `/Б77/`: `RecipeManager_MASTER_CONTROL_MATRIX_v1_2_20261002.xlsx` (9 tabs), v1.1 (7 tabs), v1, `RecipeManager_V20_FIX6_HTML_контрольная_матрица_20261002.xlsx`, and `RecipeManager_сводка_изменений_FIX6_V20_V21_N99.xlsx`. Extracted sheet text was read for v1.2, the V20/FIX6/HTML comparison and the change summary. Their contents are now summarized in `projects/RECIPE_MANAGER/MASTER_CONTROL_MATRIX_AUDIT_2026-10-13.md`; project source coverage records the artifact names and boundaries.
+
+These matrices are mixed-scope. The folder name `/Б77/` does not establish that every row belongs to B77; the source explicitly names N99 regressions, Flet behavior and a temporary HTML prototype as well as PWA camera behavior. The matrices are dated planning/control artifacts, not proof of current implementation. They identify open decisions for diet scope, Roulette, web adapters, PC DB schema, family server sync and PWA camera; they also state that KTP-21…KTP-28 must not be invented without the original source. No app source was changed.
 
 ## Next reconciliation steps
 
