@@ -85,9 +85,9 @@ Do not increase confidence by repeating the same second-hand report. Keep indepe
 The user supplied an additional text extract, `Последние дествия в предидущем чате.txt`, describing the prior session's latest actions. It confirms that the report-bundle audit had been added to PR #22 and read back, and that the PR remained Draft/open and unmerged. These statements were checked against live GitHub state rather than accepted from the extract alone.
 
 - The supplied note described the earlier PR #22 checkpoint at head `879fb70c8f24175dbe7404902bae9a76c73b9475`; GitHub Actions `Validate knowledge base` passed on that exact head, run #123: https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38355846764.
-- During this continuation, the audit and coverage documents were updated and read back. PR #22 then advanced to head `504c993ea5092517a1509b7b67c4b7b51a6e086d`; `Validate knowledge base` also passed on that exact head, run #124: https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38356845711.
+- During this continuation, all 59 PR paths were individually retrieved and scope-reviewed; raw archive counts were verified; stale structured event references were repaired; and 14 B77 event records were added across two passes (nine already in the narrative log but absent from JSONL, plus five additional raw-source regression/recovery chains). PR #22 head is now `f4418338c7427596971b9de38667af14aadade99`; GitHub Actions `Validate knowledge base` passed on that exact head, run #141: https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38359389986.
 - PR #22 remains Draft, open, and unmerged; base is `main`.
-- GitHub reports 59 changed files. The comparison against `main` shows all 59 are memory, protocol, audit, template, or project-memory files; no app source, HTML/JS app code, database, or APK files are included. Full file-by-file read-back and semantic reconciliation of every source claim are not yet complete.
+- GitHub reports 59 changed files. The comparison against `main` shows all 59 are memory, protocol, audit, template, or project-memory files; no app source, HTML/JS app code, database, or APK files are included. Line-by-line semantic reconciliation of every source claim remains incomplete.
 
 ## Structured cross-reference and event-coverage audit — 2026-10-13
 
