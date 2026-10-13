@@ -36,3 +36,15 @@
 - **Validation status:** exact-HEAD workflow lookup for `3dc92fc62e6c392f49c228887b477467441fd8ed` returned no associated PR workflow run at the time of lookup. Do not report CI PASS for this new head until a run is observed and its conclusion is successful.
 - **Scope discipline:** only universal protocol files were changed in this step. No application code, project-specific source history, PR merge, or main-branch changes were made.
 - **Next step:** re-fetch live PR/branch HEAD and check whether CI has started for the current head; then continue the existing scope-resolution work only after confirming live state. PR #22 remains intended to stay Draft/open/unmerged.
+
+
+## Checkpoint 2026-10-13 — lightweight resumable chat import
+
+- **User correction / accepted prior finding:** reports from other chat agents were already supplied, reviewed and accepted. The comparison confirmed that similar data/errors were merged in reports, obscuring distinct source dialogues/episodes. Do not restart this verification absent new contradictory evidence.
+- **Current goal:** design a low-overhead, interruption-safe import path that preserves raw chat data, source order, timestamps, stable message IDs, and links needed to reconstruct chronology and causal chains. Avoid long 10–15 minute in-context semantic processing.
+- **Architecture decision for the proposal:** separate (1) raw acquisition/inventory/staging from (2) later semantic extraction, chronology/causality analysis and search indexing. Initial import must not merge similar errors or build semantic indexes.
+- **Protocol change:** appended “Быстрый возобновляемый импорт (без смыслового анализа на лету)” to `core/source_ingestion_protocol.md`. It specifies import states, stable cursors, bounded batches, transactional staging, idempotent replay, recovery after lost acknowledgement, checkpoint/event log/gap register, completeness conditions and five failure/resume tests.
+- **Read-back:** fetched the modified protocol after write; the new section, `RAW_COMPLETE` state, lost-ack test and separation of import from later analysis were confirmed present. Commit: `8c3490627f87fa85c4f1ecfa78d8ebd00ec843af`; content blob: `c6bca94b919fd68d285781526940150e58d7b58b`.
+- **Status:** protocol proposal recorded and read-back verified (PASS for persistence/read-back only). Runtime importer is **not implemented or tested**; resilience/latency claims remain unverified. CI for the new commit has not yet been checked.
+- **Constraints:** no re-audit of accepted agent reports; no merge to `main`; PR #22 remains Draft/open/unmerged; do not claim an automatic local save mechanism exists in the current ChatGPT session.
+- **Next action:** inspect live branch/PR HEAD and exact-head CI; then check existing schemas/tools to decide the smallest executable importer implementation (prefer streaming parser + local transactional staging/SQLite if runtime allows) and define measurable interruption/idempotency tests.
