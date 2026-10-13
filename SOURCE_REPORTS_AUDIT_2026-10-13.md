@@ -53,7 +53,7 @@ Shared product names, ingredient rules or UI techniques do not establish shared 
 ### 6. Specific open completeness issues
 
 - Reports are secondary summaries and cannot substitute for missing primary messages and attachment bytes.
-- The export audit still reports 37 conversation objects versus an older note of 74 chats, both associated with 10,034 distinct message IDs. This discrepancy remains unresolved.
+- Direct inspection of the supplied `conversations.zip` confirms 37 conversation objects and 10,034 distinct message IDs. The older note of 74 chats is not supported by the supplied archive or report text; its origin remains unresolved. Treat 37 as the verified count for this archive and 74 as an unverified historical claim, not as equivalent measurements.
 - Binary attachments, full intermediate HTML/SQLite diffs, several original diagnostic logs, and missing chat tails are not established as available. Do not infer an artifact's content from its filename or marker.
 - The RECIPE_MANAGER event sequence intentionally has the unexplained gap `EVT-20261012-007`. Do not invent a record to fill it.
 - Reported events and outcomes vary in evidence level: some are user-reported, some directly visible in files/logs, and some only present in prior summaries. Preserve those distinctions.
@@ -113,7 +113,7 @@ This structural check does not establish semantic completeness of every source c
 1. Continue message-by-message matching of report claims against source chat messages and current event/lesson records.
 2. Complete line-by-line semantic reconciliation of the 59 already retrieved/scope-reviewed files against primary messages and attachments; the file retrieval/scope review is complete, but semantic source coverage is not.
 3. Inspect whether every report claim is present in the PR branch and distinguish it from claims present only in older PRs or reports.
-4. Resolve or explicitly preserve the 37-versus-74 conversation count discrepancy using actual export evidence.
+4. Keep the archive count grounded at 37 conversation objects / 10,034 distinct message IDs; the older 74-chat note is explicitly marked unsupported by current source evidence until its originating manifest or report is found.
 5. Keep source completeness `PARTIAL` until primary-source coverage and missing artifacts are accounted for.
 
 ## Non-claims
