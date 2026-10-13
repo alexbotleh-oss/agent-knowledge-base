@@ -60,7 +60,7 @@ These are separate projects despite sharing a product name and recipe domain. Do
 - PR #5: B77 HTML/PWA experience — included in this rollup.
 - PR #17: early RECIPE_MANAGER Core Lite/JNI/WebView diagnostics — unique historical material included, with source limitations.
 - PR #19 and #20: parallel RECIPE_MANAGER memory branches — reconciled event and lesson ID collisions in this rollup; source branches remain untouched.
-- PR #21: independent/stale ingredient/web regression branch with conflicting EVT-20261012-005/006 meanings; unique requirements are preserved in DEC-RM-006/EVT-014/L-RM-008/009, not imported under conflicting IDs. Re-check web-specific event ownership in light of the N99/B77 clarification.
+- PR #21: independent/stale ingredient/web regression branch with conflicting EVT-20261012-005/006 meanings and colliding legacy lesson IDs. Domain requirements remain in DEC-RM-006 and B77 event records; ingredient-normalization and HTML/SQLite end-to-end lessons are canonicalized as B77-L-011 and B77-L-012, with pointers from RECIPE_MANAGER L-RM-009. Legacy IDs remain provenance only.
 - Other older RECIPE_MANAGER PRs remain open. This rollup does not merge, close or rewrite any source PR. Review consolidation before any merge.
 
 ## Validation checklist
@@ -114,3 +114,8 @@ To reduce loss of progress during intermittent connectivity, the PR was inspecte
 - Source-coverage finding: the inspected archive contains 37 conversation objects and 10,034 distinct message IDs; the earlier “74 chats” count remains unsupported/unresolved. The archive lacks separate binary attachment bytes and later transfer-chat coverage, so overall completeness remains PARTIAL.
 - Newly inspected control-matrix audit preserves the v1.2 workbook as a dated requirements snapshot, not proof that those functions are implemented or pass runtime tests.
 - Remaining work: compare report claims and older PR branches event-by-event, resolve or preserve each possible omission/recurrence, then run CI on the final checkpoint. Do not merge PR #22 without explicit user permission.
+
+
+## Additional lesson reconciliation checkpoint — 2026-10-13
+
+Direct read-back of PR #21's legacy `lessons.jsonl` and `LESSONS.md` exposed two distinct lessons whose old IDs conflicted with canonical RECIPE_MANAGER lesson meanings: ingredient normalization (`LESSON-RM-008` / `L-RM-008`) and HTML/SQLite end-to-end regression (`LESSON-RM-009`). Both are now preserved under non-colliding canonical IDs `B77-L-011` and `B77-L-012`, with provenance and uncertainty preserved, and cross-linked from RECIPE_MANAGER `L-RM-009`. This adds no new JSONL lesson records and does not claim application fixes. The branch remains memory-only; merge is still not authorized.
