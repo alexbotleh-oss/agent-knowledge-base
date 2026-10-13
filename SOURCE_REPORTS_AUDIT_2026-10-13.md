@@ -151,9 +151,9 @@ A message-level pass over the raw archive found a significant historical N99 tas
 This is **N99/RECIPE_MANAGER** evidence, not automatically B77 evidence. The source archive contains both project identities and mixed-scope conversations; a generic HTML mention alone is insufficient for B77 attribution. Added `EVT-RM-20261001-005` to the structured and narrative event logs and `DEC-RM-009` to decisions. No app files were changed. Whether the HTML mockup was fully completed remains unverified. The later 2026-10-12 `DEC-RM-001` establishes Android debugging as the immediate priority before UI redesign; both historical and later task priorities are preserved with dates.
 
 
-## Current event-count and narrative-index reconciliation — 2026-10-13
+## Event-count and narrative-index checkpoint before PR #8 recovery — 2026-10-13
 
-The earlier first-pass count of 23 RECIPE_MANAGER structured events is superseded by the current branch state. A fresh read of canonical `projects/RECIPE_MANAGER/events.jsonl` returns **24 records, all parseable with 24 unique IDs**. The additional record is `EVT-RM-20261001-005`, recovered from the raw export as the N99 HTML-first phase decision. The current B77 JSONL has 22 parseable records with unique IDs; CARD111 has 15 and ORGANISM has 7. Total: **68 structured events**. Structured lessons remain 16 (CARD111 6, ORGANISM 5, global 5); RECIPE_MANAGER has no `lessons.jsonl` by deliberate choice because a source-aligned schema mapping was not available.
+The earlier first-pass count of 23 RECIPE_MANAGER structured events was superseded when `EVT-RM-20261001-005` was recovered from the raw export as the N99 HTML-first phase decision. At this checkpoint, before the later PR #8 recovery below, canonical `projects/RECIPE_MANAGER/events.jsonl` contained **24 parseable records with 24 unique IDs**. The current B77 JSONL had 22 parseable records with unique IDs; CARD111 had 15 and ORGANISM had 7. Total at this checkpoint: **68 structured events**. This count is historical and is superseded by the recovery section below. Structured lessons then numbered 16; RECIPE_MANAGER had no `lessons.jsonl` by deliberate choice because a source-aligned schema mapping was not available.
 
 A structured-to-narrative comparison found that 10 of the 24 RECIPE_MANAGER records did not have standalone event headings in `EVENT_LOG.md`. A concise index was added to point to those existing records without duplicating their payloads. This improves traceability; it does not establish that every source message or final outcome is recovered.
 
@@ -167,3 +167,15 @@ The report bundle explicitly identifies `EVT-20261012-007` as a PR #8 event abou
 The event was recovered into the canonical JSONL after `EVT-20261012-006`, with the original facts, hypotheses, evidence classes, related IDs, confidence and next action preserved. A corresponding human-readable candidate lesson was added as `L-RM-010`; the old source ID `LESSON-RM-010` is retained in provenance. The event and lesson remain **partial/candidate, confidence medium**: the original October 12 message is not in the inspected raw ZIP, and historical `main(9).py`/project summaries do not prove the current app state. No application files were changed.
 
 Current structured counts after recovery: RECIPE_MANAGER 25, B77 22, CARD111 15, ORGANISM 7 = 69 events; 16 structured lessons remain in CARD111, ORGANISM and global lesson records. The RECIPE_MANAGER lesson index remains Markdown-only by design. CI and final file read-back must be checked against the resulting branch head. The overall source completeness remains **PARTIAL**.
+
+
+## Cross-check of PR #8 event chain — 2026-10-13
+
+Compared all nine structured event records on PR #8's branch `handoff/recipe-manager-ui-platform-memory-20261012` against the current canonical RECIPE_MANAGER and B77 event logs:
+
+- Eight event IDs from PR #8 now exist exactly in the consolidated RECIPE_MANAGER event chain, including the recovered `EVT-20261012-007`.
+- The remaining legacy `EVT-20260922-001` was not copied under its old project attribution; its HTML/SQLite recipe-list, deletion and nutrition evidence is represented by canonical B77 event `EVT-B77-20260922-001`. This is an intentional project-boundary correction, not an omission.
+- The event `EVT-20261012-007` and candidate lesson `LESSON-RM-010` were absent from the consolidation branch but present in PR #8. The event and lesson are now restored with partial/medium-confidence provenance. The Markdown canonical lesson ID is `L-RM-010`; the legacy structured ID is preserved as provenance only, and no `lessons.jsonl` was synthesized.
+- PR #8 remains open Draft and unmerged. The source event was imported for memory continuity, not as proof that the current desktop/mobile code has any particular state.
+
+This cross-check did not identify another PR #8 event payload that was missing from the consolidated project memories. It does not close the separate mixed-chat primary-source review or establish completeness of the report bundle.
