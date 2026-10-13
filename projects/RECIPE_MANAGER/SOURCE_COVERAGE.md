@@ -38,3 +38,15 @@
 - The user explicitly specified an HTML-first validation phase for N99 before porting logic into Flet; V20 is the visual/layout reference, the existing Flet project is a functional reference, and FIX6/V21/audit/master-map materials are inputs for checking lost/missing functions and dependencies. The old scanner was excluded; native scanner retained.
 - This is distinct from B77's iPhone-oriented HTML/WMA/PWA project. The exact state of HTML mockup implementation and whether every function was validated remain unknown.
 - The later 2026-10-12 DEC-RM-001 changes the immediate priority to Android debugging before UI redesign; preserve both decisions with their event times instead of flattening them into one timeless instruction.
+
+## Master control matrix artifacts recovered from Library — 2026-10-13
+
+The following dated XLSX artifacts were found and their extracted sheet text inspected; their location under `/Б77/` is not evidence that all rows belong exclusively to B77:
+- `RecipeManager_MASTER_CONTROL_MATRIX_v1_2_20261002.xlsx` (9 tabs; latest inspected matrix snapshot).
+- `RecipeManager_MASTER_CONTROL_MATRIX_v1_1_20261002.xlsx` (7 tabs) and `RecipeManager_MASTER_CONTROL_MATRIX_v1_20261002.xlsx` (earlier revisions).
+- `RecipeManager_V20_FIX6_HTML_контрольная_матрица_20261002.xlsx` (V20/FIX6/HTML comparison).
+- `RecipeManager_сводка_изменений_FIX6_V20_V21_N99.xlsx` (5-tab change summary, removed features and N99 regressions).
+
+A source-grounded synthesis is preserved in `MASTER_CONTROL_MATRIX_AUDIT_2026-10-13.md`. Key points: V20 is the visual/layout reference; FIX6 is an existing Flet behavior source but not a completeness oracle; the HTML prototype was a planned validation surface before Flet porting; the Flet target uses the native scanner only; the matrix describes a shared Core contract, batch expiry, safe normalization, explicit availability states, staged imports, separate Shopping/Products/QR contexts, reversible backup/family operations and Lite Cook. Matrix statuses are dated snapshot claims, not fresh runtime tests. The v1.2 workbook lists KTP-01…KTP-20 and explicitly says KTP-21…KTP-28 require their original source; do not invent them.
+
+The matrix is mixed-scope and must be reconciled by message-level provenance. The N99 HTML-first prototype in `Часть 1` is not the same project as B77's separate iPhone-oriented HTML/WMA/PWA camera path in `Часть 2`. The matrix itself lists open questions around diet scope, Roulette, web adapters, PC DB schema, family server sync and PWA camera; none is silently promoted to a settled implementation fact here.
