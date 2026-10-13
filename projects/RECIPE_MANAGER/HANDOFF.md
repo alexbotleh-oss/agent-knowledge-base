@@ -36,6 +36,9 @@
 - Реальные логи Flet/Android build/runtime и любые актуальные скриншоты чёрного экрана.
 - Универсальный протокол базы знаний: `core/guardrails.md`, `core/agent_runtime_protocol.md`, `core/session_handoff.md`, `core/visual_diagnostics.md`.
 
+## Источники контрольной матрицы
+- Read `projects/RECIPE_MANAGER/MASTER_CONTROL_MATRIX_AUDIT_2026-10-13.md` for the recovered V20/FIX6/HTML/N99 control-matrix sources and their unresolved questions; treat matrix status as a dated snapshot, not runtime proof.
+
 ## Первый логичный шаг следующего чата
 Не начинать с нового UI и не пересобирать APK вслепую. Сначала восстановить точный актуальный набор исходников и конфигурацию, определить последнюю воспроизводимую команду сборки/запуска и получить конкретный лог ошибки/события, связанного с чёрным экраном. Установить, возникает ли он до старта Python/Flet, при инициализации приложения или при загрузке данных. После этого выбрать один минимальный проверяемый патч, выполнить статические проверки, сборку и фактический запуск; если доступ к Android отсутствует, честно оставить runtime BLOCKED и запросить только необходимый лог/результат.
 
