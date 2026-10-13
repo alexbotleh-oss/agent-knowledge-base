@@ -64,7 +64,8 @@ These are separate projects despite sharing a product name and recipe domain. Do
 - Other older RECIPE_MANAGER PRs remain open. This rollup does not merge, close or rewrite any source PR. Review consolidation before any merge.
 
 ## Validation checklist
-- [x] The earlier read-back covered 46 paths; three source-audit/B77 additions were then read back (49 paths covered in that check). The current GitHub PR diff contains 58 changed files, so the read-back count is not the same as the current diff count; reconcile the remaining paths before merge.
+- [x] Report-bundle audit is recorded in `SOURCE_REPORTS_AUDIT_2026-10-13.md` and was read back from GitHub.
+- [ ] Full file-by-file read-back of all 59 current PR paths is not yet complete. The earlier read-back covered 49 paths and predates the latest PR diff count; do not describe it as full coverage. Before merge, inspect the remaining current paths and verify each change is within memory/core-documentation scope.
 - [x] Parsed current JSONL files: RECIPE_MANAGER events 22/22 valid and unique; B77 HTML/PWA events 6/6 valid and unique; CARD111 events 6/6 and lessons 4/4 unique; ORGANISM events 7/7 and lessons 5/5 unique; global lessons 5/5 unique.
 - [x] Reconciled original event/lesson ID collisions: EVT-20261012-017/018 are task-scope/transfer events, EVT-20261012-019 is PWA camera decode; L-RM-022 is camera decode, L-RM-023 is task boundary.
 - [x] The initial compare recorded 46 changed paths, all memory/core documentation. The current PR API reports 58 changed files; the current diff should be used for scope review. No app source, HTML/JS project code, databases, or APKs are reported among the changed paths.
