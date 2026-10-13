@@ -179,3 +179,16 @@ Compared all nine structured event records on PR #8's branch `handoff/recipe-man
 - PR #8 remains open Draft and unmerged. The source event was imported for memory continuity, not as proof that the current desktop/mobile code has any particular state.
 
 This cross-check did not identify another PR #8 event payload that was missing from the consolidated project memories. It does not close the separate mixed-chat primary-source review or establish completeness of the report bundle.
+
+
+## Cross-branch event-ID and summary reconciliation — 2026-10-13, continuation checkpoint
+
+A direct comparison of structured RECIPE_MANAGER event IDs and summaries on the canonical consolidation branch against PR #3, #6, #8, #14, #16, #19, #20 and #21 found the following mappings. This is an ID/summary-level comparison; it is not yet a line-by-line equivalence proof for every fact, hypothesis and evidence reference in every old branch.
+
+- Legacy `EVT-20260922-001` appears in earlier RECIPE_MANAGER branches but is intentionally not retained under the N99 project ID after scope correction. Its HTML-contour evidence is represented by B77 canonical events `EVT-B77-20260922-001/002/003`, including ingredient matching/database access, recipe list/nutrition/deletion regressions, and delete-all/Shopping-to-Products requirements. The exact B77 attribution for the earliest conversations remains medium confidence where the source does not name B77.
+- Source PR #16/#19/#20 contain HTML/PWA event `EVT-20261012-014` and Products/Shopping event `EVT-20261012-016`. Both IDs are present under `projects/B77_HTML_PWA/events.jsonl` and have matching narrative headings in the B77 event log; they are intentionally absent from the N99 structured event chain.
+- PR #19 used `EVT-20261012-017` for camera/video-without-decode evidence, while PR #20 used the same ID for a different task-boundary occurrence. The canonical resolution is to keep the N99 task-boundary/transfer occurrences as `EVT-20261012-017/018` and the B77/PWA camera-decode occurrence as `EVT-20261012-019`. These distinct chains are present in the corresponding project JSONL files; the source branches were not rewritten.
+- PR #8's nine-record chain was separately compared in the prior section: eight events are in the current RECIPE_MANAGER chain, while the one HTML-contour legacy event maps to canonical B77 evidence. The reported `EVT-20261012-007` omission and candidate lesson `LESSON-RM-010` were recovered into the canonical memory with provenance and medium-confidence/partial status.
+- PR #21's conflicting `EVT-20261012-005/006` summaries are not imported under the colliding IDs. The user requirements are preserved through `DEC-RM-006` and the B77 canonical events/lessons. The older branch's event meanings remain historical evidence; do not treat a matching ID as proof of matching event identity.
+
+Structural read-back remains clean for the current canonical JSONL sets: 25 RECIPE_MANAGER events, 22 B77 events, 15 CARD111 events, 7 ORGANISM events, and 5 global + 6 CARD111 + 5 ORGANISM lessons; all parsed and had unique IDs in the checks performed. This establishes structural integrity only. Remaining work is to compare detailed claims/evidence refs for source branches and the repeated report bundle, and to verify CI against the final current branch head.
