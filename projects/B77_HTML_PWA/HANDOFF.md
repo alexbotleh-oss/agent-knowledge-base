@@ -19,7 +19,7 @@ Use the real history of Б77 HTML/PWA to learn from recurring failures and impro
 - Added five distinct B77 regression/recovery events from raw October 3–5 user messages: long-press/swipe/Light Cook regressions; Products/Shopping flow failures; category/sort/unit integrity; wrong recipe identity/context-menu regressions; and rollback blocked by a lost source file.
 - Added source message IDs/timestamps where available and corrected the October 5 scanner baseline time from Git history.
 - Added canonical B77 lessons B77-L-008/009/010; moved HTML-specific rules in RECIPE_MANAGER to explicit cross-project pointers instead of duplicate N99 lessons.
-- The raw archive itself still contains only conversations.json; binary attachments and later October 12–13 primary messages are not included.
+- Two earlier October 2 B77 scanner events have now also been recovered: IndexedDB backing-store open failure and separate Products/Shopping scanner-mode/camera/decode failure. The same mixed-scope source contains a distinct N99 expiry-edit/Add Product request, recorded under RECIPE_MANAGER. The raw archive itself still contains only conversations.json; binary attachments and later October 12–13 primary messages are not included.
 - No application files were changed by this learning pass.
 
 ## Next practical steps
