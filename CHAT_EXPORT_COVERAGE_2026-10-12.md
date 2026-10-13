@@ -134,3 +134,13 @@ Direct read-back of PR #21's legacy `lessons.jsonl` and `LESSONS.md` exposed two
 - Exact-head CI caution: the last confirmed run matching a live branch ref was run #38364347001 on e3557497f757b8377a4c01a5e7d1f7ab4fbbafba. A later completed run for 82b96bc5ee29ca6d65ebd7322cb4f9ca0bcc450f did not match the branch ref eca56274378f54dfecedb52d301cce7e0b5c65f7. The newer head's status must be verified against its own SHA.
 - Source audit was updated to record this mismatch rather than treating a pass on a different SHA as current proof. This checkpoint is append-only; after this file update, re-read the branch ref and CI run for the resulting commit.
 - Source completeness remains PARTIAL. The PR #21 lesson-ID conflict is now preserved under B77-L-011/B77-L-012, with canonical cross-links and source limitations.
+
+
+## Bounded full-path read-back — 2026-10-13 08:10 UTC
+
+- [x] Re-fetched all 60 paths returned by the current PR #22 changed-file listing in bounded batches. The 60-path list includes the newly added `projects/RECIPE_MANAGER/MASTER_CONTROL_MATRIX_AUDIT_2026-10-13.md`; older 59-file checkpoints are superseded by this check.
+- [x] Confirmed every listed path is a memory, protocol, source-audit, lesson, template, or project-state/event/decision/handoff artifact. No application source, HTML/JS implementation, database, or APK is included in the changed-path list.
+- [x] Re-read the control-matrix audit and the source/coverage audit files from the branch. They explicitly distinguish artifact requirements from implemented or runtime-verified behavior and retain the source-completeness status as PARTIAL.
+- [x] Confirmed the latest observed PR head at this checkpoint was `a801eeb324e1f480c246fcb5418b33351a3c5dbf`; GitHub Actions run #38366773680 passed on that exact SHA: https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38366773680.
+- [ ] Semantic, message-by-message reconciliation of all claims and missing binary/source artifacts remains incomplete. File read-back and successful CI do not prove historical completeness.
+- PR #22 remains Draft/open/unmerged. Do not merge without explicit user permission.
