@@ -49,6 +49,10 @@ These are separate project identities despite the shared product name and overla
 - B77's current event log starts with Stage14/scanner records around October 5, while the source JSON contains earlier HTML-specific recipe/SQLite incidents from September 22 onward. Evaluate these as possible earlier B77 history, but do not invent exact B77 attribution for entries lacking a project identifier.
 - The archive supports a much stronger audit than the previous summary-only basis for the covered dates, but overall export completeness remains **PARTIAL**.
 
+## Canonical lesson boundary correction — 2026-10-13
+
+A lesson-provenance review found HTML-specific B77 rules still duplicated inside RECIPE_MANAGER lessons. The global CRUD/data-state lesson's evidence path was corrected to the canonical B77 event. RECIPE_MANAGER IDs L-RM-004/019/021/022 remain as short pointers to the global/B77 rules for continuity; the canonical B77 lesson file now contains B77-L-008/009/010 for HTML candidate regression, ineffective Products filters, and camera video versus successful decode. This correction prevents B77 HTML symptoms from being treated as N99 Android evidence.
+
 ## RECIPE_MANAGER narrative deduplication — 2026-10-13
 
 The source-to-memory review found two near-identical narrative blocks with the same ID `EVT-20261012-013` in `projects/RECIPE_MANAGER/EVENT_LOG.md`. Their unique wording was merged into one block and the duplicate copy removed; the structured JSONL record remains. The three HTML/PWA event headings `EVT-20261012-014/016/019` in that log are cross-project pointers to B77, not canonical RECIPE_MANAGER events. Ten other RECIPE_MANAGER events are present in JSONL without standalone narrative headings; no new events were invented to force a one-to-one heading count.
