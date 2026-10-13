@@ -36,7 +36,7 @@ def validate_snapshot(snapshot: dict[str, Any]) -> list[str]:
     """Return all validation errors; never infer missing scope/time/hash."""
     errors: list[str] = []
     required = (
-        "snapshot_id", "captured_at", "scope_id", "counting_unit",
+        "snapshot_id", "scope_id", "counting_unit",
         "inclusion_rules_id", "exclusion_rules_id", "coverage_status",
     )
     for field in required:
