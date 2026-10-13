@@ -72,6 +72,7 @@ These are separate projects despite sharing a product name and recipe domain. Do
 - [x] Draft PR #22 remains open and unmerged: https://github.com/alexbotleh-oss/agent-knowledge-base/pull/22.
 - [x] Historical CI runs #103/#104 and #120 passed on their stated older SHAs. Latest GitHub Actions Validate knowledge base passed on PR #22 HEAD `879fb70c8f24175dbe7404902bae9a76c73b9475`, run #123: https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38355846764. These are structural checks, not proof of historical-source completeness.
 - [x] Moved clearly HTML/PWA-specific source events out of N99's event chain: early HTML/SQLite regressions, EVT-20261012-014, PWA Shopping/Products EVT-20261012-016 and browser camera decode EVT-20261012-019 now live under B77. Early September attribution to B77 remains medium confidence where the source conversation does not name the project.
+- [x] Structured reference audit found and repaired stale `EVT-20260922-001` references to canonical B77 event `EVT-B77-20260922-001`; re-read seven JSONL files: 41 events + 14 lessons parsed, no parse errors/duplicate IDs/unresolved structured event references. Details in `SOURCE_REPORTS_AUDIT_2026-10-13.md`.
 - [ ] Continue message-by-message review of remaining mixed N99/B77 conversations before treating the project histories as complete.
 
 ## Known limitations
