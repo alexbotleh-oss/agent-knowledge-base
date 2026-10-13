@@ -188,3 +188,21 @@ Provenance: поздно перенесено из PR #17 как историч�
 - **Сканер:** старый сканер исключён; в Flet-референсе пользователь оставил нативный сканер.
 - **Важная граница:** это историческая задача N99/RECIPE_MANAGER, а не доказательство принадлежности к отдельному B77 iPhone-oriented HTML/WMA/PWA проекту.
 - **Текущий статус:** подтверждена историческая постановка задачи; факт полной реализации/проверки HTML-макета не подтверждён. Более поздний DEC-RM-001 от 2026-10-12 задаёт отладку Android как ближайший приоритет.
+
+
+## Structured-event traceability reconciliation — 2026-10-13
+
+A comparison of the current canonical `events.jsonl` against this narrative log found 24 valid, uniquely identified RECIPE_MANAGER event records. Fourteen have dedicated dated/event sections; ten records do not have their own standalone heading. This is a narrative-index gap, not proof that their structured records are missing. To make the links auditable without copying full event payloads or creating new events, the following index points to the existing record meanings:
+
+- `EVT-20260927-001` — Flet `PopupMenuItem(text=...)` API error; symptom confirmed, final fix not recovered. See the 2026-09-27 section above.
+- `EVT-20261012-001` — later priority decision: debug Android startup before redesigning Android UI.
+- `EVT-20261012-002` — prior `main.py`/Flet state and runtime not confirmed for the currently installed APK.
+- `EVT-20261012-003` — transfer/handoff state; project-memory creation does not prove app runtime.
+- `EVT-20261012-004` — proposed `apply_platform_nav()` ordering after two reported failed builds; hypothesis only, not a confirmed patch.
+- `EVT-20261012-005` — reported build number 5 / PC launch / Android navigation observations; the proposed navigation patch was not confirmed as applied.
+- `EVT-20261012-006` — source-scope reconciliation for N99 Android/Flet versus the separate HTML/SQLite contour.
+- `EVT-20261012-009` — task-boundary recovery after the packaging discussion; the active task returned to memory transfer.
+- `EVT-20261012-012` — Build43/Build42 packaging failure with `Invalid URL './flet_barcode_scanner_ext'`; the artifact-verification rule is separately preserved in lesson `L-RM-017`.
+- `EVT-20261012-017` — scope-drift incident: application auditing resumed despite the active memory-transfer task, then the user restored scope.
+
+The old PR #21 reused `EVT-20261012-005/006` for different ingredient/web meanings. Those conflicting branch-local meanings were not imported under the same IDs: ingredient rules are retained in `DEC-RM-006` and canonical HTML/PWA evidence is under B77. This index does not replace provenance or claim the missing final chat messages have been recovered.
