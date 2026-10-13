@@ -1,0 +1,11 @@
+# PROJECT_STATE — AGENT_MEMORY_SYSTEM
+
+- **Canonical project ID:** AGENT_MEMORY_SYSTEM
+- **Object:** improvement of the agent's memory, context-recovery, source-ingestion, verification and cross-chat continuity system stored in `alexbotleh-oss/agent-knowledge-base`.
+- **Current priority:** make the memory-transfer workflow reliably recover the current chat/project context, preserve chronology and provenance, reconcile existing memory, detect omissions and repeated incidents, and validate each change with existing repository tools.
+- **Scope boundary:** this is work on the memory repository and its tools/protocols. ORGANISM, CARD111 and RECIPE_MANAGER remain separate project chains. Do not switch to implementing or auditing those applications unless the user explicitly changes scope.
+- **Current design direction:** immutable RAW sources; stable source locators and IDs; a linked, multi-dimensional registry; separate event time/source time/recorded time; evidence and lifecycle status; reversible revisions; multi-directional retrieval; coverage and contradiction audits.
+- **Available existing mechanisms to reuse:** `core/repository_scope.md`, `core/universal_instructions.md`, `core/source_ingestion_protocol.md`, `core/chronology_reconstruction.md`, `core/memory_model.md`, `core/session_handoff.md`, `tools/archive_temporal_index.py`, `tools/validate_memory.py`, `tools/validate_project.sh`, `tools/generate_report.sh`, tests and CI.
+- **Known process failure to prevent:** the assistant incorrectly redirected this task to a Recipe Manager archive migration despite repository scope explicitly prioritizing memory-system improvement. Corrective action: the chat collection task now explicitly defaults to the current chat/project and forbids scope switching based on incidental project mentions.
+- **State confidence:** partial. Repo instructions and current branch files have been inspected; complete historical chat coverage and semantic completeness have not been established.
+- **Next step:** reconcile current branch/PR and existing project-memory records; run available validators/tests; finish a scope-correct agent task that collects experience from the current chat into this repository without treating a separate application archive as the target.
