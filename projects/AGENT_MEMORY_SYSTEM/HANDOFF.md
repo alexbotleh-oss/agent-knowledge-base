@@ -45,3 +45,15 @@
 - **Current verification status:** protocol persistence/read-back PASS; executable import, network-interruption recovery, replay idempotency, local durable storage and performance target SKIP/not implemented. Exact-head CI not yet checked after the protocol commit.
 - **Boundaries:** keep PR #22 open/Draft and unmerged; do not re-run accepted report reconciliation; do not claim the current ChatGPT interface itself can guarantee background/local persistence.
 - **Next single action:** fetch the live PR/branch state and CI for the new exact head, then inventory existing parser/schema/tooling before selecting the smallest implementation path.
+
+
+## Design correction — minimal continuity memory (2026-10-13)
+
+- The user clarified that the goal is a practical memory workflow using only current chat (temporary), Project Library (archives/reports) and repository (persistent memory). Do not over-engineer or require a server/local agent/database for the first usable iteration.
+- We need not copy every chat. Preserve only enough source-grounded material to recover significant event chronology, decisions and their rationale, failed attempts, lessons, current task state and next step. Keep source IDs/locators, event time and confidence/status.
+- Keep event/incident, decision, task-state and source records linked. Generalize lessons only as an overlay linked to all distinct episodes; do not collapse separate incidents or lose provenance.
+- First archive pass should be lightweight: inventory source, select/preserve relevant fragments and metadata, checkpoint progress. No full semantic analysis or indexing during import. Reconstruct chronology/causality and build search indexes in a later pass.
+- During live work, record significant confirmed changes when they happen, and update/read back the checkpoint before likely limits/interruption and at stage completion. The current chat alone is not durable storage.
+- Instruction changes were appended to `core/universal_instructions.md` and `core/agent_runtime_protocol.md`. Write commits returned successfully; read-back and exact-head CI still need checking.
+- Accepted report finding remains accepted: supplied agent reports were reviewed and confirmed that similar information/errors had been merged, obscuring distinct source dialogue/episode provenance. Do not redo that reconciliation without new contradictory evidence.
+- **Next action:** read back the instruction changes, check current PR/CI status, then test the smallest practical continuity path using existing repository structures before designing any additional machinery.
