@@ -304,3 +304,14 @@ This checkpoint exists so a chat boundary, timeout, or connection loss does not 
 - Next bounded action: choose one small set of claims from `Отчеты о извлечении.txt`, compare against exact canonical RECIPE_MANAGER/B77 event, decision, or lesson records and their provenance, then record only the verified match/gap. Do not repeat the completed broad file-scope review. Do not conflate repeated report text with repeated real-world events.
 - After the next write: read back the edited range, record the resulting commit SHA, and check validation/CI for that exact SHA. Empty workflow/status results mean “not confirmed”, not PASS.
 - Completion gate before expanding project integration: semantic reconciliation results and unresolved gaps are documented; current-branch validation is checked; a durable handoff identifies remaining primary-source gaps. Even then, source completeness must remain PARTIAL while archive/attachment limitations persist. The user has not authorized merging PR #22.
+
+## Bounded semantic reconciliation — Flet PopupMenuItem failure claim — 2026-10-13
+
+**Scope of this pass:** one report claim about the Flet error `PopupMenuItem.__init__() got an unexpected keyword argument 'text'`; this is not a whole-report completion claim.
+
+- **Secondary report evidence:** the Library search result for `Отчеты о извлечении.txt` describes the error as historical and explicitly warns that final fixes must not be inferred without evidence.
+- **Canonical memory checked:** `projects/RECIPE_MANAGER/events.jsonl`, record `EVT-20260927-001`, was read directly from the PR #22 branch. It records the reported error and traceback location, treats Flet API incompatibility as a hypothesis rather than a proven root cause, says final fix/retest are not confirmed, and sets outcome to unknown.
+- **Cross-check result:** the canonical event preserves the claim without upgrading it to a verified fix. No contradictory success claim was found in the checked event record. This is a **consistent report-to-memory match for this single claim**, not proof that all mentions elsewhere in the report bundle are reconciled.
+- **Source/provenance limitation:** the canonical record cites a user message dated 2026-09-27, but this bounded pass did not independently reopen the raw primary message. Primary-message corroboration remains pending; the present result is a secondary-report-to-canonical-record match.
+- **No app change:** no application source, database, or APK was modified or built.
+- **Next bounded pass:** select one separate claim from the extraction report and compare it with its exact canonical record and evidence level; do not repeat this check unless new evidence changes the record.
