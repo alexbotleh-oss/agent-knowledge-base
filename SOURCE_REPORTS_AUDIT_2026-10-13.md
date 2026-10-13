@@ -89,6 +89,25 @@ The user supplied an additional text extract, `Последние дествия
 - PR #22 remains Draft, open, and unmerged; base is `main`.
 - GitHub reports 59 changed files. The comparison against `main` shows all 59 are memory, protocol, audit, template, or project-memory files; no app source, HTML/JS app code, database, or APK files are included. Full file-by-file read-back and semantic reconciliation of every source claim are not yet complete.
 
+## Structured cross-reference audit — 2026-10-13
+
+A direct read-back of all seven structured JSONL event/lesson files found a referential-integrity defect after the N99 / B77 project-boundary correction: three structured records still referenced the retired identifier `EVT-20260922-001`, which is not present in the consolidation branch. The canonical event for the HTML/SQLite incident is `EVT-B77-20260922-001` under `projects/B77_HTML_PWA/events.jsonl`.
+
+The stale references were repaired in:
+- `projects/RECIPE_MANAGER/events.jsonl` (the N99 cross-project link now points to the canonical B77 event);
+- `projects/B77_HTML_PWA/events.jsonl` (the later HTML regression points to the canonical September event);
+- `lessons/global/records.jsonl` (the global CRUD/import lesson now cites the canonical source event).
+
+This is an identifier/link repair, not a claim that the HTML defect was fixed. Historical prose that documents prior branch state remains historical evidence and must not be rewritten as if the old identifier never existed.
+
+Read-back validation after the repair:
+- 41 event records parsed across RECIPE_MANAGER (22), B77_HTML_PWA (6), CARD111 (6), and ORGANISM (7);
+- 14 lesson records parsed across CARD111 (4), ORGANISM (5), and global lessons (5);
+- no JSONL parse errors or duplicate IDs in those sets;
+- no unresolved `related_event_ids`, `created_from_event_ids`, or event-formatted `evidence_refs` in those structured records.
+
+This structural check does not establish semantic completeness of every source chat or confirm application runtime behavior.
+
 ## Next reconciliation steps
 
 1. Continue message-by-message matching of report claims against source chat messages and current event/lesson records.
