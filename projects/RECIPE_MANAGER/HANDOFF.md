@@ -192,5 +192,5 @@ An additional build-attempt chain was saved as `BUILD_PACKAGING_ATTEMPT_2026-09-
 ## Consolidated memory transfer — 2026-10-12
 - EVT-20261012-019 records HTTPS/PWA camera video with failed decode; EVT-20261012-017/018 record the separate task-boundary incident and continuation.
 - Parallel source branches assigned L-RM-022 to two different lessons. This branch reserves L-RM-022 for camera decode and renumbers the task-boundary lesson to L-RM-023.
-- Event ID EVT-20261012-007 is not present in the accessible sequence; its meaning is unknown.
+- EVT-20261012-007 is recovered from open Draft PR #8 (`handoff/recipe-manager-ui-platform-memory-20261012`) and the extraction report. It records a partial/medium-confidence observation about shared Flet UI tokens and PC/Android platform-specific navigation; candidate lesson restored as `L-RM-010` (legacy source ID `LESSON-RM-010`). The original 2026-10-12 message is absent from the inspected raw ZIP, so current app behavior remains unverified.
 - The rollup is memory-only, remains PARTIAL, and does not merge or close the source PRs. No app code/DB/HTML was changed and no APK was built.
