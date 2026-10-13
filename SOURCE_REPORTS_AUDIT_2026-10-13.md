@@ -158,3 +158,12 @@ The earlier first-pass count of 23 RECIPE_MANAGER structured events is supersede
 A structured-to-narrative comparison found that 10 of the 24 RECIPE_MANAGER records did not have standalone event headings in `EVENT_LOG.md`. A concise index was added to point to those existing records without duplicating their payloads. This improves traceability; it does not establish that every source message or final outcome is recovered.
 
 The count correction is structural, not a change to the source-completeness verdict. The archive remains **PARTIAL**: the supplied raw ZIP covers 37 conversation objects and 10,034 distinct message IDs through 2026-10-07; it does not contain the later transfer chat or the separate binary attachment bytes. The source-report text itself has a metadata/materialized-text size discrepancy and contains repeated report blocks, so report claims still require event-by-event provenance checks.
+
+
+## Recovery of report-identified EVT-20261012-007 — 2026-10-13
+
+The report bundle explicitly identifies `EVT-20261012-007` as a PR #8 event about the shift toward a shared Flet UI Design System and the risk of platform regressions. A direct read of PR #8's branch confirms the record and its candidate lesson `LESSON-RM-010`; neither was present in the current consolidated `RECIPE_MANAGER/events.jsonl` or `LESSONS.md`. This is a concrete transfer omission, unlike the previously unexplained number gap.
+
+The event was recovered into the canonical JSONL after `EVT-20261012-006`, with the original facts, hypotheses, evidence classes, related IDs, confidence and next action preserved. A corresponding human-readable candidate lesson was added as `L-RM-010`; the old source ID `LESSON-RM-010` is retained in provenance. The event and lesson remain **partial/candidate, confidence medium**: the original October 12 message is not in the inspected raw ZIP, and historical `main(9).py`/project summaries do not prove the current app state. No application files were changed.
+
+Current structured counts after recovery: RECIPE_MANAGER 25, B77 22, CARD111 15, ORGANISM 7 = 69 events; 16 structured lessons remain in CARD111, ORGANISM and global lesson records. The RECIPE_MANAGER lesson index remains Markdown-only by design. CI and final file read-back must be checked against the resulting branch head. The overall source completeness remains **PARTIAL**.
