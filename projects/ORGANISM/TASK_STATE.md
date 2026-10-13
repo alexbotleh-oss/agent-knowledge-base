@@ -28,3 +28,14 @@
 
 ## Immediate next action
 Finish writing/re-reading memory records and run validators available in agent-knowledge-base. The next ORGANISM engineering task is a minimal, traceable investigation/fix of WebView image upload, followed by device evidence.
+
+
+## Addendum — OAuth return-path diagnosis (2026-10-13)
+
+- User goal: stop the repeated consent-page spinner/manual-switch workaround using a phone-visible event trace.
+- Observed: consent action spins; browser remains on auth.openai.com; app appears connected after manual switch. User says the behavior dates back to the first use.
+- Verified code state: AuthTrace and a Settings trace viewer exist on inspected branch; OAuth starts loopback listener and waits up to 120s for callback.
+- Branch HEAD at review time: 2f67f6b817b065acaa8b9f4bd0e0a77e6b73d7ce. Relevant file blob SHAs are in SOURCES.jsonl.
+- Unknown: whether installed APK matches that branch/head; whether callback reaches the listener; whether token exchange completes before the status is shown.
+- Not done: fresh device trace, patch, build and device retest.
+- Next: request one sanitized auth trace from a controlled attempt and fix only the stage localized by its final event. Preserve app data and credentials.
