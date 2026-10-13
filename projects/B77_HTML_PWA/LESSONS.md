@@ -62,6 +62,14 @@ Status labels: **validated** means the described event/result is supported by a 
 - **Rule:** verify separately: secure context and permission → video/frame availability → decoder invocation → decoded value and symbology → callback/business handler → persistence → stop behavior after a successful decode. Do not diagnose a stop-after-success failure when no successful decode was observed.
 - **Limit:** the browser/PWA pipeline is distinct from the native N99/Flet scanner.
 
+## B77-L-011 — Normalize recipe ingredients with explicit domain rules and negative pairs
+- **Trigger:** Recipe ingredients imported from a database do not match existing Products because the matcher compares names almost one-to-one or ignores domain-specific synonyms.
+- **Observed problem:** The user reported false negatives (for example, eggs present in Products reported missing) and false positives (rice flour/rice oil treated as present when absent), alongside a broken HTML/SQLite database path. The exact code-level root cause and final implementation are unknown.
+- **Effective approach:** Keep a transparent, testable synonym/canonicalization table by product type; preserve the original recipe display text separately from the normalized lookup key; test both positive pairs and negative pairs. Include the user-specified rules for onion, rice, sunflower/vegetable oil, meat/mince, eggs, wheat flour, butter, and salt. Red/green onion must not collapse into plain onion, chicken mince must not be treated as generic non-chicken mince, and rice flour/rice oil must not match rice.
+- **Failed approach:** Near-literal string matching and broad substring matching without category-specific exclusions.
+- **Acceptance checks:** Test every specified positive/negative pair against the actual Products database, then verify recipe import, product availability, and persistence after reload. A rule list alone is not proof that the app implements it.
+- **Evidence/status:** Requirement and symptoms are supported by the available project context and EVENT_LOG.md / HTML_SQLITE_REGRESSION_2026-09-22.md; final code, full HTML diff, and runtime outcome are unavailable. High confidence in the stated user requirement; medium confidence that every early HTML conversation belongs specifically to B77.
+- **Provenance note:** PR #21 used the colliding legacy lesson ID L-RM-008 for this lesson. That ID is already used in canonical RECIPE_MANAGER memory for the Android navigation/packaging lesson, so this canonical B77 record deliberately uses B77-L-011 rather than importing the colliding ID.
 ## Cross-project candidates to compare against RECIPE_MANAGER
 1. Context recovery should precede new work.
 2. One bounded change per iteration, followed by a reverse-diff and regression checks.
