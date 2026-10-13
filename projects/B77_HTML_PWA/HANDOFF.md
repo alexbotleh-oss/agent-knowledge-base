@@ -14,9 +14,12 @@ Use the real history of Б77 HTML/PWA to learn from recurring failures and impro
 
 ## Work completed in this memory pass
 - Added a partial project state.
-- Reconstructed selected events from dated Git commits and the continuity report.
-- Preserved the Data Matrix attempt/rollback sequence without inventing the technical cause.
-- Extracted project-level lessons and cross-project candidates.
+- Reconstructed selected events from dated Git commits, the continuity report, and raw messages from the available 37-conversation archive.
+- Restored nine B77 events that already existed in the narrative log but were missing from structured JSONL.
+- Added five distinct B77 regression/recovery events from raw October 3–5 user messages: long-press/swipe/Light Cook regressions; Products/Shopping flow failures; category/sort/unit integrity; wrong recipe identity/context-menu regressions; and rollback blocked by a lost source file.
+- Added source message IDs/timestamps where available and corrected the October 5 scanner baseline time from Git history.
+- Added canonical B77 lessons B77-L-008/009/010; moved HTML-specific rules in RECIPE_MANAGER to explicit cross-project pointers instead of duplicate N99 lessons.
+- The raw archive itself still contains only conversations.json; binary attachments and later October 12–13 primary messages are not included.
 - No application files were changed by this learning pass.
 
 ## Next practical steps
@@ -27,7 +30,7 @@ Use the real history of Б77 HTML/PWA to learn from recurring failures and impro
 5. Only after evidence supports generalization, promote lessons to shared/global memory with source links and applicability limits.
 
 ## Important unknowns
-- Full source-chat history for B77 is not present in this memory package.
+- The available raw archive includes 37 conversation objects through 2026-10-07, but not the full export or separate binary attachments; October 12–13 transfer notes are secondary sources.
 - The precise technical reason for the Data Matrix rollback is not established by the commit titles alone.
 - This handoff does not establish that every scanner feature is currently working on iPhone.
 - The user's current report that the project is stopped due to recurring errors is authoritative as a project-status statement, but it does not identify a single technical root cause.
