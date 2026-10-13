@@ -13,7 +13,7 @@
 - **Scope audit result:** 37 paths are full/project-specific records under B77_HTML_PWA, CARD111, ORGANISM and RECIPE_MANAGER; two additional reports focus on individual application histories. These 39 paths are outside the direct task scope unless reduced to transferable memory-process lessons. `SOURCE_REPORTS_AUDIT_2026-10-13.md` is mixed and needs narrowing. Do not call PR scope-clean. No files were deleted pending a verified preservation destination; no merge is authorized.
 - **Environment limitation:** local git clone failed with “Could not resolve host: github.com”. Local validators and unit tests were not run; rely only on the cited baseline CI until a later exact-SHA run is confirmed.
 - **Source coverage:** PARTIAL. The uploaded task file turn209file0 was read; selected prior context and repository artifacts were reviewed. Full history of all «Настройка Агента» chats and all binary attachments is not confirmed as available in this session.
-- **New continuity records:** TASK_STATE.md, EVENT_LOG.md, events.jsonl, DECISIONS.md, LESSONS.md, HANDOFF.md. Events EVT-AGMS-20261013-001–003 record the live PR and scope audits.
+- **New continuity records:** TASK_STATE.md, EVENT_LOG.md, events.jsonl, DECISIONS.md, LESSONS.md, HANDOFF.md. Events EVT-AGMS-20261013-001–004 record PR, scope and source audits.
 - **Next step:** choose a safe way to preserve and separate out-of-scope project records, narrow mixed report content, then refresh PR description and CI on the final head.
 - **Evidence limitation:** filename inventory is complete for all 81 changed paths, but semantic review of every source claim remains partial; source archive/attachment coverage is partial. Local validators and unit tests were not run in this session.
 
