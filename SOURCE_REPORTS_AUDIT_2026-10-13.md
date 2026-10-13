@@ -85,7 +85,7 @@ Do not increase confidence by repeating the same second-hand report. Keep indepe
 The user supplied an additional text extract, `Последние дествия в предидущем чате.txt`, describing the prior session's latest actions. It confirms that the report-bundle audit had been added to PR #22 and read back, and that the PR remained Draft/open and unmerged. These statements were checked against live GitHub state rather than accepted from the extract alone.
 
 - The supplied note described the earlier PR #22 checkpoint at head `879fb70c8f24175dbe7404902bae9a76c73b9475`; GitHub Actions `Validate knowledge base` passed on that exact head, run #123: https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38355846764.
-- During this continuation, all 59 PR paths were individually retrieved and scope-reviewed; raw archive counts were verified; stale structured event references were repaired; 16 B77 event records, nine CARD111 event records, and one N99 product-expiry event were added from narrative/raw chat sources; two CARD111 lessons and three canonical B77 lessons were added; the duplicate RECIPE_MANAGER EVT-20261012-013 narrative block was deduplicated; and lesson evidence paths were checked against the canonical event files. PR #22 head `2e7183c71dec3906ecb3df22f6ad318050e6ee19` passed GitHub Actions `Validate knowledge base`, run #182: https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38362213710.
+- Historical checkpoint: all 59 paths then in PR #22 had been retrieved and scope-reviewed; source records were reconciled and CI passed on head `2e7183c71dec3906ecb3df22f6ad318050e6ee19`, run #182: https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38362213710. This is not the latest checkpoint.
 - PR #22 remains Draft, open, and unmerged; base is `main`.
 - GitHub reports 60 changed files. The comparison against `main` shows all 60 are memory, protocol, audit, template, or project-memory files; no app source, HTML/JS app code, database, or APK files are included. Line-by-line semantic reconciliation of every source claim remains incomplete.
 
@@ -120,7 +120,7 @@ A provenance check across lesson records found that global lesson `G-LESSON-004`
 
 A targeted pass over the October 2 mixed-scope source conversation recovered two earlier B77/PWA incidents absent from the current event chain: repeated IndexedDB backing-store open errors during the scan action, and the separate scanner-mode/camera/stop/decode failure. These are now EVT-B77-20261002-001/002, linked to later B77 scanner events but retained as a distinct earlier occurrence. The same conversation also contains a separate N99 product-list requirement, EVT-RM-20261002-001, recording that a saved expiry date could not be edited and that the user proposed moving Add Product above the list; the proposed UI change remains pending source/decision reconciliation.
 
-At an earlier audit checkpoint, GitHub's compare API reported PR #22 as 206 commits ahead of `main`, 0 behind, with 59 changed files. At that checkpoint, the PR commit endpoint returned 208 paginated entries with 152 unique commit subjects; those subjects were reviewed as export/docs/memory-oriented. This is historical checkpoint data, not the current count. The current compare is recorded in `CHAT_EXPORT_COVERAGE_2026-10-12.md` and reports 230 commits ahead, 0 behind, and 60 changed files. The subject review is not a full diff review of every historical commit. Keep the PR Draft/open and do not merge without explicit user permission.
+At earlier audit checkpoints, GitHub's compare API reported 206 and later 230 commits ahead of `main`, 0 behind, with 59 and later 60 changed files respectively. At the 206-commit checkpoint, the PR commit endpoint returned 208 paginated entries with 152 unique commit subjects; those subjects were reviewed as export/docs/memory-oriented. These are historical checkpoints, not the current count. Current live comparison is recorded in the latest coverage checkpoint below. The subject review is not a full diff review of every historical commit. Keep the PR Draft/open and do not merge without explicit user permission.
 
 ## Master control matrix artifacts recovered from Library — 2026-10-13
 
@@ -135,7 +135,7 @@ The earlier audit left the acceptance status of expiry editing and Add Product p
 ## Next reconciliation steps
 
 1. Continue message-by-message matching of report claims against source chat messages and current event/lesson records.
-2. Complete line-by-line semantic reconciliation of the 59 already retrieved/scope-reviewed files against primary messages and attachments; the file retrieval/scope review is complete, but semantic source coverage is not.
+2. Continue line-by-line semantic reconciliation of the 60 retrieved/scope-reviewed files against primary messages and attachments; the file retrieval/scope review is complete, but semantic source coverage is not.
 3. Inspect whether every report claim is present in the PR branch and distinguish it from claims present only in older PRs or reports.
 4. Keep the archive count grounded at 37 conversation objects / 10,034 distinct message IDs; the older 74-chat note is explicitly marked unsupported by current source evidence until its originating manifest or report is found.
 5. Keep source completeness `PARTIAL` until primary-source coverage and missing artifacts are accounted for.
@@ -231,3 +231,10 @@ The seven structured lesson records in PR #8 were compared with the current proj
 - `LESSON-RM-010` was the one lesson absent from the consolidated Markdown memory; it has now been restored as candidate `L-RM-010`, with its legacy ID and source branch preserved in provenance.
 
 No other PR #8 lesson payload was found to be absent after these mappings. The PR #8 branch remains open Draft and is not merged; the audit did not modify or close it.
+
+
+## Current branch and CI checkpoint — 2026-10-13 07:42 UTC
+
+Live GitHub recheck: PR #22 is still Draft/open/unmerged against `main`; its exact HEAD is `e3557497f757b8377a4c01a5e7d1f7ab4fbbafba`, with 60 changed paths. The compare API reports 263 commits ahead and 0 behind. GitHub Actions `Validate knowledge base` passed on this exact HEAD, run #38364347001: https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38364347001.
+
+The 60 paths were fetched and scope-reviewed in bounded batches. This does not mean every sentence has been semantically matched against every primary message or binary attachment. The remaining source-to-memory comparison is still PARTIAL. The latest PR #21 lesson reconciliation added B77-L-011 and B77-L-012, and corrected the B77 EVT-20261012-014 lesson references; these changes are included in the successful HEAD above.
