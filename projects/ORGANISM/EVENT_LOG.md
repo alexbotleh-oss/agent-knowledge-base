@@ -79,3 +79,59 @@ Append-only event history. Dates refer to event/artifact dates when known; the m
 - Separate issue: subscription_sharing_usage_limit_exceeded is a provider/account usage-limit response and is not evidence of OAuth callback failure.
 - Status: symptom user-reported and screenshot-observed; root cause UNCONFIRMED. No patch, build or fresh device trace was made in this event.
 - Next test: clear only the auth diagnostic trace, not app data; run one controlled connect attempt; after spinner stalls, copy trace. Determine whether it ends at BROWSER_LAUNCH/CALLBACK_WAIT, records CALLBACK_RECEIVED, or advances to token validation/persistence. Do not share full URLs, codes, tokens, cookies or account details.
+
+
+## E-ORG-011 — Master architecture v0.3 consolidates the continuity-first design
+- **Event/artifact date:** 2026-10-07 (date printed in the artifact).
+- **Source:** S-ORG-019 (master architecture v0.3), supported by S-ORG-020 (ORGANISM_SOLUTION_v0.2) and S-ORG-021 (memory/history pipeline).
+- **Prior state:** several competing proposals described different implementation orders and storage complexity.
+- **Documented outcome:** prioritize a demonstrable continuity test; preserve RAW and provenance; establish a sound logical memory model without overbuilding the physical schema; use SQLite as the first local store; append event history; implement Context/Resume Engine; keep CORE separate from MEMORY; treat the model as a replaceable executor.
+- **Status:** architecture decision documented in a project artifact; not evidence that these components were implemented or tested in the app.
+- **Causal confidence:** direct evidence of what the document decided; not evidence that the design has already succeeded in runtime.
+
+## E-ORG-012 — Memory/History pipeline and adversarial review requirements documented
+- **Event/artifact date:** 2026-10-08 (dates printed in the specifications).
+- **Sources:** S-ORG-021, S-ORG-022, S-ORG-025, S-ORG-026.
+- **Documented pipeline:** RAW → PROVENANCE → EXTRACTION → AUDIT → MEMORY MAP / LOSS-COVERAGE MAP → MEMORY → CONTEXT / ACTIVE FIELD → MEMORY HANDOFF → MODEL → NEW EXPERIENCE, with feedback into the event log and memory.
+- **Key constraints:** preserve the original source; retain chronology and changes in understanding; distinguish claims from verification status; keep project-specific experience separate from transferable lessons; retain negative experience and rejected paths; show extraction coverage and uncertainty.
+- **Important limit:** S-ORG-025 and S-ORG-026 are task/specification documents for independent analysis, not proof that every requested stress test was executed or passed.
+- **Status:** design requirements documented; runtime implementation and end-to-end tests are not established by these artifacts alone.
+
+## E-ORG-013 — User clarifies browser-mediated Android agent requirements
+- **Event date:** 2026-10-13; exact message timestamp/ID unavailable in the retained chat excerpt.
+- **Source:** S-ORG-017.
+- **User-stated goal:** Android application stores chat history, restores context when a chat reaches its limit or work moves to another chat, uses prior experience to build better prompts, and detects repetitive no-progress loops.
+- **Interaction preference:** embed the AI provider's web interface; the application should mediate input and read the response from the browser rather than defaulting to a model API.
+- **Autonomy preference:** maximize autonomy within explicit safety and permission limits.
+- **Status:** user requirement / product direction. This event does not establish that browser send/receive automation is implemented or that a provider permits every proposed interaction.
+
+## E-ORG-014 — Assistant proposed a Kotlin/Room implementation before inspecting the live source repository
+- **Event date:** 2026-10-13, in the assistant architecture response immediately preceding this transfer request.
+- **Source:** S-ORG-017 (current conversation); counter-evidence: S-ORG-029 and S-ORG-030.
+- **Action:** the response proposed Kotlin and Room as the Android implementation stack and depicted WebView input/output as an interaction loop.
+- **New evidence:** the live ORGANISM repository already contains Java application classes including MainActivity.java, Db.java, ImportPipeline.java, ContextEngine.java, ExperienceEngine.java, ReflexEngine.java and PlatformWebActivity.java. The inspected PlatformWebActivity source implements a separate composer that copies text to the clipboard; it does not by itself demonstrate automatic provider-message submission and response ingestion.
+- **Assessment:** the Kotlin/Room recommendation was premature and was not grounded in the existing implementation. Treat it as an unaccepted proposal, not a project decision. Continue from the existing Java/SQLite application unless an explicit migration case is established.
+- **Status:** corrected design recommendation; no project source was changed by this transfer.
+
+## E-ORG-015 — Current source readback corrects a stale WebView content-access observation
+- **Observation date:** 2026-10-13.
+- **Sources:** S-ORG-029 and S-ORG-030; earlier transfer observation S-ORG-002.
+- **Observed current branch state:** fix/oauth-diagnostic-trace-20261009 points to 2f67f6b817b065acaa8b9f4bd0e0a77e6b73d7ce. The current PlatformWebActivity.java blob is 64719a041ac899884bb6abb462b2e536a8088528 and sets WebSettings.setAllowContentAccess(true) while retaining the separate clipboard-based composer.
+- **Correction boundary:** the earlier note that the source contained setAllowContentAccess(false) may accurately describe the older blob inspected at that time, but it is not accurate for the current branch file. The old observation must remain in history, not be silently rewritten. It is not a current explanation of the upload issue.
+- **Status:** source-level readback verified; end-to-end attachment behavior is not established by this readback.
+
+## E-ORG-016 — Source repository branch pointers are inconsistent across current refs and handoff text
+- **Observation date:** 2026-10-13.
+- **Sources:** S-ORG-027 and S-ORG-028.
+- **Observed refs:** main → 6835e00ba03a3bef3206eb49c924f80604c1da17; fix/oauth-diagnostic-trace-20261009 → 2f67f6b817b065acaa8b9f4bd0e0a77e6b73d7ce; fix/zip-import-crash-and-archive-restore → c201c730604575bd799971accff486ff0e51bb22.
+- **Conflict:** PROJECT_INSTRUCTIONS / handoff text still points to fix/zip-import-crash-and-archive-restore, while the inspected fix/oauth-diagnostic-trace-20261009 branch has a later commit timestamp. GitHub branch refs establish these branch heads, but cannot establish which branch is checked out in a user's local working tree.
+- **Status:** conflicting project metadata preserved; no local-worktree branch is asserted.
+
+
+## E-ORG-017 — Direct database source read confirms an existing SQLite schema
+- **Observation date:** 2026-10-13.
+- **Source:** S-ORG-032.
+- **Observed:** Db.java extends Android SQLiteOpenHelper and defines existing tables for projects, project_states, tasks, sources, events, actions, results, verifications, memory_objects, memory_search, memory_tags, relations, experiences, rejected_paths, loss_coverage, sessions, availability_log, change_log and system_params.
+- **Interpretation:** the current app already contains a substantial SQLite schema aligned with several architecture concepts. This is source-level evidence of schema code, not proof that every table or workflow is fully exercised or correct at runtime.
+- **Correction:** a proposal to introduce Kotlin + Room without inspecting this existing database would risk unnecessary migration and duplication. Continue from the existing Db.java schema and test the required workflows before redesigning it.
+- **Status:** source inspected; no app code or database was changed.

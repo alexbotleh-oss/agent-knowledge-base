@@ -40,3 +40,12 @@
 - Decision: use the existing copyable OAuth trace first; add markers only for unobserved boundaries. Record listener readiness, browser handoff, callback receipt/timeout, state/code presence (never values), token exchange outcome, validation, persistence and foreground return.
 - Privacy: do not log authorization URLs, codes, tokens, cookies, email or secret parameters.
 - Status: accepted diagnostic strategy; no fresh trace for this failure has been collected yet.
+
+
+## D-ORG-008 — Browser-mediated input/output, persistent history and loop control
+- **Decision/requirement date:** 2026-10-13; exact message timestamp unavailable.
+- **Owner:** user.
+- **Requirement:** use the embedded provider web interface as the preferred interaction surface; ORGANISM should prepare/submit task input, read the resulting response where supported, retain chat history, reconstruct context after chat limits/transitions, and use prior experience to improve task framing and detect repeated no-progress attempts.
+- **Status:** active product requirement, not implemented/verified end-to-end.
+- **Constraints:** do not bypass authentication, CAPTCHA, anti-automation controls or usage limits; do not assume a provider permits programmatic DOM interaction. Keep the browser/provider adapter replaceable and the memory core independent.
+- **Relationship:** supplements D-ORG-001 and D-ORG-003; it does not create a second platform decision.
