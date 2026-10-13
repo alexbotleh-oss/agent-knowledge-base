@@ -80,10 +80,19 @@ For every future reconciliation, record:
 
 Do not increase confidence by repeating the same second-hand report. Keep independent corroboration and failed attempts linked to the event chain.
 
+## Latest verification update — 2026-10-13
+
+The user supplied an additional text extract, `Последние дествия в предидущем чате.txt`, describing the prior session's latest actions. It confirms that the report-bundle audit had been added to PR #22 and read back, and that the PR remained Draft/open and unmerged. These statements were checked against live GitHub state rather than accepted from the extract alone.
+
+- PR #22 head: `879fb70c8f24175dbe7404902bae9a76c73b9475` on `export/cross-project-experience-rollup-20261012`.
+- GitHub Actions `Validate knowledge base`: PASS on that exact head, run #123: https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38355846764.
+- PR #22 remains Draft, open, and unmerged; base is `main`.
+- GitHub currently reports 59 changed files. Full file-by-file read-back and semantic reconciliation of every source claim are not yet complete.
+
 ## Next reconciliation steps
 
 1. Continue message-by-message matching of report claims against source chat messages and current event/lesson records.
-2. Verify the exact current PR head and run CI for that head; CI success is structural validation only, not historical completeness.
+2. Complete file-by-file read-back of all 59 changed paths and verify that each change remains within memory/core-documentation scope.
 3. Inspect whether every report claim is present in the PR branch and distinguish it from claims present only in older PRs or reports.
 4. Resolve or explicitly preserve the 37-versus-74 conversation count discrepancy using actual export evidence.
 5. Keep source completeness `PARTIAL` until primary-source coverage and missing artifacts are accounted for.
