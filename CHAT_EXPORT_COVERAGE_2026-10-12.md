@@ -64,12 +64,12 @@ These are separate projects despite sharing a product name and recipe domain. Do
 - Other older RECIPE_MANAGER PRs remain open. This rollup does not merge, close or rewrite any source PR. Review consolidation before any merge.
 
 ## Validation checklist
-- [x] Original consolidation read-back covered 46 paths; three new source-audit/B77 files were added and the key changed files were read back after the split (49 changed paths total).
+- [x] The earlier read-back covered 46 paths; three source-audit/B77 additions were then read back (49 paths covered in that check). The current GitHub PR diff contains 58 changed files, so the read-back count is not the same as the current diff count; reconcile the remaining paths before merge.
 - [x] Parsed current JSONL files: RECIPE_MANAGER events 22/22 valid and unique; B77 HTML/PWA events 6/6 valid and unique; CARD111 events 6/6 and lessons 4/4 unique; ORGANISM events 7/7 and lessons 5/5 unique; global lessons 5/5 unique.
 - [x] Reconciled original event/lesson ID collisions: EVT-20261012-017/018 are task-scope/transfer events, EVT-20261012-019 is PWA camera decode; L-RM-022 is camera decode, L-RM-023 is task boundary.
-- [x] Compared original branch with main: 46 changed paths, all memory/core documentation; no app source, HTML/JS project code, databases, or APKs.
+- [x] The initial compare recorded 46 changed paths, all memory/core documentation. The current PR API reports 58 changed files; the current diff should be used for scope review. No app source, HTML/JS project code, databases, or APKs are reported among the changed paths.
 - [x] Draft PR #22 remains open and unmerged: https://github.com/alexbotleh-oss/agent-knowledge-base/pull/22.
-- [x] GitHub Actions Validate knowledge base passed on consolidation head `2d26c705c21890ed0673f32dc14f00ffbe7e168a`, run #103, and on subsequent coverage-update head `e0ba9626c3096df8589a9ca1251b7136e2387788`, run #104: https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38307427058. These results apply to their stated SHAs; check the latest head's run before merging.
+- [x] Historical CI runs #103/#104 passed on their stated older SHAs. Current GitHub Actions Validate knowledge base passed on HEAD `b78b0b873123f9c5dde403077a181fb89ef1da49`, run #120: https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38310227032. These are structural checks, not proof of historical-source completeness.
 - [x] Moved clearly HTML/PWA-specific source events out of N99's event chain: early HTML/SQLite regressions, EVT-20261012-014, PWA Shopping/Products EVT-20261012-016 and browser camera decode EVT-20261012-019 now live under B77. Early September attribution to B77 remains medium confidence where the source conversation does not name the project.
 - [ ] Continue message-by-message review of remaining mixed N99/B77 conversations before treating the project histories as complete.
 
