@@ -264,3 +264,16 @@ This continuation resumed after the user requested shorter sessions due to unrel
 - The existing coverage report states all 60 changed paths were fetched and scope-reviewed in bounded batches. This continuation additionally re-read the control-matrix audit, RECIPE_MANAGER task state/handoff, both coverage/audit reports, and the structured JSONL files listed above.
 - Next substantive work is semantic matching of source-report claims to canonical events/decisions/lessons, and resolution or explicit preservation of the 37-versus-74 conversation-count discrepancy. Do not infer source completeness from CI or unique IDs.
 - Overall source-to-memory completeness remains **PARTIAL**. No merge, app-code modification, database change, or APK build was performed.
+
+## Bounded continuation — narrative/structured event parity — 2026-10-13
+
+This continuation was split into short read-back batches due to intermittent connectivity. Before reading, the current PR branch was checked; PR #22 remained Draft/open/unmerged against `main`.
+
+- At the start of this pass, current HEAD was `f33f290eb5f4778f13d19dc1bf54d2f08399d946`; GitHub Actions `Validate knowledge base` passed on that exact SHA, run #38365561472: https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38365561472.
+- GitHub reports 60 changed files. All 60 paths were enumerated from the PR file-list endpoint. Project and core files were re-read in bounded batches; structured records were separately parsed below.
+- Narrative-to-structured event-ID comparison: B77 HTML/PWA 22 narrative IDs / 22 JSONL records, no missing or extra IDs; CARD111 15 / 15, no missing or extra IDs; ORGANISM 7 / 7, no missing or extra IDs.
+- RECIPE_MANAGER has 25 structured event records. Every structured event ID appears in its narrative log. Four narrative-only IDs are intentional historical/cross-project pointers: legacy `EVT-20260922-001` and B77 canonical records `EVT-20261012-014/016/019`; they are not new N99 structured events.
+- Re-parsed seven canonical JSONL files: RECIPE_MANAGER events 25, B77 events 22, CARD111 events 15, CARD111 lessons 6, ORGANISM events 7, ORGANISM lessons 5, and global lessons 5. All 85 records parsed; IDs were present and unique within each file. This is a structural check, not a claim of full semantic source coverage.
+- A current-file-list check and these targeted parity checks did not resolve the outstanding message-by-message reconciliation of mixed N99/B77 source conversations or missing binary artifacts. Source-to-memory completeness remains **PARTIAL**.
+
+Next: continue semantic comparison of source claims against their canonical event/decision/lesson records in small batches; keep source chronology separate from import order and preserve project attribution uncertainty.
