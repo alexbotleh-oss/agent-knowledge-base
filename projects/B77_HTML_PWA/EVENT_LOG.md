@@ -51,6 +51,12 @@ Full source-based details: `projects/B77_HTML_PWA/HTML_SQLITE_REGRESSION_2026-09
 - **Recorded result:** continuity report says the change was isolated to `stage14.html`, with 74 additions and 7 deletions relative to the pre-camera backup.
 - **Integration constraint:** camera is an input layer; it must feed the existing chain `openScanner(context) → scanSubmit() → Core.findQR() → existing Products/Shopping/QR handler`. Do not create a parallel Core or business-result path.
 
+### EVT-B77-20261005-007 — cross-chat context failure recorded
+- **Event time:** 2026-10-05 11:34:08 UTC.
+- **Evidence:** [continuity incident commit](https://github.com/alexbotleh-oss/LK/commit/ded22885e28773b12ccd0fb8c494af5d2991af55); [report](https://github.com/alexbotleh-oss/LK/blob/main/reports/PROJECT_CONTINUITY_20261005.md).
+- **Observation:** during chat transition, the assistant rediscovered the repository generically and asked the user for a repository identifier already available in the project context.
+- **Classification:** assistant context-continuity failure, not an application-code defect.
+
 ### EVT-B77-20261005-005 — scanner diagnostics and button binding
 - **Event times:** 2026-10-05 12:18:05 UTC (diagnostics), 13:03:33 UTC (pre-change snapshot), and 13:03:45 UTC (delegated click binding).
 - **Evidence:** [diagnostics commit](https://github.com/alexbotleh-oss/LK/commit/8926667ecbfd95fcb83b3e50dcd17177224c5370); [snapshot](https://github.com/alexbotleh-oss/LK/commit/162442d1fbccf6e41e536ffed3fc5882eef7e2be); [binding fix](https://github.com/alexbotleh-oss/LK/commit/52fb9851bb5f6cde5fad73463b6dd4051221c7a7).
@@ -61,12 +67,6 @@ Full source-based details: `projects/B77_HTML_PWA/HTML_SQLITE_REGRESSION_2026-09
 - **Evidence:** [pre-change snapshot](https://github.com/alexbotleh-oss/LK/commit/2af27cd62e87376d3409ba30a298fe7a3512a22c); [attempt](https://github.com/alexbotleh-oss/LK/commit/456b4208e94b9e2130ffa2a4a29d0041d9be7679); [rollback](https://github.com/alexbotleh-oss/LK/commit/d5a77c141e268bd2275af8748c2c4e5db2fec27a).
 - **Status:** confirmed that the change was attempted and rolled back. The commit messages alone do not establish the exact technical cause or the complete test outcome.
 - **Learning signal:** a scanner-format change was not retained as a verified improvement; preserve the rollback and do not reintroduce it without a specific test case and observed result.
-
-### EVT-B77-20261005-007 — cross-chat context failure recorded
-- **Event time:** 2026-10-05 11:34:08 UTC.
-- **Evidence:** [continuity incident commit](https://github.com/alexbotleh-oss/LK/commit/ded22885e28773b12ccd0fb8c494af5d2991af55); [report](https://github.com/alexbotleh-oss/LK/blob/main/reports/PROJECT_CONTINUITY_20261005.md).
-- **Observation:** during chat transition, the assistant rediscovered the repository generically and asked the user for a repository identifier already available in the project context.
-- **Classification:** assistant context-continuity failure, not an application-code defect.
 
 ### EVT-B77-20261006-001 — project state snapshot added
 - **Event time:** 2026-10-06 03:15:09 UTC.
