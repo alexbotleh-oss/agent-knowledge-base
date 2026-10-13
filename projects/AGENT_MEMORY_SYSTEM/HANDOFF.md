@@ -76,3 +76,12 @@
 - **Status at handoff creation:** write operations returned commit SHAs. Read-back, final PR head, and exact-head CI still require verification. Runtime mechanism and behavior tests remain NOT IMPLEMENTED / NOT TESTED.
 - **Boundaries:** PR #22 remains Draft/open/unmerged and is not scope-clean per its own audit. No merge or main-branch changes. Do not claim this documentation provides automatic cross-chat persistence or background scheduling.
 - **Next single action:** read back the changed artifacts and inspect CI for the final exact branch head; then provide the user a concise report and paste-ready ChatGPT Project instruction amendment.
+
+
+## Resume point — executable temporal memory primitives — 2026-10-13
+
+- Continue from PR #22 at live HEAD after the task-state checkpoint; fetch PR metadata again because each file update creates a new commit.
+- Added `tools/temporal_memory_model.py`: snapshot validation, comparability gate using scope/counting/inclusion/exclusion identifiers, as-of assertion view, assertion provenance/time validation, and transitive dependent discovery. Added `tests/test_temporal_memory_model.py` with seven targeted cases.
+- Current automated check at the time of writing: workflow run [#38464705063](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38464705063) was in progress for commit `484eacb048caa2c7c5a6d28c9c68d8bf2d93d308`. Re-check the run against the newest HEAD after these state updates; never infer PASS from a running job.
+- Important limits: primitives are not yet connected to the canonical memory registry or import pipeline; no automatic downstream revalidation/migration is implemented. Local test commands were not run in this environment. Source coverage remains PARTIAL, PR scope remains unsafe to merge, and PR #22 must remain Draft/open/unmerged.
+- Immediate next action: re-fetch exact PR HEAD and workflow run, inspect job/test result, repair if needed, then create a versioned fixture/schema and compatibility checks only after test baseline passes. Continue preserving rather than deleting out-of-scope histories until a destination is verified.
