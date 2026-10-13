@@ -49,6 +49,10 @@ These are separate project identities despite the shared product name and overla
 - B77's current event log starts with Stage14/scanner records around October 5, while the source JSON contains earlier HTML-specific recipe/SQLite incidents from September 22 onward. Evaluate these as possible earlier B77 history, but do not invent exact B77 attribution for entries lacking a project identifier.
 - The archive supports a much stronger audit than the previous summary-only basis for the covered dates, but overall export completeness remains **PARTIAL**.
 
+## RECIPE_MANAGER narrative deduplication — 2026-10-13
+
+The source-to-memory review found two near-identical narrative blocks with the same ID `EVT-20261012-013` in `projects/RECIPE_MANAGER/EVENT_LOG.md`. Their unique wording was merged into one block and the duplicate copy removed; the structured JSONL record remains. The three HTML/PWA event headings `EVT-20261012-014/016/019` in that log are cross-project pointers to B77, not canonical RECIPE_MANAGER events. Ten other RECIPE_MANAGER events are present in JSONL without standalone narrative headings; no new events were invented to force a one-to-one heading count.
+
 ## CARD111 raw-source incident pass — 2026-10-13
 
 The raw export contains additional CARD111 source messages dated October 5–6 that were not represented by the six earlier structured event records. Nine distinct records were added to `projects/CARD111/events.jsonl` and mirrored in `EVENT_LOG.md`; the four October 5 records separate project scope, Flet/API failures, native APK storage permission, and Web/PWA decoding/saving. The five October 6 records separate symbology preservation, the empty-wallet/JavaScript failure, editor regression, Pages/cache/backup restore, and the mobile scanner freeze/format-list attempt. The source confirms the reports and recorded attempts; it does not independently prove every reported fix worked. Two lessons were added and synced in Markdown/JSONL.
