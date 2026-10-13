@@ -11,6 +11,7 @@
   4. Label each lesson as candidate or validated; a commit alone proves a change was recorded, not that the change worked at runtime.
   5. Derive prevention rules from concrete events and link to the supporting commit/report.
   6. Do not change application files as part of this learning pass.
-- **Evidence currently available:** LK commit history; `reports/PROJECT_CONTINUITY_20261005.md`; user clarification dated 2026-10-12; selected prior-chat context.
+- **Evidence currently available:** LK commit history; `reports/PROJECT_CONTINUITY_20261005.md`; raw `conversations.json` from the 37-object archive; user clarification dated 2026-10-12; and the separately supplied report bundle. The ZIP does not include the manifest's separate attachment files.
 - **Known gap:** not all source chats, local versions, screenshots, and device logs are present in this record. Therefore this is a useful partial reconstruction, not a claim of complete history.
-- **Next step:** compare these B77 lessons with the RECIPE_MANAGER handoff and mark only genuinely cross-project patterns as transferable. Keep chronology project-specific.
+- **Progress:** 20 B77 event records now match 20 narrative event headings. Nine older narrative-only records were added to JSONL; five additional B77 incidents were recovered directly from October 3–5 raw user messages. Canonical B77 lessons B77-L-008/009/010 now hold the HTML regression, ineffective filter, and camera-decode rules. RECIPE_MANAGER retains short pointers for historical ID continuity.
+- **Next step:** continue source-message reconciliation for remaining mixed-scope conversations and check whether other B77 incidents in the 37-object archive remain absent. Do not invent root causes or change application files.
