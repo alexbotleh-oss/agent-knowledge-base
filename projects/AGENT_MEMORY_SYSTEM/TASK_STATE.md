@@ -93,3 +93,12 @@
 - Exact-HEAD CI run #38464705063 was observed for this SHA and was `in_progress` at last check. No PASS claim yet. Local test execution has not been performed in this step.
 - Scope audit remains blocking: project-specific histories and two application-history reports are present in PR #22 contrary to its direct memory-system scope; do not delete them without a verified preservation destination. Full source reconciliation remains PARTIAL.
 - Next: check exact-head CI conclusion and test logs; fix any failures; add a small versioned schema/fixture and compatibility checks only after this baseline is green; then continue scope/preservation work and refresh task/handoff/PR metadata.
+
+
+## Snapshot model increment — 2026-10-13
+
+- Extended the first implementation increment with `schemas/temporal_memory_snapshot.schema.json` (version 1.0) and `tests/fixtures/temporal_snapshots_37_vs_74.json`. The fixture preserves 37 as directly observed in the inspected archive and 74 as a historical reported claim; it deliberately leaves the capture time for the 74 claim unknown and records the evidence needed for a valid comparison.
+- Added a fixture-driven test that asserts the two snapshots are not comparable because scope and counting unit are not aligned. The test also asserts that unknown capture time remains null rather than being replaced with the date of review.
+- Corrected the Python validator so an unknown capture time is permitted instead of being treated as missing. Known times still require an ISO-8601 timezone.
+- Read-back confirmed the new files are present on the PR branch. Current live PR HEAD at checkpoint: `88a7b5362d15366483c86c7c3be50c86bb9b1513`, 105 changed paths, open/Draft/unmerged. GitHub Actions run [#38464883917](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38464883917) was queued for this exact HEAD; outcome not yet known. No local test execution has been performed, so tests are pending CI evidence.
+- This is an initial vertical slice, not a complete evolving-memory architecture. Still absent: source-snapshot registry integration, assertion-revision persistence, impact propagation into state/lesson/handoff, migration/rollback, schema validation in CI, and end-to-end temporal recovery tests. Do not claim these are implemented.
