@@ -152,9 +152,78 @@
     "by_attachment": "Search attachment_index.jsonl by attachment_id or export_name, then use conversation_id + message_id to find the message in raw conversation JSON."
   },
   "coverage_limits": [
-    "The ZIP contains only conversation metadata/messages, not attachment binary payloads.",
-    "The separate asset-name map maps export asset IDs to names but does not itself contain attachment bytes.",
-    "This selection is not claimed to be all CARD111 history in every ChatGPT export; it covers CARD111-related conversation objects found in this archive snapshot.",
-    "Two included conversations contain mixed project context; only explicitly CARD111-linked facts were used for CARD111 memory updates."
-  ]
+    "The original conversations.zip contains 37 conversation objects; this repository subset includes six CARD111-related objects selected by title and repeated project identifiers. It is not proof of complete CARD111 history across all chats/exports.",
+    "The six raw conversation objects preserve the original exported JSON structures and message IDs/timestamps/order/graph links. Their JSON formatting was normalized to pretty-printed UTF-8; semantic message fields and mappings were not edited.",
+    "Two selected source conversations contain mixed project context; only CARD111-linked material should be used to update CARD111 memory. Do not import unrelated RecipeManager or AGENT_MEMORY_SYSTEM content into CARD111 project facts.",
+    "Attachment binary payloads are not embedded in conversations.zip. The 150 attachment IDs all match entries in the current Library inventory, but only five source attachments are copied into this repository in this pass.",
+    "The full 6.56 MB conversations.zip and account-wide manifest were not copied into the public repository because they contain unrelated project histories. Their SHA-256 and member/count metadata are recorded here."
+  ],
+  "supplementary_sources": [
+    {
+      "path": "projects/CARD111/source_history/reports/CARD111_FULL_REPORT_2026-10-06.md",
+      "kind": "contemporaneous secondary report",
+      "source_library_path": "/CARD111/CARD111_FULL_REPORT_2026-10-06.md",
+      "copied_to_repo": true
+    },
+    {
+      "path": "projects/CARD111/source_history/supplementary/initial_project_proposal.md",
+      "kind": "initial project proposal attachment",
+      "source_library_path": "/CARD111/предложение_проекта_кошелёк_карт.md",
+      "copied_to_repo": true
+    },
+    {
+      "path": "projects/CARD111/source_history/supplementary/CARD_TRANSFER_STATE_2026-10-05.txt",
+      "kind": "handoff/state attachment",
+      "source_library_path": "/CARD111/CARD_TRANSFER_STATE_2026-10-05(1).txt",
+      "copied_to_repo": true
+    },
+    {
+      "path": "projects/CARD111/source_history/supplementary/EXPERIMENT_3_REQUEST_FULL_CHAT_EXTRACTION.md",
+      "kind": "chat extraction request attachment",
+      "source_library_path": "/CARD111/EXPERIMENT_3_REQUEST_FULL_CHAT_EXTRACTION.md",
+      "copied_to_repo": true
+    },
+    {
+      "path": "projects/CARD111/source_history/supplementary/EXPERIMENT_4_TASK_MEMORY_TRANSFER.txt",
+      "kind": "memory transfer request attachment",
+      "source_library_path": "/CARD111/EXPERIMENT_4_TASK_MEMORY_TRANSFER.txt",
+      "copied_to_repo": true
+    },
+    {
+      "path": "projects/CARD111/source_history/supplementary/CARD111_диалог_2026-10-08.md",
+      "kind": "secondary dialogue excerpt",
+      "source_library_path": "/CARD111/CARD111_диалог_2026-10-08.md",
+      "copied_to_repo": true,
+      "limitation": "short excerpt; not a full transcript"
+    },
+    {
+      "path": "projects/CARD111/source_history/supplementary/CARD111_чат_экспорт_2026-10-08.md",
+      "kind": "secondary chat export/excerpt",
+      "source_library_path": "/CARD111/CARD111_чат_экспорт_2026-10-08.md",
+      "copied_to_repo": true,
+      "limitation": "explicitly states it is not a byte-for-byte copy of hidden full chat"
+    },
+    {
+      "path": "projects/CARD111/source_history/supplementary/CARD111_визуальные_требования_редактор_и_кошелёк.md",
+      "kind": "derived visual requirements",
+      "source_library_path": "/CARD111/CARD111_визуальные_требования_редактор_и_кошелёк.md",
+      "copied_to_repo": true,
+      "limitation": "requirements summary, not primary history"
+    }
+  ],
+  "attachment_payload_summary": {
+    "attachment_occurrences": 152,
+    "unique_attachment_ids": 150,
+    "exact_id_matches_in_library": 150,
+    "name_only_matches": 0,
+    "not_found_in_library_inventory": 0,
+    "copied_to_repository": 5,
+    "not_copied_to_repository": 145,
+    "notes": [
+      "The original conversations.zip contains message objects and attachment metadata but not attachment binary payloads.",
+      "Five source attachment payloads are copied to source_history (one report plus four source documents).",
+      "Other 145 attachment payloads remain in the user's Library; exact file IDs are recorded in attachment_availability.json. The count is based on unique attachment IDs, so duplicate/alias file names are not counted twice.",
+      "No binary image/PDF/HTML payload is claimed to be copied unless a repository path is listed explicitly."
+    ]
+  }
 }
