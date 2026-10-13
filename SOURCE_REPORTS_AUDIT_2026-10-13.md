@@ -128,6 +128,10 @@ A Library inventory found five dated control-matrix workbooks under `/Б77/`: `R
 
 These matrices are mixed-scope. The folder name `/Б77/` does not establish that every row belongs to B77; the source explicitly names N99 regressions, Flet behavior and a temporary HTML prototype as well as PWA camera behavior. The matrices are dated planning/control artifacts, not proof of current implementation. They identify open decisions for diet scope, Roulette, web adapters, PC DB schema, family server sync and PWA camera; they also state that KTP-21…KTP-28 must not be invented without the original source. No app source was changed.
 
+## Requirement-state correction — expiry editing (2026-10-13)
+
+The earlier audit left the acceptance status of expiry editing and Add Product placement unresolved. Inspection of the Library change-summary workbook now provides secondary corroboration: `RecipeManager_сводка_изменений_FIX6_V20_V21_N99.xlsx` records Add Product at the top as `CHANGE / USER`, expiry editing as `CHANGE / USER + AUDIT`, and separate batch editing as `TODO`. DEC-RM-008 and `EVT-RM-20261002-001` were updated accordingly. The requirement is now supported; whether it was implemented or passed runtime tests remains unknown. The workbook's `/Б77/` location does not make the explicitly N99-scoped user report a B77 incident.
+
 ## Next reconciliation steps
 
 1. Continue message-by-message matching of report claims against source chat messages and current event/lesson records.
