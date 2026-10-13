@@ -219,3 +219,15 @@ The lesson reconciliation was verified by reading PR #21's `projects/RECIPE_MANA
 
 
 The same PR #21 lesson comparison found its other four structured lessons (`LESSON-RM-001/002/003/007`) are already represented by canonical RECIPE_MANAGER Markdown lessons `L-RM-001/002/003/007` with matching practical rules. Their older structured JSONL IDs are not recreated in a new `lessons.jsonl`, consistent with the canonical branch's documented choice to keep RECIPE_MANAGER lessons Markdown-only until source-aligned schema mappings are available. Their source-specific evidence references remain summarized in the current Markdown/event history; no additional missing lesson was identified in this six-record PR #21 JSONL comparison.
+
+
+## Cross-check of PR #8 lesson chain — 2026-10-13
+
+The seven structured lesson records in PR #8 were compared with the current project Markdown indexes:
+
+- `LESSON-RM-001/002/003` are represented by canonical `L-RM-001/002/003`.
+- The legacy PR #8 `LESSON-RM-007/008` are represented by canonical `L-RM-007/008` with the Android navigation/build evidence retained.
+- The legacy `LESSON-RM-009` mixed HTML/ingredient lesson is represented by the existing N99 pointer `L-RM-009` and the detailed canonical B77 lessons `B77-L-011` (ingredient normalization) and `B77-L-012` (end-to-end HTML/SQLite regression gate). This preserves the source project's HTML boundary rather than importing the old lesson under a colliding N99 ID.
+- `LESSON-RM-010` was the one lesson absent from the consolidated Markdown memory; it has now been restored as candidate `L-RM-010`, with its legacy ID and source branch preserved in provenance.
+
+No other PR #8 lesson payload was found to be absent after these mappings. The PR #8 branch remains open Draft and is not merged; the audit did not modify or close it.
