@@ -31,3 +31,12 @@
 - **Decision/requirement:** Avoid a workflow that forces the user to copy/paste prompts and responses between ORGANISM and provider websites. The current prototype is explicitly acknowledged as an interim/manual state; desired direction is a unified interaction with shared history/context, using an appropriate mix of official web UI and APIs where feasible.
 - **Evidence:** Current conversation (2026-10-13) and source text in `PlatformWebActivity.java` that says the prompt is copied and must be manually pasted/sent.
 - **Status:** Requirement active; automatic send/receive is not implemented or verified.
+
+
+## D-ORG-007 — Instrument the OAuth boundary before patching
+
+- Decision date: 2026-10-13.
+- Owner: user explicitly proposed diagnostics on the phone showing sent/received commands/events so the failing side and exact stage are visible.
+- Decision: use the existing copyable OAuth trace first; add markers only for unobserved boundaries. Record listener readiness, browser handoff, callback receipt/timeout, state/code presence (never values), token exchange outcome, validation, persistence and foreground return.
+- Privacy: do not log authorization URLs, codes, tokens, cookies, email or secret parameters.
+- Status: accepted diagnostic strategy; no fresh trace for this failure has been collected yet.
