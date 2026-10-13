@@ -45,3 +45,12 @@ In source `app/src/main/java/com/organism/app/PlatformWebActivity.java` at proje
 
 ## Next step
 Continue from attachment diagnosis on the exact branch/source. Read project instructions, handoff, continuity protocol, worklog and Android UI standard; inspect current branch/head before editing. Investigate WebView file chooser and content URI permission handling; make one minimal source change, build, inspect APK provenance, and record exact commit. Then verify on device: select image, ensure it appears as a ChatGPT attachment preview, cancel path, cookie dialog, keyboard/safe areas, and preservation of imported history. Do not claim device verification until evidence exists.
+
+
+## OAuth return diagnostic state (2026-10-13 addendum)
+
+The visible blocker is a repeated OAuth consent-page spinner and failure to return automatically to ORGANISM. The user says manually switching back makes the app show connected; that status is not proof the just-started OAuth exchange completed.
+
+On branch fix/oauth-diagnostic-trace-20261009, source has an in-app copyable auth trace and a loopback listener. It launches auth.openai.com, waits up to 120 seconds, checks state/code, exchanges the code, validates ID token/scope, saves credentials and records outcomes. The inspected manifest has no custom-scheme callback filter; the source relies on an HTTP loopback callback page and an intent link. The installed APK identity remains unknown.
+
+Next step: clear only the auth trace immediately before one controlled attempt, approve once, and copy the trace after the spinner stalls. CALLBACK_WAIT/TIMEOUT points to no callback reaching the listener; CALLBACK_RECEIVED followed by a later failure localizes the problem further; AUTH_COMPLETE/SUCCESS with spinner still visible suggests an issue after successful exchange, subject to confirming the installed APK matches inspected source. If previous trace events remain, separate them by timestamps and a fresh AUTH_START marker. Do not collect or share credentials, codes, tokens, cookies or full authorization URLs. The separate subscription_sharing_usage_limit_exceeded message remains a usage-limit issue.
