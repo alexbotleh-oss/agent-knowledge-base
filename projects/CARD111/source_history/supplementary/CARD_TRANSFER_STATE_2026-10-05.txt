@@ -1,0 +1,49 @@
+CARD — TRANSFER STATE / НОВЫЙ ЧАТ
+Дата: 2026-10-05
+Ядро: CORE_v1.7.9.3
+CORE SHA-256: ac1db0fac8f586ad1af143cc40e7827a968fcbbb49a9ae560e0b10169ec97fc5
+
+=== WP / ЭТАЛОН ===
+WP scanner: CARD_MVP_v0.1.0_FIX6_scanner_FLET103_FIX1.zip
+Файл: /mnt/data/CARD_MVP_v0.1.0_FIX6_scanner_FLET103_FIX1.zip
+SHA-256: c78178ef4c1942d88204887b17c725792557327ca69ca8ecdfe74e12589268ff
+Статус: WP для native scanner baseline; НЕ объявлять весь текущий APK release WP до E3.
+Scanner extension SHA: 8a599edb01ce6512d383fb789f2666b38bba415e402ed888e68ad4efa3decfc7
+
+=== APK ===
+FIX3 source SHA: 47c60b53d30f5440e3ad96273ca21cf4bf30a9091a157c63793822f5f67f4a3b
+FIX3 ZIP: CARD_MVP_v0.1.0_FIX3_scanner_FLET103_BUTTONFIX.zip
+FIX3 ZIP SHA: 3912df9b45761f901909be70eb31d65f4ca7f3488909f2111f74ab294771c714
+Candidate branch: candidate/apk-fix3-e2-20261005
+CI commit: a800c9e9fa1c2fceafffcb80ece1dd7974d0ada4
+E2 run: 37320247661 — completed/success
+Artifact: CARD-FIX3-E2-APK
+Artifact SHA-256: e33676c196c1dd2e8b30fdac7a33c569d936b66f331633b1655cb53da78bf547
+APK E2: PASS
+APK E3: PENDING — требуется реальное Android-устройство.
+Не merge/release до E3.
+
+=== WEB/PWA ===
+Последний pre-fix index blob: 233862b8abae32da7d647ce601007cdabafecf1b
+Была исправлена JS syntax regression в onclick scanFile; reverse-diff = 1 строка.
+Все 4 script blocks: E2 PASS.
+sw.js cache: v6 -> v7.
+Web E3: PENDING — live/device verification отсутствует.
+Quarantine branch: quarantine/web-regression-20261005; НЕ WP/base.
+
+=== INCIDENTS ===
+CARD INCIDENT-001: APK Flet API regression: ft.ElevatedButton -> ft.Button.
+CARD INCIDENT-002: Web scanner JS syntax regression; исправлена минимально, E2 PASS.
+Полный regression-контроль обязателен после каждого change.
+
+=== CORE RULES ===
+WP = E3-confirmed implementation; новая непроверенная версия WP не заменяет.
+MP: один change -> E2 -> E3 -> следующий change; batching запрещён.
+PATCH loop: WP -> SHA -> BACKUP -> SNAPSHOT -> PRE-CHECK -> PATCH -> FORWARD -> REVERSE-DIFF -> UI -> REGRESSION -> E2/E3 -> PROMOTE WP.
+Новый артефакт не удаляет поведение WP без команды «переписать».
+QUARANTINE не является WP/base.
+
+=== ТЕКУЩАЯ ТОЧКА ===
+Основной блокер: APK E3 и Web/PWA E3.
+Текущая ориентировочная готовность: ~85%, но не release-ready.
+Следующий шаг: получить E3 на устройстве для APK; затем продолжить Web E3/контроль.
