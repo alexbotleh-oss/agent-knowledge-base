@@ -31,7 +31,7 @@ The spreadsheet text was read through Library extraction. Raw XLSX bytes were no
 
 - Use canonical `product_id`, canonical name/aliases, barcode, category, food/household and product/non-product classification.
 - A product may have multiple batches; quantity, unit and expiry belong to the batch, and availability aggregates across batches.
-- Editing an already-saved expiry date is an explicit user-reported gap (`EVT-RM-20261002-001`); the workbook marks batch/expiry behavior PARTIAL. Do not claim the edit path is fixed.
+- Editing an already-saved expiry date is an explicit user-reported gap (`EVT-RM-20261002-001`). The change-summary workbook records expiry editing as `CHANGE / USER + AUDIT`, Add Product placement at the top as `CHANGE / USER`, and separate batch editing as `TODO`; the v1.2 matrix marks batch/expiry behavior PARTIAL. This corroborates the intended requirement, not implementation success.
 - Keep brand, package/variant, nutrition, category and other product fields when editing. Avoid duplicates after scanning or purchase transfer.
 
 ### Recipes, ingredients and availability
