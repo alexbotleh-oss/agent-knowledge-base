@@ -64,3 +64,18 @@ Append-only event history. Dates refer to event/artifact dates when known; the m
 - **Action:** Attempted GitHub contents update to set content URI access true with file:// access still disabled.
 - **Result:** Tool returned “blocked by OpenAI security systems”; no commit SHA was returned and no write was verified.
 - **Conclusion:** No code fix, new build, or test resulted. The proposed causal explanation remains a hypothesis.
+
+
+## E-ORG-010 — OAuth consent page spinner and manual return (2026-10-13)
+
+- Event date: 2026-10-13; phone status bar in screenshot shows 18:20, but timezone and message timestamp are unavailable.
+- User report: after approving permissions on auth.openai.com, the browser remains on the consent page with the primary control spinning and does not automatically return to ORGANISM. Manually switching back to the app causes it to display connected. User says this has happened since the first use.
+- Direct evidence: screenshot shows the consent page, spinner, and browser chrome. It does not show a callback URL or diagnostic trace.
+- Source branch inspected: fix/oauth-diagnostic-trace-20261009; branch HEAD separately fetched as 2f67f6b817b065acaa8b9f4bd0e0a77e6b73d7ce. This does not prove the installed APK was built from this HEAD.
+- MainActivity.signIn() starts a loopback listener on 127.0.0.1 using an OS-assigned port (fallback hint 1455), opens the auth URL, and waits up to 120 seconds for ServerSocket.accept(). Trace stages include CALLBACK_LISTENER/READY, BROWSER_LAUNCH/REQUESTED, CALLBACK_WAIT/WAITING, CALLBACK_RECEIVED, OAUTH_STATE, OAUTH_CODE, TOKEN_EXCHANGE, ID_TOKEN_VALIDATION, OAUTH_SCOPE, AUTH_PERSISTENCE and AUTH_COMPLETE; timeout records CALLBACK_WAIT/TIMEOUT.
+- AndroidManifest.xml on this branch has only the MainActivity launcher filter, with no custom organism-scheme callback filter. The callback implementation instead serves an HTTP page with a JavaScript/intent link intended to return to the app.
+- AuthTrace.java stores a bounded timestamped trace (up to 120 lines); Settings exposes “Журнал диагностики авторизации” with copy/clear actions. No credential values should be logged.
+- Hypotheses, not facts: browser/provider might not redirect to the listener; callback may arrive while automatic foreground handoff fails; installed APK may not match inspected source; current “connected” UI may reflect already-persisted credentials rather than this attempt.
+- Separate issue: subscription_sharing_usage_limit_exceeded is a provider/account usage-limit response and is not evidence of OAuth callback failure.
+- Status: symptom user-reported and screenshot-observed; root cause UNCONFIRMED. No patch, build or fresh device trace was made in this event.
+- Next test: clear only the auth diagnostic trace, not app data; run one controlled connect attempt; after spinner stalls, copy trace. Determine whether it ends at BROWSER_LAUNCH/CALLBACK_WAIT, records CALLBACK_RECEIVED, or advances to token validation/persistence. Do not share full URLs, codes, tokens, cookies or account details.
