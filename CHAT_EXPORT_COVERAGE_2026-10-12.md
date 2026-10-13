@@ -66,7 +66,7 @@ These are separate projects despite sharing a product name and recipe domain. Do
 ## Validation checklist
 - [x] Report-bundle audit is recorded in `SOURCE_REPORTS_AUDIT_2026-10-13.md` and was read back from GitHub.
 - [x] Retrieved and reviewed all 59 current PR paths individually for availability, structure/headings, unresolved-status markers, and change scope; PR file list confirms all changes are within memory/core documentation, templates, audits, and project-memory records. This is not equivalent to line-by-line semantic reconciliation of every claim against primary chat messages; that work remains open.
-- [x] Parsed current JSONL files: RECIPE_MANAGER events 22/22 valid and unique; B77 HTML/PWA events 20/20 valid and unique; CARD111 events 15/15 and lessons 6/6 unique; ORGANISM events 7/7 and lessons 5/5 unique; global lessons 5/5 unique.
+- [x] Parsed current JSONL files: RECIPE_MANAGER events 22/22 valid and unique; B77 HTML/PWA events 22/22 valid and unique; CARD111 events 15/15 and lessons 6/6 unique; ORGANISM events 7/7 and lessons 5/5 unique; global lessons 5/5 unique.
 - [x] Reconciled original event/lesson ID collisions: EVT-20261012-017/018 are task-scope/transfer events, EVT-20261012-019 is PWA camera decode; L-RM-022 is camera decode, L-RM-023 is task boundary.
 - [x] The initial compare recorded 46 changed paths, all memory/core documentation. The current PR API reports 59 changed files, and all 59 were individually retrieved and scope-reviewed. No app source, HTML/JS project code, databases, or APKs are reported among the changed paths.
 - [x] Draft PR #22 remains open and unmerged: https://github.com/alexbotleh-oss/agent-knowledge-base/pull/22.
@@ -76,9 +76,10 @@ These are separate projects despite sharing a product name and recipe domain. Do
 - [x] Global lesson `G-LESSON-004` source path corrected to canonical B77 event. HTML-specific rules in `L-RM-019/021/022` and HTML evidence in `L-RM-004` are now cross-project pointers; canonical B77 lessons `B77-L-008/009/010` hold the HTML-specific rules.
 - [x] RECIPE_MANAGER EVENT_LOG duplicate heading `EVT-20261012-013` was deduplicated after merging its unique wording; the JSONL record remains. `EVT-20261012-014/016/019` are cross-project pointers to B77, while 10 structured RECIPE_MANAGER records remain without standalone narrative headings (not duplicated; see source audit).
 - [x] CARD111 narrative and structured event parity is restored: 15 event headings in `EVENT_LOG.md` match 15 structured JSONL records; nine raw-source events were added and two lessons were synchronized across Markdown/JSONL.
-- [x] B77 narrative and structured event parity is restored: 20 event headings in `EVENT_LOG.md` match 20 structured JSONL records; nine pre-existing narrative events were added without duplicates.
+- [x] B77 narrative and structured event parity is restored: 22 event headings in `EVENT_LOG.md` match 22 structured JSONL records; nine pre-existing narrative events were added without duplicates.
 - [x] Lesson evidence-path audit passed: all structured lesson evidence refs that name a project event JSONL resolve to an event ID in that exact project file; all created_from_event_ids resolve to a known event. Global G-LESSON-004 now points to B77's canonical event file.
-- [x] Structured reference audit found and repaired stale `EVT-20260922-001` references to canonical B77 event `EVT-B77-20260922-001`; re-read seven JSONL files: 64 events + 16 lessons parsed, no parse errors/duplicate IDs/unresolved structured event references. Details in `SOURCE_REPORTS_AUDIT_2026-10-13.md`.
+- [x] October 2 mixed-scope source split: B77/PWA IndexedDB and scanner failures are recorded as EVT-B77-20261002-001/002; the separate N99 expiry-edit/Add Product request is EVT-RM-20261002-001 and remains a pending design item, not an accepted implementation decision.
+- [x] Structured reference audit found and repaired stale `EVT-20260922-001` references to canonical B77 event `EVT-B77-20260922-001`; re-read seven JSONL files: 67 events + 16 lessons parsed, no parse errors/duplicate IDs/unresolved structured event references. Details in `SOURCE_REPORTS_AUDIT_2026-10-13.md`.
 - [ ] Continue message-by-message review of remaining mixed N99/B77 conversations before treating the project histories as complete.
 
 ## Known limitations
