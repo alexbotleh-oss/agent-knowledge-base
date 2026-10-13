@@ -66,7 +66,7 @@ These are separate projects despite sharing a product name and recipe domain. Do
 ## Validation checklist
 - [x] Report-bundle audit is recorded in `SOURCE_REPORTS_AUDIT_2026-10-13.md` and was read back from GitHub.
 - [x] Retrieved and reviewed all 59 current PR paths individually for availability, structure/headings, unresolved-status markers, and change scope; PR file list confirms all changes are within memory/core documentation, templates, audits, and project-memory records. This is not equivalent to line-by-line semantic reconciliation of every claim against primary chat messages; that work remains open.
-- [x] Parsed current JSONL files: RECIPE_MANAGER events 22/22 valid and unique; B77 HTML/PWA events 6/6 valid and unique; CARD111 events 6/6 and lessons 4/4 unique; ORGANISM events 7/7 and lessons 5/5 unique; global lessons 5/5 unique.
+- [x] Parsed current JSONL files: RECIPE_MANAGER events 22/22 valid and unique; B77 HTML/PWA events 15/15 valid and unique; CARD111 events 6/6 and lessons 4/4 unique; ORGANISM events 7/7 and lessons 5/5 unique; global lessons 5/5 unique.
 - [x] Reconciled original event/lesson ID collisions: EVT-20261012-017/018 are task-scope/transfer events, EVT-20261012-019 is PWA camera decode; L-RM-022 is camera decode, L-RM-023 is task boundary.
 - [x] The initial compare recorded 46 changed paths, all memory/core documentation. The current PR API reports 59 changed files, and all 59 were individually retrieved and scope-reviewed. No app source, HTML/JS project code, databases, or APKs are reported among the changed paths.
 - [x] Draft PR #22 remains open and unmerged: https://github.com/alexbotleh-oss/agent-knowledge-base/pull/22.
