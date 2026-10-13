@@ -25,6 +25,21 @@ This is a partial reconstruction from Git history, the B77 continuity report, an
 Full source-based details: `projects/B77_HTML_PWA/HTML_SQLITE_REGRESSION_2026-09-22.md`.
 
 
+## 2026-10-02 — IndexedDB and scanner-mode failures
+
+### EVT-B77-20261002-001 — IndexedDB backing-store open error
+- **Источник:** «Часть 2» (conversation_id 6abf7d53-15c8-83ed-b5f4-dd819664ce6f), 2026-10-02 11:01–11:12 UTC.
+- **Наблюдение:** пользователь сообщил о неработающем сканере и предоставил журнал с повторяющимися сообщениями `[pwa-storage] IndexedDB: Internal error opening backing store for indexedDB.open`, возникавшими при выборе сканера и нажатии Scan.
+- **Статус:** ошибка IndexedDB подтверждена вставленным логом; связь с декодированием камеры и причина не установлены.
+- **Сообщения:** `bbb2116e-efc8-459d-b3b9-b45e880b1ea7`, `bbb2129f-4b6a-405f-8dca-c1860b0bf2a1`.
+
+### EVT-B77-20261002-002 — смешение режимов Products/Shopping и отказ camera/decode
+- **Источник:** «Часть 2», 2026-10-02 11:27–12:46 UTC.
+- **Наблюдение:** пользователь потребовал сохранить раздельные режимы сканирования Products и Shopping, как в Flet-референсе; сообщил, что системная камера, остановка и распознавание штрихкода не работают как ожидалось. Позже уточнил, что скриншот относится к настройкам сканера, а не к экрану продукта.
+- **Граница:** вопрос о запуске локального content:// HTML не является доказательством, что secure context — единственная причина. Ошибка IndexedDB из EVT-B77-20261002-001 остаётся отдельной диагностической цепочкой.
+- **Статус:** требования и симптомы подтверждены сообщениями; успешный decode/save и окончательное исправление не подтверждены.
+- **Сообщения:** `bbb21b92-4ebb-4145-a9aa-ef92630bdccc`, `bbb2187b-1f57-489b-86d1-031548e770dc`, `bbb21994-bda8-45a7-ad38-1b4c93eb842f`, `bbb21392-41c4-4bb5-b7c5-c4d72e4075ca`.
+
 ## 2026-10-03–05 — HTML prototype interaction regressions and failed recovery
 
 ### EVT-B77-20261003-001 — repeated long-press, swipe and Light Cook regressions
