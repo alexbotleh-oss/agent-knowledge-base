@@ -76,7 +76,7 @@ These are separate projects despite sharing a product name and recipe domain. Do
 - [ ] Continue message-by-message review of remaining mixed N99/B77 conversations before treating the project histories as complete.
 
 ## Known limitations
-- The supplied ZIP improves raw-source access for 37 conversations, but does not prove full-export completeness and lacks the separate binary attachments.
+- The supplied ZIP contains exactly 37 conversation objects and 10,034 distinct message IDs. The older 74-chat note is not substantiated by this archive or the supplied report text; its origin remains unresolved. The ZIP does not prove full-export completeness and lacks the separate binary attachment bytes.
 - Missing source files are not reconstructed from filenames alone. Unverified fixes remain unverified; hypotheses remain hypotheses.
 - Source PRs may still show stale/conflicting content until separately reviewed. The consolidation branch is the candidate review surface, not evidence that main has been updated.
 - Do not merge PR #22 without explicit user permission.
