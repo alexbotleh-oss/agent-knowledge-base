@@ -54,3 +54,8 @@ The matrix is mixed-scope and must be reconciled by message-level provenance. Th
 ## Control-matrix cross-check for saved expiry editing — 2026-10-13
 - The direct 2026-10-02 user message is now corroborated by the Library workbook `RecipeManager_сводка_изменений_FIX6_V20_V21_N99.xlsx` (modified 2026-10-02T13:30:48Z): UI-05 records Add Product at the top as `CHANGE / USER`; P-07 records expiry editing as `CHANGE / USER + AUDIT`; P-10 marks separate batch editing as `TODO`.
 - This resolves the requirement-status uncertainty in DEC-RM-008, but not the implementation question. The matrix records the target; no app source/runtime test was performed here.
+
+
+## Structured-event count update — 2026-10-13
+
+A later primary-source reconciliation added `EVT-RM-20261001-005`, the N99 HTML-first phase decision, after the previous 23-record count was written. Current `events.jsonl` on the consolidation branch has 24 valid, unique records. The project-wide total is 68 structured events (RECIPE_MANAGER 24, B77 22, CARD111 15, ORGANISM 7) and 16 structured lessons (global 5, CARD111 6, ORGANISM 5). These are structural counts only; historical/source completeness remains PARTIAL.
