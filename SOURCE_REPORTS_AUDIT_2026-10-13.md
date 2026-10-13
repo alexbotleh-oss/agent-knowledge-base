@@ -62,8 +62,8 @@ Shared product names, ingredient rules or UI techniques do not establish shared 
 
 Read-back of current machine-readable event logs established:
 - `projects/RECIPE_MANAGER/events.jsonl`: 22 parseable records with unique event IDs. The chain contains Android build/navigation, packaging, Flet/WebView diagnostics, and task-scope transfer lessons; source status is still partial.
-- `projects/B77_HTML_PWA/events.jsonl`: 6 parseable records with unique IDs, including September HTML/SQLite incidents and October UI/camera recurrences. The September issues are attributed to the HTML contour with medium confidence for exact B77 ownership where source chats do not name B77.
-- `projects/CARD111/events.jsonl`: 6 records; `projects/ORGANISM/events.jsonl`: 7 records; global lessons: 5 records. The rollup coverage file records the latest earlier uniqueness/parse checks for these sets. This report audit does not re-validate every JSONL schema for every project beyond those noted counts.
+- `projects/B77_HTML_PWA/events.jsonl`: 15 parseable records with unique IDs after reconciliation against `projects/B77_HTML_PWA/EVENT_LOG.md`. Nine previously narrative-only events (Stage14 baseline, secure-context diagnosis, pre-change checkpoints, camera layer, diagnostics/click binding, Data Matrix attempt/rollback, cross-chat context failure, project-state snapshot, and October 12 learning priority) are now represented in structured memory with source confidence limits. The September issues are attributed to the HTML contour with medium confidence for exact B77 ownership where source chats do not name B77.
+- `projects/CARD111/events.jsonl`: 6 records; `projects/ORGANISM/events.jsonl`: 7 records; global lessons: 5 records. After the B77 additions, all four project event JSONL files total 50 records; 14 lesson records are present across CARD111, ORGANISM and global lessons. All records were re-parsed; IDs are unique and structured event references resolve. This report audit does not claim every source chat has been semantically reconciled.
 - Event identifiers that occur later than the September baseline are preserved as later events instead of overwritten by earlier summaries. For example, B77's October reports retain the failed Products category/sort selection, the packaging artifact failure, and camera video-without-code-recognition as distinct evidence chains. A user-confirmed narrow UI improvement does not convert unrelated scenarios to PASS.
 
 ## Process correction
@@ -89,7 +89,9 @@ The user supplied an additional text extract, `Последние дествия
 - PR #22 remains Draft, open, and unmerged; base is `main`.
 - GitHub reports 59 changed files. The comparison against `main` shows all 59 are memory, protocol, audit, template, or project-memory files; no app source, HTML/JS app code, database, or APK files are included. Full file-by-file read-back and semantic reconciliation of every source claim are not yet complete.
 
-## Structured cross-reference audit — 2026-10-13
+## Structured cross-reference and event-coverage audit — 2026-10-13
+
+The comparison of B77 narrative event headings with structured records exposed a concrete coverage gap: nine events already documented in `projects/B77_HTML_PWA/EVENT_LOG.md` were absent from `events.jsonl`. These were not inferred new incidents; each already had a distinct event ID and evidence in the narrative log. The missing structured records were added without creating duplicate IDs. The B77 event log now has 15 distinct event headings and the JSONL has 15 corresponding records. The event-log ordering of the October 5 context-continuity incident was also corrected to follow its recorded source time.
 
 A direct read-back of all seven structured JSONL event/lesson files found a referential-integrity defect after the N99 / B77 project-boundary correction: three structured records still referenced the retired identifier `EVT-20260922-001`, which is not present in the consolidation branch. The canonical event for the HTML/SQLite incident is `EVT-B77-20260922-001` under `projects/B77_HTML_PWA/events.jsonl`.
 
