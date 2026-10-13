@@ -101,3 +101,16 @@ These are separate projects despite sharing a product name and recipe domain. Do
 - [x] Current project event totals: RECIPE_MANAGER 25 + B77 22 + CARD111 15 + ORGANISM 7 = 69 structured events. CARD111 lessons 6, ORGANISM lessons 5 and global lessons 5 = 16 structured lessons. RECIPE_MANAGER intentionally has no `lessons.jsonl`; its Markdown lesson index remains canonical until schema-aligned source mapping is available.
 - [ ] Continue primary-message reconciliation of remaining mixed N99/B77 conversations and inspect older PR branches for unique evidence not yet represented in the consolidation branch.
 - [ ] Semantic completeness remains PARTIAL; no merge into `main` without explicit user permission.
+
+
+## Chunked read-back checkpoint — 2026-10-13
+
+To reduce loss of progress during intermittent connectivity, the PR was inspected in bounded batches and the results consolidated here.
+
+- All 60 paths listed by the current PR API were fetched from the consolidation branch, including the source archive audit, report audit, all core protocols, project-state documents, handoffs, and machine-readable records.
+- First-pass scope review: all changed paths are memory, core protocol, source-audit, project-state, lesson, template, or event-log artifacts. No application source, HTML/JS app code, database, or APK files are in the changed-path list.
+- JSONL checks: RECIPE_MANAGER events 25/25 parseable with unique IDs; B77_HTML_PWA events 22/22 parseable with unique IDs; CARD111 events 15/15 and lessons 6/6 parseable with unique IDs; ORGANISM events 7/7 and lessons 5/5 parseable with unique IDs; global lessons 5/5 parseable with unique IDs. Total: 69 structured events and 16 structured lessons. These are structural checks, not proof of semantic completeness.
+- Confirmed project boundary: early HTML/SQLite events are filed under B77_HTML_PWA with medium confidence for exact B77 attribution where the original messages do not name the project. Do not treat them as evidence of an N99 Android/APK defect.
+- Source-coverage finding: the inspected archive contains 37 conversation objects and 10,034 distinct message IDs; the earlier “74 chats” count remains unsupported/unresolved. The archive lacks separate binary attachment bytes and later transfer-chat coverage, so overall completeness remains PARTIAL.
+- Newly inspected control-matrix audit preserves the v1.2 workbook as a dated requirements snapshot, not proof that those functions are implemented or pass runtime tests.
+- Remaining work: compare report claims and older PR branches event-by-event, resolve or preserve each possible omission/recurrence, then run CI on the final checkpoint. Do not merge PR #22 without explicit user permission.
