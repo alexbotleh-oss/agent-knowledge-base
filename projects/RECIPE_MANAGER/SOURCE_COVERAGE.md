@@ -58,4 +58,7 @@ The matrix is mixed-scope and must be reconciled by message-level provenance. Th
 
 ## Structured-event count update — 2026-10-13
 
-A later primary-source reconciliation added `EVT-RM-20261001-005`, the N99 HTML-first phase decision, after the previous 23-record count was written. Current `events.jsonl` on the consolidation branch has 24 valid, unique records. The project-wide total is 68 structured events (RECIPE_MANAGER 24, B77 22, CARD111 15, ORGANISM 7) and 16 structured lessons (global 5, CARD111 6, ORGANISM 5). These are structural counts only; historical/source completeness remains PARTIAL.
+A later primary-source reconciliation added `EVT-RM-20261001-005`, the N99 HTML-first phase decision, after the previous 23-record count was written. Current `events.jsonl` on the consolidation branch has 25 valid, unique records. The project-wide total is 69 structured events (RECIPE_MANAGER 25, B77 22, CARD111 15, ORGANISM 7) and 16 structured lessons (global 5, CARD111 6, ORGANISM 5). These are structural counts only; historical/source completeness remains PARTIAL.
+
+
+The restored `EVT-20261012-007` is placed after `EVT-20261012-006` in the RECIPE_MANAGER event chain. Its candidate lesson is now represented in `LESSONS.md` as `L-RM-010`, retaining the legacy source-branch ID `LESSON-RM-010` in provenance. No `lessons.jsonl` was created because the consolidated project deliberately uses the Markdown lesson index until source-aligned structured mappings are available.
