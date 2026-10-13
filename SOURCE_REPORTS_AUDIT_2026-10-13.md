@@ -277,3 +277,9 @@ This continuation was split into short read-back batches due to intermittent con
 - A current-file-list check and these targeted parity checks did not resolve the outstanding message-by-message reconciliation of mixed N99/B77 source conversations or missing binary artifacts. Source-to-memory completeness remains **PARTIAL**.
 
 Next: continue semantic comparison of source claims against their canonical event/decision/lesson records in small batches; keep source chronology separate from import order and preserve project attribution uncertainty.
+
+## Structured event-link integrity recheck — 2026-10-13
+
+A fresh parse of the four project event JSONL files found 69 event records and 69 unique event IDs across RECIPE_MANAGER (25), B77_HTML_PWA (22), CARD111 (15) and ORGANISM (7). All records parsed; every `related_event_ids` and `created_from_event_ids` reference resolved to a known canonical event ID. No unresolved event links were found. This validates the inspected structured link fields only; it does not validate every prose citation or prove source completeness.
+
+At the immediately preceding checkpoint, CI passed on exact HEAD `0e2a2213742b9e7ee38e7ee916ab42399d7be264`, run #38366704509: https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38366704509. This commit contains the preceding bounded narrative/structured parity audit. Any subsequent commit requires its own exact-head CI check.
