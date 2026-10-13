@@ -246,3 +246,9 @@ Live branch ref currently resolves to eca56274378f54dfecedb52d301cce7e0b5c65f7. 
 CI status is recorded precisely: run #38364347001 passed on exact branch head e3557497f757b8377a4c01a5e7d1f7ab4fbbafba. A later completed run #38364455942 reports success for SHA 82b96bc5ee29ca6d65ebd7322cb4f9ca0bcc450f, which did not match the branch ref when rechecked. Therefore the current branch head eca56274378f54dfecedb52d301cce7e0b5c65f7 does not yet have an independently confirmed matching CI result in this read-back. Do not represent a different SHA's successful run as proof for this head.
 
 The latest source-memory additions (B77-L-011/012, RECIPE_MANAGER cross-pointers, corrected B77 EVT-20261012-014 lesson references, report duplicate line ranges and PR #21 event/lesson collision mappings) were read back from their canonical branch files. Overall semantic source coverage remains PARTIAL.
+
+## Subsequent exact-head verification — 2026-10-13 07:44 UTC
+
+The next branch checkpoint superseded the prior eca562... snapshot. Current PR #22 HEAD was re-read as a5b41f3f0028671f29a6f094010e0a2b460199ec; GitHub Actions Validate knowledge base passed on that exact SHA, run #38364549105: https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38364549105. The live compare at that checkpoint was 268 commits ahead of main, 0 behind, with 60 changed paths. PR #22 remained Draft/open/unmerged.
+
+This is a verified checkpoint for the tree as it stood before this audit append. The audit append itself creates a new commit and therefore requires a fresh exact-HEAD CI check before calling that resulting commit validated. Semantic source completeness remains PARTIAL.
