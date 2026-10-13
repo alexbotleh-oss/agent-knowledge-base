@@ -127,3 +127,10 @@ Direct read-back of PR #21's legacy `lessons.jsonl` and `LESSONS.md` exposed two
 - All 60 paths have been fetched and scope-reviewed in bounded batches. Detailed semantic matching of every source claim remains incomplete; source completeness remains PARTIAL.
 - Additional collision repair: PR #21 ingredient and HTML/SQLite lessons are preserved as B77-L-011 and B77-L-012, with pointers from RECIPE_MANAGER L-RM-009. B77 event EVT-20261012-014 now references the canonical B77 lessons, not the conflicting legacy N99 lesson ID.
 - PR #22 remains Draft/open/unmerged. Do not merge without explicit user permission.
+
+## Live recheck — 2026-10-13 07:43 UTC
+
+- Branch ref at the last live compare resolved to eca56274378f54dfecedb52d301cce7e0b5c65f7; compare showed 266 commits ahead of main, 0 behind, and 60 changed paths. PR #22 remained Draft/open/unmerged.
+- Exact-head CI caution: the last confirmed run matching a live branch ref was run #38364347001 on e3557497f757b8377a4c01a5e7d1f7ab4fbbafba. A later completed run for 82b96bc5ee29ca6d65ebd7322cb4f9ca0bcc450f did not match the branch ref eca56274378f54dfecedb52d301cce7e0b5c65f7. The newer head's status must be verified against its own SHA.
+- Source audit was updated to record this mismatch rather than treating a pass on a different SHA as current proof. This checkpoint is append-only; after this file update, re-read the branch ref and CI run for the resulting commit.
+- Source completeness remains PARTIAL. The PR #21 lesson-ID conflict is now preserved under B77-L-011/B77-L-012, with canonical cross-links and source limitations.
