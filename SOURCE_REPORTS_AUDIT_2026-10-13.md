@@ -192,3 +192,10 @@ A direct comparison of structured RECIPE_MANAGER event IDs and summaries on the 
 - PR #21's conflicting `EVT-20261012-005/006` summaries are not imported under the colliding IDs. The user requirements are preserved through `DEC-RM-006` and the B77 canonical events/lessons. The older branch's event meanings remain historical evidence; do not treat a matching ID as proof of matching event identity.
 
 Structural read-back remains clean for the current canonical JSONL sets: 25 RECIPE_MANAGER events, 22 B77 events, 15 CARD111 events, 7 ORGANISM events, and 5 global + 6 CARD111 + 5 ORGANISM lessons; all parsed and had unique IDs in the checks performed. This establishes structural integrity only. Remaining work is to compare detailed claims/evidence refs for source branches and the repeated report bundle, and to verify CI against the final current branch head.
+
+
+## Quantified duplicate-block check in supplied report bundle — 2026-10-13
+
+The Library file `Отчеты о извлечении.txt` was materialized for local text analysis. The accessible raw file contains 1,425 lines and 110,155 Unicode characters; Files metadata reports 169,371 bytes. These are different measurement units/representations and should not be silently equated. The metadata/materialized-text discrepancy remains documented; it does not by itself prove truncation because byte length and character count differ.
+
+A direct line comparison found a near-verbatim repeated audit block: source lines 206–503 and 765–1062 each contain 298 lines; 296 aligned lines match exactly, with the differences confined to closing/blank lines. This confirms a copied report block, not a second independent project event. The block should be deduplicated at the report-copy layer while any unique details elsewhere in the file remain eligible for extraction. Other report sections also repeat or overlap, so the entire file must not be treated as a single chronological log.
