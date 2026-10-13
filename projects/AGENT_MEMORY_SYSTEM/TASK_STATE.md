@@ -48,3 +48,15 @@
 - **Status:** protocol proposal recorded and read-back verified (PASS for persistence/read-back only). Runtime importer is **not implemented or tested**; resilience/latency claims remain unverified. CI for the new commit has not yet been checked.
 - **Constraints:** no re-audit of accepted agent reports; no merge to `main`; PR #22 remains Draft/open/unmerged; do not claim an automatic local save mechanism exists in the current ChatGPT session.
 - **Next action:** inspect live branch/PR HEAD and exact-head CI; then check existing schemas/tools to decide the smallest executable importer implementation (prefer streaming parser + local transactional staging/SQLite if runtime allows) and define measurable interruption/idempotency tests.
+
+
+## Design correction 2026-10-13 — minimal continuity memory
+
+- **User clarified the intended scope:** use current chat as temporary workspace, Project Library for source archives/reports, and repository as persistent structured memory. Do not make servers, a local agent, or a separate database prerequisites for the first usable version.
+- **Primary purpose:** prevent context loss across chats and preserve the chronology/causal chain of important project events, decisions, failed attempts and lessons with minimal necessary context and stable source locators—not copy every conversation wholesale.
+- **Accepted workflow:** restore latest state → continue the nearest unfinished action → record significant confirmed events/decisions/errors during work → save/read back a checkpoint before likely interruption and at stage completion. No need to create a record for every message.
+- **Memory model:** linked event/incident, decision, task state and source records. Keep distinct episodes distinct; an aggregated lesson links to its supporting episodes and must not replace them.
+- **Import scope correction:** first pass is lightweight source inventory and selective preservation of relevant source fragments with timestamps/IDs; no full semantic analysis, index building, or error-merging during ingestion. A later pass reconstructs chronology and causal links; uncertainty remains explicit.
+- **Documentation updated:** added “Минимальная непрерывная память между чатами” to `core/universal_instructions.md` and “Минимальная непрерывность: восстановить → работать → зафиксировать” to `core/agent_runtime_protocol.md`.
+- **Verified so far:** GitHub Contents API returned commits for both files; read-back still required. This is a protocol/instruction update, not a runtime feature or evidence that chat-level auto-save exists.
+- **Next action:** read back both updated files, fetch latest branch/PR head and CI, then test whether the present repo mechanisms can support the smallest practical source-fragment/event record and reliable handoff without adding unnecessary infrastructure.
