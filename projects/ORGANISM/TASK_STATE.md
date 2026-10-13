@@ -56,3 +56,13 @@ The branch discovery performed in this transfer found the already-existing branc
 - **Acceptance:** re-read every changed file from GitHub; parse every non-empty line in SOURCES.jsonl as JSON; validate event/source IDs and paths; run available target-repository checks through CI if available. Keep the PR unmerged.
 - **Status before verification:** PARTIAL; report and changes require post-write readback and checks.
 - **Next:** complete readback/validation on the exact transfer commit, open a review PR against the existing ORGANISM memory branch, and leave independent verification to the separate reviewer.
+
+
+## Post-write verification — 2026-10-13
+
+- Readback completed for all eight changed files on memory/organism-architecture-chat-20261013.
+- SOURCES.jsonl: 31 records parsed; unique source IDs confirmed. New event, decision and lesson IDs are unique; event source references resolve.
+- Payload commit 7f3301cb33ed7f00434cfe33ba1f19fc53bc4147 passed GitHub Actions run 38457405842, including both memory protocol/record validation and knowledge-base/stack validation.
+- Draft PR #24 opened against memory/organism-current-chat-20261013; no merge to main. PR #23 was left unchanged.
+- Coverage remains PARTIAL because complete raw chat history and exhaustive attachment audit are unavailable.
+- The report-only verification follow-up does not change source evidence or memory schema; its exact branch HEAD and CI result must be checked before the final status is reported.

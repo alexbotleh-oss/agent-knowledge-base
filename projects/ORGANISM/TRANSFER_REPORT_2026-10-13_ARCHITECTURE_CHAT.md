@@ -106,3 +106,15 @@ Causal links are stated only where directly supported. In particular, no claim i
 - **NOT TESTED:** Android runtime, provider send/receive automation, context recovery acceptance tests, loop detection acceptance tests.
 - **BLOCKED / PENDING:** exact target branch write/readback and CI checks until this report is committed and verified.
 - **Next step:** verify the transfer branch's exact commit, read back all changed files, run available validators/CI and open a review PR against memory/organism-current-chat-20261013. Do not merge to main.
+
+
+## Post-write verification addendum — 2026-10-13
+
+- **Payload commit:** 7f3301cb33ed7f00434cfe33ba1f19fc53bc4147 — https://github.com/alexbotleh-oss/agent-knowledge-base/commit/7f3301cb33ed7f00434cfe33ba1f19fc53bc4147
+- **Readback:** all eight changed files were fetched again from the dedicated branch. Their resulting blob SHAs matched the blobs created for the commit.
+- **Structural checks:** SOURCES.jsonl has 31 non-empty JSON records; all parse; source IDs are unique. Event, decision and lesson IDs are unique. Every source ID referenced by the appended events exists in SOURCES.jsonl.
+- **Diff integrity:** comparison against base adbd68938539ff59bf67a0b451207d22d6b896de reports one commit ahead, eight changed files, 251 additions and zero deletions. Existing records were appended to; the earlier transfer report was not overwritten.
+- **CI for the payload commit:** GitHub Actions run 38457405842 (pull_request event) completed with conclusion SUCCESS: https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38457405842 . Both “Validate memory protocol and records” and “Validate knowledge base and detected stacks” passed for commit 7f3301cb33ed7f00434cfe33ba1f19fc53bc4147.
+- **Review PR:** draft PR #24, https://github.com/alexbotleh-oss/agent-knowledge-base/pull/24, targets the existing memory branch memory/organism-current-chat-20261013. It remains unmerged. Existing PR #23 was not modified.
+- **Main/data safety:** target main remains at a0c12ba849a3416f50e1289d8f0dd20844e1e51f in the observed ref; no merge or deletion was performed. No ORGANISM application code or user data was changed.
+- **Remaining:** source/chat coverage is PARTIAL; the final report-only follow-up commit still requires its own CI status check; independent review has not occurred.
