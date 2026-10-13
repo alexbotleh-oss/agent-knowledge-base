@@ -199,3 +199,10 @@ Structural read-back remains clean for the current canonical JSONL sets: 25 RECI
 The Library file `Отчеты о извлечении.txt` was materialized for local text analysis. The accessible raw file contains 1,425 lines and 110,155 Unicode characters; Files metadata reports 169,371 bytes. These are different measurement units/representations and should not be silently equated. The metadata/materialized-text discrepancy remains documented; it does not by itself prove truncation because byte length and character count differ.
 
 A direct line comparison found a near-verbatim repeated audit block: source lines 206–503 and 765–1062 each contain 298 lines; 296 aligned lines match exactly, with the differences confined to closing/blank lines. This confirms a copied report block, not a second independent project event. The block should be deduplicated at the report-copy layer while any unique details elsewhere in the file remain eligible for extraction. Other report sections also repeat or overlap, so the entire file must not be treated as a single chronological log.
+
+
+## Cross-project ingredient-rule parity check — 2026-10-13
+
+A comparison of PR #21's ingredient-equivalence decision with the canonical B77 HTML source record found a documentation-parity gap: the B77 source record explicitly preserves three further user-requested cases from 2026-09-22 20:47 — wheat flour vs. flour, butter naming order/units, and a pinch of salt vs. salt — while the consolidated RECIPE_MANAGER `DEC-RM-006` did not list them. The rules were already preserved in the B77 regression record, so this is not a missing source event; it is a gap in the transferable requirement index.
+
+The cases are now added to `DEC-RM-006` and `RECIPE_SEARCH_REQUIREMENTS.md`, with explicit source provenance and a boundary note: they are user requirements from the HTML contour, not evidence of current implementation in N99 or B77. The original conversation ID is `6ab2de4d-12f0-83ed-be6e-6212b0fdf4ad`. Exact early B77 ownership remains medium confidence because the source chat discusses the HTML contour without consistently naming B77.
