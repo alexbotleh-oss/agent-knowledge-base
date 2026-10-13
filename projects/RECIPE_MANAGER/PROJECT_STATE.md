@@ -159,4 +159,4 @@ Events `EVT-20261012-010/011` and lessons `L-RM-013..016` preserve the newly rec
 ### Консолидация параллельных lesson IDs — 2026-10-12
 - В исходных ветках PR #19 и PR #20 L-RM-022 обозначал разные уроки. В этой ветке L-RM-022 закреплён за camera/decode failure, а task-scope lesson перенумерован в L-RM-023.
 - EVT-20261012-017/018 — процессная граница задачи и продолжение переноса; camera decode записан как EVT-20261012-019 и L-RM-022.
-- Нумерационный пробел EVT-20261012-007 в доступной последовательности не объяснён; не придумывать отсутствующую запись.
+- EVT-20261012-007 is recovered from open Draft PR #8 (`handoff/recipe-manager-ui-platform-memory-20261012`) and the extraction report. It records a partial/medium-confidence observation about shared Flet UI tokens and PC/Android platform-specific navigation; candidate lesson restored as `L-RM-010` (legacy source ID `LESSON-RM-010`). The original 2026-10-12 message is absent from the inspected raw ZIP, so current app behavior remains unverified.
