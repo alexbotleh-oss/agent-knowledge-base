@@ -33,3 +33,15 @@
 - **Validation status:** exact-HEAD workflow lookup for `3dc92fc62e6c392f49c228887b477467441fd8ed` returned no associated PR workflow run at the time of lookup. Do not report CI PASS for this new head until a run is observed and its conclusion is successful.
 - **Scope discipline:** only universal protocol files were changed in this step. No application code, project-specific source history, PR merge, or main-branch changes were made.
 - **Next step:** re-fetch live PR/branch HEAD and check whether CI has started for the current head; then continue the existing scope-resolution work only after confirming live state. PR #22 remains intended to stay Draft/open/unmerged.
+
+
+## Continuity checkpoint — 2026-10-13: resumable low-overhead chat import
+
+- **Current task:** develop a safe, lightweight chat-history import mechanism that can resume after unstable network/long context interruption, while preserving chronology, source identity and causal evidence. The point is to stop repeating work after chat transitions and avoid losing errors/decisions.
+- **Accepted finding — do not redo:** the user already provided reports from agents in other chats; reports and chat/archive information were compared, confirming that similar data/errors had been merged and distinct dialogue/incident provenance was obscured. Treat this as accepted for the current task unless new contradictory evidence appears.
+- **Design direction:** first preserve raw source and exact ordering in bounded, resumable batches; later run a separate analysis pass for events, decisions, causal relations, semantic grouping and indexes. Do not perform semantic merging during initial import.
+- **Change recorded:** extended `core/source_ingestion_protocol.md` with states (`REGISTERED`, `SNAPSHOTTED`, `INVENTORIED`, `STAGING`, `PAUSED`, `RAW_COMPLETE`, `PARTIAL`, `FAILED`), stable source-key/cursor rules, idempotent replay, lost-ack recovery, checkpoints, append-only import events, gap tracking and required tests.
+- **Evidence:** commit `8c3490627f87fa85c4f1ecfa78d8ebd00ec843af`; read-back from the branch confirmed the new section and required clauses. This verifies that the protocol text was saved, not that a runtime implementation exists.
+- **Current verification status:** protocol persistence/read-back PASS; executable import, network-interruption recovery, replay idempotency, local durable storage and performance target SKIP/not implemented. Exact-head CI not yet checked after the protocol commit.
+- **Boundaries:** keep PR #22 open/Draft and unmerged; do not re-run accepted report reconciliation; do not claim the current ChatGPT interface itself can guarantee background/local persistence.
+- **Next single action:** fetch the live PR/branch state and CI for the new exact head, then inventory existing parser/schema/tooling before selecting the smallest implementation path.
