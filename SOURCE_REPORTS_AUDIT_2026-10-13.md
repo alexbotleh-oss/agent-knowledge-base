@@ -133,3 +133,9 @@ GitHub's compare API reports PR #22 as 206 commits ahead of `main`, 0 behind, wi
 ## Non-claims
 
 This first-pass audit does not claim a specific memory fact has definitely been lost. It demonstrates that report copies repeat and that unique IDs/CI are insufficient to establish semantic completeness. It does not prove that all source chat messages or binary attachments are present.
+
+## Additional source-to-memory reconciliation — N99 HTML-first phase (2026-10-13)
+
+A message-level pass over the raw archive found a significant historical N99 task-scope decision that was not represented in the RECIPE_MANAGER structured event log or decisions file. In conversation `Часть 1` (`6abe10f8-03d8-83eb-8219-eac3bdd308b0`), the user explicitly asked to pause the T-003 path, inventory existing/missing functions, validate windows/logic/dependencies in an HTML mockup, and port verified behavior into Flet only after that phase. Follow-up messages name V20 as the visual/layout reference, the existing Flet project as a functional reference, FIX6/V21/audit/master-map as reconciliation inputs, and exclude the old scanner while retaining the native scanner.
+
+This is **N99/RECIPE_MANAGER** evidence, not automatically B77 evidence. The source archive contains both project identities and mixed-scope conversations; a generic HTML mention alone is insufficient for B77 attribution. Added `EVT-RM-20261001-005` to the structured and narrative event logs and `DEC-RM-009` to decisions. No app files were changed. Whether the HTML mockup was fully completed remains unverified. The later 2026-10-12 `DEC-RM-001` establishes Android debugging as the immediate priority before UI redesign; both historical and later task priorities are preserved with dates.
