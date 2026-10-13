@@ -32,3 +32,9 @@
 ## Additional raw-source requirement — 2026-10-02
 - EVT-RM-20261002-001 records the user's report that an already saved product expiry date could not be edited and the proposal to move Add Product above the list.
 - This is a user-reported gap and proposed UI change; earlier acceptance status and the current data model have not been verified. Do not treat it as a settled implementation decision.
+
+## Additional raw-source recovery — N99 HTML-prototype phase gate (2026-10-13)
+- Added `EVT-RM-20261001-005` and `DEC-RM-009` from direct message-level evidence in the raw export conversation `Часть 1` (conversation_id `6abe10f8-03d8-83eb-8219-eac3bdd308b0`).
+- The user explicitly specified an HTML-first validation phase for N99 before porting logic into Flet; V20 is the visual/layout reference, the existing Flet project is a functional reference, and FIX6/V21/audit/master-map materials are inputs for checking lost/missing functions and dependencies. The old scanner was excluded; native scanner retained.
+- This is distinct from B77's iPhone-oriented HTML/WMA/PWA project. The exact state of HTML mockup implementation and whether every function was validated remain unknown.
+- The later 2026-10-12 DEC-RM-001 changes the immediate priority to Android debugging before UI redesign; preserve both decisions with their event times instead of flattening them into one timeless instruction.
