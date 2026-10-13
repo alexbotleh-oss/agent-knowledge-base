@@ -85,6 +85,15 @@ Full source-based details: `projects/B77_HTML_PWA/HTML_SQLITE_REGRESSION_2026-09
 - A later-discovered historical source must be inserted by its event time and linked to its source; it must not be appended as though it were the newest project event merely because it was imported later.
 - Unknown dates and uncertain causal links stay explicitly unknown.
 
+## 2026-10-12 — HTML/SQLite, PWA Shopping/Products and mobile camera decode issues
+
+### EVT-20261012-014 — later HTML/SQLite regression reconciliation
+- **Source:** follow-up report in the October 12 memory-transfer conversation; the supplied raw `conversations.zip` ends with conversations updated on October 7, so the exact original October 12 message ID is not present in that archive.
+- **Observed:** the user again reported recipe database additions failing and the loss of recipe deletion and kcal/100 g / BJU display in later HTML candidates. The working reference `index_db_path(5).html` contains relevant deletion and nutrition paths, but the latest candidate's runtime behavior was not independently verified.
+- **Relationship to September events:** this is a later report about subsequent candidate files, not a duplicate copy of the September source messages. Preserve both the original September occurrence chain (EVT-B77-20260922-001/002/003) and this later report, linked rather than merged.
+- **Status:** user report confirmed; root cause and final candidate outcome unknown.
+- **Source details:** `HTML_SQLITE_REGRESSION_2026-09-22.md` and structured record `events.jsonl:EVT-20261012-014`.
+
 ## 2026-10-12 — PWA Shopping/Products and mobile camera decode issues
 
 ### EVT-20261012-016 — Shopping units and Products filters
