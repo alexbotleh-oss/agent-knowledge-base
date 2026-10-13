@@ -116,6 +116,8 @@ A third source reconciliation pass found that CARD111's raw October 5–6 conver
 
 The RECIPE_MANAGER narrative log also contained two near-identical headings for `EVT-20261012-013`. The blocks described the same occurrence and source chain with minor wording differences; the wording was merged into one canonical narrative block and the duplicate copy removed. The JSONL event record was not deleted or rewritten. Three remaining headings in the RECIPE_MANAGER log (`EVT-20261012-014/016/019`) are explicit cross-project pointers to canonical B77 records, not N99 events. Ten other RECIPE_MANAGER events remain present in structured JSONL without standalone headings in `EVENT_LOG.md`; they are not being recreated as new events. Their narrative-index coverage is a presentation gap to review, not evidence that the structured records are absent.
 
+A provenance check across lesson records found that global lesson `G-LESSON-004` still pointed to the retired RECIPE_MANAGER path while its canonical event had been moved to B77. The path and Markdown attribution were corrected to `projects/B77_HTML_PWA/events.jsonl:EVT-B77-20260922-001`. The full HTML-specific lessons `L-RM-019/021/022` and the HTML-source portion of `L-RM-004` were also found inside RECIPE_MANAGER lessons; they are now concise historical cross-project pointers to canonical global/B77 lessons, and canonical B77 lessons `B77-L-008/009/010` hold the HTML regression, ineffective filter and camera-decode rules. This preserves historical IDs while removing the false implication that those HTML incidents were N99 Android defects.
+
 ## Next reconciliation steps
 
 1. Continue message-by-message matching of report claims against source chat messages and current event/lesson records.
