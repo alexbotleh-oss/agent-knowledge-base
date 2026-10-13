@@ -58,7 +58,7 @@ Status labels: **validated** means the described event/result is supported by a 
 
 ## B77-L-010 — Camera video is not proof of successful code decoding
 - **Status:** validated distinction from user reports; decoder root cause remains unknown.
-- **Evidence:** EVT-B77-20261005-002, EVT-B77-20261005-004 and EVT-20261012-019; camera access/video appeared in browser/PWA contexts, but the code was not recognized or saved.
+- **Evidence:** EVT-B77-20261002-002, EVT-B77-20261005-002, EVT-B77-20261005-004 and EVT-20261012-019; camera access/video appeared in browser/PWA contexts, but the code was not recognized or saved.
 - **Rule:** verify separately: secure context and permission → video/frame availability → decoder invocation → decoded value and symbology → callback/business handler → persistence → stop behavior after a successful decode. Do not diagnose a stop-after-success failure when no successful decode was observed.
 - **Limit:** the browser/PWA pipeline is distinct from the native N99/Flet scanner.
 
