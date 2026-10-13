@@ -46,7 +46,12 @@ User-provided timeline: archive submitted for archiving on 2026-10-05, returned 
 
 ## Scope and status
 
-- Status: ARCHITECTURE GAP IDENTIFIED; implementation NOT YET STARTED.
+- Status: ARCHITECTURE GAP IDENTIFIED; initial executable vertical slice IMPLEMENTED ON PR BRANCH, end-to-end integration NOT YET IMPLEMENTED.
+- Added `tools/temporal_memory_model.py`: snapshot validation, comparability gates, as-of assertion views, assertion provenance/time validation, and transitive downstream impact discovery.
+- Added `schemas/temporal_memory_snapshot.schema.json`, fixture `tests/fixtures/temporal_snapshots_37_vs_74.json`, and seven core tests plus a fixture-driven test in `tests/test_temporal_memory_model.py`.
+- The 74-count fixture preserves unknown source capture time as null and marks the snapshots non-comparable because scope and counting unit differ. It explicitly does not infer missing records or corruption from the numeric delta.
+- Initial code/test CI passed on commit `d831318acdd2d098d2827c903497cccad0ea5e42`; later schema/fixture revisions are awaiting their queued CI runs. Do not treat those later changes as verified until an exact-head run passes.
+- Still missing: schema validation wired into CI, snapshot registry/import integration, persistent assertion revision history, impact propagation into canonical state/lessons/handoffs, migration/rollback, and end-to-end temporal recovery tests.
 - This document is a proposed analysis derived from existing repository protocols and user-provided clarification, not proof that any new mechanism exists.
 - Memory-system work only. Do not change application code, databases, or APKs. Keep N99 / RECIPE_MANAGER, B77_HTML_PWA, CARD111, and ORGANISM as distinct project chains.
 - PR #22 remains open and must not be merged without explicit user permission.
