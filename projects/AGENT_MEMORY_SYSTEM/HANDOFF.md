@@ -66,3 +66,13 @@
 - PR #22 remains Draft/open/unmerged and is explicitly not scope-clean; preserve that boundary.
 - ChatGPT Project instructions do not need editing for this correction: they already require context restoration and checkpoints. Keep the repository protocol as the detailed source, and read it at the start of relevant work rather than assuming it loads automatically.
 - **Next single action:** inspect existing event/source/decision/task-state schemas and use the smallest existing format for a real continuity record; add a template only if none is suitable, then perform a new-context recovery test.
+
+
+## Handoff — 2026-10-13: causal attention and return stack
+
+- **Active goal:** develop persistent, evidence-backed continuity in `agent-knowledge-base`, not implement a separate application.
+- **Accepted change:** return stack records must preserve the reason/context of the conversational detour, the branch's meaning and findings, its established or unknown relation to the original goal, new constraints, and the condition for return. On return, re-evaluate the goal and next step; do not jump back mechanically.
+- **Written artifacts:** `core/continuous_agent_architecture.md` section 10; attention/return requirements in `core/universal_instructions.md`; decision `DEC-AGMS-20261013-003`; corresponding checkpoint appended to `TASK_STATE.md`.
+- **Status at handoff creation:** write operations returned commit SHAs. Read-back, final PR head, and exact-head CI still require verification. Runtime mechanism and behavior tests remain NOT IMPLEMENTED / NOT TESTED.
+- **Boundaries:** PR #22 remains Draft/open/unmerged and is not scope-clean per its own audit. No merge or main-branch changes. Do not claim this documentation provides automatic cross-chat persistence or background scheduling.
+- **Next single action:** read back the changed artifacts and inspect CI for the final exact branch head; then provide the user a concise report and paste-ready ChatGPT Project instruction amendment.
