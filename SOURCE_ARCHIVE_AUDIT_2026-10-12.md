@@ -57,10 +57,6 @@ A lesson-provenance review found HTML-specific B77 rules still duplicated inside
 
 The October 2 raw conversation contains a B77/PWA scanner chain (IndexedDB backing-store errors, separate Products/Shopping scanner modes, camera/stop/decode symptoms) and a separate N99 product-list requirement (saved expiry date could not be edited; user proposed moving Add Product above the list). These were split by message-level evidence into EVT-B77-20261002-001/002 and EVT-RM-20261002-001. The N99 UI proposal remains pending verification against earlier decisions; no code change was made.
 
-## RECIPE_MANAGER raw-source addition — 2026-10-13
-
-The October 2 mixed-scope conversation also contains an N99 product-list issue that was not represented in the event chain: the user said a saved expiry date could not be edited and proposed moving Add Product above the list. It is now EVT-RM-20261002-001 and DEC-RM-008 records it as an open requirement pending comparison with earlier decisions, not an accepted implementation decision. RECIPE_MANAGER now has 23 structured event records.
-
 ## RECIPE_MANAGER narrative deduplication — 2026-10-13
 
 The source-to-memory review found two near-identical narrative blocks with the same ID `EVT-20261012-013` in `projects/RECIPE_MANAGER/EVENT_LOG.md`. Their unique wording was merged into one block and the duplicate copy removed; the structured JSONL record remains. The three HTML/PWA event headings `EVT-20261012-014/016/019` in that log are cross-project pointers to B77, not canonical RECIPE_MANAGER events. Ten other RECIPE_MANAGER events are present in JSONL without standalone narrative headings; no new events were invented to force a one-to-one heading count.
