@@ -85,3 +85,12 @@
 - Current automated check at the time of writing: workflow run [#38464705063](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38464705063) was in progress for commit `484eacb048caa2c7c5a6d28c9c68d8bf2d93d308`. Re-check the run against the newest HEAD after these state updates; never infer PASS from a running job.
 - Important limits: primitives are not yet connected to the canonical memory registry or import pipeline; no automatic downstream revalidation/migration is implemented. Local test commands were not run in this environment. Source coverage remains PARTIAL, PR scope remains unsafe to merge, and PR #22 must remain Draft/open/unmerged.
 - Immediate next action: re-fetch exact PR HEAD and workflow run, inspect job/test result, repair if needed, then create a versioned fixture/schema and compatibility checks only after test baseline passes. Continue preserving rather than deleting out-of-scope histories until a destination is verified.
+
+
+## Resume checkpoint — snapshot schema and fixture
+
+- Added versioned snapshot schema `schemas/temporal_memory_snapshot.schema.json`, fixture `tests/fixtures/temporal_snapshots_37_vs_74.json`, and fixture-driven coverage in `tests/test_temporal_memory_model.py`.
+- Key safety correction: unknown capture time for the historical “74 conversations” claim remains null; review date must not be substituted as if it were source capture time. The two snapshots are marked non-comparable because their scope and counting unit are not aligned. A numeric delta is not treated as proof of corruption or missing data.
+- The temporal model remains an isolated additive module, not yet integrated into import/canonicalization. Schema is not yet wired into CI validation. Local tests not run.
+- At the preceding check, CI run #38464883917 was queued for HEAD `88a7b5362d15366483c86c7c3be50c86bb9b1513`. Re-fetch PR #22 and the newest workflow run before claiming test status because subsequent checkpoint commits move HEAD.
+- Continue with exact-head CI inspection; if green, wire JSON Schema and tests into CI with backward-compatibility coverage. Do not merge PR #22; the scope/preservation issue remains unresolved and source completeness is PARTIAL.
