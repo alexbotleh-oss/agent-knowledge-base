@@ -252,3 +252,15 @@ The latest source-memory additions (B77-L-011/012, RECIPE_MANAGER cross-pointers
 The next branch checkpoint superseded the prior eca562... snapshot. Current PR #22 HEAD was re-read as a5b41f3f0028671f29a6f094010e0a2b460199ec; GitHub Actions Validate knowledge base passed on that exact SHA, run #38364549105: https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38364549105. The live compare at that checkpoint was 268 commits ahead of main, 0 behind, with 60 changed paths. PR #22 remained Draft/open/unmerged.
 
 This checkpoint was subsequently verified: GitHub Actions Validate knowledge base passed on resulting HEAD 6fd1c9b01bbc143a032d02b79f4124cfba7804f8, run #38364657618: https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38364657618. That is a pass for the cited SHA only; any later commit requires its own exact-head check. Semantic source completeness remains PARTIAL.
+
+
+## Bounded continuation checkpoint — 2026-10-13
+
+This continuation resumed after the user requested shorter sessions due to unreliable connectivity. The current PR branch was re-read before any write.
+
+- PR #22 remains Draft/open/unmerged against `main`; branch head at the start of this checkpoint was `d178ef40fe3684b474d1664e8719704bfe0e8f24`, with 60 changed files.
+- GitHub Actions run #38364890030 passed on that exact SHA: https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38364890030.
+- Bounded JSONL read-back: RECIPE_MANAGER events 25/25 parseable, unique IDs; B77_HTML_PWA events 22/22; CARD111 events 15/15 and lessons 6/6; ORGANISM events 7/7 and lessons 5/5; global lessons 5/5. No parse errors, missing IDs, or duplicate IDs were found in these inspected files.
+- The existing coverage report states all 60 changed paths were fetched and scope-reviewed in bounded batches. This continuation additionally re-read the control-matrix audit, RECIPE_MANAGER task state/handoff, both coverage/audit reports, and the structured JSONL files listed above.
+- Next substantive work is semantic matching of source-report claims to canonical events/decisions/lessons, and resolution or explicit preservation of the 37-versus-74 conversation-count discrepancy. Do not infer source completeness from CI or unique IDs.
+- Overall source-to-memory completeness remains **PARTIAL**. No merge, app-code modification, database change, or APK build was performed.
