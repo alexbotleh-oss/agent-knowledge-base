@@ -41,7 +41,7 @@
     {
       "schema_version": "1.0",
       "snapshot_id": "historical-reference-74-unresolved",
-      "captured_at": "2026-10-13T00:00:00Z",
+      "captured_at": null,
       "received_at": null,
       "scope_id": "historical-memory-scope-not-yet-established",
       "counting_unit": "conversation_claim",
@@ -54,7 +54,7 @@
       "counts": {
         "conversations": 74
       },
-      "notes": "Historical claim only. Timestamp is a bookkeeping placeholder for this fixture, not the proven capture time of the source. Exact snapshot, scope and counting method remain unknown."
+      "notes": "Historical claim only. Capture time, scope and counting method of the original source remain unknown; do not substitute the date this claim was reviewed."
     }
   ],
   "expected_interpretation": {
