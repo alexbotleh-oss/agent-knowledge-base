@@ -1,3 +1,4 @@
+import json
 import sys
 import unittest
 from pathlib import Path
@@ -47,6 +48,17 @@ class TemporalMemoryModelTests(unittest.TestCase):
         self.assertEqual(result["status"], "comparable")
         self.assertEqual(result["deltas"]["conversations"], 37)
         self.assertIn("cause is undetermined", result["interpretation"])
+
+    def test_37_vs_74_fixture_keeps_unknown_snapshot_unresolved(self):
+        fixture_path = ROOT / "tests" / "fixtures" / "temporal_snapshots_37_vs_74.json"
+        fixture = json.loads(fixture_path.read_text(encoding="utf-8"))
+        left, right = fixture["snapshots"]
+        result = compare_snapshots(left, right)
+        self.assertEqual(result["status"], fixture["expected_interpretation"]["status"])
+        self.assertIsNone(right["captured_at"])
+        self.assertIn("scope_id", result["mismatched_dimensions"])
+        self.assertIn("counting_unit", result["mismatched_dimensions"])
+        self.assertIn("37 missing conversations", fixture["expected_interpretation"]["must_not_conclude"][-1])
 
     def test_different_counting_unit_is_not_comparable(self):
         before = snapshot("a", "2026-10-07T15:00:00Z", 37)
