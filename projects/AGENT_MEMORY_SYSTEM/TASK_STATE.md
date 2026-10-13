@@ -60,3 +60,12 @@
 - **Documentation updated:** added “Минимальная непрерывная память между чатами” to `core/universal_instructions.md` and “Минимальная непрерывность: восстановить → работать → зафиксировать” to `core/agent_runtime_protocol.md`.
 - **Verified so far:** GitHub Contents API returned commits for both files; read-back still required. This is a protocol/instruction update, not a runtime feature or evidence that chat-level auto-save exists.
 - **Next action:** read back both updated files, fetch latest branch/PR head and CI, then test whether the present repo mechanisms can support the smallest practical source-fragment/event record and reliable handoff without adding unnecessary infrastructure.
+
+
+## Checkpoint 2026-10-13 — instruction read-back and CI refresh
+
+- **Read-back:** `core/universal_instructions.md` and `core/agent_runtime_protocol.md` were fetched from this branch. The minimal continuity workflow is present: existing resources only; linked event/decision/task/source records; preserve separate incidents and provenance; lightweight archive pass first; checkpoints during work and before interruption; honest limits and test statuses.
+- **Live PR state:** PR #22 is OPEN / DRAFT / UNMERGED. Current head reported by GitHub: `8112a41eea8cb7b03b403748567fb5faa60d8d3c`. Do not merge; the PR's own scope audit says it is not scope-clean.
+- **CI:** workflow run 38416426765 (“Validate knowledge base”, run #318) for that exact head completed with conclusion `success` (PASS for that CI workflow only). This does not prove source-history completeness or the runtime interruption/resume behavior.
+- **ChatGPT Project instructions:** no change is required for this correction: the active project instructions already require context recovery, source verification, checkpointing, honest statuses, and a concrete next step before repository work. Repository protocols remain the detailed implementation reference; they are not automatically loaded in every chat, so the start gate must continue to direct the agent to read them.
+- **Next action:** inspect existing memory schemas/registries and reuse them if suitable; only add a compact event/checkpoint template if a real gap is confirmed. Then test a real handoff/recovery path. No new runtime importer or automatic chat autosave is claimed.
