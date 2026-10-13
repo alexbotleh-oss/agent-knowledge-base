@@ -31,7 +31,7 @@
 
 ## Additional raw-source requirement — 2026-10-02
 - EVT-RM-20261002-001 records the user's report that an already saved product expiry date could not be edited and the proposal to move Add Product above the list.
-- This is a user-reported gap and proposed UI change; earlier acceptance status and the current data model have not been verified. Do not treat it as a settled implementation decision.
+- The later same-day control-matrix workbook corroborates the intended requirements: Add Product at top is `CHANGE / USER`, expiry editing is `CHANGE / USER + AUDIT`, and separate batch editing remains `TODO`. The current data model and runtime implementation are still unverified.
 
 ## Additional raw-source recovery — N99 HTML-prototype phase gate (2026-10-13)
 - Added `EVT-RM-20261001-005` and `DEC-RM-009` from direct message-level evidence in the raw export conversation `Часть 1` (conversation_id `6abe10f8-03d8-83eb-8219-eac3bdd308b0`).
