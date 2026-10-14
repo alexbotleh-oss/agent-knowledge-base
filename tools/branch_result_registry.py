@@ -26,6 +26,10 @@ REQUIRED = (
     "reported_at",
 )
 RESULT_STATUSES = {"RESULT_REPORTED", "NEEDS_REVIEW", "NO_CHANGE"}
+
+def utc_now() -> str:
+    return datetime.now(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z")
+
 EVIDENCE_STATUSES = {"reported", "observed", "inferred", "verified", "unknown"}
 
 
