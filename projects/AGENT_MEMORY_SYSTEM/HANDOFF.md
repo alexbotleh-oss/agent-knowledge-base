@@ -327,3 +327,10 @@ Network-level resumption of the export transfer itself is still not implemented/
 - The search scope is limited to event log and TASK_STATE paths supplied by the caller. Guarded repair remains explicit and expected-hash protected.
 - Updated the unified-loop contract. Exact-head CI after this final addition remains to be checked.
 - Next: verify CI/read-back, then classify all 12 UMC acceptance scenarios as tested / partial / blocked. Keep PR #22 open/draft/unmerged.
+
+
+### Acceptance audit checkpoint — UMC-01..12 (2026-10-14)
+
+- Added a status matrix to the unified-loop contract. UMC-04..11 are PARTIAL, UMC-01/02/03/12 BLOCKED; none is claimed end-to-end PASS.
+- CI passed exact SHA `d938c393057cde2e670fd2477d31fd75f691960a`, [run #435](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38548477905). The matrix changes HEAD; re-check latest exact-head CI.
+- Next: implement/test a minimal session-restore packet reader from canonical task state, handoff, event log and linked evidence; missing source/access must yield BLOCKED. Do not mark the project ready for end-to-end testing yet.
