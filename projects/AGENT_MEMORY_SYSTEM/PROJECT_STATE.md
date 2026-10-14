@@ -18,3 +18,12 @@
 - **Data-integrity correction:** temporal edge directions in EVT-AGMS-002/003/004 were found reversed; EVT-AGMS-005 documents the correction and EVT-AGMS-006 adds machine-readable `edge_corrections`. Lesson candidate L-AGMS-20261013-002 was appended. Older records remain in the append-only log; an automatic overlay-applier/validator is not implemented.
 - **Canonical records:** `EVENT_LOG.md` and `events.jsonl` contain events EVT-AGMS-20261013-001 through EVT-AGMS-20261013-006. Historical events remain append-only; this file is a current-state snapshot.
 - **Next step:** decide a safe preservation/separation strategy for the 39 out-of-scope paths; narrow the mixed report; continue semantic reconciliation only for AGENT_MEMORY_SYSTEM and transferable memory lessons; rerun exact-head CI after final scope changes.
+
+## Checkpoint — actionable cross-chat checkpoint instructions (2026-10-14)
+
+- User identified a practical gap: agents may see a checkpoint owned by another chat/project but lack explicit instructions for how to act on it.
+- Added `core/cross_chat_checkpoint_agent_instructions.md` with an eight-step procedure: identify source and owner; preserve source history; assess applicability; avoid repeating evidence-backed work; record child work separately; return results with evidence; reconcile linked results on source resume; safely handle interrupted delivery.
+- Wired the instruction into `core/universal_instructions.md` and `core/agent_runtime_protocol.md` so it is part of the normal agent instructions, not an isolated design note.
+- Read-back confirmed the instruction file and both references are present on the working branch.
+- **Implementation boundary:** this is an actionable behavioral instruction plus runtime reference. It does not implement the branch registry, automated cross-chat retrieval/result delivery, acknowledgement tracking, or derived-state updates. Do not claim those mechanisms are automatic.
+- **Next:** run/check CI for the exact latest HEAD and record the result. Keep PR #22 Draft/open/unmerged; do not change `main`.
