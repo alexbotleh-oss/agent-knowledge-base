@@ -252,3 +252,13 @@ Network-level resumption of the export transfer itself is still not implemented/
 - Prior exact HEAD e9a50d2209894f2536035abf03ea56c937dfc39e passed CI run 38527148878. The latest protocol and state updates have new commits; verify the latest exact-head run before claiming current CI PASS.
 - Runtime remains unimplemented: no branch registry, automatic result return/notification, acknowledgement tracking, or derived-state updater yet. Do not imply that cross-chat propagation is already automatic.
 - Next action: read back the protocol and both state files, check exact-head CI, then implement and test the smallest compatible branch-link/result-return mechanism against existing event/task-state formats. PR #22 stays OPEN/DRAFT/UNMERGED; do not change main.
+
+
+## Checkpoint 2026-10-14 — unified dialogue–memory loop
+
+- Active goal: integrate useful mechanisms from Alice's proposal into existing AGENT_MEMORY_SYSTEM architecture without rebuilding canonical storage or creating a parallel source of truth.
+- Added `core/unified_memory_control_loop.md` and linked it from `core/agent_runtime_protocol.md`. It connects goal continuity, safe shared-memory reuse, source intake lifecycle, event evidence states, side-branch return, and checkpoint recovery. It defines UMC-01..12 acceptance scenarios.
+- Added `tests/test_unified_memory_control_loop.py` as a guard that the runtime protocol references the contract, all acceptance IDs remain present, and documentation does not overclaim deployment. These are documentation-contract tests, not end-to-end behavior tests.
+- Read-back confirmed the new files and runtime link. CI run 38545650884 was QUEUED for SHA `0545ee77d79cead774258523dcd998ace0238dc5`; check the latest exact HEAD after these state updates.
+- Known gaps remain: no connected route-to-promotion pipeline, automatic index/view updater, child-result return/acknowledgement service, all-chat capture, or verified agent-specific access control. Local raw importer is a component, not the full pipeline.
+- Next step: implement the minimal compatible path for intake result manifests and linked child-result propagation, add fault-injection tests, then execute the UMC acceptance matrix. Do not create duplicate journals. PR #22 remains OPEN/DRAFT/UNMERGED; do not change `main`.
