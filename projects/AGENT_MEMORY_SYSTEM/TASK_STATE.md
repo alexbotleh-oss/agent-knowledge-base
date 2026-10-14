@@ -256,3 +256,15 @@ Tests added for first pass, completed replay, and a changed source under the sam
 - **Current limitation:** no automatic capture of every live message/tool event, atomic event journal, full cross-chat retrieval, or end-to-end fault-injection proof is implemented. Keep these as explicit gaps.
 - **CI:** prior exact HEAD `a2fc7d1ca1c13f542d155896da5a3cde7c48cd07` passed run 38524792592. This state update changes HEAD; check the newest exact-head run before reporting current PASS.
 - **Next action:** read back `core/event_continuity_and_uncertainty.md`, HANDOFF and TASK_STATE from the branch; verify exact-head CI. Then inspect the existing event schema and implement the smallest compatible append-only event/checkpoint mechanism with tests for lost acknowledgement, missing record, duplicate replay, and contradictory later evidence. Do not build a parallel memory store. PR #22 stays OPEN/DRAFT/UNMERGED; do not change main.
+
+
+## Active checkpoint — ownership and cross-chat result branches (2026-10-14)
+
+- **New requirement from user:** a checkpoint belongs to the project/chat/task that created it. If another agent/chat uses it, create a linked child branch. When that branch reaches a result, it must report back to the originating checkpoint so the source task can recognize the question as resolved and continue its plan with updated evidence.
+- **Protocol change:** core/event_continuity_and_uncertainty.md now separates checkpoint ownership, branch lineage, question resolution, result propagation/acknowledgement, and derived current view. Child work must not overwrite the source checkpoint or pretend it originated there.
+- **Required behavior:** on source-task resume, inspect directly linked child results before repeating work. Mark only the sub-question whose acceptance criteria are met as resolved; continue the parent plan. A child merely reading/referencing a checkpoint is not evidence that the question is solved.
+- **Cross-branch record:** link source checkpoint ID/revision/hash and owner scope to child branch ID/owner scope; preserve reused material, applicability decision, new evidence, result status, and report/acknowledgement state.
+- **Propagation rule:** append a linked event or update a derived current-state projection; never rewrite historical source events. Conflicts or narrow applicability trigger review, not silent replacement. Use direct reverse links/indexes rather than a global scan every turn.
+- **Verification:** previous exact HEAD e9a50d2209894f2536035abf03ea56c937dfc39e passed CI run 38527148878. New protocol and state changes move HEAD; verify read-back and CI for the latest exact SHA before claiming PASS.
+- **Implementation gap:** this is still a documented design contract. Branch registry, automatic child-result return, source-owner notification/acknowledgement, derived-state refresh, and fault-injection tests are not yet implemented.
+- **Next step:** read back protocol and state files, check exact-head CI, then inspect the existing event/decision/task-state schemas and implement the smallest compatible branch-link/result-return path. PR #22 stays OPEN/DRAFT/UNMERGED; do not modify main.
