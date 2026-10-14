@@ -176,3 +176,6 @@
 - Добавлены `tests/test_memory_intake_planner.py` для кандидата, явно одобренной записи, отказа при неверном хеше и карантина неизвестного типа.
 - Планировщик не пишет в память и индексы; изменения `task_state`/`handoff` только предлагаются. Это намеренное ограничение этапа.
 - Следующий шаг: CI exact HEAD, затем расширить тесты на связи и несовместимые версии схемы; только после этого проектировать staging/commit path в канонический реестр.
+
+
+- **CI checkpoint for dry-run planner:** implementation commit `799d438f664e7792af0d402c858a7a0a0d038e55` was created via Git Data API and had no associated workflow run at first lookup. This is not a PASS. The current contents-API checkpoint is intended to trigger validation; re-fetch the live PR HEAD and verify its exact-head run before reporting the planner tested.
