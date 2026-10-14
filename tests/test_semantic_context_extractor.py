@@ -98,11 +98,27 @@ class SemanticContextExtractorTests(unittest.TestCase):
         context = extract_semantic_context(packet)
         self.assertEqual(context["status"], "SOURCE_CHANGED")
         self.assertEqual(context["source_freshness"]["task_state"], "CHANGED")
+        self.assertEqual(context["field_status"]["active_goal"], "STALE_SOURCE")
         self.assertEqual(context["source_hashes"]["task_state"], original_hash)
         self.assertNotEqual(
             context["source_hashes"]["task_state"],
             __import__("hashlib").sha256(self.task.read_bytes()).hexdigest(),
         )
+
+    def test_task_state_next_step_takes_precedence_over_handoff(self):
+        self.task.write_text(
+            "- **Активная задача в текущей сессии:** сессионная задача.\\n"
+            "- **Следующий шаг:** сначала проверить TASK_STATE.\\n",
+            encoding="utf-8",
+        )
+        self.handoff.write_text(
+            "# HANDOFF\\n"
+            "- **Следующий шаг:** продолжить общую задачу проекта.\\n",
+            encoding="utf-8",
+        )
+        context = extract_semantic_context(self._packet())
+        self.assertEqual(context["next_step"], "сначала проверить TASK_STATE")
+        self.assertEqual(context["provenance"]["next_step"]["source"], "TASK_STATE.md")
 
     def test_insufficient_data_returns_unknown_without_guessing(self):
         self.task.write_text("# TASK_STATE\nNo explicit semantic labels.\n", encoding="utf-8")
