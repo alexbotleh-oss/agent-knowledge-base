@@ -382,3 +382,11 @@ Tests added for first pass, completed replay, and a changed source under the sam
 - Updated the unified-loop contract. It explicitly does not claim automatic startup across every ChatGPT chat or full semantic verification of excerpted statements.
 - **CI pending** for the latest combined state after adding the restore tool and test. Re-fetch exact HEAD and inspect the workflow before declaring the checkpoint verified.
 - Next: verify CI/read-back; then test actual packet generation from the current branch's AGENT_MEMORY_SYSTEM files and audit whether linked IDs resolve. Continue with source promotion/index refresh and UMC-01..12 gaps.
+
+
+### Verification checkpoint — session restore packet and UMC status refresh (2026-10-14)
+
+- Exact-head CI PASS before this status refresh: [run #438](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38548779020), SHA `158d072dee176d02f6305661857c287cb65a6beb`.
+- Updated the UMC matrix: UMC-01 is now PARTIAL because a source-backed packet builder exists and is tested; automatic startup/semantic goal verification across live ChatGPT chats is still absent.
+- **Final HEAD changed after this matrix edit.** Re-check CI for the final branch SHA before reporting this checkpoint as fully verified.
+- Next implementation focus: connect validated intake staging to explicit reviewed promotion and derived index refresh without a second source of truth; retain a resumable operation ledger and test interruption between each commit boundary. Then validate a new-session restore against the resulting canonical state.
