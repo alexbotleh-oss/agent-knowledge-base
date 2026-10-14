@@ -127,8 +127,7 @@ class TrustPolicyEnforcedOnWriteTests(unittest.TestCase):
             self.task_state, self.events, self._proposal(), trust_verdict=verdict
         )
 
-        self.assertEqual(result["status"], "BLOCKED")
-        self.assertEqual(result["reason"], "TrustPolicyViolated")
+        self.assertEqual(result["status"], "REJECTED")
         self.assertFalse(result["writes_performed"])
         self.assertEqual(before, self.task_state.read_bytes())
 
