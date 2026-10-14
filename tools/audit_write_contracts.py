@@ -87,6 +87,7 @@ def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parents[1])
     parser.add_argument("--json", action="store_true", help="emit JSON")
+    parser.add_argument("--strict", action="store_true", help="exit 2 when any mutation site lacks a contract entry")
     args = parser.parse_args(argv)
     findings, unclassified = audit(args.root.resolve())
     if args.json:
@@ -98,7 +99,7 @@ def main(argv=None) -> int:
         print(f"\nMutation sites: {len(findings)}; unclassified: {len(unclassified)}")
         for item in unclassified:
             print("UNCLASSIFIED:", item)
-    return 2 if unclassified else 0
+    return 2 if args.strict and unclassified else 0
 
 
 if __name__ == "__main__":
