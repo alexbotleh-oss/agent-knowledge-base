@@ -363,5 +363,39 @@ class ResumableChatImportTests(unittest.TestCase):
                 conn.close()
 
 
+    def test_same_operation_with_changed_source_is_new_snapshot_not_resume(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            source = self.make_source(root, 2)
+            out = root / "state"
+            first = import_export(source, out, "INCIDENT-SNAPSHOT-001", batch_size=1)
+            original_hash = first["source_sha256"]
+
+            source.write_text(json.dumps(sample_conversations(3), ensure_ascii=False), encoding="utf-8")
+            second = import_export(source, out, "INCIDENT-SNAPSHOT-001", batch_size=1)
+            self.assertNotEqual(second["source_sha256"], original_hash)
+            self.assertEqual(second["run_mode"], "NEW_SNAPSHOT")
+            self.assertEqual(second["status"], "RAW_COMPLETE")
+
+            conn = sqlite3.connect(out / "import.sqlite3")
+            try:
+                rows = conn.execute(
+                    "SELECT source_sha256,status FROM imports WHERE archive_id=? ORDER BY source_bytes",
+                    ("INCIDENT-SNAPSHOT-001",),
+                ).fetchall()
+                self.assertEqual(len(rows), 2)
+                event_types = [
+                    row[0] for row in conn.execute(
+                        "SELECT event_type FROM import_events WHERE archive_id=? ORDER BY event_id",
+                        ("INCIDENT-SNAPSHOT-001",),
+                    )
+                ]
+                self.assertIn("FIRST_PASS_STARTED", event_types)
+                self.assertIn("NEW_SNAPSHOT_STARTED", event_types)
+                self.assertNotIn("RESUME", event_types)
+            finally:
+                conn.close()
+
+
 if __name__ == "__main__":
     unittest.main()
