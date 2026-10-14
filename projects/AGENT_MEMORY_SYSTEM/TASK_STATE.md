@@ -114,3 +114,11 @@
 - **Docs:** `core/source_ingestion_protocol.md` now documents invocation, behaviour and limitations.
 - **Known limitation:** resume currently rescans prior conversations from the immutable snapshot until it reaches the saved ordinal. It is correct for a fixed snapshot but not optimal for very large exports; next optimization is a snapshot-bound byte-offset/position index tied to the last committed source locator. Payloads are staged at conversation granularity with full nested message structures; binary attachments are not extracted, and message-level semantic indexing is deferred.
 - **Next:** verify CI for exact current HEAD; inspect failure logs if needed. Then improve resume seek efficiency only after correctness baseline remains green, add a test for simulated lost acknowledgement/transaction recovery and duplicate source IDs, and update PR description/hand-off. Do not merge because PR #22 remains scope-unsafe and includes unrelated project histories without a verified preservation destination.
+
+
+## Resumable import test expansion — 2026-10-14
+
+- Expanded `tests/test_resumable_chat_import.py` with a simulated lost acknowledgement/replayed committed batch, duplicate source conversation IDs (must fail visibly rather than silently drop one), and incremental UTF-8 decoding with tiny chunks/non-ASCII text.
+- New exact-head workflow run [#38519357924](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38519357924) is running for commit `31272906f2b2a904c230225249fd930e8c0c0cf4`; result is not yet known at this checkpoint.
+- Previous implementation + documentation changes have PASS on run [#38519320849](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38519320849) for commit `466f68801eb7fd8b75bdbc8171f4bae5ce213d32`. Do not extend that PASS to the new test commit until its own run completes.
+- Next: inspect run #38519357924 and job logs if it fails; then optimize cursor seek only after tests are green. Current known limitation remains re-scanning from the start of the immutable snapshot on resume.
