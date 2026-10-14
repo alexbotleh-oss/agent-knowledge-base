@@ -319,3 +319,11 @@ Network-level resumption of the export transfer itself is still not implemented/
 - Tested local sequence: publish → idempotent replay → owner acknowledgement → guarded TASK_STATE append; stale parent revision is rejected, and retry against refreshed hash preserves the parent change.
 - Not proven: cross-chat delivery, distributed transaction, automatic pending-return discovery or task-state reconciliation.
 - Next: implement a dry-run reconciliation/report over canonical events, identify unacknowledged child results and acknowledgements lacking a linked checkpoint, then explicit hash-guarded repair. Do not auto-resolve parent tasks.
+
+
+### Handoff — child-return reconciliation report (2026-10-14)
+
+- Added read-only `tools/reconcile_branch_returns.py` and tests. It reports missing owner acknowledgements and accepted acknowledgements without a task-state link; it never writes or auto-resolves a task.
+- The search scope is limited to event log and TASK_STATE paths supplied by the caller. Guarded repair remains explicit and expected-hash protected.
+- Updated the unified-loop contract. Exact-head CI after this final addition remains to be checked.
+- Next: verify CI/read-back, then classify all 12 UMC acceptance scenarios as tested / partial / blocked. Keep PR #22 open/draft/unmerged.
