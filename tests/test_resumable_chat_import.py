@@ -113,6 +113,21 @@ class ResumableChatImportTests(unittest.TestCase):
             self.assertEqual(staged[0]["mapping"]["node-0-user"]["message"]["content"]["parts"], ["question 0"])
             self.assertEqual(staged[0]["mapping"]["node-0-user"]["children"], ["node-0-assistant"])
 
+    def test_zip_resume_seeks_within_conversations_member(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            source = root / "export.zip"
+            rows = sample_conversations(4)
+            with zipfile.ZipFile(source, "w") as archive:
+                archive.writestr("account/conversations.json", json.dumps(rows, ensure_ascii=False))
+            out = root / "state"
+            paused = import_export(source, out, "ARCHIVE-ZIP-RESUME", batch_size=1, stop_after_batches=1)
+            self.assertEqual(paused["status"], "PAUSED")
+            self.assertGreater(paused["next_byte_offset"], 0)
+            done = import_export(source, out, "ARCHIVE-ZIP-RESUME", batch_size=1)
+            self.assertEqual(done["status"], "RAW_COMPLETE")
+            self.assertEqual(done["committed_conversations"], 4)
+
     def test_replayed_committed_batch_models_lost_ack_without_duplicate(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
