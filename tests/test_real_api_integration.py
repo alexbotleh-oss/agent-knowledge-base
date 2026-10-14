@@ -249,16 +249,16 @@ class TestRealApiIntegration(unittest.TestCase):
                 "type": "checkpoint",
                 "summary": "Persisted recovery fixture",
             }
-            event_log.write_text(json.dumps(event) + "\\n", encoding="utf-8")
+            event_log.write_text(json.dumps(event) + "\n", encoding="utf-8")
             task_state.write_text(
-                "# TASK_STATE\\n"
-                "- **Активная задача в текущей сессии:** проверить восстановление после рестарта\\n"
-                "- **Следующий шаг:** проверить новый процесс\\n"
-                "- **Последнее событие:** EVT-RESTART-001\\n",
+                "# TASK_STATE\n"
+                "- **Активная задача в текущей сессии:** проверить восстановление после рестарта\n"
+                "- **Следующий шаг:** проверить новый процесс\n"
+                "- **Последнее событие:** EVT-RESTART-001\n",
                 encoding="utf-8",
             )
             handoff.write_text(
-                "# HANDOFF\\n- **Следующий шаг:** fallback шаг не должен переопределить TASK_STATE\\n",
+                "# HANDOFF\n- **Следующий шаг:** fallback шаг не должен переопределить TASK_STATE\n",
                 encoding="utf-8",
             )
             script = (
