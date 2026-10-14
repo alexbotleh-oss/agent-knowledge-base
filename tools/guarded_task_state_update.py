@@ -110,14 +110,33 @@ def apply_checkpoint(
             "writes_performed": False,
         }
 
-    lock_path = task_state.with_name(task_state.name + ".lock")
+    # Global lock order: journal lock -> task-state lock. Event registry writers
+    # acquire only the journal lock, so this order avoids lock-order cycles and
+    # keeps event evidence stable through the final trust check and state replace.
+    journal_lock_path = event_log.with_name(event_log.name + ".lock")
+    task_lock_path = task_state.with_name(task_state.name + ".lock")
+    acquired: list[Path] = []
     try:
-        lock_fd = os.open(lock_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
-    except FileExistsError:
-        return {"status": "LOCKED", "writes_performed": False, "error": f"Lock exists: {lock_path}"}
-    try:
-        os.close(lock_fd)
-        # Re-read under lock; a stale proposal must never overwrite a concurrent update.
+        for lock_path, label in (
+            (journal_lock_path, "Journal"),
+            (task_lock_path, "Task-state"),
+        ):
+            try:
+                lock_fd = os.open(lock_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+            except FileExistsError:
+                return {
+                    "status": "LOCKED",
+                    "writes_performed": False,
+                    "error": f"{label} lock exists: {lock_path}. Verify no writer is active before manual stale-lock recovery.",
+                }
+            acquired.append(lock_path)
+            with os.fdopen(lock_fd, "w", encoding="utf-8") as lock_stream:
+                lock_stream.write(json.dumps({"pid": os.getpid(), "started_at": __import__("datetime").datetime.now(__import__("datetime").timezone.utc).isoformat()}))
+                lock_stream.flush()
+                os.fsync(lock_stream.fileno())
+
+        # Re-read under both locks. The shared journal lock prevents the event
+        # registry from changing evidence until this operation completes.
         current = task_state.read_bytes()
         actual_hash = sha256_bytes(current)
         current_text = current.decode("utf-8")
@@ -128,8 +147,9 @@ def apply_checkpoint(
             return {"status": "ALREADY_APPLIED" if proposal["checkpoint_markdown"].strip() in current_text[current_text.index(marker):]
                     else "CONFLICT", "update_id": proposal["update_id"], "writes_performed": False}
 
-        # Recompute trust only after acquiring the task-state lock and confirming
-        # the expected revision. This closes the task-state TOCTOU window.
+        # Trust is recomputed while both canonical files are protected by the
+        # lock protocol. HANDOFF is still externally mutable and not covered by
+        # these locks; source freshness checks therefore remain mandatory.
         handoff_path = task_state.with_name("HANDOFF.md")
         try:
             from context_extractor import extract_semantic_context
@@ -183,7 +203,10 @@ def apply_checkpoint(
                 "event_id": proposal["event_id"], "new_sha256": sha256_bytes(new_bytes),
                 "writes_performed": True}
     finally:
-        lock_path.unlink(missing_ok=True)
+        # Release in reverse acquisition order. Never break a lock automatically:
+        # a leftover lock requires operator inspection before recovery.
+        for lock_path in reversed(acquired):
+            lock_path.unlink(missing_ok=True)
 
 
 def main(argv=None) -> int:
