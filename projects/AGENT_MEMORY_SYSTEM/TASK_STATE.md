@@ -390,3 +390,13 @@ Tests added for first pass, completed replay, and a changed source under the sam
 - Updated the UMC matrix: UMC-01 is now PARTIAL because a source-backed packet builder exists and is tested; automatic startup/semantic goal verification across live ChatGPT chats is still absent.
 - **Final HEAD changed after this matrix edit.** Re-check CI for the final branch SHA before reporting this checkpoint as fully verified.
 - Next implementation focus: connect validated intake staging to explicit reviewed promotion and derived index refresh without a second source of truth; retain a resumable operation ledger and test interruption between each commit boundary. Then validate a new-session restore against the resulting canonical state.
+
+
+### Checkpoint — source-and-goal preflight incident (2026-10-14)
+
+- **Observed incident:** four PDF volumes were already present in the active environment, but the assistant asked for a PDF/manifest again instead of continuing analysis. See `SOURCE_AND_GOAL_PREFLIGHT_INCIDENT_2026-10-14.md` and EVT-AGMS-20261014-003.
+- **Correction discipline:** EVT-AGMS-003 initially received a temporal relation unsupported by day-level timestamps; EVT-AGMS-004 records an append-only correction removing that relation. Preserve both records; do not infer same-day event ordering without evidence.
+- **Changes made on this branch:** appended incident/correction events; added lesson L-AGMS-20261014-003; added the SOURCE-AND-GOAL PREFLIGHT section to `core/universal_instructions.md`; wired its reference into `core/agent_runtime_protocol.md`; created the incident report with CTX-01..CTX-05 regression criteria.
+- **Analysis coverage:** primary keyword/context passes over all four extracted PDF text volumes are complete for this first pass; the full semantic incident inventory and binary attachment review remain PARTIAL. No claim of exhaustive archive analysis.
+- **Not yet proven:** prompt text alone does not prove the model will obey the preflight. No dedicated runtime/model-behavior regression evaluation has passed yet.
+- **Next:** read back every changed file; validate JSONL parsing and unique IDs/edge corrections; fetch live PR #22 metadata and exact HEAD; check CI on that exact SHA. Then implement/evaluate CTX-01/CTX-02 with evidence. Keep PR #22 Draft/open/unmerged and do not modify `main`.
