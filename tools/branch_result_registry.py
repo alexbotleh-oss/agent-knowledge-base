@@ -185,7 +185,7 @@ def acknowledge_result(
         return {"status": "REJECTED", "writes_performed": False,
                 "errors": ["target must be an existing cross_branch_result event"]}
     branch = target.get("branch_return") or {}
-    identity = "\\0".join((result_event_id, decision, owner_ref))
+    identity = "\\0".join((result_event_id, owner_ref))
     ack_id = "EVT-AGMS-XACK-" + hashlib.sha256(identity.encode("utf-8")).hexdigest()[:20].upper()
     ack_event = {
         "event_id": ack_id,
