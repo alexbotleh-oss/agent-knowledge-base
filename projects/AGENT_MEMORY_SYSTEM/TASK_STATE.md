@@ -373,3 +373,12 @@ Tests added for first pass, completed replay, and a changed source under the sam
 - CI passed exact SHA `d938c393057cde2e670fd2477d31fd75f691960a` in [run #435](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38548477905). The matrix update changes HEAD; final exact-head CI must be checked again.
 - Matrix result: UMC-04..11 are PARTIAL; UMC-01, UMC-02, UMC-03 and UMC-12 are BLOCKED. No UMC scenario is declared end-to-end PASS yet.
 - **Next priority:** build the smallest session-restore packet reader from canonical TASK_STATE/HANDOFF/events and linked decisions, with a test proving it reconstructs goal, constraints, evidence, pending return, and next step; if required source is inaccessible, return BLOCKED rather than hallucinating continuity.
+
+
+### Implementation checkpoint — source-backed session restore packet (2026-10-14)
+
+- Added `tools/restore_session_packet.py` and `tests/test_restore_session_packet.py`.
+- The read-only packet builder consumes TASK_STATE, HANDOFF and events.jsonl, includes source hashes, recent checkpoint excerpts and referenced events. It distinguishes RESTORED_PACKET, PARTIAL (missing referenced event) and BLOCKED (missing/invalid source).
+- Updated the unified-loop contract. It explicitly does not claim automatic startup across every ChatGPT chat or full semantic verification of excerpted statements.
+- **CI pending** for the latest combined state after adding the restore tool and test. Re-fetch exact HEAD and inspect the workflow before declaring the checkpoint verified.
+- Next: verify CI/read-back; then test actual packet generation from the current branch's AGENT_MEMORY_SYSTEM files and audit whether linked IDs resolve. Continue with source promotion/index refresh and UMC-01..12 gaps.
