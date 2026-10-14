@@ -161,3 +161,10 @@
 - **Approval boundary:** `IMPORT_READY` means “this batch is ready for processing,” not “approve all records.” An artifact with lifecycle status `accepted` requires explicit user-approval evidence. The intake validator never executes artifact content and rejects path traversal, hash mismatch, unknown fields, duplicate artifact IDs and unsupported status values.
 - **Privacy boundary:** the manifest contract forbids treating raw private chat exports as normal repository artifacts. Use sanitized structured memory or private-reference-only metadata; the GitHub repository is not a safe default destination for private raw history.
 - **Next:** read back all changed files, run CI on exact HEAD, fix any validation issues, then define a dry-run route plan against the existing registry without writing canonical memory. Do not build automatic writes/index publication until the dry-run contract is tested.
+
+
+## Intake contract correction — 2026-10-14
+
+- Corrected validator/schema alignment: absent source capture time is permitted and remains unknown; it is not replaced with review time. Added a regression test for this case.
+- Code/test commit: `94cdd01424d77f2158e385c2de1ad96948149d31`. The Git Data API update did not yet expose an associated workflow run at the time of this checkpoint; this does **not** mean CI passed. A fresh exact-head run must be observed before marking the contract green.
+- Contract validation remains metadata/hash/path validation only. It does not route artifacts, parse every type-specific record schema, write canonical memory or rebuild indexes.
