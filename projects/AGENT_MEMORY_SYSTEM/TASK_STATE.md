@@ -419,3 +419,13 @@ Tests added for first pass, completed replay, and a changed source under the sam
 - The final reconciliation and Lite Cook/LK correction documents were fetched after writes and their relevant content verified.
 - Latest preservation-branch commit after these writes: `d9e49aa1a6bf8425e4299a19b440a07be4ffbac3`. Exact-head CI for this preservation-branch commit is not yet available through the PR-run lookup; do not claim it passed.
 - **Next action:** manually review the path dispositions against the repository's direct-scope rule, especially raw CARD111 source-history, project summaries/events, and the two app-specific reconciliation reports. Then create a scope-clean change set while retaining the preserved out-of-scope material; run checks and verify CI on the final exact SHA. PR #22 remains open/Draft/unmerged; do not change `main`.
+
+
+## Reconstructed missing context crosswalk — 2026-10-14
+
+- Added `projects/AGENT_MEMORY_SYSTEM/RECONSTRUCTED_CONTEXT_CROSSWALK_2026-10-14.md` on `archive-reconciliation/deferred-20261014`; read-back succeeded (109 lines).
+- The crosswalk compares the four PDF volumes, supplied previous-chat note/text captures, and current repository notes. It restores the causal relationship between B77/LK, Lite Cook, the technical «Что приготовить» APK direction, and the later switch to CARD111.
+- Key correction: LK is the umbrella repository for B77; Lite Cook is one simplified direction; the APK direction was planned for later unfreezing/integration, not confirmed merged.
+- Also preserves the architectural chain: source-first resumable import → separate later analysis → chronology/provenance → event/decision/causal links → reviewed promotion and derived indexes.
+- This is a bounded reconstruction. It does not claim every PDF message/attachment was available, does not prove the planned APK/HTML merge occurred, and does not infer a single root cause for agent reliability deterioration.
+- Next: link the crosswalk into canonical handoff/task state, update scope decisions without deleting source material, and validate the final exact commit/CI.
