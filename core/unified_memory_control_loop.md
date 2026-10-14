@@ -197,3 +197,15 @@ Status meanings: **PARTIAL** means a component/test covers a narrow subcase but 
 | UMC-12 | BLOCKED | Protocol says to report BLOCKED when access is unavailable; no executable session restore gate enforces this across environments. |
 
 The current CI pass verifies the repository validators and unit tests on a specific commit. It does not upgrade PARTIAL/BLOCKED rows automatically. The end-to-end test stage remains blocked until the missing cross-component paths are implemented and evidenced.
+
+
+## 11. Source-backed session restore packet
+
+Implemented prototype: `tools/restore_session_packet.py`; tests: `tests/test_restore_session_packet.py`.
+
+The tool reads TASK_STATE, HANDOFF and the canonical event log, records exact source hashes, includes recent checkpoint excerpts and linked events, and returns explicit status:
+- `RESTORED_PACKET`: required sources parse and all referenced event IDs found in the inspected sources;
+- `PARTIAL`: a referenced event is missing from the inspected event log;
+- `BLOCKED`: a canonical source is missing or invalid.
+
+It is read-only. It does not infer that all dialogue was captured, and it does not independently decide which excerpted statements are accepted facts. The agent must still interpret statuses, conflicts and next steps. This is a source-backed packet builder, not automatic session startup in every ChatGPT chat; callers must have access to the files and invoke it.
