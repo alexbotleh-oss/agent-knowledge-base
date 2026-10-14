@@ -130,3 +130,16 @@
 - Test commit f100e40e9d68cbdbf4a9a2099beb2afc7a2c8133; workflow run #38519660453 was in progress at checkpoint. Check its conclusion before claiming this test passed.
 - Previous importer + offset implementation passed exact-head CI at b7344e351c260dab55f24a03e1c355f953124988. That result does not cover the later ZIP-specific test.
 - Next: inspect run #38519660453 and repair if needed; then decide on a concurrent-import lock and crash-injection test before production claims. Keep PR #22 Draft/open/unmerged; no changes to main.
+
+
+## Handoff — memory pipeline concept and audit — 2026-10-14
+
+- **Active goal:** apply the user's new concept to AGENT_MEMORY_SYSTEM in stages: a shared, multi-chat memory pipeline where working agents submit structured material and independent infrastructure preserves, routes, links, indexes, and exposes it without requiring the source agent to remain active.
+- **Important distinction:** chat/session interruption and GitHub workflow interruption are separate failure modes. GitHub automation cannot recover material that was never successfully exported/uploaded. Checkpoints for the pipeline do not imply ChatGPT auto-save or background synchronization.
+- **Audit artifact:** `projects/AGENT_MEMORY_SYSTEM/MEMORY_PIPELINE_GAP_ANALYSIS_2026-10-14.md`, created in commit `70422903e899521ad6eca93d07395098787f7581`. It records existing components, evidence boundaries, gaps, invariants, staged plan, and acceptance criteria.
+- **Existing reusable components found:** `core/memory_model.md`; `core/stack_registry.json`; event/lesson templates; `tools/validate_memory.py`; `.github/workflows/validate.yml`; `core/agent_runtime_protocol.md`; `core/session_handoff.md`. The current stack registry is a useful starting point for observed language/tool attributes, not proof of semantic lesson applicability.
+- **Runtime boundary:** `tools/resumable_chat_import.py` is only an isolated raw-chat import prototype. It preserves/stages conversation payloads and checkpoint state, but does not perform the full route-to-libraries → update-indexes → publish result addresses workflow. Do not describe it as the complete memory pipeline. Do not delete it automatically; decide after intake contract/schema compatibility review.
+- **Current phase:** Stage 1 (inventory/gap map) documented. Still needed: inspect all actual write/index consumers and CI triggers; map each library's canonical format and update path; then define the smallest compatible versioned intake manifest and lifecycle before adding routing code.
+- **Next action:** continue the factual inventory of indexing/write paths and workflow permissions/triggers. Do not start a new router before this is complete. Do not touch `main`.
+- **CI:** run #38519704988 passed for the preceding HEAD `b43f404034450f718f18e002356cdb926fd702ba`; the new audit/checkpoint commits require a fresh exact-HEAD CI result.
+- **PR #22:** keep OPEN/DRAFT/UNMERGED; existing unrelated project histories and preservation/scope issue remain unresolved.
