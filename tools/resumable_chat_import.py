@@ -269,7 +269,7 @@ def import_export(source: Path, output: Path, archive_id: str, batch_size: int =
                         continue
                     cid, identity_method = conversation_id(conversation, ordinal)
                     locator = f"{archive_id}/{digest}/{cid}" if identity_method == "source_id" else f"{archive_id}/{digest}/{cid}"
-                    payload = json.dumps(conversation, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+                    payload = json.dumps(conversation, ensure_ascii=False, separators=(",", ":"))
                     payload_hash = hashlib.sha256(payload.encode("utf-8")).hexdigest()
                     batch.append((archive_id, digest, locator, cid, identity_method, ordinal, payload, payload_hash, utc_now()))
                     if len(batch) >= batch_size:
