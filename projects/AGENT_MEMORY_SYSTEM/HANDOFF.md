@@ -197,3 +197,17 @@
 - **Important self-detected defect:** while recording EVT-AGMS-20261014-001, the agent initially reversed a temporal relation to EVT-AGMS-20261013-006. It caught this on review and preserved an append-only correction in EVT-AGMS-20261014-002. The validator for temporal edge direction is still missing; do not treat this as solved by manual review.
 - **Latest known change after the passing CI:** TASK_STATE was updated in commit `0b57475aca9628f1d8a4e6fcff3f02126b073afe`; CI for the resulting exact HEAD must be checked before claiming the latest head passes.
 - **Remaining acceptance gates:** native source export/read-back of the live chat; verified counts/IDs/order/hashes; interruption/resume and malformed-source cases; semantic recovery against a blind source-derived checklist; automatic ongoing capture. Current test only proves behavior on the reconstructed fixture.
+
+## Handoff — продолжить с последней подтверждённой контрольной точки (2026-10-14)
+
+**Явная директива следующему заходу:** CONTINUE_FROM_LAST_CONFIRMED_CHECKPOINT.
+
+- Цель: проверить двухзаходное восстановление после намеренно неполной обработки и закрепить явные инструкции агента.
+- Состояние ветки до read-back/CI: export/cross-project-experience-rollup-20261012; последняя известная ранее HEAD 55cb3a50ad338dccc80b5ca968942618349b377d. После последних записей необходимо получить живой HEAD повторно.
+- Изменён тест tests/test_resumable_chat_import.py: test_explicit_second_pass_resumes_from_last_confirmed_checkpoint создаёт паузу после одного подтверждённого пакета, читает durable checkpoint из SQLite, затем запускает второй проход с теми же идентификаторами и проверяет RESUME, source SHA-256, ordinal, byte offset, locator, уникальность/порядок записей и RAW_COMPLETE только после финальной сверки.
+- Добавлены правила явного resume в core/universal_instructions.md, core/agent_runtime_protocol.md, core/source_ingestion_protocol.md. На втором заходе агент обязан проверить фактическую контрольную точку и использовать тот же исходник, archive ID и state path.
+- Важно: обработка остановлена ≠ сама выгрузка усечена. Для усечённой выгрузки нужен отдельный тест и статус FAILED/PARTIAL; нельзя объявлять RAW_COMPLETE или переносить offset на новый снимок.
+- Коммиты записи: test f97f1a57462a3a2672ec7c243246eb528274f527; universal aafd760661dc387a54ffeb94bdc212ff699d1011; runtime ce86fc578482a3cb31db7ad466eeb9d970478e2c; source protocol be5c95a964cdff40ef7f432c98eb650594477de1.
+- **Статус сейчас: PARTIAL.** Файлы были записаны, но exact-HEAD read-back/CI ещё не подтверждены; локальный тест не запускался. Не называть это PASS до доказательств.
+- **Следующий шаг:** read-back всех четырёх изменённых файлов и этого handoff, получить фактический HEAD, найти workflow run для точного SHA и прочитать итог. При зелёном CI выполнить/добавить отдельный тест усечённой выгрузки. PR #22 оставлять Draft/open/unmerged; main не менять.
+
