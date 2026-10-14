@@ -90,3 +90,6 @@
 
 Проверки пропорциональны режиму: первичный заход — проверка входного источника и критериев полноты; возобновление — проверка контрольной точки; повтор завершённой операции — чтение статуса/результата. Не запускать полную историческую сверку на каждом входе без конкретного основания.
 
+## Cross-chat checkpoint gate
+
+When using a checkpoint owned by another chat/task/project, follow `core/cross_chat_checkpoint_agent_instructions.md` before acting. Identify its owner and exact revision; preserve the source history; create a linked child record; assess applicability; avoid repeating work already supported by evidence; record new work in the child branch; return meaningful results to the source owner; and inspect linked results before resuming the source task. A reference is not resolution, a child result is not delivery acknowledgement, and a resolved sub-question is not completion of the parent goal. If the registry/return path is unavailable, record a temporary link in TASK_STATE/HANDOFF and state the gap. Do not claim automatic synchronization unless implemented and tested.
