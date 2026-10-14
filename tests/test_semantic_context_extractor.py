@@ -143,6 +143,24 @@ class SemanticContextExtractorTests(unittest.TestCase):
         self.assertEqual(context["source_hashes"]["task_state"], "UNKNOWN")
 
 
+    def test_real_recipe_manager_sources_keep_session_and_project_scopes_distinct(self):
+        task = ROOT / "projects" / "RECIPE_MANAGER" / "TASK_STATE.md"
+        handoff = ROOT / "projects" / "RECIPE_MANAGER" / "HANDOFF.md"
+        events = ROOT / "projects" / "RECIPE_MANAGER" / "events.jsonl"
+        packet = build_session_packet(task, handoff, events)
+        context = extract_semantic_context(packet)
+        self.assertEqual(
+            context["active_goal"],
+            "перенести доступный опыт текущего чата в `agent-knowledge-base`, проверить дубликаты и оформить отдельный PR. Не выполнять отладку, не изменять код/БД приложения и не собирать APK",
+        )
+        self.assertEqual(context["historical_goal"], "отладить Android-приложение; улучшения интерфейса отложить до завершения отладки")
+        # The handoff's project-level Android goal must not become this session's goal.
+        self.assertNotIn("отладку Android", context["active_goal"])
+        # No explicit session next-step label exists in TASK_STATE; don't infer one
+        # from the handoff's differently named prose heading.
+        self.assertEqual(context["next_step"], "UNKNOWN")
+        self.assertEqual(context["provenance"]["active_goal"]["source"], "TASK_STATE.md")
+
     def test_semantic_context_restores_in_fresh_process_from_persisted_sources(self):
         self.task.write_text(
             "# TASK_STATE\n"
