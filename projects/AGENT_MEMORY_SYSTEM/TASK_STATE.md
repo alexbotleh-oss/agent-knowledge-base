@@ -365,3 +365,11 @@ Tests added for first pass, completed replay, and a changed source under the sam
 - It rejects malformed event logs/missing task-state files and explicitly states that supplied files limit the search; it cannot prove a checkpoint is absent from every possible source.
 - Updated `core/unified_memory_control_loop.md`. CI verification for the final HEAD after this addition is pending.
 - Next: exact-head CI and read-back. If green, map the 12 UMC scenarios to implemented tests, partially covered behavior, and blocked runtime features. Do not add automatic mutation to the reconciler.
+
+
+### Acceptance audit checkpoint — UMC-01..12 (2026-10-14)
+
+- Added a source-grounded status matrix to `core/unified_memory_control_loop.md`. It distinguishes PARTIAL component coverage from actual end-to-end PASS and identifies evidence and gaps for each of the 12 scenarios.
+- CI passed exact SHA `d938c393057cde2e670fd2477d31fd75f691960a` in [run #435](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38548477905). The matrix update changes HEAD; final exact-head CI must be checked again.
+- Matrix result: UMC-04..11 are PARTIAL; UMC-01, UMC-02, UMC-03 and UMC-12 are BLOCKED. No UMC scenario is declared end-to-end PASS yet.
+- **Next priority:** build the smallest session-restore packet reader from canonical TASK_STATE/HANDOFF/events and linked decisions, with a test proving it reconstructs goal, constraints, evidence, pending return, and next step; if required source is inaccessible, return BLOCKED rather than hallucinating continuity.
