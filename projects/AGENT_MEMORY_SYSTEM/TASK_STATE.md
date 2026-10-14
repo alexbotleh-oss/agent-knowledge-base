@@ -245,3 +245,14 @@ The importer now distinguishes FIRST_PASS, RESUME, RETRY_FROM_START, ALREADY_COM
 
 Tests added for first pass, completed replay, and a changed source under the same operation ID. Exact-head CI for 215c6596aaf2dee45693d7d075809055fff00d20 passed (run 38524687066). HANDOFF updated in commit 8145ce6e4869d8835c12d4f2bd5125345bfc12df; this TASK_STATE update will change HEAD, so verify CI again for the resulting SHA. PR #22 remains draft/open/unmerged; do not modify main.
 
+
+
+## Active checkpoint — event continuity and uncertain execution (2026-10-14)
+
+- **Active goal:** protect event/action/result continuity across interrupted connections, attention switches, and chat boundaries so a new chat can reconstruct the same evidence-backed project state without the user re-teaching the context.
+- **New source-grounded requirement:** model outputs may vary; therefore continuity must be carried by durable event records, provenance, causal links and checkpoints, not by trying to force identical answers. Preserve the difference between intent, attempt, external report, verification and unknown outcome.
+- **Protocol artifact:** `core/event_continuity_and_uncertainty.md` added to the working branch. It defines append-only event records, explicit lifecycle/evidence states, safe interruption recovery, cross-chat continuity packet and minimum failure-injection cases. It is a protocol proposal, not evidence of a deployed runtime.
+- **Critical invariant:** missing record does not prove no event occurred; assistant assertion does not prove execution; lost acknowledgement leaves a side-effecting operation UNKNOWN until authoritative state is checked or safe idempotent replay is established.
+- **Current limitation:** no automatic capture of every live message/tool event, atomic event journal, full cross-chat retrieval, or end-to-end fault-injection proof is implemented. Keep these as explicit gaps.
+- **CI:** prior exact HEAD `a2fc7d1ca1c13f542d155896da5a3cde7c48cd07` passed run 38524792592. This state update changes HEAD; check the newest exact-head run before reporting current PASS.
+- **Next action:** read back `core/event_continuity_and_uncertainty.md`, HANDOFF and TASK_STATE from the branch; verify exact-head CI. Then inspect the existing event schema and implement the smallest compatible append-only event/checkpoint mechanism with tests for lost acknowledgement, missing record, duplicate replay, and contradictory later evidence. Do not build a parallel memory store. PR #22 stays OPEN/DRAFT/UNMERGED; do not change main.
