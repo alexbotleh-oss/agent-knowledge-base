@@ -143,6 +143,12 @@ def extract_semantic_context(packet: dict[str, Any], *, verify_sources: bool = T
         field: ("FOUND" if (value != UNKNOWN and value != []) else "UNKNOWN")
         for field, value in values.items()
     }
+    if status in {"SOURCE_CHANGED", "SOURCE_MISSING"}:
+        # Preserve extracted text for audit, but do not label it as current.
+        field_status = {
+            field: ("STALE_SOURCE" if state == "FOUND" else state)
+            for field, state in field_status.items()
+        }
     return {
         **values,
         "source_hashes": source_hashes,
