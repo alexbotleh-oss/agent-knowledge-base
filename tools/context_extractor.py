@@ -150,12 +150,15 @@ def extract_semantic_context(packet: dict[str, Any], *, verify_sources: bool = T
             for field, state in field_status.items()
         }
     freshness_verified = (
-        bool(freshness)
+        verify_sources
+        and len(freshness) == 3
         and all(value == "CURRENT" for value in freshness.values())
         and status not in {"BLOCKED", "SOURCE_CHANGED", "SOURCE_MISSING", UNKNOWN}
     )
     semantic_context_usable = (
-        freshness_verified and status in {"RESTORED_PACKET", "PARTIAL"}
+        freshness_verified
+        and status in {"RESTORED_PACKET", "PARTIAL"}
+        and bool(values["active_goal"] != UNKNOWN)
     )
     event_linkage_complete = (
         freshness_verified
