@@ -400,3 +400,9 @@ Tests added for first pass, completed replay, and a changed source under the sam
 - **Analysis coverage:** primary keyword/context passes over all four extracted PDF text volumes are complete for this first pass; the full semantic incident inventory and binary attachment review remain PARTIAL. No claim of exhaustive archive analysis.
 - **Not yet proven:** prompt text alone does not prove the model will obey the preflight. No dedicated runtime/model-behavior regression evaluation has passed yet.
 - **Next:** read back every changed file; validate JSONL parsing and unique IDs/edge corrections; fetch live PR #22 metadata and exact HEAD; check CI on that exact SHA. Then implement/evaluate CTX-01/CTX-02 with evidence. Keep PR #22 Draft/open/unmerged and do not modify `main`.
+
+
+- **Preflight contract smoke test added:** `tests/test_source_goal_preflight_contract.py` checks that the universal instruction, runtime reference, incident scenarios and lesson remain wired together. This is a documentation-contract test only, not proof of live model behavior.
+- **Latest source read-back:** event log parses as 10 JSONL records with 10 unique event IDs and no parse errors; EVT-AGMS-20261014-004 explicitly removes the unsupported relation from EVT-AGMS-20261014-003.
+- **CI status:** run #38562931786 passed for the prior branch checkpoint before the new smoke-test commit. No workflow run/status was returned for latest commit `0e09c8acfbf4bd61758007fe6b8dcc4c1ed123b1`; latest exact-head CI is therefore **NOT VERIFIED**, not PASS.
+- **Next:** obtain CI evidence for the latest head or run the repository test suite in a connected environment; separately test live assistant behavior against CTX-01/CTX-02. Do not conflate contract smoke tests with semantic behavior validation.
