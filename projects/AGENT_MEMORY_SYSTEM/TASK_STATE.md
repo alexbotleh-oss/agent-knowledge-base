@@ -302,3 +302,12 @@ Tests added for first pass, completed replay, and a changed source under the sam
 - **Important limitation:** file replacement is atomic for a single writer; concurrent writers are not coordinated. The primitive does not automatically update EVENT_LOG/TASK_STATE/HANDOFF, notify a parent chat, record owner acknowledgement, or provide a cross-chat service. It is a callable repository tool, not automatic ChatGPT capture.
 - **Next step:** verify exact-head CI; if green, inspect its test job. Then implement the smallest safe acknowledgement/projection update path or strengthen writer coordination before attempting parallel/concurrent use. Continue toward UMC-01..12; no end-to-end release claim yet.
 - **PR #22:** remains OPEN/DRAFT/UNMERGED; do not modify `main`.
+
+
+### Addendum — explicit parent acknowledgement event (2026-10-14)
+
+- Added `acknowledge_result(...)` to `tools/branch_result_registry.py`. It appends a separate event linked to an existing child result; decisions are accepted / needs_review / rejected.
+- Added tests for acknowledgement append-only behavior, exact replay, unknown target rejection, and conflict when the same acknowledgement identity changes decision.
+- Parent task projection is deliberately not mutated by acknowledgement. The caller must still check the specific acceptance criterion and update TASK_STATE/HANDOFF separately. The owner reference is a supplied evidence locator, not an authentication mechanism.
+- Acknowledgement API is not yet wired to a dedicated CLI or automatic chat workflow. Multi-writer locking remains absent.
+- Next: verify exact-head CI and read back changed files. If green, implement/test derived-state update as a separate controlled operation, with optimistic expected-revision checks so stale child results cannot overwrite newer parent state.
