@@ -175,3 +175,25 @@ Implemented prototype: `tools/reconcile_branch_returns.py`; tests: `tests/test_r
 It reads the canonical event log and explicitly supplied TASK_STATE files. It reports (without writing) child results that have no owner acknowledgement, and accepted acknowledgements whose event IDs are not linked from any supplied task-state file. Reports include source log hash and candidate task-state paths/hashes for a future guarded repair.
 
 The report is intentionally conservative: it does not auto-acknowledge results, apply task-state updates, or declare the parent task complete. It cannot conclude that no checkpoint exists outside the files supplied by the caller. Repair remains a separate explicit operation requiring owner review and the expected-revision guard.
+
+
+## 10. Current acceptance matrix — evidence-based status
+
+Status meanings: **PARTIAL** means a component/test covers a narrow subcase but not the full scenario; **BLOCKED** means no executable end-to-end mechanism has been demonstrated.
+
+| ID | Current status | Evidence / remaining gap |
+|---|---|---|
+| UMC-01 | BLOCKED | Raw export round-trip exists in `tests/test_current_session_roundtrip.py`; no new-session restore from TASK_STATE + linked decisions/events into a verified continuity packet. |
+| UMC-02 | BLOCKED | Return rules are documented; no runtime dialogue controller classifying side branches and preserving/returning active goals. |
+| UMC-03 | BLOCKED | Intake planner carries observed tool/language/task tags; no runtime applicability evaluator that gates use of shared lessons. |
+| UMC-04 | PARTIAL | `tests/test_resumable_chat_import.py` covers replay/resume for immutable source snapshots; promotion and index refresh are not in that pipeline. |
+| UMC-05 | PARTIAL | Manifest hash/path validation and importer incomplete-source tests exist; full staging-to-quarantine-to-promotion recovery is not end-to-end. |
+| UMC-06 | PARTIAL | Disputed lifecycle and routing exist; end-to-end conflicting-source preservation and dependent-state impact review need stronger tests. |
+| UMC-07 | PARTIAL | Unknown execution state is specified and idempotent child-result replay is tested; generic external side-effect reconciliation is not integrated. |
+| UMC-08 | PARTIAL | `tests/test_child_result_return_roundtrip.py` covers local result → acknowledgement → guarded checkpoint; automatic chat delivery and pending-return reconciliation are absent. |
+| UMC-09 | PARTIAL | Importer resume tests and stale TASK_STATE rejection exist separately; no single injected crash across canonical event commit, projection update and index refresh. |
+| UMC-10 | PARTIAL | Temporal lineage/impact primitives exist; automated downstream impact review across every canonical record type is not proven. |
+| UMC-11 | PARTIAL | Guarded updater path scope and exclusive locks are tested; actual GitHub permissions, branch protections and per-agent credentials are not verified. |
+| UMC-12 | BLOCKED | Protocol says to report BLOCKED when access is unavailable; no executable session restore gate enforces this across environments. |
+
+The current CI pass verifies the repository validators and unit tests on a specific commit. It does not upgrade PARTIAL/BLOCKED rows automatically. The end-to-end test stage remains blocked until the missing cross-component paths are implemented and evidenced.
