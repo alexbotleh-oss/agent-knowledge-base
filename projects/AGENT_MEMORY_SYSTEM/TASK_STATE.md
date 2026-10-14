@@ -406,3 +406,16 @@ Tests added for first pass, completed replay, and a changed source under the sam
 - **Latest source read-back:** event log parses as 10 JSONL records with 10 unique event IDs and no parse errors; EVT-AGMS-20261014-004 explicitly removes the unsupported relation from EVT-AGMS-20261014-003.
 - **CI status:** run #38562931786 passed for the prior branch checkpoint before the new smoke-test commit. No workflow run/status was returned for latest commit `0e09c8acfbf4bd61758007fe6b8dcc4c1ed123b1`; latest exact-head CI is therefore **NOT VERIFIED**, not PASS.
 - **Next:** obtain CI evidence for the latest head or run the repository test suite in a connected environment; separately test live assistant behavior against CTX-01/CTX-02. Do not conflate contract smoke tests with semantic behavior validation.
+
+
+## Checkpoint — live PR scope refresh and B77/LK correction (2026-10-14)
+
+- Re-fetched PR #22 changed paths: **134 paths**, not the 81 paths in older checkpoint notes.
+- The exact-head workflow for PR-head SHA `52ff4df1c13f65bb33e5ec2a122b387071e973ce` completed successfully: [run 38563107303](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38563107303). This is CI evidence for that SHA only.
+- The prior note “39 out-of-scope paths” does not contain a complete path-level list and is stale against the current 134-path set. Do not use the number 39 as a deletion manifest.
+- Created and read back `projects/AGENT_MEMORY_SYSTEM/PR22_SCOPE_AUDIT_REFRESH_2026-10-14.md` and `PR22_PATH_DISPOSITION_MANIFEST_2026-10-14.md` on preservation branch `archive-reconciliation/deferred-20261014`. The manifest covers all 134 live paths with first-pass dispositions: KEEP_CORE 52; KEEP_AGMS 14; KEEP_TRANSFERABLE_LESSON 3; SEPARATE_PROJECT_MEMORY 37; PRESERVE_RAW_OUT_OF_SCOPE 20; REVIEW_MIXED 8.
+- These dispositions are a review manifest, **not a deletion script**. No files were deleted; the preservation branch keeps the existing PR-head tree and the reconciliation additions.
+- User clarification incorporated into the scope docs: LK is the repository for the whole B77 project; Lite Cook is a simplified direction; the «Что приготовить» APK was planned to be unfrozen and integrated later, not confirmed merged.
+- The final reconciliation and Lite Cook/LK correction documents were fetched after writes and their relevant content verified.
+- Latest preservation-branch commit after these writes: `d9e49aa1a6bf8425e4299a19b440a07be4ffbac3`. Exact-head CI for this preservation-branch commit is not yet available through the PR-run lookup; do not claim it passed.
+- **Next action:** manually review the path dispositions against the repository's direct-scope rule, especially raw CARD111 source-history, project summaries/events, and the two app-specific reconciliation reports. Then create a scope-clean change set while retaining the preserved out-of-scope material; run checks and verify CI on the final exact SHA. PR #22 remains open/Draft/unmerged; do not change `main`.
