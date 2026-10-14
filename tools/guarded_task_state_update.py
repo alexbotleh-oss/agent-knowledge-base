@@ -83,6 +83,29 @@ def apply_checkpoint(
         return {"status": "REJECTED", "errors": ["event evidence must come from an events.jsonl under a projects/ directory"], "writes_performed": False}
     if not task_state.is_file() or not event_log.is_file():
         return {"status": "REJECTED", "errors": ["task state and canonical event log must already exist"], "writes_performed": False}
+    marker = f"<!-- guarded-task-update:{proposal['update_id']} -->"
+    current = task_state.read_bytes()
+    current_text = current.decode("utf-8")
+    if marker in current_text:
+        marker_pos = current_text.index(marker)
+        prior_block = current_text[marker_pos:]
+        if proposal["checkpoint_markdown"].strip() in prior_block:
+            return {"status": "ALREADY_APPLIED", "update_id": proposal["update_id"], "writes_performed": False}
+        return {"status": "CONFLICT", "update_id": proposal["update_id"], "writes_performed": False,
+                "error": "Update ID already exists with different content."}
+
+    actual_hash = sha256_bytes(current)
+    if actual_hash.lower() != proposal["expected_sha256"].lower():
+        return {"status": "STALE_REVISION", "writes_performed": False,
+                "expected_sha256": proposal["expected_sha256"], "actual_sha256": actual_hash}
+    try:
+        event_ids = _load_event_ids(event_log)
+    except ValueError as exc:
+        return {"status": "REJECTED", "writes_performed": False, "errors": [str(exc)]}
+    if proposal["event_id"] not in event_ids:
+        return {"status": "REJECTED", "writes_performed": False,
+                "errors": ["event_id is not present in the canonical event log"]}
+
     # Recompute trust from canonical files at write time. An externally supplied
     # verdict alone is not trusted: it may be stale or incorrectly fabricated.
     handoff_path = task_state.with_name("HANDOFF.md")
@@ -109,28 +132,6 @@ def apply_checkpoint(
             "trust_status": current_verdict.get("status", "INVALID_TRUST_VERDICT"),
             "writes_performed": False,
         }
-    marker = f"<!-- guarded-task-update:{proposal['update_id']} -->"
-    current = task_state.read_bytes()
-    current_text = current.decode("utf-8")
-    if marker in current_text:
-        marker_pos = current_text.index(marker)
-        prior_block = current_text[marker_pos:]
-        if proposal["checkpoint_markdown"].strip() in prior_block:
-            return {"status": "ALREADY_APPLIED", "update_id": proposal["update_id"], "writes_performed": False}
-        return {"status": "CONFLICT", "update_id": proposal["update_id"], "writes_performed": False,
-                "error": "Update ID already exists with different content."}
-
-    actual_hash = sha256_bytes(current)
-    if actual_hash.lower() != proposal["expected_sha256"].lower():
-        return {"status": "STALE_REVISION", "writes_performed": False,
-                "expected_sha256": proposal["expected_sha256"], "actual_sha256": actual_hash}
-    try:
-        event_ids = _load_event_ids(event_log)
-    except ValueError as exc:
-        return {"status": "REJECTED", "writes_performed": False, "errors": [str(exc)]}
-    if proposal["event_id"] not in event_ids:
-        return {"status": "REJECTED", "writes_performed": False,
-                "errors": ["event_id is not present in the canonical event log"]}
 
     lock_path = task_state.with_name(task_state.name + ".lock")
     try:
