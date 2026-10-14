@@ -296,3 +296,11 @@ Network-level resumption of the export transfer itself is still not implemented/
 - Added CLI subcommands `publish` and `ack`, plus tests for lock conflict and acknowledgement through CLI.
 - Updated unified-loop contract with usage and limits. Still not an automatic chat bus, not owner authentication, and does not mutate TASK_STATE/HANDOFF.
 - Next: read back all files and verify CI on exact final HEAD; then design expected-revision-protected derived task-state update. Keep PR #22 open/draft/unmerged.
+
+
+### Verification checkpoint — exclusive lock and CLI (2026-10-14)
+
+- Exact-head CI PASS: [run #429](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38547767850), SHA `2ab05c78367d0920c197b8da816dcb28f6a06aac`.
+- After adding fail-closed lock coordination, CI exposed a missing `utc_now()` helper; it was added, and the exact-head suite passed.
+- Registry tests cover replay/conflict/provenance rejection, acknowledgement semantics, CLI acknowledgement, lock conflict and corrupt journal safety.
+- Next: inspect existing state-update utilities; only then build expected-revision-protected task-state projection update, with crash/retry tests. Automatic chat transport/capture and full UMC-01..12 remain gaps. PR #22 stays OPEN/DRAFT/UNMERGED.
