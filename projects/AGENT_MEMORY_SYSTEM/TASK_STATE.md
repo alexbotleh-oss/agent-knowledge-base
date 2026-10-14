@@ -328,3 +328,12 @@ Tests added for first pass, completed replay, and a changed source under the sam
 - Added tests for lock conflict and CLI acknowledgement. Contract documentation now states limitations, including manual stale-lock recovery, no authenticated owner identity, no task projection update, and unverified distributed-filesystem semantics.
 - **Current validation must be taken from CI on the final branch HEAD after all code, test, and checkpoint changes.** Do not reuse an earlier passing SHA as proof of the newest state.
 - Next: exact-head CI and read-back. After that, decide the smallest safe task-state projection mechanism; it must use expected revision and never overwrite an intervening parent change.
+
+
+### Verification checkpoint — exclusive writer lock and CLI (2026-10-14)
+
+- **Exact-head CI PASS:** [run #429](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38547767850), SHA `2ab05c78367d0920c197b8da816dcb28f6a06aac`. Both validation steps and the unit-test suite passed.
+- **Regression trail preserved:** CI caught the missing UTC timestamp helper after adding the lock. Added `utc_now()`; latest exact-head run passed.
+- **Tested behaviors now include:** linked result publication; replay idempotency; changed payload conflict; missing provenance/unknown evidence rejection; corrupt journal preservation; append-only acknowledgement; acknowledgement replay; invalid target rejection; changed decision conflict; lock conflict fail-closed; acknowledgement CLI path.
+- **Still not implemented:** task-state projection updater with expected-revision guard, EVENT_LOG projection refresh, automatic owner notification/chat transport, automatic capture of every live chat, and full end-to-end UMC acceptance.
+- **Next action:** inspect whether existing task-state update utilities already exist before adding anything. If none, design a guarded proposal/apply operation that requires an expected file hash/revision, appends a linked event first, refuses stale writes, and never silently overwrites a newer parent state. Then add crash/retry tests.
