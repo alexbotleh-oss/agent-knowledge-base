@@ -12,6 +12,9 @@ if str(tools_dir) not in sys.path:
 
 from branch_result_registry import publish_result, acknowledge_result
 from guarded_task_state_update import apply_checkpoint
+from context_extractor import extract_semantic_context
+from context_trust_gate import authorize_next_step
+from restore_session_packet import build_session_packet
 from reconcile_branch_returns import build_report
 
 
@@ -56,7 +59,23 @@ class TestRealApiIntegration(unittest.TestCase):
         event_log.write_text("", encoding="utf-8")
         task_state = project_dir / "TASK_STATE.md"
         task_state.write_text("", encoding="utf-8")
+        handoff = project_dir / "HANDOFF.md"
+        handoff.write_text("- **Следующий шаг:** compile_core\n", encoding="utf-8")
         return event_log, task_state
+
+    def _trust_verdict(self, task_state: Path, event_log: Path) -> dict:
+        packet = build_session_packet(task_state, task_state.with_name("HANDOFF.md"), event_log)
+        context = extract_semantic_context(packet)
+        return authorize_next_step(context)
+
+    def _state_content(self, ack_event_id: str) -> str:
+        return (
+            "# Task: build_core_lite\n"
+            "- **Активная задача в текущей сессии:** восстановить состояние проекта\n"
+            "- **Следующий шаг:** compile_core\n"
+            f"- **Последнее событие:** {ack_event_id}\n"
+            "parent_task_id: task-main-123\n"
+        )
 
     def test_publish_and_idempotency(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -105,11 +124,7 @@ class TestRealApiIntegration(unittest.TestCase):
                 str(event_log), pub_event_id, "owner-abc"
             )
 
-            state_content = (
-                "# Task: build_core_lite\n"
-                "parent_task_id: task-main-123\n"
-                "next_step: compile_core\n"
-            )
+            state_content = self._state_content(ack_event_id)
             task_state.write_text(state_content, encoding="utf-8")
             expected_sha256 = hashlib.sha256(state_content.encode("utf-8")).hexdigest()
             proposal = {
@@ -120,10 +135,12 @@ class TestRealApiIntegration(unittest.TestCase):
                 "checkpoint_markdown": state_content,
             }
 
-            applied = apply_checkpoint(str(task_state), str(event_log), proposal)
+            verdict = self._trust_verdict(task_state, event_log)
+            self.assertEqual(verdict.get("status"), "AUTHORIZED_FOR_PLANNING")
+            applied = apply_checkpoint(str(task_state), str(event_log), proposal, trust_verdict=verdict)
             self.assertEqual(applied.get("status"), "APPLIED")
 
-            repeated = apply_checkpoint(str(task_state), str(event_log), proposal)
+            repeated = apply_checkpoint(str(task_state), str(event_log), proposal, trust_verdict=verdict)
             self.assertEqual(repeated.get("status"), "ALREADY_APPLIED")
 
             diff_content = state_content.replace("compile_core", "build_docs")
@@ -137,7 +154,7 @@ class TestRealApiIntegration(unittest.TestCase):
                 "checkpoint_markdown": diff_content,
             }
             conflict = apply_checkpoint(
-                str(task_state), str(event_log), conflict_proposal
+                str(task_state), str(event_log), conflict_proposal, trust_verdict=verdict
             )
             self.assertEqual(conflict.get("status"), "CONFLICT")
 
@@ -150,11 +167,7 @@ class TestRealApiIntegration(unittest.TestCase):
                 str(event_log), pub_event_id, "owner-abc"
             )
 
-            original_content = (
-                "# Task: build_core_lite\n"
-                "parent_task_id: task-main-123\n"
-                "next_step: compile_core\n"
-            )
+            original_content = self._state_content(ack_event_id)
             task_state.write_text(original_content, encoding="utf-8")
             expected_sha256 = hashlib.sha256(
                 original_content.encode("utf-8")
@@ -167,11 +180,12 @@ class TestRealApiIntegration(unittest.TestCase):
                 "checkpoint_markdown": original_content,
             }
 
+            verdict = self._trust_verdict(task_state, event_log)
             modified_content = original_content.replace("compile_core", "build_docs")
             task_state.write_text(modified_content, encoding="utf-8")
             bytes_before_apply = task_state.read_bytes()
 
-            stale = apply_checkpoint(str(task_state), str(event_log), proposal)
+            stale = apply_checkpoint(str(task_state), str(event_log), proposal, trust_verdict=verdict)
             self.assertEqual(stale.get("status"), "STALE_REVISION")
             self.assertEqual(task_state.read_bytes(), bytes_before_apply)
 
@@ -201,11 +215,7 @@ class TestRealApiIntegration(unittest.TestCase):
                 str(event_log), pub_event_id, "owner-abc"
             )
 
-            state_content = (
-                "# Task: build_core_lite\n"
-                "parent_task_id: task-main-123\n"
-                "next_step: compile_core\n"
-            )
+            state_content = self._state_content(ack_event_id)
             task_state.write_text(state_content, encoding="utf-8")
             proposal = {
                 "update_id": "upd-persisted-001",
@@ -217,7 +227,9 @@ class TestRealApiIntegration(unittest.TestCase):
                 "checkpoint_markdown": state_content,
             }
 
-            applied = apply_checkpoint(str(task_state), str(event_log), proposal)
+            verdict = self._trust_verdict(task_state, event_log)
+            self.assertEqual(verdict.get("status"), "AUTHORIZED_FOR_PLANNING")
+            applied = apply_checkpoint(str(task_state), str(event_log), proposal, trust_verdict=verdict)
             self.assertEqual(applied.get("status"), "APPLIED")
 
             report_after_reread = build_report(str(event_log), [str(task_state)])
