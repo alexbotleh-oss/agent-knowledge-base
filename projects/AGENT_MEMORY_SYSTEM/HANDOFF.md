@@ -218,3 +218,17 @@
 - CI для exact HEAD 61e30d628814f97275f0d1402f2a89211affc9ac: run 38524298742, состояние IN_PROGRESS на момент записи. Следующий агент обязан проверить итог и при сдвиге HEAD найти CI именно для нового SHA.
 - Resume-протокол и тесты ещё не считать сквозным сетевым экспортом: они покрывают локальный неизменяемый снимок, паузу импорта и отказ на усечённом исходнике. Возобновление самой сетевой передачи экспорта остаётся вне подтверждённой реализации.
 
+## Handoff: first-pass versus resume (2026-10-14)
+
+Next action: CONTINUE_FROM_LAST_CONFIRMED_CHECKPOINT for this importer/instructions task. On entering a new incident/material, first determine its exact operation ID and source SHA-256.
+
+- FIRST_PASS: no prior record for this operation/source pair; start normally without checkpoint recovery or global history search.
+- RESUME: same immutable source and a valid persisted nonzero checkpoint.
+- RETRY_FROM_START: prior operation exists but has no valid checkpoint.
+- ALREADY_COMPLETE: same source is already RAW_COMPLETE; return the result without re-import.
+- NEW_SNAPSHOT: same operation ID but different source SHA-256; never treat this as resume.
+
+Code and tests are on the working branch. Tests cover first-pass classification, completed replay, changed-source snapshot, two-pass resume, and truncated input. CI run 38524687066 for HEAD 215c6596aaf2dee45693d7d075809055fff00d20 completed successfully. Earlier intermediate CI failures exposed missing run_mode in the return status; fixed in commit 58ac1bd and validated by the later run. Do not hide that history.
+
+Network-level resumption of the export transfer itself is still not implemented/proven; this branch covers local import of an immutable snapshot. PR #22 stays draft/open/unmerged; do not modify main.
+
