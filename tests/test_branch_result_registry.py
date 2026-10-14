@@ -101,5 +101,62 @@ class BranchResultRegistryTests(unittest.TestCase):
             self.assertEqual(rows[1]["related_event_ids"], [first["event_id"]])
 
 
+    def test_owner_acknowledgement_is_appended_without_editing_child_result_or_task(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "events.jsonl"
+            published = publish_result(path, sample_result())
+            before = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()]
+            from branch_result_registry import acknowledge_result
+            ack = acknowledge_result(
+                path, published["event_id"], "accepted",
+                "user-confirmation:accepted-child-result",
+                "2026-10-14T11:00:00Z",
+                "Acceptance criteria for this sub-question were reviewed.",
+            )
+            after = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()]
+            self.assertEqual(ack["status"], "ACKNOWLEDGED")
+            self.assertFalse(ack["parent_task_updated"])
+            self.assertEqual(len(after), 2)
+            self.assertEqual(after[0], before[0])
+            self.assertEqual(after[1]["type"], "cross_branch_result_acknowledged")
+            self.assertEqual(after[1]["related_event_ids"], [published["event_id"]])
+            self.assertEqual(after[1]["outcome"], "accepted")
+
+    def test_acknowledgement_replay_is_idempotent(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "events.jsonl"
+            published = publish_result(path, sample_result())
+            from branch_result_registry import acknowledge_result
+            args = (path, published["event_id"], "needs_review", "owner-ref-1", "2026-10-14T11:00:00Z")
+            first = acknowledge_result(*args)
+            before = path.read_bytes()
+            second = acknowledge_result(*args)
+            self.assertEqual(first["status"], "ACKNOWLEDGED")
+            self.assertEqual(second["status"], "ALREADY_ACKNOWLEDGED")
+            self.assertEqual(path.read_bytes(), before)
+
+    def test_acknowledgement_requires_existing_child_result(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "events.jsonl"
+            path.write_text('{"event_id":"OTHER","type":"observation"}\\n', encoding="utf-8")
+            from branch_result_registry import acknowledge_result
+            response = acknowledge_result(path, "OTHER", "accepted", "owner-ref", "2026-10-14T11:00:00Z")
+            self.assertEqual(response["status"], "REJECTED")
+            self.assertEqual(path.read_text(encoding="utf-8"), '{"event_id":"OTHER","type":"observation"}\\n')
+
+    def test_acknowledgement_does_not_allow_silent_decision_mutation(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "events.jsonl"
+            published = publish_result(path, sample_result())
+            from branch_result_registry import acknowledge_result
+            first = acknowledge_result(path, published["event_id"], "accepted", "owner-ref", "2026-10-14T11:00:00Z")
+            before = path.read_bytes()
+            second = acknowledge_result(path, published["event_id"], "rejected", "owner-ref", "2026-10-14T11:00:00Z")
+            self.assertEqual(first["status"], "ACKNOWLEDGED")
+            self.assertEqual(second["status"], "CONFLICT")
+            self.assertEqual(path.read_bytes(), before)
+
+
+
 if __name__ == "__main__":
     unittest.main()
