@@ -429,3 +429,13 @@ Tests added for first pass, completed replay, and a changed source under the sam
 - Also preserves the architectural chain: source-first resumable import → separate later analysis → chronology/provenance → event/decision/causal links → reviewed promotion and derived indexes.
 - This is a bounded reconstruction. It does not claim every PDF message/attachment was available, does not prove the planned APK/HTML merge occurred, and does not infer a single root cause for agent reliability deterioration.
 - Next: link the crosswalk into canonical handoff/task state, update scope decisions without deleting source material, and validate the final exact commit/CI.
+
+
+## Checkpoint — universal export instruction and source-to-memory gaps (2026-10-14)
+
+- Added user-facing protocol: core/universal_chat_export_and_context_transfer.md. It separates user preparation, agent preflight, immutable raw sources, inventory, extraction, coverage reconciliation, event/causal reconstruction, promotion to memory, privacy boundaries, and resumable checkpoints.
+- Linked the new guide from core/source_ingestion_protocol.md. Both files were fetched back from GitHub; guide length 10,781 characters and required sections confirmed. This proves persistence/read-back only; exact-head CI and behavioral compliance are not verified.
+- Added projects/AGENT_MEMORY_SYSTEM/SOURCE_TO_MEMORY_GAP_REGISTER_2026-10-14.md with 12 bounded reconciliation gaps, source locators, evidence grades, proposed destinations and next checks. It explicitly does not restart the already accepted duplicate-report audit.
+- Branch: archive-reconciliation/deferred-20261014. New guide commit ee7f8e3aecccfcba23a34ff2e4ada1a3e0b2bda9; protocol-link commit 928f3dbacde7b9ef54413584c695bdc74abad7fd; gap-register commit 4c3fad070b1a06b0d2e9916f9454f027d6d07247. These are sequential commit IDs, not proof of exact current HEAD; refresh branch HEAD before further work.
+- CI lookup returned no PR-triggered workflow run for the protocol-link commit. Do not claim current branch CI PASS.
+- Immediate next: read back gap register and update handoff; refresh current branch/PR #22 state; inspect REVIEW_MIXED paths and app-specific reports; continue source-to-memory reconciliation; preserve all out-of-scope material until a safe destination is verified. No main changes, no merge, no deletions.
