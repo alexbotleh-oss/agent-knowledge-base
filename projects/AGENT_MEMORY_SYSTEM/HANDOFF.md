@@ -379,3 +379,12 @@ Network-level resumption of the export transfer itself is still not implemented/
 - User correction: LK is the repository for the whole B77 project. Lite Cook is a simplified user-facing direction. The «Что приготовить» APK direction was planned for later unfreezing/integration; no completed merge is asserted.
 - No source files have been deleted; no changes to `main`; PR #22 has not been merged. The preservation branch retains the existing PR-head tree plus these reconciliation additions.
 - Next: review ambiguous paths and the 2 app-specific reconciliation reports; produce a final scope decision; remove or separate out-of-scope paths only after verified preservation; then validate the final candidate and obtain exact-head CI. Never infer a CI PASS from an earlier SHA.
+
+## Handoff — reconstructed missing context crosswalk (2026-10-14)
+
+- Read-back verified: [RECONSTRUCTED_CONTEXT_CROSSWALK_2026-10-14.md](RECONSTRUCTED_CONTEXT_CROSSWALK_2026-10-14.md), 109 lines, on `archive-reconciliation/deferred-20261014`.
+- It restores the B77/LK umbrella-project meaning, Lite Cook as the simplified direction, the separate technical APK direction and its planned future integration, and the causal transition to CARD111.
+- It reconciles PDF evidence with supplied handoff captures and current repository reports; it explicitly labels direct user clarification, archive evidence, secondary summaries and unresolved points separately.
+- It also restates the source-first importer/analyzer split, chronology and provenance rules, event-vs-report-copy deduplication, causal experience records, and the difference between documentation/CI success and real end-to-end behavior.
+- This does not scope-clean PR #22 by itself. No source history was deleted, no change was made to `main`, and PR #22 remains unmerged.
+- Next: use the crosswalk as canonical context when reviewing path dispositions, then produce a preservation-safe scope-clean candidate and check exact-head validation/CI.
