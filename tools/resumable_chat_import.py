@@ -261,13 +261,20 @@ def import_export(source: Path, output: Path, archive_id: str, batch_size: int =
         if row and row[3] != PARSER_VERSION:
             raise RuntimeError("Parser version changed; explicit migration is required")
         if row is None:
-            run_mode = "FIRST_PASS"
+            prior_sources = conn.execute(
+                "SELECT source_sha256,status FROM imports WHERE archive_id=? ORDER BY updated_at",
+                (archive_id,),
+            ).fetchall()
+            run_mode = "NEW_SNAPSHOT" if prior_sources else "FIRST_PASS"
             with conn:
                 conn.execute(
                     "INSERT INTO imports(archive_id,source_sha256,snapshot_path,source_bytes,parser_version,schema_version,status,next_ordinal,committed_conversations,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?)",
                     (archive_id, digest, str(snapshot), byte_size, PARSER_VERSION, SCHEMA_VERSION, "REGISTERED", 0, 0, utc_now()),
                 )
-                add_event(conn, archive_id, digest, "REGISTERED", None, {"snapshot_path": str(snapshot), "bytes": byte_size, "run_mode": run_mode})
+                add_event(conn, archive_id, digest, "REGISTERED", None, {
+                    "snapshot_path": str(snapshot), "bytes": byte_size, "run_mode": run_mode,
+                    "prior_source_hashes": [item[0] for item in prior_sources],
+                })
             next_ordinal = committed = next_byte_offset = 0
         else:
             prior_status = str(row[0])
@@ -280,9 +287,12 @@ def import_export(source: Path, output: Path, archive_id: str, batch_size: int =
         with conn:
             conn.execute("UPDATE imports SET status='STAGING',last_error=NULL,updated_at=? WHERE archive_id=? AND source_sha256=?",
                          (utc_now(), archive_id, digest))
-            event_type = "FIRST_PASS_STARTED" if run_mode == "FIRST_PASS" else (
-                "RESUME" if run_mode == "RESUME" else "RETRY_FROM_START"
-            )
+            event_type = {
+                "FIRST_PASS": "FIRST_PASS_STARTED",
+                "NEW_SNAPSHOT": "NEW_SNAPSHOT_STARTED",
+                "RESUME": "RESUME",
+                "RETRY_FROM_START": "RETRY_FROM_START",
+            }[run_mode]
             add_event(conn, archive_id, digest, event_type, next_ordinal,
                       {"run_mode": run_mode, "prior_status": row[0] if row else "NEW",
                        "next_ordinal": next_ordinal, "next_byte_offset": next_byte_offset,
