@@ -231,12 +231,12 @@ def acknowledge_result(
                     "error": "Same acknowledgement identity has different content; use a new owner reference."}
 
     new_text = event_log.read_text(encoding="utf-8")
-    if new_text and not new_text.endswith("\\n"):
-        new_text += "\\n"
-    new_text += _canonical(ack_event) + "\\n"
+    if new_text and not new_text.endswith("\n"):
+        new_text += "\n"
+    new_text += _canonical(ack_event) + "\n"
     fd, temp_name = tempfile.mkstemp(prefix=".events-", suffix=".tmp", dir=event_log.parent)
     try:
-        with os.fdopen(fd, "w", encoding="utf-8", newline="\\n") as stream:
+        with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as stream:
             stream.write(new_text)
             stream.flush()
             os.fsync(stream.fileno())
