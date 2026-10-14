@@ -1,4 +1,5 @@
 import json
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -124,6 +125,48 @@ class SemanticContextExtractorTests(unittest.TestCase):
         self.assertEqual(context["status"], "BLOCKED")
         self.assertEqual(context["active_goal"], "UNKNOWN")
         self.assertEqual(context["source_hashes"]["task_state"], "UNKNOWN")
+
+
+    def test_semantic_context_restores_in_fresh_process_from_persisted_sources(self):
+        self.task.write_text(
+            "# TASK_STATE\\n"
+            "- **Активная задача в текущей сессии:** проверить восстановление после перезапуска.\\n"
+            "- **Последнее событие:** EVT-TEST-001\\n",
+            encoding="utf-8",
+        )
+        self.handoff.write_text(
+            "# HANDOFF\\n"
+            "- **Следующий шаг:** проверить результат восстановления.\\n",
+            encoding="utf-8",
+        )
+        script = (
+            "import json, sys; "
+            "from pathlib import Path; "
+            "sys.path.insert(0, sys.argv[1]); "
+            "from restore_session_packet import build_session_packet; "
+            "from context_extractor import extract_semantic_context; "
+            "packet = build_session_packet(Path(sys.argv[2]), Path(sys.argv[3]), Path(sys.argv[4])); "
+            "print(json.dumps(extract_semantic_context(packet), ensure_ascii=False))"
+        )
+        completed = subprocess.run(
+            [
+                sys.executable, "-c", script, str(TOOLS),
+                str(self.task), str(self.handoff), str(self.events),
+            ],
+            check=True,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+        )
+        context = json.loads(completed.stdout)
+        self.assertEqual(context["status"], "RESTORED_PACKET")
+        self.assertEqual(
+            context["active_goal"],
+            "проверить восстановление после перезапуска",
+        )
+        self.assertEqual(context["next_step"], "проверить результат восстановления")
+        self.assertEqual(context["source_freshness"]["task_state"], "CURRENT")
+        self.assertFalse(context["writes_performed"])
 
 
 if __name__ == "__main__":
