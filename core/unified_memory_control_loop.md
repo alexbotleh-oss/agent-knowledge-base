@@ -111,3 +111,18 @@ All of the following are required:
 8. Known limitations are explicit; no automatic cross-chat capture is claimed unless the capture path exists and has been tested.
 
 Until these conditions are met, describe the architecture as partially implemented and in development, not complete.
+
+
+## 7. First executable integration primitive: child-result publication
+
+Implemented component: `tools/branch_result_registry.py`. Tests: `tests/test_branch_result_registry.py`.
+
+- Writes a linked `cross_branch_result` event to the existing canonical `projects/AGENT_MEMORY_SYSTEM/events.jsonl`; it does not create a parallel journal or directly mark a parent question resolved.
+- Requires child branch ID, parent checkpoint/task IDs, stable result key, explicit result status, summary, source references and report timestamp.
+- Exact replay with the same stable identity/content is a no-op. Same identity with changed content is a conflict; a correction must use a new result key and link to the earlier event.
+- Missing provenance, invalid state or reported success with unknown evidence is rejected without writing.
+- Owner acknowledgement remains PENDING. Delivery is not acknowledgement; acknowledgement is not acceptance; acceptance of a child result is not completion of the parent task.
+- The write uses a temporary file and atomic replacement for a single writer. Concurrent writers are NOT coordinated; use a single-writer constraint until a lock/transactional store is implemented.
+- This component is a local repository primitive, not an automatic ChatGPT cross-chat message bus. The caller must have repository access and explicitly invoke it. Updating the human-readable EVENT_LOG, notifying the owner, recording acknowledgement, and refreshing TASK_STATE/HANDOFF are not automated by this primitive.
+
+Release interpretation: this closes only one narrow part of UMC-08 (durable linked result publication). It does not make UMC-08 end-to-end PASS and does not satisfy the whole release gate.
