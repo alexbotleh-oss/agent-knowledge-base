@@ -38,7 +38,33 @@ def _load_event_ids(event_log: Path) -> set[str]:
     return ids
 
 
-def apply_checkpoint(task_state: Path, event_log: Path, proposal: dict[str, Any]) -> dict[str, Any]:
+def apply_checkpoint(
+    task_state: Path,
+    event_log: Path,
+    proposal: dict[str, Any],
+    *,
+    trust_verdict: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Apply a checkpoint only when an explicit trust-gate decision authorizes planning.
+
+    The verdict is an input contract, not cryptographic proof of its origin. Callers
+    must obtain it from context_trust_gate.authorize_next_step; this function fails
+    closed when it is absent, malformed, or not explicitly authorized.
+    """
+    if not isinstance(trust_verdict, dict):
+        return {
+            "status": "BLOCKED",
+            "reason": "TrustPolicyViolated",
+            "trust_status": "MISSING_TRUST_VERDICT",
+            "writes_performed": False,
+        }
+    if trust_verdict.get("status") != "AUTHORIZED_FOR_PLANNING":
+        return {
+            "status": "BLOCKED",
+            "reason": "TrustPolicyViolated",
+            "trust_status": trust_verdict.get("status", "INVALID_TRUST_VERDICT"),
+            "writes_performed": False,
+        }
     required = ("update_id", "expected_sha256", "parent_checkpoint_id", "event_id", "checkpoint_markdown")
     errors = [f"missing:{key}" for key in required if key not in proposal or proposal[key] is None]
     for key in ("update_id", "expected_sha256", "parent_checkpoint_id", "event_id", "checkpoint_markdown"):
@@ -127,9 +153,14 @@ def main(argv=None) -> int:
     parser.add_argument("task_state", type=Path)
     parser.add_argument("event_log", type=Path)
     parser.add_argument("proposal_json", type=Path)
+    parser.add_argument(
+        "--trust-verdict-json", type=Path, required=True,
+        help="JSON decision produced by context_trust_gate.py; only AUTHORIZED_FOR_PLANNING permits writes",
+    )
     args = parser.parse_args(argv)
     proposal = json.loads(args.proposal_json.read_text(encoding="utf-8"))
-    result = apply_checkpoint(args.task_state, args.event_log, proposal)
+    trust_verdict = json.loads(args.trust_verdict_json.read_text(encoding="utf-8"))
+    result = apply_checkpoint(args.task_state, args.event_log, proposal, trust_verdict=trust_verdict)
     print(json.dumps(result, ensure_ascii=False, indent=2))
     return 0 if result["status"] in {"APPLIED", "ALREADY_APPLIED"} else 2
 
