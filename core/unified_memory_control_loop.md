@@ -166,3 +166,12 @@ This is a guarded local projection primitive, not an automatic cross-chat restor
 `tests/test_child_result_return_roundtrip.py` now exercises the connected local path: publish child result → replay without duplication → append owner acknowledgement → append a guarded task-state checkpoint linked to the acknowledgement. It also changes the parent state between proposal and apply to confirm that stale state is rejected, then re-plans against the new hash without losing the intervening parent update.
 
 This proves a local two-step recovery path under the tested fixtures. It does not prove distributed atomicity: a crash can occur after the event is appended and before the task checkpoint is applied. Recovery currently relies on idempotent replay plus an explicit refreshed proposal; automatic reconciliation of all pending branch returns remains future work.
+
+
+## 9. Read-only reconciliation of incomplete returns
+
+Implemented prototype: `tools/reconcile_branch_returns.py`; tests: `tests/test_reconcile_branch_returns.py`.
+
+It reads the canonical event log and explicitly supplied TASK_STATE files. It reports (without writing) child results that have no owner acknowledgement, and accepted acknowledgements whose event IDs are not linked from any supplied task-state file. Reports include source log hash and candidate task-state paths/hashes for a future guarded repair.
+
+The report is intentionally conservative: it does not auto-acknowledge results, apply task-state updates, or declare the parent task complete. It cannot conclude that no checkpoint exists outside the files supplied by the caller. Repair remains a separate explicit operation requiring owner review and the expected-revision guard.
