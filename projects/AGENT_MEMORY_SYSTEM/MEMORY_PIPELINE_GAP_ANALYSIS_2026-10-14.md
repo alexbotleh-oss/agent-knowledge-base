@@ -119,3 +119,16 @@ The follow-up check found additional existing components that narrow the impleme
 - Добавлены `tests/test_memory_intake_planner.py`: кандидат направляется в candidate view; явно одобренная запись сохраняет статус одобрения; неверный хеш отклоняет всю партию без маршрутов; неизвестный тип отправляется в карантин.
 - Планировщик только печатает JSON-план и всегда сообщает `writes_performed: false`. Он не пишет в канонические библиотеки, не применяет task state/handoff и не перестраивает индексы.
 - Это первый проверяемый маршрут от манифеста к плану, не автоматический intake workflow и не end-to-end конвейер.
+
+
+## Correction after branch-vs-main verification — 2026-10-14
+
+A live fetch of the referenced paths against both refs corrected an overstatement in the second-pass inventory above:
+
+- `core/memory_registry_and_multidimensional_index.md` and `templates/memory_record.json.example` are present on the PR branch but returned 404 when fetched from `main`. They are proposed additions in PR #22, not pre-existing canonical files on the default branch. Treat the registry description as a target contract under review, not as an already deployed storage system.
+- Existing baseline components confirmed on `main` include `core/memory_model.md`, `core/stack_registry.json`, event/lesson examples, `tools/validate_memory.py` and `.github/workflows/validate.yml`. The workflow validates on pull requests and pushes to `main`; no intake-triggered workflow was found in the inspected workflow configuration.
+- Current branch implementations still do not provide a canonical write/index adapter: `tools/archive_registry_staging.py` writes local staging output; `tools/temporal_memory_model.py` provides standalone primitives; `tools/plan_memory_intake.py` is read-only. The intake validator checks manifest fields, relative paths and artifact hashes, but does not validate each artifact payload against a per-kind record schema or resolve relation endpoints against a canonical ID registry.
+- Existing relation shapes are not yet unified: event records contain nested relations using `event_id`, while the proposed registry contract describes typed relations with source/target identity and evidence. Decision records are currently Markdown. Do not assume one generic writer can append all kinds safely without explicit adapters and round-trip tests.
+- Therefore the next safe step is a compatibility map and tests for each allowed artifact kind: source-record staging, event records, lesson records, decision proposals, memory candidates and relations. Define how endpoint IDs are resolved (in-batch, existing canonical record, or unresolved/quarantined) before any canonical write. Keep the planner read-only until this gate passes.
+
+Verification snapshot before this correction commit: PR #22 was OPEN / DRAFT / UNMERGED at HEAD `fa382dab2cce0b01caf7fdf292ace80432c649b7` with 116 changed paths. GitHub Actions reported the Validate knowledge base workflow completed successfully for that HEAD. That is a CI result only; it does not establish full pipeline readiness. The PR body still contains older path-count/HEAD metadata and remains stale; PR scope/preservation issues are unresolved.
