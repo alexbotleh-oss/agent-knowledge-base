@@ -290,3 +290,15 @@ Tests added for first pass, completed replay, and a changed source under the sam
 - **Scope of this step:** integration contract and guard test only. This is not yet an end-to-end runtime. The importer works as a local-first raw staging prototype; the full route → reviewed promotion → index/view update → linked result publication → new-chat restore path is not yet connected. Automatic capture from all live ChatGPT chats, cross-chat availability in every environment, protected per-agent write permissions, and automatic child-result propagation remain unimplemented/unverified.
 - **Next implementation priority:** implement the smallest compatible end-to-end path on top of existing records (not a second memory store): intake result manifest with stable IDs, atomic/transactional staging and idempotent promotion, derived-view/index update status, and linked return to the owning TASK_STATE/HANDOFF. Add failure-injection tests for crash between commit/index/checkpoint and child-result acknowledgement. Then audit actual repository permissions and run UMC-01..12.
 - **Release gate:** project is not yet ready to enter the end-to-end test stage. PR #22 remains open/draft/unmerged; do not merge or modify `main`.
+
+
+## Active implementation checkpoint — child-result return primitive (2026-10-14)
+
+- **User instruction:** proceed from the unified dialogue–memory integration contract toward implementation and executable tests; preserve existing architecture and do not merge PR #22.
+- **Implemented:** `tools/branch_result_registry.py` publishes a child-branch result as a linked append-only event in the existing `projects/AGENT_MEMORY_SYSTEM/events.jsonl`. It requires provenance and parent IDs, rejects unknown evidence for a claimed reported result, makes exact replay a no-op, rejects same-identity/different-content overwrite, and leaves owner acknowledgement PENDING.
+- **Tests added:** `tests/test_branch_result_registry.py` covers first publication, replay idempotency, conflicting overwrite, missing provenance, unknown evidence, malformed existing log preservation, and correction via a new linked result key.
+- **Contract updated:** `core/unified_memory_control_loop.md` records the component, operational limits, and explicitly states that this only partially implements UMC-08.
+- **Read-back:** source/test/contract are to be verified at exact branch HEAD; run exact-head CI before claiming the test result.
+- **Important limitation:** file replacement is atomic for a single writer; concurrent writers are not coordinated. The primitive does not automatically update EVENT_LOG/TASK_STATE/HANDOFF, notify a parent chat, record owner acknowledgement, or provide a cross-chat service. It is a callable repository tool, not automatic ChatGPT capture.
+- **Next step:** verify exact-head CI; if green, inspect its test job. Then implement the smallest safe acknowledgement/projection update path or strengthen writer coordination before attempting parallel/concurrent use. Continue toward UMC-01..12; no end-to-end release claim yet.
+- **PR #22:** remains OPEN/DRAFT/UNMERGED; do not modify `main`.
