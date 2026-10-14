@@ -65,6 +65,8 @@ class SemanticContextExtractorTests(unittest.TestCase):
         self.assertEqual(context["source_freshness"], {
             "task_state": "CURRENT", "handoff": "CURRENT", "events": "CURRENT"
         })
+        self.assertTrue(context["freshness_verified"])
+        self.assertTrue(context["semantic_context_usable"])
         self.assertFalse(context["writes_performed"])
 
     def test_real_task_state_format_does_not_invent_next_step_or_questions(self):
@@ -99,6 +101,8 @@ class SemanticContextExtractorTests(unittest.TestCase):
         self.assertEqual(context["status"], "SOURCE_CHANGED")
         self.assertEqual(context["source_freshness"]["task_state"], "CHANGED")
         self.assertEqual(context["field_status"]["active_goal"], "STALE_SOURCE")
+        self.assertFalse(context["freshness_verified"])
+        self.assertFalse(context["semantic_context_usable"])
         self.assertEqual(context["source_hashes"]["task_state"], original_hash)
         self.assertNotEqual(
             context["source_hashes"]["task_state"],
@@ -141,6 +145,8 @@ class SemanticContextExtractorTests(unittest.TestCase):
         self.assertEqual(context["status"], "BLOCKED")
         self.assertEqual(context["active_goal"], "UNKNOWN")
         self.assertEqual(context["source_hashes"]["task_state"], "UNKNOWN")
+        self.assertFalse(context["freshness_verified"])
+        self.assertFalse(context["semantic_context_usable"])
 
 
     def test_real_recipe_manager_sources_keep_session_and_project_scopes_distinct(self):
