@@ -261,21 +261,32 @@ def import_export(source: Path, output: Path, archive_id: str, batch_size: int =
         if row and row[3] != PARSER_VERSION:
             raise RuntimeError("Parser version changed; explicit migration is required")
         if row is None:
+            run_mode = "FIRST_PASS"
             with conn:
                 conn.execute(
                     "INSERT INTO imports(archive_id,source_sha256,snapshot_path,source_bytes,parser_version,schema_version,status,next_ordinal,committed_conversations,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?)",
                     (archive_id, digest, str(snapshot), byte_size, PARSER_VERSION, SCHEMA_VERSION, "REGISTERED", 0, 0, utc_now()),
                 )
-                add_event(conn, archive_id, digest, "REGISTERED", None, {"snapshot_path": str(snapshot), "bytes": byte_size})
+                add_event(conn, archive_id, digest, "REGISTERED", None, {"snapshot_path": str(snapshot), "bytes": byte_size, "run_mode": run_mode})
             next_ordinal = committed = next_byte_offset = 0
         else:
+            prior_status = str(row[0])
             next_ordinal, committed, next_byte_offset = int(row[1]), int(row[2]), int(row[4])
+            if prior_status == "RAW_COMPLETE":
+                # Exact same archive ID + immutable source hash: nothing to ingest again.
+                return _status(conn, archive_id, digest, db_path, run_mode="ALREADY_COMPLETE")
+            run_mode = "RESUME" if next_ordinal > 0 and next_byte_offset > 0 else "RETRY_FROM_START"
 
         with conn:
             conn.execute("UPDATE imports SET status='STAGING',last_error=NULL,updated_at=? WHERE archive_id=? AND source_sha256=?",
                          (utc_now(), archive_id, digest))
-            add_event(conn, archive_id, digest, "RESUME" if next_ordinal else "STAGING_STARTED",
-                      next_ordinal, {"next_ordinal": next_ordinal, "parser_version": PARSER_VERSION})
+            event_type = "FIRST_PASS_STARTED" if run_mode == "FIRST_PASS" else (
+                "RESUME" if run_mode == "RESUME" else "RETRY_FROM_START"
+            )
+            add_event(conn, archive_id, digest, event_type, next_ordinal,
+                      {"run_mode": run_mode, "prior_status": row[0] if row else "NEW",
+                       "next_ordinal": next_ordinal, "next_byte_offset": next_byte_offset,
+                       "parser_version": PARSER_VERSION})
 
         archive = None
         batch: list[tuple] = []
@@ -359,13 +370,13 @@ def _commit_batch(conn: sqlite3.Connection, archive_id: str, digest: str, batch:
     return len(batch)
 
 
-def _status(conn: sqlite3.Connection, archive_id: str, digest: str, db_path: Path) -> dict[str, Any]:
+def _status(conn: sqlite3.Connection, archive_id: str, digest: str, db_path: Path, run_mode: str | None = None) -> dict[str, Any]:
     row = conn.execute(
         "SELECT status,next_ordinal,committed_conversations,last_error,snapshot_path,source_bytes,next_byte_offset,last_source_locator FROM imports WHERE archive_id=? AND source_sha256=?",
         (archive_id, digest),
     ).fetchone()
     return {
-        "archive_id": archive_id, "source_sha256": digest, "status": row[0],
+        "archive_id": archive_id, "source_sha256": digest, "status": row[0], "run_mode": run_mode,
         "next_ordinal": row[1], "committed_conversations": row[2], "last_error": row[3], "next_byte_offset": row[6], "last_source_locator": row[7],
         "snapshot_path": row[4], "source_bytes": row[5], "database_path": str(db_path),
         "resume_command": "rerun the same command with the same source, output directory, and --archive-id",
