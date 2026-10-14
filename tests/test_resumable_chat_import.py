@@ -320,5 +320,48 @@ class ResumableChatImportTests(unittest.TestCase):
                 conn.close()
 
 
+    def test_first_pass_is_explicit_and_does_not_claim_resume(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            source = self.make_source(root, 3)
+            out = root / "state"
+            result = import_export(source, out, "INCIDENT-FIRST-PASS-001", batch_size=1)
+            self.assertEqual(result["run_mode"], "FIRST_PASS")
+            self.assertEqual(result["status"], "RAW_COMPLETE")
+            conn = sqlite3.connect(out / "import.sqlite3")
+            try:
+                events = [
+                    row[0] for row in conn.execute(
+                        "SELECT event_type FROM import_events ORDER BY event_id"
+                    )
+                ]
+                self.assertIn("FIRST_PASS_STARTED", events)
+                self.assertNotIn("RESUME", events)
+            finally:
+                conn.close()
+
+    def test_completed_exact_source_is_not_reimported(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            source = self.make_source(root, 3)
+            out = root / "state"
+            first = import_export(source, out, "INCIDENT-COMPLETE-001", batch_size=1)
+            second = import_export(source, out, "INCIDENT-COMPLETE-001", batch_size=1)
+            self.assertEqual(first["run_mode"], "FIRST_PASS")
+            self.assertEqual(second["run_mode"], "ALREADY_COMPLETE")
+            self.assertEqual(second["status"], "RAW_COMPLETE")
+            conn = sqlite3.connect(out / "import.sqlite3")
+            try:
+                events = [
+                    row[0] for row in conn.execute(
+                        "SELECT event_type FROM import_events ORDER BY event_id"
+                    )
+                ]
+                self.assertEqual(events.count("FIRST_PASS_STARTED"), 1)
+                self.assertEqual(events.count("RAW_COMPLETE"), 1)
+            finally:
+                conn.close()
+
+
 if __name__ == "__main__":
     unittest.main()
