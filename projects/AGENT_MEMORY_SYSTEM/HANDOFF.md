@@ -288,3 +288,11 @@ Network-level resumption of the export transfer itself is still not implemented/
 - Preserved the regression trail: CI found a newline escaping issue, a malformed JSONL fixture, and an acknowledgement-identity bug. These were corrected and retested; the identity now conflicts if the same owner attempts to change the decision under the same acknowledgement reference.
 - The tested component is a local repository primitive, not an automatic cross-chat service. Multi-writer coordination, dedicated CLI acknowledgement, owner notification, and derived task-state projection remain open.
 - Next: add a clear CLI acknowledgement command and safe single-writer/locking policy; then design guarded projection update with expected revision and tests. PR #22 remains OPEN/DRAFT/UNMERGED.
+
+
+### Addendum — writer coordination and CLI (2026-10-14)
+
+- Added fail-closed exclusive lock-file coordination for child-result publication and acknowledgement. Existing lock → LOCKED/no write; stale lock requires verified manual recovery.
+- Added CLI subcommands `publish` and `ack`, plus tests for lock conflict and acknowledgement through CLI.
+- Updated unified-loop contract with usage and limits. Still not an automatic chat bus, not owner authentication, and does not mutate TASK_STATE/HANDOFF.
+- Next: read back all files and verify CI on exact final HEAD; then design expected-revision-protected derived task-state update. Keep PR #22 open/draft/unmerged.
