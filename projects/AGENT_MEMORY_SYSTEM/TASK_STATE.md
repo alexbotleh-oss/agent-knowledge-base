@@ -179,3 +179,10 @@
 
 
 - **CI checkpoint for dry-run planner:** implementation commit `799d438f664e7792af0d402c858a7a0a0d038e55` was created via Git Data API and had no associated workflow run at first lookup. This is not a PASS. The current contents-API checkpoint is intended to trigger validation; re-fetch the live PR HEAD and verify its exact-head run before reporting the planner tested.
+
+
+## CI result — dry-run planner — 2026-10-14
+
+- Exact implementation/test commit `799d438f664e7792af0d402c858a7a0a0d038e55` passed GitHub Actions run [#38521279153](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38521279153): memory validation and detected-stack validation both SUCCESS, including unittest discovery.
+- The current branch head at the time of this checkpoint is `4ae8b5d2d56fa64220774348ea03054ee17110aa`; it adds only this checkpoint note after the tested code commit. Do not claim the latest documentation-only HEAD itself has a separately observed CI run unless one is found.
+- Stage 3 remains dry-run only. No incoming workflow, canonical writer, or index updater exists yet.
