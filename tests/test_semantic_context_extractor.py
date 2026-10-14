@@ -107,13 +107,13 @@ class SemanticContextExtractorTests(unittest.TestCase):
 
     def test_task_state_next_step_takes_precedence_over_handoff(self):
         self.task.write_text(
-            "- **Активная задача в текущей сессии:** сессионная задача.\\n"
-            "- **Следующий шаг:** сначала проверить TASK_STATE.\\n",
+            "- **Активная задача в текущей сессии:** сессионная задача.\n"
+            "- **Следующий шаг:** сначала проверить TASK_STATE.\n",
             encoding="utf-8",
         )
         self.handoff.write_text(
-            "# HANDOFF\\n"
-            "- **Следующий шаг:** продолжить общую задачу проекта.\\n",
+            "# HANDOFF\n"
+            "- **Следующий шаг:** продолжить общую задачу проекта.\n",
             encoding="utf-8",
         )
         context = extract_semantic_context(self._packet())
