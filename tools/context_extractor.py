@@ -20,7 +20,7 @@ LABELS = {
 }
 
 
-def _lines(*fragments: str) -> list[tuple[str, str]]:
+def _lines(*fragments: tuple[str, str]) -> list[tuple[str, str]]:
     result = []
     for source_name, fragment in fragments:
         for line in fragment.splitlines():
