@@ -311,3 +311,11 @@ Network-level resumption of the export transfer itself is still not implemented/
 - Added `tools/guarded_task_state_update.py` and seven tests. The tool appends rather than rewrites, checks an expected SHA-256, requires a supporting event ID, uses a fail-closed lock, and rejects stale or out-of-scope writes.
 - Updated unified-loop contract. This is a local guarded primitive only; no atomic transaction spans child-result publication and task-state update, no automatic handoff/event-log projection, and no automatic chat restore.
 - Next: check exact-head CI/read-back; if green, add failure-injection and recovery tests for the two-step result-publication → state-projection flow. PR #22 remains OPEN/DRAFT/UNMERGED.
+
+
+### Handoff — linked child-return round trip (2026-10-14)
+
+- Added `tests/test_child_result_return_roundtrip.py`; CI passed on exact test commit `74777aede3df8528cd3e455e9e0bcd72144d57e2`, [run #432](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38548227060).
+- Tested local sequence: publish → idempotent replay → owner acknowledgement → guarded TASK_STATE append; stale parent revision is rejected, and retry against refreshed hash preserves the parent change.
+- Not proven: cross-chat delivery, distributed transaction, automatic pending-return discovery or task-state reconciliation.
+- Next: implement a dry-run reconciliation/report over canonical events, identify unacknowledged child results and acknowledgements lacking a linked checkpoint, then explicit hash-guarded repair. Do not auto-resolve parent tasks.
