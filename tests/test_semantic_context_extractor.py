@@ -137,7 +137,7 @@ class SemanticContextExtractorTests(unittest.TestCase):
 
     def test_missing_source_disables_freshness_and_usability(self):
         self.task.write_text(
-            "- **Активная задача в текущей сессии:** сохранить контрольную точку.\\n",
+            "- **Активная задача в текущей сессии:** сохранить контрольную точку.\n",
             encoding="utf-8",
         )
         packet = self._packet()
@@ -150,8 +150,8 @@ class SemanticContextExtractorTests(unittest.TestCase):
 
     def test_partial_packet_separates_semantic_freshness_from_event_completeness(self):
         self.task.write_text(
-            "- **Активная задача в текущей сессии:** проверить неполный журнал.\\n"
-            "- **Последнее событие:** EVT-MISSING-999\\n",
+            "- **Активная задача в текущей сессии:** проверить неполный журнал.\n"
+            "- **Последнее событие:** EVT-MISSING-999\n",
             encoding="utf-8",
         )
         packet = self._packet()
@@ -164,7 +164,7 @@ class SemanticContextExtractorTests(unittest.TestCase):
 
     def test_verify_sources_false_never_claims_verified_freshness(self):
         self.task.write_text(
-            "- **Активная задача в текущей сессии:** проверить без хеш-проверки.\\n",
+            "- **Активная задача в текущей сессии:** проверить без хеш-проверки.\n",
             encoding="utf-8",
         )
         context = extract_semantic_context(self._packet(), verify_sources=False)
