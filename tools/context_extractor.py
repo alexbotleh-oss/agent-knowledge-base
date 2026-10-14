@@ -149,11 +149,21 @@ def extract_semantic_context(packet: dict[str, Any], *, verify_sources: bool = T
             field: ("STALE_SOURCE" if state == "FOUND" else state)
             for field, state in field_status.items()
         }
+    freshness_verified = (
+        bool(freshness)
+        and all(value == "CURRENT" for value in freshness.values())
+        and status not in {"BLOCKED", "SOURCE_CHANGED", "SOURCE_MISSING", UNKNOWN}
+    )
+    semantic_context_usable = (
+        freshness_verified and status in {"RESTORED_PACKET", "PARTIAL"}
+    )
     return {
         **values,
         "source_hashes": source_hashes,
         "source_freshness": freshness,
         "status": status,
+        "freshness_verified": freshness_verified,
+        "semantic_context_usable": semantic_context_usable,
         "field_status": field_status,
         "provenance": provenance,
         "writes_performed": False,
