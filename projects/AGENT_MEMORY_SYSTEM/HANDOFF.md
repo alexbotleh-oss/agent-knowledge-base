@@ -334,3 +334,11 @@ Network-level resumption of the export transfer itself is still not implemented/
 - Added a status matrix to the unified-loop contract. UMC-04..11 are PARTIAL, UMC-01/02/03/12 BLOCKED; none is claimed end-to-end PASS.
 - CI passed exact SHA `d938c393057cde2e670fd2477d31fd75f691960a`, [run #435](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38548477905). The matrix changes HEAD; re-check latest exact-head CI.
 - Next: implement/test a minimal session-restore packet reader from canonical task state, handoff, event log and linked evidence; missing source/access must yield BLOCKED. Do not mark the project ready for end-to-end testing yet.
+
+
+### Handoff — source-backed session restore packet (2026-10-14)
+
+- Added `tools/restore_session_packet.py` and tests. It builds a read-only recovery packet from TASK_STATE, HANDOFF and events.jsonl with exact hashes and linked event records. Missing source -> BLOCKED; missing referenced event -> PARTIAL.
+- Updated the unified-loop contract. This is invoked explicitly by a caller; not automatic cross-chat restore and not semantic proof that all messages were captured.
+- CI for the newest combined HEAD is pending; verify before claiming PASS.
+- Next: run the packet builder against current repository sources (read-only), verify reference coverage, then continue intake promotion/index refresh and remaining acceptance gaps.
