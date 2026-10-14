@@ -18,15 +18,15 @@ class GuardedTaskStateUpdateTests(unittest.TestCase):
         self.project.mkdir(parents=True)
         self.task_state = self.project / "TASK_STATE.md"
         self.task_state.write_text(
-            "# Task state\\n"
-            "- **Активная задача в текущей сессии:** проверка записи контрольной точки\\n"
-            "- **Следующий шаг:** применить подтверждённую контрольную точку\\n"
-            "- **Последнее событие:** EVT-TEST-001\\n"
-            "\\nOriginal checkpoint.\\n",
+            "# Task state\n"
+            "- **Активная задача в текущей сессии:** проверка записи контрольной точки\n"
+            "- **Следующий шаг:** применить подтверждённую контрольную точку\n"
+            "- **Последнее событие:** EVT-TEST-001\n"
+            "\nOriginal checkpoint.\n",
             encoding="utf-8",
         )
         (self.project / "HANDOFF.md").write_text(
-            "# HANDOFF\\n- **Следующий шаг:** проверить запись контрольной точки\\n",
+            "# HANDOFF\n- **Следующий шаг:** проверить запись контрольной точки\n",
             encoding="utf-8",
         )
         event_dir = self.root / "projects" / "AGENT_MEMORY_SYSTEM"
