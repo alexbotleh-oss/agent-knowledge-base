@@ -3,6 +3,7 @@ import sqlite3
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 import zipfile
 from pathlib import Path
 
@@ -71,7 +72,11 @@ class ResumableChatImportTests(unittest.TestCase):
             paused = import_export(source, out, "ARCHIVE-001", batch_size=2, stop_after_batches=1)
             self.assertEqual(paused["status"], "PAUSED")
             self.assertEqual(paused["next_ordinal"], 2)
-            done = import_export(source, out, "ARCHIVE-001", batch_size=2)
+            self.assertGreater(paused["next_byte_offset"], 0)
+            with patch("resumable_chat_import.iter_json_array", wraps=iter_json_array) as parser:
+                done = import_export(source, out, "ARCHIVE-001", batch_size=2)
+                self.assertEqual(parser.call_args.kwargs["start_offset"], paused["next_byte_offset"])
+                self.assertEqual(parser.call_args.kwargs["start_ordinal"], 2)
             self.assertEqual(done["status"], "RAW_COMPLETE")
             self.assertEqual(done["committed_conversations"], 5)
             counts, events, payloads, state = self.query_counts(out)
@@ -117,7 +122,7 @@ class ResumableChatImportTests(unittest.TestCase):
             conn = connect(out / "import.sqlite3")
             try:
                 record = conn.execute(
-                    "SELECT archive_id,source_sha256,source_locator,source_conversation_id,identity_method,source_ordinal,payload_json,payload_sha256,imported_at FROM raw_conversations ORDER BY source_ordinal LIMIT 1"
+                    "SELECT archive_id,source_sha256,source_locator,source_conversation_id,identity_method,source_ordinal,payload_json,payload_sha256,imported_at,source_end_byte_offset FROM raw_conversations ORDER BY source_ordinal LIMIT 1"
                 ).fetchone()
                 _commit_batch(conn, "ARCHIVE-005", paused["source_sha256"], [record])
                 count = conn.execute(
@@ -159,8 +164,10 @@ class ResumableChatImportTests(unittest.TestCase):
         rows = [{"id": "один", "title": "Привет 🌍"}, {"id": "two", "title": "second"}]
         stream = io.BytesIO(json.dumps(rows, ensure_ascii=False).encode("utf-8"))
         parsed = list(iter_json_array(stream, chunk_size=5))
-        self.assertEqual([ordinal for ordinal, _ in parsed], [0, 1])
+        self.assertEqual([ordinal for ordinal, _, _ in parsed], [0, 1])
         self.assertEqual(parsed[0][1]["title"], "Привет 🌍")
+        self.assertGreater(parsed[0][2], 0)
+        self.assertGreater(parsed[1][2], parsed[0][2])
 
     def test_invalid_source_is_not_marked_complete(self):
         with tempfile.TemporaryDirectory() as tmp:
