@@ -186,3 +186,15 @@
 - Exact implementation/test commit `799d438f664e7792af0d402c858a7a0a0d038e55` passed GitHub Actions run [#38521279153](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38521279153): memory validation and detected-stack validation both SUCCESS, including unittest discovery.
 - The current branch head at the time of this checkpoint is `4ae8b5d2d56fa64220774348ea03054ee17110aa`; it adds only this checkpoint note after the tested code commit. Do not claim the latest documentation-only HEAD itself has a separately observed CI run unless one is found.
 - Stage 3 remains dry-run only. No incoming workflow, canonical writer, or index updater exists yet.
+
+
+## Resume checkpoint — intake compatibility audit — 2026-10-14
+
+- User chose to defer repository visibility changes until the memory mechanism is fully tested. No visibility setting was changed.
+- Recovered active goal: finish the staged memory-intake pipeline, not repeat the already accepted report-agent reconciliation. Keep PR #22 OPEN/DRAFT/UNMERGED and do not change main.
+- Live inspection: PR #22 was at HEAD `fa382dab2cce0b01caf7fdf292ace80432c649b7`, 116 changed paths; Validate knowledge base was successful for that exact pre-correction HEAD. The PR description still has stale HEAD/path-count metadata and is not ready for merge.
+- Important inventory correction written and read back in `projects/AGENT_MEMORY_SYSTEM/MEMORY_PIPELINE_GAP_ANALYSIS_2026-10-14.md` (commit `4113fc2121c85c4d52d7751b97498f5225597463`): `core/memory_registry_and_multidimensional_index.md` and `templates/memory_record.json.example` exist on the PR branch, but not on `main`; they are proposed target-contract files, not deployed canonical storage.
+- Reused components: main-branch memory model, stack registry, event/lesson examples, validator and PR/push validation workflow; branch-only local staging, temporal model primitives, versioned intake manifest and read-only planner.
+- Remaining compatibility gap: no canonical writer/index updater or intake-triggered workflow; manifest validation does not validate every artifact payload by kind or resolve relation endpoints. Existing event relations are nested and use `event_id`; the proposed registry contract uses typed source/target relations; decisions are Markdown. Do not implement a generic writer until per-kind adapters and endpoint-resolution policy are tested.
+- Latest verification after the correction: read-back PASS; PR head moved to `4113fc2121c85c4d52d7751b97498f5225597463`; CI for that exact head was QUEUED at last check, so no current-head PASS claim.
+- Next action: define and test a compatibility map for source records, events, lessons, decision proposals, memory candidates and relations; distinguish in-batch IDs, existing IDs and unresolved endpoints. Keep the route planner read-only until that contract passes.
