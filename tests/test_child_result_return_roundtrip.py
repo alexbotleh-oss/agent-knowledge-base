@@ -92,7 +92,7 @@ class ChildResultReturnRoundTripTests(unittest.TestCase):
                 "event_id": "EVT-1",
                 "checkpoint_markdown": "- New child result was reviewed.",
             }
-            task_state.write_text("# Parent changed while child work was running.\n", encoding="utf-8")
+            task_state.write_text("# Parent changed while child work was running.\n- **Активная задача в текущей сессии:** проверить устаревшую ревизию\n- **Следующий шаг:** повторно проверить контрольную точку\n- **Последнее событие:** EVT-1\n", encoding="utf-8")
             before = task_state.read_bytes()
             packet = build_session_packet(task_state, handoff, event_log)
             verdict = authorize_next_step(extract_semantic_context(packet))
