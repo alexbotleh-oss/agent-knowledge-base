@@ -157,6 +157,9 @@ def extract_semantic_context(packet: dict[str, Any], *, verify_sources: bool = T
     semantic_context_usable = (
         freshness_verified and status in {"RESTORED_PACKET", "PARTIAL"}
     )
+    event_linkage_complete = (
+        status == "RESTORED_PACKET" and not packet.get("missing_event_refs")
+    )
     return {
         **values,
         "source_hashes": source_hashes,
@@ -164,6 +167,7 @@ def extract_semantic_context(packet: dict[str, Any], *, verify_sources: bool = T
         "status": status,
         "freshness_verified": freshness_verified,
         "semantic_context_usable": semantic_context_usable,
+        "event_linkage_complete": event_linkage_complete,
         "field_status": field_status,
         "provenance": provenance,
         "writes_performed": False,
