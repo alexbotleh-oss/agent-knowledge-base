@@ -388,3 +388,13 @@ Network-level resumption of the export transfer itself is still not implemented/
 - It also restates the source-first importer/analyzer split, chronology and provenance rules, event-vs-report-copy deduplication, causal experience records, and the difference between documentation/CI success and real end-to-end behavior.
 - This does not scope-clean PR #22 by itself. No source history was deleted, no change was made to `main`, and PR #22 remains unmerged.
 - Next: use the crosswalk as canonical context when reviewing path dispositions, then produce a preservation-safe scope-clean candidate and check exact-head validation/CI.
+
+
+## Handoff — universal export protocol and source-memory gap register (2026-10-14)
+
+- User requested continued archive reconstruction and, in parallel, a universal export instruction understandable to both user and agent.
+- Added and read back [universal_chat_export_and_context_transfer.md](../../core/universal_chat_export_and_context_transfer.md); linked from technical source-ingestion protocol. It distinguishes export/import/extraction/analysis/promotion, source provenance, completeness states, causal links, corrections, privacy, and interruption recovery.
+- Added [SOURCE_TO_MEMORY_GAP_REGISTER_2026-10-14.md](SOURCE_TO_MEMORY_GAP_REGISTER_2026-10-14.md) with 12 gaps. It tracks the B77/LK/Lite Cook/APK chain, recipe-import requirement, transition to CARD111, causal-memory requirements, accepted duplicate-report findings, archive-count uncertainty, attachment limits, PR scope conflict, and implementation-vs-documentation status.
+- Persistence/read-back verified for the guide and protocol link. No workflow run was returned for the protocol-link commit; exact-head CI is NOT VERIFIED. The guide is documentation, not an implemented automatic exporter or proof of model compliance.
+- Next: refresh exact branch HEAD and PR #22 metadata; inspect the eight REVIEW_MIXED paths and two app-specific reports; create event-level records only when message-level locators exist; preserve out-of-scope project histories before scope cleanup; run tests/CI on the exact resulting SHA.
+- Safety unchanged: no changes to main, no merge, no deletion of source material.
