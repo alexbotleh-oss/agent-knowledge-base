@@ -439,3 +439,13 @@ Tests added for first pass, completed replay, and a changed source under the sam
 - Branch: archive-reconciliation/deferred-20261014. New guide commit ee7f8e3aecccfcba23a34ff2e4ada1a3e0b2bda9; protocol-link commit 928f3dbacde7b9ef54413584c695bdc74abad7fd; gap-register commit 4c3fad070b1a06b0d2e9916f9454f027d6d07247. These are sequential commit IDs, not proof of exact current HEAD; refresh branch HEAD before further work.
 - CI lookup returned no PR-triggered workflow run for the protocol-link commit. Do not claim current branch CI PASS.
 - Immediate next: read back gap register and update handoff; refresh current branch/PR #22 state; inspect REVIEW_MIXED paths and app-specific reports; continue source-to-memory reconciliation; preserve all out-of-scope material until a safe destination is verified. No main changes, no merge, no deletions.
+
+
+## Continuation checkpoint — PR #22 bounded scope review (2026-10-14)
+
+- Reviewed the eight previously flagged mixed candidates at content level and recorded decisions in [PR22_MIXED_PATH_REVIEW_2026-10-14.md](PR22_MIXED_PATH_REVIEW_2026-10-14.md).
+- Preserved the full APK reconciliation report byte-for-byte at `projects/RECIPE_MANAGER/source_history/SOURCE_RECONCILIATION_APK_BUILD_2026-10-13.md` and the B77 HTML regression report at `projects/B77_HTML_PWA/source_history/SOURCE_RECONCILIATION_B77_HTML_REGRESSIONS_2026-10-13.md`. Readback blob SHAs match the root originals, so the copies are exact at this revision.
+- Updated [PR22_PATH_DISPOSITION_MANIFEST_2026-10-14.md](PR22_PATH_DISPOSITION_MANIFEST_2026-10-14.md): 134 paths; KEEP_CORE=52, KEEP_AGMS=19, KEEP_TRANSFERABLE_LESSON=4, SEPARATE_PROJECT_MEMORY=37, PRESERVE_RAW_OUT_OF_SCOPE=22, REVIEW_MIXED=0. The status count was recomputed from the rows after the update.
+- This is still a preservation/reconciliation branch, not a cleaned PR #22 candidate. Root copies remain; no file was deleted and PR #22 was not merged.
+- CI for this preservation branch's latest HEAD is not verified. The old PR description's head SHA/counts are stale relative to subsequent work; refresh live PR metadata before creating or validating a cleaned candidate.
+- Next: reconcile live PR head and base; inspect references/dependencies to every out-of-scope path; then construct a separate scope-clean candidate that preserves original provenance and validates exact-head CI. Do not alter `main` or merge without explicit approval.
