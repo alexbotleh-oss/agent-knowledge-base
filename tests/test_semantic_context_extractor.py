@@ -129,14 +129,14 @@ class SemanticContextExtractorTests(unittest.TestCase):
 
     def test_semantic_context_restores_in_fresh_process_from_persisted_sources(self):
         self.task.write_text(
-            "# TASK_STATE\\n"
-            "- **Активная задача в текущей сессии:** проверить восстановление после перезапуска.\\n"
-            "- **Последнее событие:** EVT-TEST-001\\n",
+            "# TASK_STATE\n"
+            "- **Активная задача в текущей сессии:** проверить восстановление после перезапуска.\n"
+            "- **Последнее событие:** EVT-TEST-001\n",
             encoding="utf-8",
         )
         self.handoff.write_text(
-            "# HANDOFF\\n"
-            "- **Следующий шаг:** проверить результат восстановления.\\n",
+            "# HANDOFF\n"
+            "- **Следующий шаг:** проверить результат восстановления.\n",
             encoding="utf-8",
         )
         script = (
