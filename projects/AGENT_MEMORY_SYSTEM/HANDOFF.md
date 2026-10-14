@@ -342,3 +342,11 @@ Network-level resumption of the export transfer itself is still not implemented/
 - Updated the unified-loop contract. This is invoked explicitly by a caller; not automatic cross-chat restore and not semantic proof that all messages were captured.
 - CI for the newest combined HEAD is pending; verify before claiming PASS.
 - Next: run the packet builder against current repository sources (read-only), verify reference coverage, then continue intake promotion/index refresh and remaining acceptance gaps.
+
+
+### Handoff — session restore packet and status refresh (2026-10-14)
+
+- CI passed on exact SHA `158d072dee176d02f6305661857c287cb65a6beb`, [run #438](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38548779020).
+- UMC-01 status changed to PARTIAL: a source-backed recovery packet is implemented/tested, but automatic new-chat startup and semantic validation are not.
+- This matrix change moves HEAD; check exact-head CI again.
+- Next: connect source intake to reviewed promotion and derived index refresh with a resumable operation ledger; add failure-injection tests at commit boundaries. Do not claim end-to-end readiness.
