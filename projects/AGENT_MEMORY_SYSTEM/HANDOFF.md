@@ -162,3 +162,11 @@
 - Stage 3 adds `tools/plan_memory_intake.py` and `tests/test_memory_intake_planner.py`. The tool validates the batch then emits a read-only JSON route plan. It never writes to canonical memory or indexes; unknown artifact types go to quarantine; task-state and handoff changes are proposal-only.
 - **Next:** run exact-head CI for the planner; add relationship-endpoint and schema-version rejection cases. Do not create the writer or trigger workflow until dry-run routing and record-format compatibility are verified.
 - PR #22 remains open/Draft/unmerged; no changes to `main`.
+
+
+## CI checkpoint — dry-run planner — 2026-10-14
+
+- `tools/plan_memory_intake.py` and `tests/test_memory_intake_planner.py` passed workflow run [#38521279153](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38521279153) on exact implementation commit `799d438f664e7792af0d402c858a7a0a0d038e55`.
+- The workflow validated memory records/protocol and detected stacks. It does not prove production-scale behavior or integration with canonical write/index paths.
+- Follow-up checkpoint changes are documentation/state-only; verify live PR head and any associated run before claiming exact-head CI.
+- Next architecture gate: inspect the actual on-disk canonical record collections and relation formats before any writer/index updater. Keep the current route planner read-only until that mapping is complete.
