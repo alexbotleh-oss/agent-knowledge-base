@@ -304,3 +304,10 @@ Network-level resumption of the export transfer itself is still not implemented/
 - After adding fail-closed lock coordination, CI exposed a missing `utc_now()` helper; it was added, and the exact-head suite passed.
 - Registry tests cover replay/conflict/provenance rejection, acknowledgement semantics, CLI acknowledgement, lock conflict and corrupt journal safety.
 - Next: inspect existing state-update utilities; only then build expected-revision-protected task-state projection update, with crash/retry tests. Automatic chat transport/capture and full UMC-01..12 remain gaps. PR #22 stays OPEN/DRAFT/UNMERGED.
+
+
+### Handoff — guarded task-state projection prototype (2026-10-14)
+
+- Added `tools/guarded_task_state_update.py` and seven tests. The tool appends rather than rewrites, checks an expected SHA-256, requires a supporting event ID, uses a fail-closed lock, and rejects stale or out-of-scope writes.
+- Updated unified-loop contract. This is a local guarded primitive only; no atomic transaction spans child-result publication and task-state update, no automatic handoff/event-log projection, and no automatic chat restore.
+- Next: check exact-head CI/read-back; if green, add failure-injection and recovery tests for the two-step result-publication → state-projection flow. PR #22 remains OPEN/DRAFT/UNMERGED.
