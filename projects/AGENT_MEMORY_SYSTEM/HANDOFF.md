@@ -361,3 +361,9 @@ Network-level resumption of the export transfer itself is still not implemented/
 - **Local analysis artifact:** `/mnt/data/Анализ_ошибок_агента_и_меры_предотвращения_2026-10-14.md` contains the initial cross-volume analysis and prevention/test matrix. It is a first-pass report, not a claim of exhaustive semantic audit.
 - **Immediate next actions:** (1) read back all changed files; (2) parse `events.jsonl`, check unique IDs and correction overlay; (3) fetch live PR #22 head/state and exact-head CI; (4) create real tests/evaluation for CTX-01/CTX-02; (5) continue source-by-source incident reconciliation.
 - **Safety:** PR #22 stays Draft/open/unmerged; do not alter `main`. Existing scope drift (39 out-of-scope project-specific paths) remains unresolved. Documentation-only changes and passing CI do not prove the whole memory system is operational.
+
+
+- Added `tests/test_source_goal_preflight_contract.py`; it guards policy wiring only, not live LLM compliance.
+- Read-back validated `events.jsonl`: 10 lines, 10 unique IDs, zero parse errors; append-only edge correction EVT-AGMS-20261014-004 removes an unsupported same-day relation.
+- CI run #38562931786 passed for the prior checkpoint, but no run/status was returned for commit `0e09c8acfbf4bd61758007fe6b8dcc4c1ed123b1`. After this handoff update, the head advances again; **exact-head CI is not verified** until a run tied to the final SHA is found.
+- Next safe step: fetch current branch/PR metadata and latest commit, obtain exact-head CI or run tests in a connected clone, then perform CTX-01/CTX-02 behavioral evaluation. Do not claim the preflight prevents live model errors until that evaluation passes.
