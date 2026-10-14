@@ -143,3 +143,13 @@
 - **Next action:** continue the factual inventory of indexing/write paths and workflow permissions/triggers. Do not start a new router before this is complete. Do not touch `main`.
 - **CI:** run #38519704988 passed for the preceding HEAD `b43f404034450f718f18e002356cdb926fd702ba`; the new audit/checkpoint commits require a fresh exact-HEAD CI result.
 - **PR #22:** keep OPEN/DRAFT/UNMERGED; existing unrelated project histories and preservation/scope issue remain unresolved.
+
+
+## Handoff — stage 2 intake manifest contract — 2026-10-14
+
+- Additional repository inventory found existing target contract `core/memory_registry_and_multidimensional_index.md`, memory-record example, local source-record staging, read-only temporal query tool and snapshot/assertion primitives. These are not yet wired into one end-to-end ingestion flow.
+- Stage 2 adds a versioned intake envelope, not a replacement memory model: `schemas/memory_intake_manifest.schema.json`, `templates/memory_intake_manifest.json.example`, synthetic fixture under `tests/fixtures/memory_intake_batch/`, dependency-free validation in `tools/validate_memory.py`, and tests in `tests/test_memory_intake_contract.py`.
+- Routing is by a closed allowlist of artifact kinds; paths are relative to the manifest directory and SHA-256 is checked. No arbitrary target path, executable payload, automatic promotion to accepted memory, or guessed future-project applicability.
+- `IMPORT_READY` is a processing signal only, not authorization. A future workflow must have separate trusted trigger/permissions and must not run write-capable processing on untrusted PR input.
+- The repository is public; raw private chat exports must not be committed. Use sanitized structured records or private-reference-only metadata.
+- **Next action:** verify read-back and exact-head CI for this contract. If green, implement a dry-run route planner that reports intended logical views/updates from the existing registry, without writing canonical memory or rebuilding indexes yet. Keep PR #22 Draft/open/unmerged and do not touch `main`.

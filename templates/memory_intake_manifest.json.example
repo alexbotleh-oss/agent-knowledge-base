@@ -1,0 +1,42 @@
+{
+  "schema_version": "1.0",
+  "command": "IMPORT_READY",
+  "batch_id": "BATCH-YYYYMMDD-001",
+  "created_at": "ISO-8601-with-timezone",
+  "payload_classification": "sanitized",
+  "source": {
+    "source_type": "chat_summary",
+    "source_id": "SOURCE_ID",
+    "project_id": "PROJECT_ID-or-unknown",
+    "conversation_ids": ["SOURCE_CONVERSATION_ID"],
+    "source_locator": "stable source locator",
+    "captured_at": "unknown",
+    "scope_status": "PARTIAL"
+  },
+  "observed_context": {
+    "languages": [
+      {
+        "value": "Python",
+        "evidence_status": "observed",
+        "source_refs": ["path/to/evidence"],
+        "basis": "Explicitly present in the source"
+      }
+    ],
+    "tools": [],
+    "task_types": []
+  },
+  "artifacts": [
+    {
+      "artifact_id": "ARTIFACT-001",
+      "kind": "event_records",
+      "path": "events.jsonl",
+      "sha256": "REPLACE_WITH_64_HEX_SHA256",
+      "record_count": 1,
+      "lifecycle_status": "candidate",
+      "evidence_status": "observed",
+      "approval_status": "pending",
+      "notes": "Candidate; upload does not approve it for long-term memory."
+    }
+  ],
+  "notes": "IMPORT_READY is a processing marker, not an authorization token. Never commit raw private chat exports."
+}

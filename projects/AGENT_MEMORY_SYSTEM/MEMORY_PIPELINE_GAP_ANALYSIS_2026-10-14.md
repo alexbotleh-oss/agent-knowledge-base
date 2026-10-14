@@ -95,3 +95,19 @@
 - `main` не изменяется.
 - Проверка CI для текущего HEAD подтверждает только проход имеющихся проверок, а не архитектурную полноту и не эксплуатационную готовность всей системы.
 - Источники чатов/вложений и их полнота остаются отдельной задачей; импорт одного доступного снимка не доказывает полноту всей истории.
+
+
+## Second-pass implementation inventory — 2026-10-14
+
+The follow-up check found additional existing components that narrow the implementation gap:
+
+- `core/memory_registry_and_multidimensional_index.md` already defines one logical linked registry with multidimensional views, stable source locators, ImportRun/RecordRevision concepts, provenance traversal and rebuildable indexes. Do not create independent duplicate libraries/catalogs merely to represent different dimensions.
+- `templates/memory_record.json.example` already contains lifecycle/evidence/decision statuses, provenance, relations, revision metadata, classification, content and coverage fields. It is an example, not a versioned JSON Schema.
+- `tools/archive_registry_staging.py` builds local source records and an archive snapshot manifest, but reads the full export into memory, sorts derived records by event time, and rewrites the output as a whole. It is useful as a field inventory, not a resumable canonical writer.
+- `tools/archive_temporal_index.py` is a read-only query utility; it loads the export into memory and builds transient lists/maps. It is not a persistent, rebuildable index connected to the canonical registry.
+- `tools/temporal_memory_model.py` adds dependency-free snapshot comparability, assertion validation/as-of views and downstream impact discovery. Tests cover primitives, but the model is not yet wired into the intake/canonical write path or downstream state/lesson/handoff updates.
+- `core/source_ingestion_protocol.md` defines RAW/INVENTORY/EXTRACTED/CANDIDATE/CANONICAL and import completeness requirements. This protocol should be reconciled with the manifest contract, not duplicated.
+- `.github/workflows/validate.yml` runs validation on pull requests and pushes to main. No intake-triggered processing workflow was found in the inspected workflow directory.
+- Current CI for HEAD `58f237c80d74709a334b5e57e8c4cfcfb9ace500` was queued as run [#38520584849](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38520584849); re-check after contract changes.
+
+**Updated conclusion:** the repository has several useful, partially overlapping prototypes and a detailed target registry contract. The next implementation should add the smallest versioned *intake envelope* around existing artifact formats, validate it, and preserve the distinction between intake acceptance and long-term-memory approval. It should not build a new competing registry or a generic arbitrary-path router.
