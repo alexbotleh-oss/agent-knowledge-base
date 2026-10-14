@@ -51,20 +51,6 @@ def apply_checkpoint(
     must obtain it from context_trust_gate.authorize_next_step; this function fails
     closed when it is absent, malformed, or not explicitly authorized.
     """
-    if not isinstance(trust_verdict, dict):
-        return {
-            "status": "BLOCKED",
-            "reason": "TrustPolicyViolated",
-            "trust_status": "MISSING_TRUST_VERDICT",
-            "writes_performed": False,
-        }
-    if trust_verdict.get("status") != "AUTHORIZED_FOR_PLANNING":
-        return {
-            "status": "BLOCKED",
-            "reason": "TrustPolicyViolated",
-            "trust_status": trust_verdict.get("status", "INVALID_TRUST_VERDICT"),
-            "writes_performed": False,
-        }
     required = ("update_id", "expected_sha256", "parent_checkpoint_id", "event_id", "checkpoint_markdown")
     errors = [f"missing:{key}" for key in required if key not in proposal or proposal[key] is None]
     for key in ("update_id", "expected_sha256", "parent_checkpoint_id", "event_id", "checkpoint_markdown"):
@@ -105,6 +91,24 @@ def apply_checkpoint(
     if proposal["event_id"] not in event_ids:
         return {"status": "REJECTED", "writes_performed": False,
                 "errors": ["event_id is not present in the canonical event log"]}
+
+    # No-write validation (schema, path, idempotency, revision and event evidence)
+    # runs before trust authorization so callers receive precise conflict/stale
+    # statuses. The gate remains mandatory before any write attempt.
+    if not isinstance(trust_verdict, dict):
+        return {
+            "status": "BLOCKED",
+            "reason": "TrustPolicyViolated",
+            "trust_status": "MISSING_TRUST_VERDICT",
+            "writes_performed": False,
+        }
+    if trust_verdict.get("status") != "AUTHORIZED_FOR_PLANNING":
+        return {
+            "status": "BLOCKED",
+            "reason": "TrustPolicyViolated",
+            "trust_status": trust_verdict.get("status", "INVALID_TRUST_VERDICT"),
+            "writes_performed": False,
+        }
 
     # Recompute trust from canonical files at write time. An externally supplied
     # verdict alone is not trusted: it may be stale or incorrectly fabricated.
