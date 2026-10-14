@@ -113,3 +113,12 @@
 - Most recent prior exact code/docs commit `466f68801eb7fd8b75bdbc8171f4bae5ce213d32` passed run #38519320849. Later test additions are not covered by that pass.
 - Continue from the importer task, not the temporal-model tangent. Main remaining implementation trade-off: resume scans earlier conversation objects to reach the checkpoint ordinal. Improve this with a snapshot-bound position index after green test evidence. Preserve private source content locally; never commit exports.
 - PR #22 remains OPEN/DRAFT/UNMERGED; do not merge or touch main because unrelated project histories still require safe preservation and scope resolution.
+
+
+## Resume checkpoint — offset-based import verified — 2026-10-14
+
+- The resumable importer now saves the next conversation ordinal, byte offset after the last committed JSON object, and last source locator. The offset is scoped to the source snapshot SHA-256 and committed atomically with each batch and append-only event. Resume seeks to the saved offset; legacy zero-offset checkpoints fall back to scanning from the start.
+- The first offset patch had a CI-detected bookkeeping error and was corrected. Code + protocol documentation passed CI at SHA b7344e351c260dab55f24a03e1c355f953124988 (run #38519573230). Tests include interruption/resume, seek from saved offset, idempotent repeat, lost-ack batch replay, duplicate source IDs, ZIP source, malformed JSON, and small-chunk UTF-8 decoding.
+- Re-fetch live PR metadata and workflow after this checkpoint commit; current commit updates only this handoff/state documentation. Do not say the newest HEAD passed until its own workflow finishes.
+- Remaining production hardening: ZIP resume seek behaviour at scale, concurrent invocation lock, injected process crash around transaction boundaries, benchmark on a real large archive, attachment completeness and source-scope reconciliation. Private exports stay local and must not be committed.
+- Continue the importer task. PR #22 remains Draft/open/unmerged because the broader PR has unrelated project histories without a verified preservation destination. Do not touch main.
