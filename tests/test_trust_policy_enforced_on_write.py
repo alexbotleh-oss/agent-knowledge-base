@@ -131,6 +131,22 @@ class TrustPolicyEnforcedOnWriteTests(unittest.TestCase):
         self.assertFalse(result["writes_performed"])
         self.assertEqual(before, self.task_state.read_bytes())
 
+    def test_journal_lock_contention_refuses_checkpoint_write(self):
+        _, _, verdict = self._restore_and_decide()
+        proposal = self._proposal()
+        before = self.task_state.read_bytes()
+        journal_lock = self.events.with_name(self.events.name + ".lock")
+        journal_lock.write_text('{"pid": 999999, "started_at": "test"}', encoding="utf-8")
+
+        result = apply_checkpoint(
+            self.task_state, self.events, proposal, trust_verdict=verdict
+        )
+
+        self.assertEqual(result["status"], "LOCKED")
+        self.assertFalse(result["writes_performed"])
+        self.assertEqual(before, self.task_state.read_bytes())
+        self.assertTrue(journal_lock.exists())
+
     def test_unknown_next_step_does_not_authorize_write(self):
         self.task_state.write_text(
             "# TASK_STATE\n"
