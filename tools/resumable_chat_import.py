@@ -339,7 +339,8 @@ def import_export(source: Path, output: Path, archive_id: str, batch_size: int =
 
 
 def _commit_batch(conn: sqlite3.Connection, archive_id: str, digest: str, batch: list[tuple]) -> int:
-    first, last = batch[0][5], batch[-1][5]
+    first_record, last_record = batch[0], batch[-1]
+    first, last = first_record[5], last_record[5]
     with conn:
         for record in batch:
             conn.execute(
@@ -352,9 +353,9 @@ def _commit_batch(conn: sqlite3.Connection, archive_id: str, digest: str, batch:
         count = conn.execute("SELECT COUNT(*) FROM raw_conversations WHERE archive_id=? AND source_sha256=?",
                              (archive_id, digest)).fetchone()[0]
         conn.execute("UPDATE imports SET next_ordinal=?,next_byte_offset=?,last_source_locator=?,committed_conversations=?,updated_at=? WHERE archive_id=? AND source_sha256=?",
-                     (next_ordinal, last[9], last[2], count, utc_now(), archive_id, digest))
+                     (next_ordinal, last_record[9], last_record[2], count, utc_now(), archive_id, digest))
         add_event(conn, archive_id, digest, "BATCH_COMMITTED", last,
-                  {"first_ordinal": first, "last_ordinal": last, "batch_size": len(batch), "staged_total": count, "next_byte_offset": last[9], "last_source_locator": last[2]})
+                  {"first_ordinal": first, "last_ordinal": last, "batch_size": len(batch), "staged_total": count, "next_byte_offset": last_record[9], "last_source_locator": last_record[2]})
     return len(batch)
 
 
