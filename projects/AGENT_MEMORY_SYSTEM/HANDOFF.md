@@ -153,3 +153,12 @@
 - `IMPORT_READY` is a processing signal only, not authorization. A future workflow must have separate trusted trigger/permissions and must not run write-capable processing on untrusted PR input.
 - The repository is public; raw private chat exports must not be committed. Use sanitized structured records or private-reference-only metadata.
 - **Next action:** verify read-back and exact-head CI for this contract. If green, implement a dry-run route planner that reports intended logical views/updates from the existing registry, without writing canonical memory or rebuilding indexes yet. Keep PR #22 Draft/open/unmerged and do not touch `main`.
+
+
+## Handoff — dry-run router — 2026-10-14
+
+- Stage 1 inventory/gap map is documented in `projects/AGENT_MEMORY_SYSTEM/MEMORY_PIPELINE_GAP_ANALYSIS_2026-10-14.md`.
+- Stage 2 adds `schemas/memory_intake_manifest.schema.json`, an example, synthetic manifest/artifact fixtures, and dependency-free validation for schema version, status, source metadata, path containment and SHA-256. Exact-head CI passed for preceding checkpoint HEAD `258f6895e144b160fb82cd5a6d990fc294506a3d` in run [#38521126820](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38521126820).
+- Stage 3 adds `tools/plan_memory_intake.py` and `tests/test_memory_intake_planner.py`. The tool validates the batch then emits a read-only JSON route plan. It never writes to canonical memory or indexes; unknown artifact types go to quarantine; task-state and handoff changes are proposal-only.
+- **Next:** run exact-head CI for the planner; add relationship-endpoint and schema-version rejection cases. Do not create the writer or trigger workflow until dry-run routing and record-format compatibility are verified.
+- PR #22 remains open/Draft/unmerged; no changes to `main`.

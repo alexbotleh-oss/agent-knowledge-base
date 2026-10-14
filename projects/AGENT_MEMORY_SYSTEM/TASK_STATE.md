@@ -168,3 +168,11 @@
 - Corrected validator/schema alignment: absent source capture time is permitted and remains unknown; it is not replaced with review time. Added a regression test for this case.
 - Code/test commit: `94cdd01424d77f2158e385c2de1ad96948149d31`. The Git Data API update did not yet expose an associated workflow run at the time of this checkpoint; this does **not** mean CI passed. A fresh exact-head run must be observed before marking the contract green.
 - Contract validation remains metadata/hash/path validation only. It does not route artifacts, parse every type-specific record schema, write canonical memory or rebuild indexes.
+
+
+## Stage 3 — dry-run маршрутизация — 2026-10-14
+
+- Добавлен `tools/plan_memory_intake.py`: сначала проверка manifest + файлов/хешей, затем allowlist-based mapping в логические представления единого реестра.
+- Добавлены `tests/test_memory_intake_planner.py` для кандидата, явно одобренной записи, отказа при неверном хеше и карантина неизвестного типа.
+- Планировщик не пишет в память и индексы; изменения `task_state`/`handoff` только предлагаются. Это намеренное ограничение этапа.
+- Следующий шаг: CI exact HEAD, затем расширить тесты на связи и несовместимые версии схемы; только после этого проектировать staging/commit path в канонический реестр.

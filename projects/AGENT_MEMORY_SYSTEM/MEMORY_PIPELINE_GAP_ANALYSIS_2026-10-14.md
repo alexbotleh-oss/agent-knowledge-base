@@ -111,3 +111,11 @@ The follow-up check found additional existing components that narrow the impleme
 - Current CI for HEAD `58f237c80d74709a334b5e57e8c4cfcfb9ace500` was queued as run [#38520584849](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38520584849); re-check after contract changes.
 
 **Updated conclusion:** the repository has several useful, partially overlapping prototypes and a detailed target registry contract. The next implementation should add the smallest versioned *intake envelope* around existing artifact formats, validate it, and preserve the distinction between intake acceptance and long-term-memory approval. It should not build a new competing registry or a generic arbitrary-path router.
+
+
+## Этап 3 — dry-run план маршрутизации — 2026-10-14
+
+- Добавлен `tools/plan_memory_intake.py`. Он сначала вызывает валидатор манифеста, затем сопоставляет только известные `kind` с логическими представлениями единого реестра. Произвольные destination paths из манифеста не принимаются.
+- Добавлены `tests/test_memory_intake_planner.py`: кандидат направляется в candidate view; явно одобренная запись сохраняет статус одобрения; неверный хеш отклоняет всю партию без маршрутов; неизвестный тип отправляется в карантин.
+- Планировщик только печатает JSON-план и всегда сообщает `writes_performed: false`. Он не пишет в канонические библиотеки, не применяет task state/handoff и не перестраивает индексы.
+- Это первый проверяемый маршрут от манифеста к плану, не автоматический intake workflow и не end-to-end конвейер.
