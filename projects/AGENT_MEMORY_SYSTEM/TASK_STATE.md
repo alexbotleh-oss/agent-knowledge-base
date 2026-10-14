@@ -356,3 +356,12 @@ Tests added for first pass, completed replay, and a changed source under the sam
 - Exact-head CI PASS for the test commit `74777aede3df8528cd3e455e9e0bcd72144d57e2`: [run #432](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38548227060). The workflow's validation and unit tests passed.
 - **Boundary:** this validates a local connected path under fixtures, not distributed atomicity or automatic chat delivery. A crash after event publication but before task-state append is recoverable by explicit replay/replanning; no automatic reconciler currently finds all pending returns.
 - **Next step:** add a reconciliation/report tool that scans the canonical event log for child results without acknowledgement or accepted acknowledgement without a linked checkpoint update, produces a dry-run repair plan, and never mutates state without explicit apply and expected hashes.
+
+
+### Implementation checkpoint — child-return reconciliation report (2026-10-14)
+
+- Added `tools/reconcile_branch_returns.py` and `tests/test_reconcile_branch_returns.py`.
+- The report is read-only. It finds child results without an owner acknowledgement and accepted acknowledgements not referenced in any supplied TASK_STATE file. It reports candidate file hashes for a later guarded repair.
+- It rejects malformed event logs/missing task-state files and explicitly states that supplied files limit the search; it cannot prove a checkpoint is absent from every possible source.
+- Updated `core/unified_memory_control_loop.md`. CI verification for the final HEAD after this addition is pending.
+- Next: exact-head CI and read-back. If green, map the 12 UMC scenarios to implemented tests, partially covered behavior, and blocked runtime features. Do not add automatic mutation to the reconciler.
