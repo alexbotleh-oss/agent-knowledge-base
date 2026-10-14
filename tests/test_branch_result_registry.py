@@ -158,5 +158,39 @@ class BranchResultRegistryTests(unittest.TestCase):
 
 
 
+    def test_existing_writer_lock_fails_closed_without_modifying_journal(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "events.jsonl"
+            path.write_text("", encoding="utf-8")
+            lock = path.with_name(path.name + ".lock")
+            lock.write_text('{"pid":123}', encoding="utf-8")
+            before = path.read_bytes()
+            response = publish_result(path, sample_result())
+            self.assertEqual(response["status"], "LOCKED")
+            self.assertFalse(response["writes_performed"])
+            self.assertEqual(path.read_bytes(), before)
+            self.assertTrue(lock.exists())
+
+    def test_acknowledgement_cli_uses_same_validated_append_path(self):
+        import contextlib
+        import io
+        from branch_result_registry import main
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "events.jsonl"
+            published = publish_result(path, sample_result())
+            stdout = io.StringIO()
+            with contextlib.redirect_stdout(stdout):
+                code = main([
+                    str(path), "ack",
+                    "--result-event-id", published["event_id"],
+                    "--decision", "accepted",
+                    "--owner-ref", "explicit-owner-approval",
+                    "--at", "2026-10-14T12:00:00Z",
+                ])
+            self.assertEqual(code, 0)
+            self.assertEqual(json.loads(stdout.getvalue())["status"], "ACKNOWLEDGED")
+
+
+
 if __name__ == "__main__":
     unittest.main()
