@@ -48,7 +48,8 @@ class MutationVisitor(ast.NodeVisitor):
         name = ""
         if isinstance(node.func, ast.Attribute):
             name = node.func.attr
-            if name in MUTATING_METHODS or name in MUTATING_ATTRS:
+            receiver_is_os = isinstance(node.func.value, ast.Name) and node.func.value.id == "os"
+            if name in MUTATING_METHODS or (name in MUTATING_ATTRS and (name != "replace" or receiver_is_os)):
                 self.hits.append((node.lineno, self.function, name))
         elif isinstance(node.func, ast.Name) and node.func.id in {"open"}:
             mode = ""
