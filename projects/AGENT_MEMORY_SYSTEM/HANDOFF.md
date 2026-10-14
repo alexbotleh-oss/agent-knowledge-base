@@ -122,3 +122,11 @@
 - Re-fetch live PR metadata and workflow after this checkpoint commit; current commit updates only this handoff/state documentation. Do not say the newest HEAD passed until its own workflow finishes.
 - Remaining production hardening: ZIP resume seek behaviour at scale, concurrent invocation lock, injected process crash around transaction boundaries, benchmark on a real large archive, attachment completeness and source-scope reconciliation. Private exports stay local and must not be committed.
 - Continue the importer task. PR #22 remains Draft/open/unmerged because the broader PR has unrelated project histories without a verified preservation destination. Do not touch main.
+
+
+## Handoff checkpoint — ZIP resume test pending — 2026-10-14
+
+- A dedicated test now pauses a ZIP export after a committed batch and resumes from the stored byte offset inside conversations.json. This is specifically to validate ZIP-member seek behavior.
+- Test commit f100e40e9d68cbdbf4a9a2099beb2afc7a2c8133; workflow run #38519660453 was in progress at checkpoint. Check its conclusion before claiming this test passed.
+- Previous importer + offset implementation passed exact-head CI at b7344e351c260dab55f24a03e1c355f953124988. That result does not cover the later ZIP-specific test.
+- Next: inspect run #38519660453 and repair if needed; then decide on a concurrent-import lock and crash-injection test before production claims. Keep PR #22 Draft/open/unmerged; no changes to main.
