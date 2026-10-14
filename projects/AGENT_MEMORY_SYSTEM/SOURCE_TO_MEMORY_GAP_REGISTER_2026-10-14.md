@@ -17,6 +17,9 @@
 | GAP-011 | Latest guide creation commit ee7f8e3…; protocol-link commit 928f3db… | Universal user-facing export/context-transfer instructions now exist and are linked from technical intake protocol | File and link read-back verified; exact-head CI unavailable from PR-triggered workflow lookup | Verified persistence/read-back only | core/universal_chat_export_and_context_transfer.md; core/source_ingestion_protocol.md | Implemented as documentation; runtime and behavioral tests pending |
 | GAP-012 | Existing import protocol and prior task checkpoints | Resumable import must checkpoint stable source keys, be idempotent, and separate raw import from semantic analysis | Design recorded; actual runtime behavior and failure-injection coverage must be verified against exact current tree | Repository documentation/checkpoint; not an end-to-end claim | Importer tests and source manifest | Partially represented; verify exact HEAD, tests and runtime limits |
 
+
+| GAP-013 | User clarification in current continuation (2026-10-14); existing RECIPE_MANAGER/B77/CARD111 event records | Possible use of control CORE during Exit Manager, RECIPE_MANAGER («Что приготовить») and B77 work; some imported experience events may be unclassified CORE/control events rather than only app-specific history | Not yet verified which CORE version/rules were active in each project, nor which source events lack a classification; existing records mention CORE/Core Lite unevenly and cannot prove runtime/application | User-proposed hypothesis; related repository evidence is mixed and project-scoped | CORE version/activation timeline + source-event classification crosswalk; preserve app event and add a relation to CORE only when source evidence supports it | Open; inspect primary messages, version mentions, and event provenance before reclassifying any record |
+
 ## Confidence rules
 - Direct archive evidence means text visible in the supplied PDF extraction; it does not prove excluded binary attachments were present.
 - User clarification is direct evidence of the user's intended meaning/history, but is not independent implementation evidence.
@@ -26,7 +29,8 @@
 
 ## Immediate next steps
 1. Refresh exact branch HEAD and PR #22 state; distinguish preservation branch from PR head.
-2. Inspect the eight REVIEW_MIXED paths and both app-specific reconciliation reports.
+2. Inspect the eight formerly mixed paths and both app-specific reconciliation reports; preserve project boundaries while following evidence links to CORE/control where relevant.
 3. For GAP-005/GAP-006, create linked atomic event candidates only where message-level locators can be recovered; otherwise retain report-level provenance.
 4. Decide safe separate destinations for out-of-scope project histories before any removal from a scope-clean candidate.
-5. Run repository tests and exact-HEAD CI; do not infer success from an older SHA.
+5. Check whether CORE/control was active in Exit Manager, RECIPE_MANAGER and B77, using source-level evidence; distinguish CORE incidents, project incidents, and cross-links.
+6. Run repository tests and exact-HEAD CI; do not infer success from an older SHA.
