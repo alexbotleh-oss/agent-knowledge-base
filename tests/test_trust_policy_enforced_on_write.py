@@ -3,6 +3,8 @@ import json
 import sys
 import tempfile
 import unittest
+from concurrent.futures import ThreadPoolExecutor
+from threading import Barrier
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -130,6 +132,39 @@ class TrustPolicyEnforcedOnWriteTests(unittest.TestCase):
         self.assertEqual(result["status"], "REJECTED")
         self.assertFalse(result["writes_performed"])
         self.assertEqual(before, self.task_state.read_bytes())
+
+    def test_concurrent_checkpoint_writers_cannot_both_apply_same_revision(self):
+        _, _, verdict = self._restore_and_decide()
+        base_hash = hashlib.sha256(self.task_state.read_bytes()).hexdigest()
+        barrier = Barrier(2)
+
+        def attempt(update_id):
+            proposal = self._proposal()
+            proposal["update_id"] = update_id
+            proposal["expected_sha256"] = base_hash
+            barrier.wait(timeout=5)
+            return apply_checkpoint(
+                self.task_state, self.events, proposal, trust_verdict=verdict
+            )
+
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            futures = [
+                pool.submit(attempt, "UPDATE-CONCURRENT-A"),
+                pool.submit(attempt, "UPDATE-CONCURRENT-B"),
+            ]
+            results = [future.result(timeout=10) for future in futures]
+
+        statuses = [result["status"] for result in results]
+        self.assertEqual(statuses.count("APPLIED"), 1, statuses)
+        self.assertEqual(sum(status in {"LOCKED", "STALE_REVISION"} for status in statuses), 1, statuses)
+        state = self.task_state.read_text(encoding="utf-8")
+        self.assertEqual(
+            sum(marker in state for marker in (
+                "guarded-task-update:UPDATE-CONCURRENT-A",
+                "guarded-task-update:UPDATE-CONCURRENT-B",
+            )),
+            1,
+        )
 
     def test_journal_lock_contention_refuses_checkpoint_write(self):
         _, _, verdict = self._restore_and_decide()
