@@ -268,3 +268,13 @@ Tests added for first pass, completed replay, and a changed source under the sam
 - **Verification:** previous exact HEAD e9a50d2209894f2536035abf03ea56c937dfc39e passed CI run 38527148878. New protocol and state changes move HEAD; verify read-back and CI for the latest exact SHA before claiming PASS.
 - **Implementation gap:** this is still a documented design contract. Branch registry, automatic child-result return, source-owner notification/acknowledgement, derived-state refresh, and fault-injection tests are not yet implemented.
 - **Next step:** read back protocol and state files, check exact-head CI, then inspect the existing event/decision/task-state schemas and implement the smallest compatible branch-link/result-return path. PR #22 stays OPEN/DRAFT/UNMERGED; do not modify main.
+
+## Active checkpoint — idea sandbox and cross-chat synthesis (2026-10-14)
+
+- **User direction:** this belongs to the project «Настройка Агента» / AGENT_MEMORY_SYSTEM, not to the separate ORGANISM project.
+- **New artifact:** `projects/AGENT_MEMORY_SYSTEM/IDEA_SANDBOX.md` added on the working branch. It defines a provenance-preserving sandbox for ideas, alternatives, disagreements, hypotheses and emergent synthesis across chats/projects.
+- **Initial record:** `IDEA-AGMS-20261014-001` captures the proposal that independently discussed approaches can be connected later to produce a new hypothesis/solution. Exact source message IDs and full cross-chat chronology are not available in this record and are not invented.
+- **Key constraints:** no early forced project classification; record tool/technology/problem descriptors where known; preserve alternative positions and confidence states; a synthesis must link to source records; agreement among agents is not proof; validate with evidence/experiments; reuse existing source/event/edge/index structures instead of creating a parallel source of truth.
+- **Status:** the idea and operating rules are recorded. Automated ingestion from all chats, cross-chat discovery, agent debate orchestration and sandbox indexing are NOT implemented or verified.
+- **Next step:** inspect current source/event/edge schemas and existing indexes to map the idea-card format onto the current canonical structures, then implement a minimal compatible path and tests.
+- **Branch/PR guardrail:** work on `export/cross-project-experience-rollup-20261012`; PR #22 remains Draft/open/unmerged; do not modify `main`.
