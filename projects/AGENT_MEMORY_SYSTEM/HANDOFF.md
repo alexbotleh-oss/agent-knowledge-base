@@ -232,3 +232,12 @@ Code and tests are on the working branch. Tests cover first-pass classification,
 
 Network-level resumption of the export transfer itself is still not implemented/proven; this branch covers local import of an immutable snapshot. PR #22 stays draft/open/unmerged; do not modify main.
 
+
+## Handoff checkpoint — event continuity and unknown outcomes (2026-10-14)
+
+- User clarified the central failure mode: a break or attention/context switch can sever the relation between an event, an action, its result and the memory of having performed it. The agent may regenerate a different answer later, so fixed wording/rules alone cannot guarantee continuity.
+- Added `core/event_continuity_and_uncertainty.md` on this branch. It defines append-only event provenance, stable event/operation/task IDs, causal links, distinct execution/evidence states (INTENDED, PREPARED, ATTEMPTED, REPORTED_SUCCESS, VERIFIED, FAILED, UNKNOWN, CANCELLED, SUPERSEDED), checkpoint recovery order, cross-chat continuity packets and fault-injection tests.
+- Safety invariant: absence of a record is not evidence an event did not happen; a model-generated claim is not independent evidence; never silently convert UNKNOWN to DONE or NOT_DONE. If a side-effecting operation's acknowledgement is lost, check authoritative state or use supported idempotency before replaying.
+- New protocol is a design proposal, not an implemented guarantee. Automatic capture of every live chat/tool event, atomic durable journaling, cross-chat retrieval, idempotency integrations and fault-injection coverage remain unimplemented/unverified.
+- CI for the prior first-pass/resume exact HEAD `a2fc7d1ca1c13f542d155896da5a3cde7c48cd07` passed (run [38524792592](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38524792592)). New protocol/checkpoint commits change HEAD; verify exact-head CI again before claiming current branch green.
+- PR #22 remains OPEN/DRAFT/UNMERGED; do not change main or merge. Next step: read back the new protocol and state updates, check exact-head CI, then implement the smallest event-record/checkpoint path against existing schemas instead of building a separate parallel memory store.
