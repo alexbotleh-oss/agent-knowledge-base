@@ -350,3 +350,14 @@ Network-level resumption of the export transfer itself is still not implemented/
 - UMC-01 status changed to PARTIAL: a source-backed recovery packet is implemented/tested, but automatic new-chat startup and semantic validation are not.
 - This matrix change moves HEAD; check exact-head CI again.
 - Next: connect source intake to reviewed promotion and derived index refresh with a resumable operation ledger; add failure-injection tests at commit boundaries. Do not claim end-to-end readiness.
+
+
+### Handoff — source-and-goal preflight incident (2026-10-14)
+
+- **Active task remains:** develop and verify continuity/memory mechanisms in `agent-knowledge-base`; current subtask is evidence-backed prevention of context/source omissions.
+- **Incident:** four PDF volumes were already available, but the assistant asked for them again. Source record: `projects/AGENT_MEMORY_SYSTEM/SOURCE_AND_GOAL_PREFLIGHT_INCIDENT_2026-10-14.md`; event EVT-AGMS-20261014-003; lesson L-AGMS-20261014-003.
+- **Prevention text added:** SOURCE-AND-GOAL PREFLIGHT in `core/universal_instructions.md`, referenced by `core/agent_runtime_protocol.md`. It requires checking the active goal, currently available files, processing status, already completed steps, and concrete grounds for any resend request.
+- **Important correction retained:** EVT-AGMS-20261014-004 removes an unsupported same-day temporal edge from EVT-AGMS-003. Do not silently edit the historical record.
+- **Local analysis artifact:** `/mnt/data/Анализ_ошибок_агента_и_меры_предотвращения_2026-10-14.md` contains the initial cross-volume analysis and prevention/test matrix. It is a first-pass report, not a claim of exhaustive semantic audit.
+- **Immediate next actions:** (1) read back all changed files; (2) parse `events.jsonl`, check unique IDs and correction overlay; (3) fetch live PR #22 head/state and exact-head CI; (4) create real tests/evaluation for CTX-01/CTX-02; (5) continue source-by-source incident reconciliation.
+- **Safety:** PR #22 stays Draft/open/unmerged; do not alter `main`. Existing scope drift (39 out-of-scope project-specific paths) remains unresolved. Documentation-only changes and passing CI do not prove the whole memory system is operational.
