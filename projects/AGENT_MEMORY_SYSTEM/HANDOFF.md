@@ -241,3 +241,14 @@ Network-level resumption of the export transfer itself is still not implemented/
 - New protocol is a design proposal, not an implemented guarantee. Automatic capture of every live chat/tool event, atomic durable journaling, cross-chat retrieval, idempotency integrations and fault-injection coverage remain unimplemented/unverified.
 - CI for the prior first-pass/resume exact HEAD `a2fc7d1ca1c13f542d155896da5a3cde7c48cd07` passed (run [38524792592](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38524792592)). New protocol/checkpoint commits change HEAD; verify exact-head CI again before claiming current branch green.
 - PR #22 remains OPEN/DRAFT/UNMERGED; do not change main or merge. Next step: read back the new protocol and state updates, check exact-head CI, then implement the smallest event-record/checkpoint path against existing schemas instead of building a separate parallel memory store.
+
+
+## Handoff checkpoint — source-owned checkpoints and child branches (2026-10-14)
+
+- User clarified that a checkpoint must remain owned by the project/chat/task that created it. When another chat/project uses it, the system should create a child branch and preserve lineage rather than transferring or overwriting ownership.
+- On child completion, report the evidence-backed result back to the source checkpoint. On resumption, the originating chat should see that the linked sub-question has been answered, avoid repeating the same investigation, and continue its plan or address the user's new request with updated memory.
+- Added this contract to core/event_continuity_and_uncertainty.md: ownership, source revision/hash, branch ID, reused facts/decisions/constraints, applicability, result propagation/acknowledgement, conflict handling, and eight required recovery tests.
+- Important distinction: referenced != solved; child work finished != source owner acknowledged; sub-question resolved != parent goal complete. Preserve old history and represent updates as linked events/derived current state.
+- Prior exact HEAD e9a50d2209894f2536035abf03ea56c937dfc39e passed CI run 38527148878. The latest protocol and state updates have new commits; verify the latest exact-head run before claiming current CI PASS.
+- Runtime remains unimplemented: no branch registry, automatic result return/notification, acknowledgement tracking, or derived-state updater yet. Do not imply that cross-chat propagation is already automatic.
+- Next action: read back the protocol and both state files, check exact-head CI, then implement and test the smallest compatible branch-link/result-return mechanism against existing event/task-state formats. PR #22 stays OPEN/DRAFT/UNMERGED; do not change main.
