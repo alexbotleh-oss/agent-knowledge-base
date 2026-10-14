@@ -84,7 +84,7 @@ class GuardedTaskStateUpdateTests(unittest.TestCase):
         first = apply_checkpoint(self.task_state, self.event_log, self.proposal, trust_verdict={"status": "AUTHORIZED_FOR_PLANNING"})
         before = self.task_state.read_bytes()
         changed = dict(self.proposal, checkpoint_markdown="- Different content under same update ID.")
-        second = apply_checkpoint(self.task_state, self.event_log, changed)
+        second = apply_checkpoint(self.task_state, self.event_log, changed, trust_verdict={"status": "AUTHORIZED_FOR_PLANNING"})
         self.assertEqual(first["status"], "APPLIED")
         self.assertEqual(second["status"], "CONFLICT")
         self.assertEqual(before, self.task_state.read_bytes())
