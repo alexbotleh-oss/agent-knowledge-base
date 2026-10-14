@@ -398,3 +398,10 @@ Network-level resumption of the export transfer itself is still not implemented/
 - Persistence/read-back verified for the guide and protocol link. No workflow run was returned for the protocol-link commit; exact-head CI is NOT VERIFIED. The guide is documentation, not an implemented automatic exporter or proof of model compliance.
 - Next: refresh exact branch HEAD and PR #22 metadata; inspect the eight REVIEW_MIXED paths and two app-specific reports; create event-level records only when message-level locators exist; preserve out-of-scope project histories before scope cleanup; run tests/CI on the exact resulting SHA.
 - Safety unchanged: no changes to main, no merge, no deletion of source material.
+
+
+## Latest verified continuation — 2026-10-14
+
+The bounded PR #22 path review is persisted in [PR22_MIXED_PATH_REVIEW_2026-10-14.md](PR22_MIXED_PATH_REVIEW_2026-10-14.md). The disposition manifest now covers all 134 current paths with zero rows left in `REVIEW_MIXED` (recounted from the manifest rows). Two application-specific reconciliation reports were copied byte-for-byte to their respective `projects/RECIPE_MANAGER/source_history/` and `projects/B77_HTML_PWA/source_history/` destinations; the original root copies remain in place. These copies preserve the evidence but do not by themselves make PR #22 scope-clean.
+
+**Current checkpoint:** branch `archive-reconciliation/deferred-20261014`; latest commit at the time of this handoff update is the commit returned by the immediately preceding GitHub write. Exact branch HEAD and CI must be refreshed before further claims. PR #22 remains unmerged; no `main` changes or deletions were made. Next operation is to refresh live PR metadata, inspect dependencies/references, and only then build a separate cleaned candidate.
