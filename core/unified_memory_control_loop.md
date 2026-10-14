@@ -144,3 +144,18 @@ CLI forms:
 - `python3 tools/branch_result_registry.py <events.jsonl> ack --result-event-id <event-id> --decision accepted|needs_review|rejected --owner-ref <evidence-ref> --at <ISO-8601>`
 
 These are explicit local operations. They do not dispatch chat messages, authenticate the owner reference, update task-state projections, or guarantee cross-host locking on every filesystem. Multi-process same-filesystem writes are guarded by exclusive lock-file creation; network/distributed filesystem behavior remains unverified.
+
+
+## 8. Guarded task-state projection update
+
+Implemented prototype: `tools/guarded_task_state_update.py`; tests: `tests/test_guarded_task_state_update.py`.
+
+- Appends a new checkpoint block to an existing project `TASK_STATE.md`; it never replaces prior checkpoint text.
+- Requires a caller-supplied expected SHA-256 of the exact current task-state file, a parent checkpoint ID, a stable update ID and a supporting event ID already present in a project `events.jsonl`.
+- Re-reads the task state after acquiring an exclusive lock. If the file changed since the proposal was made, returns `STALE_REVISION` without writing.
+- Exact replay is a no-op; reusing an update ID with changed content is a conflict; missing event evidence, invalid paths or an existing lock fail closed.
+- The lock is removed after a normal handled operation; a hard process crash can leave a stale lock and requires verified manual recovery.
+- This updates only the task-state checkpoint append. It does not regenerate HANDOFF or EVENT_LOG, authenticate the event's source, or determine that a parent acceptance criterion is satisfied. The caller remains responsible for recording truthful content and linking evidence.
+- The tool is restricted by path/name checks to `TASK_STATE.md` and `events.jsonl` under `projects/`, but path checks are not a substitute for repository/OS permissions.
+
+This is a guarded local projection primitive, not an automatic cross-chat restore mechanism. End-to-end integration and failure injection across event publication plus state update are still required.
