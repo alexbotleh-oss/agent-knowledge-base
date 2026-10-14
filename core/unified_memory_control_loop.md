@@ -133,3 +133,14 @@ Release interpretation: this closes only one narrow part of UMC-08 (durable link
 `tools/branch_result_registry.py` also exposes `acknowledge_result(...)`, which appends a separate `cross_branch_result_acknowledged` event referencing an existing child-result event. Allowed decisions are `accepted`, `needs_review`, and `rejected`; exact replay is idempotent, and changing a decision under the same acknowledgement identity is rejected as a conflict.
 
 The acknowledgement is append-only and does not edit the child event or mutate TASK_STATE. Even an `accepted` acknowledgement means only that the owner accepted that child result; the parent task controller must separately check acceptance criteria and update the current-state projection. The owner reference is an evidence locator supplied by the caller; the primitive cannot authenticate the human or prove the reference's truth. The CLI currently publishes result envelopes only; acknowledgement is available as a Python API, not yet wired into a dedicated CLI command or automatic chat workflow.
+
+
+### Writer coordination and command-line interface
+
+The result registry now acquires a fail-closed exclusive lock file around read/validate/append. If a lock already exists, it returns `LOCKED` without changing the journal; it never automatically deletes a stale lock because doing so could race a live writer. Recovery from a stale lock requires checking that no writer remains active, then manual removal. A process crash may therefore require operator recovery.
+
+CLI forms:
+- `python3 tools/branch_result_registry.py <events.jsonl> publish <result-envelope.json>`
+- `python3 tools/branch_result_registry.py <events.jsonl> ack --result-event-id <event-id> --decision accepted|needs_review|rejected --owner-ref <evidence-ref> --at <ISO-8601>`
+
+These are explicit local operations. They do not dispatch chat messages, authenticate the owner reference, update task-state projections, or guarantee cross-host locking on every filesystem. Multi-process same-filesystem writes are guarded by exclusive lock-file creation; network/distributed filesystem behavior remains unverified.
