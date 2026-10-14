@@ -200,5 +200,86 @@ class ResumableChatImportTests(unittest.TestCase):
                 conn.close()
 
 
+    def test_explicit_second_pass_resumes_from_last_confirmed_checkpoint(self):
+        """A fresh second pass must use the persisted cursor, not agent/chat memory."""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            source = self.make_source(root, 6)
+            out = root / "state"
+            archive_id = "ACCEPTANCE-TWO-PASS-001"
+
+            # Pass 1 is intentionally incomplete: stop only after a durable batch.
+            partial = import_export(
+                source, out, archive_id, batch_size=2, stop_after_batches=1
+            )
+            self.assertEqual(partial["status"], "PAUSED")
+            self.assertEqual(partial["committed_conversations"], 2)
+            self.assertEqual(partial["next_ordinal"], 2)
+            self.assertGreater(partial["next_byte_offset"], 0)
+            self.assertTrue(partial["last_source_locator"])
+            source_digest = partial["source_sha256"]
+
+            # Simulate a new agent/session: reconstruct the continuation point
+            # only from durable SQLite state, then invoke the same import identity.
+            conn = sqlite3.connect(out / "import.sqlite3")
+            try:
+                checkpoint = conn.execute(
+                    """SELECT source_sha256,status,next_ordinal,next_byte_offset,
+                              committed_conversations,last_source_locator
+                       FROM imports WHERE archive_id=?""",
+                    (archive_id,),
+                ).fetchone()
+                self.assertEqual(
+                    checkpoint,
+                    (
+                        source_digest, "PAUSED", 2, partial["next_byte_offset"],
+                        2, partial["last_source_locator"],
+                    ),
+                )
+            finally:
+                conn.close()
+
+            resumed = import_export(source, out, archive_id, batch_size=2)
+            self.assertEqual(resumed["status"], "RAW_COMPLETE")
+            self.assertEqual(resumed["source_sha256"], source_digest)
+            self.assertEqual(resumed["committed_conversations"], 6)
+            self.assertEqual(resumed["next_ordinal"], 6)
+
+            conn = sqlite3.connect(out / "import.sqlite3")
+            try:
+                rows = conn.execute(
+                    """SELECT source_ordinal,source_conversation_id,payload_sha256
+                       FROM raw_conversations
+                       WHERE archive_id=? AND source_sha256=?
+                       ORDER BY source_ordinal""",
+                    (archive_id, source_digest),
+                ).fetchall()
+                events = [
+                    row[0] for row in conn.execute(
+                        """SELECT event_type FROM import_events
+                           WHERE archive_id=? AND source_sha256=? ORDER BY event_id""",
+                        (archive_id, source_digest),
+                    )
+                ]
+                self.assertEqual([row[0] for row in rows], list(range(6)))
+                self.assertEqual(
+                    [row[1] for row in rows],
+                    [f"conversation-{i}" for i in range(6)],
+                )
+                self.assertEqual(len({row[2] for row in rows}), 6)
+                self.assertIn("PAUSED_FOR_TEST", events)
+                self.assertIn("RESUME", events)
+                self.assertEqual(
+                    conn.execute(
+                        """SELECT status,committed_conversations,next_ordinal
+                           FROM imports WHERE archive_id=? AND source_sha256=?""",
+                        (archive_id, source_digest),
+                    ).fetchone(),
+                    ("RAW_COMPLETE", 6, 6),
+                )
+            finally:
+                conn.close()
+
+
 if __name__ == "__main__":
     unittest.main()
