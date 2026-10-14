@@ -14,7 +14,7 @@ Statuses: KEEP_CORE; KEEP_AGMS; KEEP_TRANSFERABLE_LESSON; SEPARATE_PROJECT_MEMOR
 | 6 | `SOURCE_ARCHIVE_AUDIT_2026-10-12.md` | KEEP_AGMS | Source coverage/provenance audit for memory-transfer task; verify no unnecessary app history. |
 | 7 | `SOURCE_RECONCILIATION_APK_BUILD_2026-10-13.md` | PRESERVE_RAW_OUT_OF_SCOPE | Full report preserved at `projects/RECIPE_MANAGER/source_history/SOURCE_RECONCILIATION_APK_BUILD_2026-10-13.md`; retain original root copy until a separately validated PR candidate excludes it. |
 | 8 | `SOURCE_RECONCILIATION_B77_HTML_REGRESSIONS_2026-10-13.md` | PRESERVE_RAW_OUT_OF_SCOPE | Full report preserved at `projects/B77_HTML_PWA/source_history/SOURCE_RECONCILIATION_B77_HTML_REGRESSIONS_2026-10-13.md`; retain original root copy until a separately validated PR candidate excludes it. |
-| 9 | `SOURCE_REPORTS_AUDIT_2026-10-13.md` | REVIEW_MIXED | Mixed report audit; retain only cross-project methodology after narrowing. |
+| 9 | `SOURCE_REPORTS_AUDIT_2026-10-13.md` | KEEP_AGMS | Direct audit methodology: copied report text vs incidents, chronology, evidence grading, source coverage, and structural vs semantic completeness. Preserve its limitations; no broad re-audit without contradictory evidence. |
 | 10 | `SOURCE_TIMELINE_RECONCILIATION_37_VS_74_2026-10-13.md` | KEEP_AGMS | Source coverage/provenance audit for memory-transfer task; verify no unnecessary app history. |
 | 11 | `UNIFIED_MEMORY_REGISTRY_AND_SAFE_ENRICHMENT_2026-10-13.md` | KEEP_AGMS | Memory architecture for snapshots, provenance, lineage, staging, idempotence, retrieval and integrity; does not establish that all runtime integration/rollback is implemented. |
 | 12 | `core/agent_runtime_protocol.md` | KEEP_CORE | Universal memory architecture, implementation, schema, fixture or test; confirm dependencies before scope removal. |
@@ -36,7 +36,7 @@ Statuses: KEEP_CORE; KEEP_AGMS; KEEP_TRANSFERABLE_LESSON; SEPARATE_PROJECT_MEMOR
 | 28 | `core/unified_memory_control_loop.md` | KEEP_CORE | Universal memory architecture, implementation, schema, fixture or test; confirm dependencies before scope removal. |
 | 29 | `core/universal_instructions.md` | KEEP_CORE | Universal memory architecture, implementation, schema, fixture or test; confirm dependencies before scope removal. |
 | 30 | `core/visual_diagnostics.md` | KEEP_CORE | Universal memory architecture, implementation, schema, fixture or test; confirm dependencies before scope removal. |
-| 31 | `lessons/cross_project_review_20261012.md` | REVIEW_MIXED | Review path contents and dependencies before deciding. |
+| 31 | `lessons/cross_project_review_20261012.md` | KEEP_TRANSFERABLE_LESSON | Retain only general prevention rules and explicit project-boundary distinctions; full B77 and RECIPE_MANAGER event histories remain in their own project memories. |
 | 32 | `lessons/global/LESSONS.md` | KEEP_TRANSFERABLE_LESSON | Shared lessons; retain only entries with source provenance and no project-only detail. |
 | 33 | `lessons/global/README.md` | KEEP_TRANSFERABLE_LESSON | Shared lessons; retain only entries with source provenance and no project-only detail. |
 | 34 | `lessons/global/records.jsonl` | KEEP_TRANSFERABLE_LESSON | Shared lessons; retain only entries with source provenance and no project-only detail. |
@@ -141,7 +141,7 @@ Statuses: KEEP_CORE; KEEP_AGMS; KEEP_TRANSFERABLE_LESSON; SEPARATE_PROJECT_MEMOR
 | 133 | `tools/temporal_memory_model.py` | KEEP_CORE | Universal memory architecture, implementation, schema, fixture or test; confirm dependencies before scope removal. |
 | 134 | `tools/validate_memory.py` | KEEP_CORE | Universal memory architecture, implementation, schema, fixture or test; confirm dependencies before scope removal. |
 
-Total: 134 paths. Updated status counts after bounded content review: REVIEW_MIXED=1, KEEP_AGMS=18, KEEP_CORE=52, KEEP_TRANSFERABLE_LESSON=3, SEPARATE_PROJECT_MEMORY=37, PRESERVE_RAW_OUT_OF_SCOPE=22. The sole remaining REVIEW_MIXED row is `SOURCE_REPORTS_AUDIT_2026-10-13.md` only if the exact row above did not match; if that row is KEEP_AGMS, recount the manifest before relying on these counts.
+Total: 134 paths. Updated status counts after bounded content review: REVIEW_MIXED=0, KEEP_AGMS=19, KEEP_CORE=52, KEEP_TRANSFERABLE_LESSON=4, SEPARATE_PROJECT_MEMORY=37, PRESERVE_RAW_OUT_OF_SCOPE=22.
 
 ## Safety
 
