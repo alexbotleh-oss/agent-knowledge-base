@@ -6,17 +6,17 @@ Statuses: KEEP_CORE; KEEP_AGMS; KEEP_TRANSFERABLE_LESSON; SEPARATE_PROJECT_MEMOR
 
 | # | Path | Proposed status | Rationale / required handling |
 |---:|---|---|---|
-| 1 | `ARCHIVE_TEMPORAL_ROUNDTRIP_AND_RECURRENCE_PROBE_2026-10-13.md` | REVIEW_MIXED | Review path contents and dependencies before deciding. |
-| 2 | `BIDIRECTIONAL_TEMPORAL_CONTEXT_RETRIEVAL_2026-10-13.md` | REVIEW_MIXED | Review path contents and dependencies before deciding. |
+| 1 | `ARCHIVE_TEMPORAL_ROUNDTRIP_AND_RECURRENCE_PROBE_2026-10-13.md` | KEEP_AGMS | Temporal round-trip fixture evidence and recurrence-probe caveats; retain as memory-system validation evidence, not as independent incident counts. |
+| 2 | `BIDIRECTIONAL_TEMPORAL_CONTEXT_RETRIEVAL_2026-10-13.md` | KEEP_AGMS | Memory-system design for bidirectional temporal retrieval, lineage, causal/impact traces, and a proposed test plan; do not overstate requirements as implementation. |
 | 3 | `CHAT_EXPORT_COVERAGE_2026-10-12.md` | KEEP_AGMS | Source coverage/provenance audit for memory-transfer task; verify no unnecessary app history. |
-| 4 | `MEMORY_ARCHITECTURE_GAP_EVOLVING_KNOWLEDGE_2026-10-13.md` | REVIEW_MIXED | Review path contents and dependencies before deciding. |
+| 4 | `MEMORY_ARCHITECTURE_GAP_EVOLVING_KNOWLEDGE_2026-10-13.md` | KEEP_AGMS | Direct analysis of evolving-memory gaps; distinguishes partial vertical slices from missing end-to-end integration. |
 | 5 | `README.md` | KEEP_CORE | Repository entrypoint; review links against files retained in scope. |
 | 6 | `SOURCE_ARCHIVE_AUDIT_2026-10-12.md` | KEEP_AGMS | Source coverage/provenance audit for memory-transfer task; verify no unnecessary app history. |
-| 7 | `SOURCE_RECONCILIATION_APK_BUILD_2026-10-13.md` | REVIEW_MIXED | Application-specific reconciliation report; distill only general memory-process lesson and preserve project details separately. |
-| 8 | `SOURCE_RECONCILIATION_B77_HTML_REGRESSIONS_2026-10-13.md` | REVIEW_MIXED | Application-specific reconciliation report; distill only general memory-process lesson and preserve project details separately. |
+| 7 | `SOURCE_RECONCILIATION_APK_BUILD_2026-10-13.md` | PRESERVE_RAW_OUT_OF_SCOPE | Full report preserved at `projects/RECIPE_MANAGER/source_history/SOURCE_RECONCILIATION_APK_BUILD_2026-10-13.md`; retain original root copy until a separately validated PR candidate excludes it. |
+| 8 | `SOURCE_RECONCILIATION_B77_HTML_REGRESSIONS_2026-10-13.md` | PRESERVE_RAW_OUT_OF_SCOPE | Full report preserved at `projects/B77_HTML_PWA/source_history/SOURCE_RECONCILIATION_B77_HTML_REGRESSIONS_2026-10-13.md`; retain original root copy until a separately validated PR candidate excludes it. |
 | 9 | `SOURCE_REPORTS_AUDIT_2026-10-13.md` | REVIEW_MIXED | Mixed report audit; retain only cross-project methodology after narrowing. |
 | 10 | `SOURCE_TIMELINE_RECONCILIATION_37_VS_74_2026-10-13.md` | KEEP_AGMS | Source coverage/provenance audit for memory-transfer task; verify no unnecessary app history. |
-| 11 | `UNIFIED_MEMORY_REGISTRY_AND_SAFE_ENRICHMENT_2026-10-13.md` | REVIEW_MIXED | Review path contents and dependencies before deciding. |
+| 11 | `UNIFIED_MEMORY_REGISTRY_AND_SAFE_ENRICHMENT_2026-10-13.md` | KEEP_AGMS | Memory architecture for snapshots, provenance, lineage, staging, idempotence, retrieval and integrity; does not establish that all runtime integration/rollback is implemented. |
 | 12 | `core/agent_runtime_protocol.md` | KEEP_CORE | Universal memory architecture, implementation, schema, fixture or test; confirm dependencies before scope removal. |
 | 13 | `core/chat_lifecycle_protocol.md` | KEEP_CORE | Universal memory architecture, implementation, schema, fixture or test; confirm dependencies before scope removal. |
 | 14 | `core/chat_memory_collection_task.md` | KEEP_CORE | Universal memory architecture, implementation, schema, fixture or test; confirm dependencies before scope removal. |
@@ -141,7 +141,7 @@ Statuses: KEEP_CORE; KEEP_AGMS; KEEP_TRANSFERABLE_LESSON; SEPARATE_PROJECT_MEMOR
 | 133 | `tools/temporal_memory_model.py` | KEEP_CORE | Universal memory architecture, implementation, schema, fixture or test; confirm dependencies before scope removal. |
 | 134 | `tools/validate_memory.py` | KEEP_CORE | Universal memory architecture, implementation, schema, fixture or test; confirm dependencies before scope removal. |
 
-Total: 134 paths. Proposed status counts: REVIEW_MIXED=8, KEEP_AGMS=14, KEEP_CORE=52, KEEP_TRANSFERABLE_LESSON=3, SEPARATE_PROJECT_MEMORY=37, PRESERVE_RAW_OUT_OF_SCOPE=20.
+Total: 134 paths. Updated status counts after bounded content review: REVIEW_MIXED=1, KEEP_AGMS=18, KEEP_CORE=52, KEEP_TRANSFERABLE_LESSON=3, SEPARATE_PROJECT_MEMORY=37, PRESERVE_RAW_OUT_OF_SCOPE=22. The sole remaining REVIEW_MIXED row is `SOURCE_REPORTS_AUDIT_2026-10-13.md` only if the exact row above did not match; if that row is KEEP_AGMS, recount the manifest before relying on these counts.
 
 ## Safety
 
