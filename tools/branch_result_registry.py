@@ -80,7 +80,7 @@ def _load_events(path: Path) -> list[dict[str, Any]]:
     return events
 
 
-def publish_result(event_log: Path, result: dict[str, Any]) -> dict[str, Any]:
+def _publish_result_unlocked(event_log: Path, result: dict[str, Any]) -> dict[str, Any]:
     """Validate and append a linked result; exact replay is a no-op, ID conflict fails."""
     errors = validate_result(result)
     if errors:
@@ -161,7 +161,7 @@ def publish_result(event_log: Path, result: dict[str, Any]) -> dict[str, Any]:
 
 
 
-def acknowledge_result(
+def _acknowledge_result_unlocked(
     event_log: Path,
     result_event_id: str,
     decision: str,
@@ -253,15 +253,74 @@ def acknowledge_result(
     }
 
 
+
+def _run_exclusive(event_log: Path, operation, *args) -> dict[str, Any]:
+    """Fail closed if another writer holds the journal lock; never auto-break stale locks."""
+    event_log = Path(event_log)
+    event_log.parent.mkdir(parents=True, exist_ok=True)
+    lock_path = event_log.with_name(event_log.name + ".lock")
+    try:
+        fd = os.open(lock_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+    except FileExistsError:
+        return {
+            "status": "LOCKED",
+            "writes_performed": False,
+            "error": f"Journal lock exists: {lock_path}. Verify no writer is active before manual stale-lock recovery.",
+        }
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as lock_stream:
+            lock_stream.write(json.dumps({"pid": os.getpid(), "started_at": utc_now()}))
+            lock_stream.flush()
+            os.fsync(lock_stream.fileno())
+        return operation(event_log, *args)
+    finally:
+        lock_path.unlink(missing_ok=True)
+
+
+def publish_result(event_log: Path, result: dict[str, Any]) -> dict[str, Any]:
+    return _run_exclusive(event_log, _publish_result_unlocked, result)
+
+
+def acknowledge_result(
+    event_log: Path,
+    result_event_id: str,
+    decision: str,
+    owner_ref: str,
+    acknowledged_at: str,
+    notes: str = "",
+) -> dict[str, Any]:
+    return _run_exclusive(
+        event_log, _acknowledge_result_unlocked,
+        result_event_id, decision, owner_ref, acknowledged_at, notes,
+    )
+
+
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("event_log", type=Path, help="canonical projects/AGENT_MEMORY_SYSTEM/events.jsonl")
-    parser.add_argument("result_json", type=Path, help="child result envelope JSON")
+    subparsers = parser.add_subparsers(dest="command", required=True)
+
+    publish_parser = subparsers.add_parser("publish", help="publish a child-result JSON envelope")
+    publish_parser.add_argument("result_json", type=Path)
+
+    ack_parser = subparsers.add_parser("ack", help="append explicit parent-owner acknowledgement")
+    ack_parser.add_argument("--result-event-id", required=True)
+    ack_parser.add_argument("--decision", choices=("accepted", "needs_review", "rejected"), required=True)
+    ack_parser.add_argument("--owner-ref", required=True, help="reference proving/locating the owner's explicit decision")
+    ack_parser.add_argument("--at", required=True, help="ISO-8601 timestamp with timezone")
+    ack_parser.add_argument("--notes", default="")
+
     args = parser.parse_args(argv)
-    result = json.loads(args.result_json.read_text(encoding="utf-8"))
-    response = publish_result(args.event_log, result)
+    if args.command == "publish":
+        result = json.loads(args.result_json.read_text(encoding="utf-8"))
+        response = publish_result(args.event_log, result)
+    else:
+        response = acknowledge_result(
+            args.event_log, args.result_event_id, args.decision,
+            args.owner_ref, args.at, args.notes,
+        )
     print(json.dumps(response, ensure_ascii=False, indent=2))
-    return 0 if response["status"] in {"RESULT_REPORTED", "ALREADY_PUBLISHED"} else 2
+    return 0 if response["status"] in {"RESULT_REPORTED", "ALREADY_PUBLISHED", "ACKNOWLEDGED", "ALREADY_ACKNOWLEDGED"} else 2
 
 
 if __name__ == "__main__":
