@@ -126,3 +126,10 @@ Implemented component: `tools/branch_result_registry.py`. Tests: `tests/test_bra
 - This component is a local repository primitive, not an automatic ChatGPT cross-chat message bus. The caller must have repository access and explicitly invoke it. Updating the human-readable EVENT_LOG, notifying the owner, recording acknowledgement, and refreshing TASK_STATE/HANDOFF are not automated by this primitive.
 
 Release interpretation: this closes only one narrow part of UMC-08 (durable linked result publication). It does not make UMC-08 end-to-end PASS and does not satisfy the whole release gate.
+
+
+### Explicit parent acknowledgement primitive
+
+`tools/branch_result_registry.py` also exposes `acknowledge_result(...)`, which appends a separate `cross_branch_result_acknowledged` event referencing an existing child-result event. Allowed decisions are `accepted`, `needs_review`, and `rejected`; exact replay is idempotent, and changing a decision under the same acknowledgement identity is rejected as a conflict.
+
+The acknowledgement is append-only and does not edit the child event or mutate TASK_STATE. Even an `accepted` acknowledgement means only that the owner accepted that child result; the parent task controller must separately check acceptance criteria and update the current-state projection. The owner reference is an evidence locator supplied by the caller; the primitive cannot authenticate the human or prove the reference's truth. The CLI currently publishes result envelopes only; acknowledgement is available as a Python API, not yet wired into a dedicated CLI command or automatic chat workflow.
