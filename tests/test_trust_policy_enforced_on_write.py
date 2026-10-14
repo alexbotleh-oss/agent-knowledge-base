@@ -116,11 +116,11 @@ class TrustPolicyEnforcedOnWriteTests(unittest.TestCase):
         self.assertFalse(result["writes_performed"])
         self.assertEqual(before, self.task_state.read_bytes())
 
-    def test_handoff_change_after_authorization_refuses_write(self):
+    def test_event_log_change_after_authorization_refuses_write(self):
         _, _, verdict = self._restore_and_decide()
         self.assertEqual(verdict["status"], "AUTHORIZED_FOR_PLANNING")
-        # The task-state hash is unchanged; only a second canonical source changes.
-        self.handoff.write_text("# HANDOFF\\n", encoding="utf-8")
+        # The task-state hash is unchanged; linked event evidence disappears.
+        self.events.write_text("", encoding="utf-8")
         before = self.task_state.read_bytes()
 
         result = apply_checkpoint(
