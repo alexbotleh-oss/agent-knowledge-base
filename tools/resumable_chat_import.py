@@ -59,8 +59,8 @@ def immutable_snapshot(source: Path, output: Path) -> tuple[Path, str, int]:
     return target, digest, size
 
 
-def iter_json_array(stream: BinaryIO, chunk_size: int = 65536) -> Iterator[tuple[int, dict[str, Any]]]:
-    """Yield (zero-based ordinal, object) from a top-level JSON array.
+def iter_json_array(stream: BinaryIO, chunk_size: int = 65536, *, start_offset: int = 0, start_ordinal: int = 0) -> Iterator[tuple[int, dict[str, Any], int]]:
+    """Yield (zero-based ordinal, object, byte offset after object) from a top-level JSON array.
 
     Uses incremental decoding so the full export is not loaded into RAM. A
     single conversation object is decoded at a time. The immutable source file
@@ -73,10 +73,14 @@ def iter_json_array(stream: BinaryIO, chunk_size: int = 65536) -> Iterator[tuple
     buffer = ""
     pos = 0
     eof = False
+    base_byte_offset = start_offset
+    if start_offset:
+        stream.seek(start_offset)
 
     def refill() -> None:
-        nonlocal buffer, pos, eof
+        nonlocal buffer, pos, eof, base_byte_offset
         if pos:
+            base_byte_offset += len(buffer[:pos].encode("utf-8"))
             buffer = buffer[pos:]
             pos = 0
         raw = stream.read(chunk_size)
@@ -96,15 +100,19 @@ def iter_json_array(stream: BinaryIO, chunk_size: int = 65536) -> Iterator[tuple
                 return
             refill()
 
-    whitespace()
-    while not buffer and not eof:
-        refill()
+    if start_offset:
+        ordinal = start_ordinal
+        expect_value = False  # Cursor points immediately after the last committed object.
+    else:
         whitespace()
-    if pos >= len(buffer) or buffer[pos] != "[":
-        raise ValueError("Export root must be a JSON array")
-    pos += 1
-    ordinal = 0
-    expect_value = True
+        while not buffer and not eof:
+            refill()
+            whitespace()
+        if pos >= len(buffer) or buffer[pos] != "[":
+            raise ValueError("Export root must be a JSON array")
+        pos += 1
+        ordinal = 0
+        expect_value = True
     while True:
         whitespace()
         if pos >= len(buffer):
@@ -139,7 +147,8 @@ def iter_json_array(stream: BinaryIO, chunk_size: int = 65536) -> Iterator[tuple
                 refill()
         if not isinstance(item, dict):
             raise ValueError(f"Conversation at ordinal {ordinal} is not a JSON object")
-        yield ordinal, item
+        end_byte_offset = base_byte_offset + len(buffer[:end].encode("utf-8"))
+        yield ordinal, item, end_byte_offset
         ordinal += 1
         pos = end
         expect_value = False
@@ -184,6 +193,8 @@ def connect(database: Path) -> sqlite3.Connection:
             committed_conversations INTEGER NOT NULL DEFAULT 0,
             last_error TEXT,
             updated_at TEXT NOT NULL,
+            next_byte_offset INTEGER NOT NULL DEFAULT 0,
+            last_source_locator TEXT,
             PRIMARY KEY (archive_id, source_sha256)
         );
         CREATE TABLE IF NOT EXISTS raw_conversations (
@@ -196,6 +207,7 @@ def connect(database: Path) -> sqlite3.Connection:
             payload_json TEXT NOT NULL,
             payload_sha256 TEXT NOT NULL,
             imported_at TEXT NOT NULL,
+            source_end_byte_offset INTEGER NOT NULL DEFAULT 0,
             PRIMARY KEY (archive_id, source_sha256, source_locator),
             UNIQUE (archive_id, source_sha256, source_ordinal),
             FOREIGN KEY (archive_id, source_sha256)
@@ -211,6 +223,15 @@ def connect(database: Path) -> sqlite3.Connection:
             occurred_at TEXT NOT NULL
         );
     """)
+    # Additive migrations keep an existing prototype database resumable.
+    for table, column, declaration in (
+        ("imports", "next_byte_offset", "INTEGER NOT NULL DEFAULT 0"),
+        ("imports", "last_source_locator", "TEXT"),
+        ("raw_conversations", "source_end_byte_offset", "INTEGER NOT NULL DEFAULT 0"),
+    ):
+        existing = {row[1] for row in conn.execute(f"PRAGMA table_info({table})")}
+        if column not in existing:
+            conn.execute(f"ALTER TABLE {table} ADD COLUMN {column} {declaration}")
     return conn
 
 
@@ -234,7 +255,7 @@ def import_export(source: Path, output: Path, archive_id: str, batch_size: int =
     conn = connect(db_path)
     try:
         row = conn.execute(
-            "SELECT status,next_ordinal,committed_conversations,parser_version FROM imports WHERE archive_id=? AND source_sha256=?",
+            "SELECT status,next_ordinal,committed_conversations,parser_version,next_byte_offset FROM imports WHERE archive_id=? AND source_sha256=?",
             (archive_id, digest),
         ).fetchone()
         if row and row[3] != PARSER_VERSION:
@@ -246,9 +267,9 @@ def import_export(source: Path, output: Path, archive_id: str, batch_size: int =
                     (archive_id, digest, str(snapshot), byte_size, PARSER_VERSION, SCHEMA_VERSION, "REGISTERED", 0, 0, utc_now()),
                 )
                 add_event(conn, archive_id, digest, "REGISTERED", None, {"snapshot_path": str(snapshot), "bytes": byte_size})
-            next_ordinal = committed = 0
+            next_ordinal = committed = next_byte_offset = 0
         else:
-            next_ordinal, committed = int(row[1]), int(row[2])
+            next_ordinal, committed, next_byte_offset = int(row[1]), int(row[2]), int(row[4])
 
         with conn:
             conn.execute("UPDATE imports SET status='STAGING',last_error=NULL,updated_at=? WHERE archive_id=? AND source_sha256=?",
@@ -259,22 +280,27 @@ def import_export(source: Path, output: Path, archive_id: str, batch_size: int =
         archive = None
         batch: list[tuple] = []
         batches_this_run = 0
-        seen_count = 0
+        seen_count = next_ordinal if next_byte_offset else 0
         try:
             archive, stream = open_conversation_stream(snapshot)
             with stream:
-                for ordinal, conversation in iter_json_array(stream):
+                parser_offset = next_byte_offset
+                parser_ordinal = next_ordinal if next_byte_offset else 0
+                for ordinal, conversation, end_byte_offset in iter_json_array(
+                    stream, start_offset=parser_offset, start_ordinal=parser_ordinal
+                ):
                     seen_count = ordinal + 1
-                    if ordinal < next_ordinal:
+                    if not next_byte_offset and ordinal < next_ordinal:
                         continue
                     cid, identity_method = conversation_id(conversation, ordinal)
                     locator = f"{archive_id}/{digest}/{cid}" if identity_method == "source_id" else f"{archive_id}/{digest}/{cid}"
                     payload = json.dumps(conversation, ensure_ascii=False, separators=(",", ":"))
                     payload_hash = hashlib.sha256(payload.encode("utf-8")).hexdigest()
-                    batch.append((archive_id, digest, locator, cid, identity_method, ordinal, payload, payload_hash, utc_now()))
+                    batch.append((archive_id, digest, locator, cid, identity_method, ordinal, payload, payload_hash, utc_now(), end_byte_offset))
                     if len(batch) >= batch_size:
                         committed += _commit_batch(conn, archive_id, digest, batch)
                         next_ordinal = ordinal + 1
+                        next_byte_offset = end_byte_offset
                         batch = []
                         batches_this_run += 1
                         if stop_after_batches is not None and batches_this_run >= stop_after_batches:
@@ -282,19 +308,20 @@ def import_export(source: Path, output: Path, archive_id: str, batch_size: int =
                                 conn.execute("UPDATE imports SET status='PAUSED',updated_at=? WHERE archive_id=? AND source_sha256=?",
                                              (utc_now(), archive_id, digest))
                                 add_event(conn, archive_id, digest, "PAUSED_FOR_TEST", next_ordinal,
-                                          {"committed_conversations": committed, "next_ordinal": next_ordinal})
+                                          {"committed_conversations": committed, "next_ordinal": next_ordinal, "next_byte_offset": next_byte_offset})
                             return _status(conn, archive_id, digest, db_path)
                 if batch:
                     committed += _commit_batch(conn, archive_id, digest, batch)
                     next_ordinal = batch[-1][5] + 1
+                    next_byte_offset = batch[-1][9]
                     batches_this_run += 1
             total = conn.execute("SELECT COUNT(*) FROM raw_conversations WHERE archive_id=? AND source_sha256=?",
                                  (archive_id, digest)).fetchone()[0]
             if total != seen_count:
                 raise RuntimeError(f"Staging count mismatch: staged={total}, source={seen_count}")
             with conn:
-                conn.execute("UPDATE imports SET status='RAW_COMPLETE',next_ordinal=?,committed_conversations=?,updated_at=? WHERE archive_id=? AND source_sha256=?",
-                             (seen_count, total, utc_now(), archive_id, digest))
+                conn.execute("UPDATE imports SET status='RAW_COMPLETE',next_ordinal=?,next_byte_offset=?,committed_conversations=?,updated_at=? WHERE archive_id=? AND source_sha256=?",
+                             (seen_count, next_byte_offset, total, utc_now(), archive_id, digest))
                 add_event(conn, archive_id, digest, "RAW_COMPLETE", seen_count,
                           {"source_conversations": seen_count, "staged_conversations": total})
             return _status(conn, archive_id, digest, db_path)
@@ -317,28 +344,28 @@ def _commit_batch(conn: sqlite3.Connection, archive_id: str, digest: str, batch:
         for record in batch:
             conn.execute(
                 """INSERT INTO raw_conversations
-                (archive_id,source_sha256,source_locator,source_conversation_id,identity_method,source_ordinal,payload_json,payload_sha256,imported_at)
-                VALUES(?,?,?,?,?,?,?,?,?) ON CONFLICT(archive_id,source_sha256,source_locator) DO NOTHING""",
+                (archive_id,source_sha256,source_locator,source_conversation_id,identity_method,source_ordinal,payload_json,payload_sha256,imported_at,source_end_byte_offset)
+                VALUES(?,?,?,?,?,?,?,?,?,?) ON CONFLICT(archive_id,source_sha256,source_locator) DO NOTHING""",
                 record,
             )
         next_ordinal = last + 1
         count = conn.execute("SELECT COUNT(*) FROM raw_conversations WHERE archive_id=? AND source_sha256=?",
                              (archive_id, digest)).fetchone()[0]
-        conn.execute("UPDATE imports SET next_ordinal=?,committed_conversations=?,updated_at=? WHERE archive_id=? AND source_sha256=?",
-                     (next_ordinal, count, utc_now(), archive_id, digest))
+        conn.execute("UPDATE imports SET next_ordinal=?,next_byte_offset=?,last_source_locator=?,committed_conversations=?,updated_at=? WHERE archive_id=? AND source_sha256=?",
+                     (next_ordinal, last[9], last[2], count, utc_now(), archive_id, digest))
         add_event(conn, archive_id, digest, "BATCH_COMMITTED", last,
-                  {"first_ordinal": first, "last_ordinal": last, "batch_size": len(batch), "staged_total": count})
+                  {"first_ordinal": first, "last_ordinal": last, "batch_size": len(batch), "staged_total": count, "next_byte_offset": last[9], "last_source_locator": last[2]})
     return len(batch)
 
 
 def _status(conn: sqlite3.Connection, archive_id: str, digest: str, db_path: Path) -> dict[str, Any]:
     row = conn.execute(
-        "SELECT status,next_ordinal,committed_conversations,last_error,snapshot_path,source_bytes FROM imports WHERE archive_id=? AND source_sha256=?",
+        "SELECT status,next_ordinal,committed_conversations,last_error,snapshot_path,source_bytes,next_byte_offset,last_source_locator FROM imports WHERE archive_id=? AND source_sha256=?",
         (archive_id, digest),
     ).fetchone()
     return {
         "archive_id": archive_id, "source_sha256": digest, "status": row[0],
-        "next_ordinal": row[1], "committed_conversations": row[2], "last_error": row[3],
+        "next_ordinal": row[1], "committed_conversations": row[2], "last_error": row[3], "next_byte_offset": row[6], "last_source_locator": row[7],
         "snapshot_path": row[4], "source_bytes": row[5], "database_path": str(db_path),
         "resume_command": "rerun the same command with the same source, output directory, and --archive-id",
     }
