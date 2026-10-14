@@ -94,3 +94,13 @@
 - The temporal model remains an isolated additive module, not yet integrated into import/canonicalization. Schema is not yet wired into CI validation. Local tests not run.
 - At the preceding check, CI run #38464883917 was queued for HEAD `88a7b5362d15366483c86c7c3be50c86bb9b1513`. Re-fetch PR #22 and the newest workflow run before claiming test status because subsequent checkpoint commits move HEAD.
 - Continue with exact-head CI inspection; if green, wire JSON Schema and tests into CI with backward-compatibility coverage. Do not merge PR #22; the scope/preservation issue remains unresolved and source completeness is PARTIAL.
+
+
+## Resume point — chat-history importer implementation — 2026-10-14
+
+- Active task is a real, fast, safe, resumable import of chat history. Do not repeat the accepted investigation of agent reports. Preserve source identity, raw source, chronology and provenance; semantic analysis is a separate later pass.
+- `tools/archive_registry_staging.py` was confirmed not resumable: it reads the entire export into memory and rewrites derived output as a whole. A new isolated tool `tools/resumable_chat_import.py` was added instead, with tests in `tests/test_resumable_chat_import.py` and invocation/limitations documented in `core/source_ingestion_protocol.md`.
+- Importer capabilities: SHA-256 snapshot copy/verification; incremental top-level JSON-array decode; ZIP support when exactly one `conversations.json` exists; SQLite local staging of full opaque conversation payloads; per-batch transaction that commits payloads, ordinal checkpoint and append-only event together; rerun/resume and unique source locator protection. It does not send private source content to GitHub.
+- CI passed on commit `d5bbb7a21e0e280c5fc6aa11ff4cc546bcac9774` (run [#38519218588](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38519218588)). A subsequent small payload-order fix and documentation/state updates created newer commits, so re-check exact HEAD CI before calling the current tree green.
+- Limitation to carry forward honestly: resume rescans the immutable source from the beginning to the saved ordinal; byte-offset/position index optimization remains future work. Source archive is byte-preserved, staged conversation payloads retain nested messages and parent/child links, but binary attachments are not extracted and no semantic analysis is performed.
+- Next action: check exact current HEAD and CI. Then add lost-ack/duplicate-ID recovery tests and optimize seek position only after tests remain green. PR #22 stays open/Draft/unmerged due to unresolved unrelated project-history preservation/scope concerns; never touch main.
