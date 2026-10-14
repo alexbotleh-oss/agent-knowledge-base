@@ -125,6 +125,10 @@ def extract_semantic_context(packet: dict[str, Any], *, verify_sources: bool = T
                 continue
             value = match.group(1).strip().rstrip(".")
             digest = task_digest if source == "TASK_STATE.md" else handoff_digest
+            # TASK_STATE is session-scoped and takes precedence over the
+            # project-level HANDOFF. HANDOFF fills only fields absent in TASK_STATE.
+            if source == "HANDOFF.md" and values[field] != UNKNOWN and values[field] != []:
+                break
             if field == "blockers":
                 values[field] = [value]
                 provenance[field] = [_ref(source, line, digest)]
