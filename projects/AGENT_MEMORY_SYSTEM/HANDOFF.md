@@ -367,3 +367,15 @@ Network-level resumption of the export transfer itself is still not implemented/
 - Read-back validated `events.jsonl`: 10 lines, 10 unique IDs, zero parse errors; append-only edge correction EVT-AGMS-20261014-004 removes an unsupported same-day relation.
 - CI run #38562931786 passed for the prior checkpoint, but no run/status was returned for commit `0e09c8acfbf4bd61758007fe6b8dcc4c1ed123b1`. After this handoff update, the head advances again; **exact-head CI is not verified** until a run tied to the final SHA is found.
 - Next safe step: fetch current branch/PR metadata and latest commit, obtain exact-head CI or run tests in a connected clone, then perform CTX-01/CTX-02 behavioral evaluation. Do not claim the preflight prevents live model errors until that evaluation passes.
+
+
+## Handoff refresh — PR #22 scope work (2026-10-14)
+
+- Active goal remains: transfer verified memory-system experience into `agent-knowledge-base`, reconcile the PDF archive against existing memory, and scope-clean PR #22 without losing provenance.
+- Live PR #22 currently lists 134 changed paths. Exact-head CI for `52ff4df1c13f65bb33e5ec2a122b387071e973ce` passed in [run 38563107303](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38563107303).
+- The previous “39 out-of-scope paths” note is not a complete path manifest and is stale. The 134-path list has been classified in first pass at `projects/AGENT_MEMORY_SYSTEM/PR22_PATH_DISPOSITION_MANIFEST_2026-10-14.md`; do not treat that proposed classification as final authorization to delete.
+- Current preservation branch: `archive-reconciliation/deferred-20261014`. It contains the archive reconciliation, corrected B77/LK project identity, scope audit and path disposition manifest. Read-back succeeded for these files. Latest known commit before this handoff append: `e63724027a44db650714aab0cb4cd5a281ce2977`; check live HEAD again after this append.
+- Scope categories from the current manifest: 52 KEEP_CORE, 14 KEEP_AGMS, 3 KEEP_TRANSFERABLE_LESSON, 37 SEPARATE_PROJECT_MEMORY, 20 PRESERVE_RAW_OUT_OF_SCOPE, 8 REVIEW_MIXED. These are proposed dispositions, not a final clean PR.
+- User correction: LK is the repository for the whole B77 project. Lite Cook is a simplified user-facing direction. The «Что приготовить» APK direction was planned for later unfreezing/integration; no completed merge is asserted.
+- No source files have been deleted; no changes to `main`; PR #22 has not been merged. The preservation branch retains the existing PR-head tree plus these reconciliation additions.
+- Next: review ambiguous paths and the 2 app-specific reconciliation reports; produce a final scope decision; remove or separate out-of-scope paths only after verified preservation; then validate the final candidate and obtain exact-head CI. Never infer a CI PASS from an earlier SHA.
