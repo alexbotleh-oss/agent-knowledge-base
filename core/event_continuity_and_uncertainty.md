@@ -111,3 +111,61 @@ Expected behavior: preserve chronology, never invent completion, avoid unsafe du
 ## Scope and limitations
 
 This document defines a protocol proposal. It does not itself implement durable storage, atomic writes, automatic capture of every chat/tool event, cross-chat retrieval, distributed locking, idempotency support, or network-resumable export. Those capabilities require implementation and fault-injection tests before they may be described as operational.
+
+
+## Checkpoint ownership and cross-chat branches
+
+A checkpoint belongs to the task/project/chat context that created it. Ownership identifies the authoritative origin and the context responsible for advancing that line of work; it does not grant exclusive rights to read or reference the checkpoint.
+
+When another chat or project uses an existing checkpoint as a basis for reasoning or action, create a child-branch record linked to the source checkpoint. Do not copy the source checkpoint as if the child created it, and do not mutate the source history in place.
+
+Each branch record should preserve, where available:
+- source checkpoint ID and owner scope (project/task/chat/session);
+- consuming branch ID and its owner scope;
+- the exact source revision/hash and the time it was read;
+- what was reused: facts, decision, method, hypothesis, constraint, or open question;
+- applicability assessment: accepted, adapted, rejected, or unresolved, with rationale;
+- new evidence, actions, decisions, outcomes, and links to their own event records;
+- whether the child result should be reported back to the source owner, and whether that report was delivered/acknowledged.
+
+A read/reference alone does not mean the child has solved the original question. Record branch states distinctly, for example: REFERENCED, IN_PROGRESS, RESULT_REPORTED, SOURCE_OWNER_ACKNOWLEDGED, and NEEDS_REVIEW. The source question is marked resolved only when there is evidence that its required outcome was achieved or the original owner explicitly accepts the result. A child branch may resolve a reusable sub-question while leaving the parent task open.
+
+### Returning knowledge to the source owner
+
+When a child branch reaches a meaningful result, append a cross-branch event pointing to the source checkpoint and report:
+1. which original question/decision it relates to;
+2. what the child did with the inherited material;
+3. the evidence-backed result and any limitations;
+4. whether the result confirms, extends, contradicts, or is inapplicable to the source decision;
+5. what, if anything, the source owner should update.
+
+The source history remains append-only. The parent task's *current view* may incorporate the child result through a linked event or derived projection, but the original checkpoint and historical state remain available. If new evidence changes a previously accepted conclusion, append a correction/supersession event; never rewrite the old event as though the new information had always been known.
+
+### Resume behavior in the originating chat
+
+On reopening the originating task, retrieve branch notifications/results attached to its checkpoint before deciding the next step. If the original question is now resolved, do not repeat the investigation: mark that subtask resolved with a link to the child evidence, then continue the original plan or respond to the user's new request using the updated state. Reopen/reassess only if the child result is unverified, conflicts with stronger evidence, has narrower scope, or new data changes the premises.
+
+This is not a global scan of every project on each turn. Use direct reverse links/indexes from checkpoint ID to its child branches and returned results. Updating the source task's current view should be proportional to the known related branches.
+
+### Ownership, resolution, and synchronization are separate
+
+- **Ownership:** who maintains the authoritative source task/checkpoint.
+- **Reference/lineage:** which child branches rely on that checkpoint.
+- **Resolution:** whether the specific question's acceptance criteria are satisfied.
+- **Propagation:** whether the source owner has received and incorporated a child result.
+- **Current view:** the latest derived state after applying linked events, without erasing historical states.
+
+Do not conflate these dimensions into one boolean such as DONE. A child may have finished its work while the parent has not yet received the result; a result may be received but require review; a sub-question may be resolved while the parent goal continues.
+
+## Required cross-branch recovery tests
+
+1. A child reads a source checkpoint; the source owner and source content/hash remain unchanged.
+2. A child completes a sub-question and records a result; the source task receives a linked result event without rewriting source history.
+3. The originating chat resumes and discovers the result, skips duplicate investigation, and advances to the next plan step.
+4. A child references a checkpoint but produces no result; the source question remains unresolved.
+5. A child result conflicts with the source decision; both histories remain, and the source becomes NEEDS_REVIEW rather than silently adopting either conclusion.
+6. A child adapts an idea to another project; applicability and new assumptions are explicit, and the source project is not mutated.
+7. The result is recorded but its delivery/acknowledgement is interrupted; propagation remains pending and is retried idempotently.
+8. Multiple child branches report results; source task state is derived from their distinct evidence and acceptance criteria, not from whichever report arrived last.
+
+These semantics are a design contract until the branch registry, result-return path, and recovery tests are implemented.
