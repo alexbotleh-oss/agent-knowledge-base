@@ -51,6 +51,10 @@ def apply_checkpoint(task_state: Path, event_log: Path, proposal: dict[str, Any]
 
     task_state = Path(task_state)
     event_log = Path(event_log)
+    if task_state.name != "TASK_STATE.md" or "projects" not in task_state.parts:
+        return {"status": "REJECTED", "errors": ["writes are restricted to a TASK_STATE.md under a projects/ directory"], "writes_performed": False}
+    if event_log.name != "events.jsonl" or "projects" not in event_log.parts:
+        return {"status": "REJECTED", "errors": ["event evidence must come from an events.jsonl under a projects/ directory"], "writes_performed": False}
     if not task_state.is_file() or not event_log.is_file():
         return {"status": "REJECTED", "errors": ["task state and canonical event log must already exist"], "writes_performed": False}
     marker = f"<!-- guarded-task-update:{proposal['update_id']} -->"
