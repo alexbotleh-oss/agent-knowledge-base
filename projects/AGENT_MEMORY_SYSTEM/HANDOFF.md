@@ -272,3 +272,10 @@ Network-level resumption of the export transfer itself is still not implemented/
 - Limits: no multi-writer locking; no automated owner notification/acknowledgement; no automatic EVENT_LOG or task-state projection refresh; not an all-chat service. UMC-08 is only partially implemented, not end-to-end passing.
 - Next: check exact-head CI and inspect test job; then implement safe acknowledgement/projection path or writer coordination, continuing the UMC acceptance matrix.
 - PR #22 remains OPEN/DRAFT/UNMERGED; do not change `main`.
+
+
+### Addendum — parent acknowledgement primitive (2026-10-14)
+
+- Added append-only `acknowledge_result(...)` API in `tools/branch_result_registry.py` and four tests. It acknowledges only a known child-result event; exact replay is idempotent, conflicting decision under the same identity is rejected, and no parent task file is mutated.
+- This separates delivery, owner acknowledgement and parent-task resolution. It is not authentication or an automatic chat signal; owner reference is supplied by caller.
+- Next: verify CI on exact latest HEAD; then implement a guarded derived-state update with expected revision, preserving append-only history. Multi-writer locking and dedicated CLI are still open.
