@@ -239,3 +239,9 @@
 - На промежуточном коммите 2ab65e1 тесты обнаружили две ошибки: run_mode не возвращался в статусе. Это было исправлено коммитом 58ac1bd; затем уточнён NEW_SNAPSHOT в 76d3dc3 и добавлен тест в 215c659. Не скрывать этот регрессионный этап; считать исправление подтверждённым только после CI для актуального HEAD.
 - Текущая известная HEAD: 215c6596aaf2dee45693d7d075809055fff00d20. CI run 38524687066 был IN_PROGRESS при записи. Следующий шаг — проверить итог run на exact HEAD; затем записать окончательный статус в HANDOFF. Не изменять main и не сливать PR #22.
 
+## Addendum: first-pass versus resume (2026-10-14)
+
+The importer now distinguishes FIRST_PASS, RESUME, RETRY_FROM_START, ALREADY_COMPLETE, and NEW_SNAPSHOT. This prevents a first-time source from being falsely treated as previously exported and avoids full re-import of an identical completed snapshot. Matching is scoped to the exact operation/archive ID and source SHA-256; no global search for similar history on each entry.
+
+Tests added for first pass, completed replay, and a changed source under the same operation ID. Exact-head CI for 215c6596aaf2dee45693d7d075809055fff00d20 passed (run 38524687066). HANDOFF updated in commit 8145ce6e4869d8835c12d4f2bd5125345bfc12df; this TASK_STATE update will change HEAD, so verify CI again for the resulting SHA. PR #22 remains draft/open/unmerged; do not modify main.
+
