@@ -159,3 +159,10 @@ Implemented prototype: `tools/guarded_task_state_update.py`; tests: `tests/test_
 - The tool is restricted by path/name checks to `TASK_STATE.md` and `events.jsonl` under `projects/`, but path checks are not a substitute for repository/OS permissions.
 
 This is a guarded local projection primitive, not an automatic cross-chat restore mechanism. End-to-end integration and failure injection across event publication plus state update are still required.
+
+
+### Local linked-return round-trip test
+
+`tests/test_child_result_return_roundtrip.py` now exercises the connected local path: publish child result → replay without duplication → append owner acknowledgement → append a guarded task-state checkpoint linked to the acknowledgement. It also changes the parent state between proposal and apply to confirm that stale state is rejected, then re-plans against the new hash without losing the intervening parent update.
+
+This proves a local two-step recovery path under the tested fixtures. It does not prove distributed atomicity: a crash can occur after the event is appended and before the task checkpoint is applied. Recovery currently relies on idempotent replay plus an explicit refreshed proposal; automatic reconciliation of all pending branch returns remains future work.
