@@ -75,6 +75,7 @@ class SemanticContextExtractorTests(unittest.TestCase):
             "- **Последнее событие:** EVT-TEST-001\n",
             encoding="utf-8",
         )
+        self.handoff.write_text("# HANDOFF\nNo explicit next step.\n", encoding="utf-8")
         context = extract_semantic_context(self._packet())
         self.assertEqual(context["active_goal"], "memory transfer only")
         self.assertEqual(context["next_step"], "UNKNOWN")
