@@ -320,7 +320,7 @@ def import_export(source: Path, output: Path, archive_id: str, batch_size: int =
                                              (utc_now(), archive_id, digest))
                                 add_event(conn, archive_id, digest, "PAUSED_FOR_TEST", next_ordinal,
                                           {"committed_conversations": committed, "next_ordinal": next_ordinal, "next_byte_offset": next_byte_offset})
-                            return _status(conn, archive_id, digest, db_path)
+                            return _status(conn, archive_id, digest, db_path, run_mode=run_mode)
                 if batch:
                     committed += _commit_batch(conn, archive_id, digest, batch)
                     next_ordinal = batch[-1][5] + 1
@@ -335,7 +335,7 @@ def import_export(source: Path, output: Path, archive_id: str, batch_size: int =
                              (seen_count, next_byte_offset, total, utc_now(), archive_id, digest))
                 add_event(conn, archive_id, digest, "RAW_COMPLETE", seen_count,
                           {"source_conversations": seen_count, "staged_conversations": total})
-            return _status(conn, archive_id, digest, db_path)
+            return _status(conn, archive_id, digest, db_path, run_mode=run_mode)
         except Exception as exc:
             with conn:
                 conn.execute("UPDATE imports SET status='FAILED',last_error=?,updated_at=? WHERE archive_id=? AND source_sha256=?",
