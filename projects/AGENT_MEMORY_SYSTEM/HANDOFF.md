@@ -262,3 +262,13 @@ Network-level resumption of the export transfer itself is still not implemented/
 - Read-back confirmed the new files and runtime link. CI run 38545650884 was QUEUED for SHA `0545ee77d79cead774258523dcd998ace0238dc5`; check the latest exact HEAD after these state updates.
 - Known gaps remain: no connected route-to-promotion pipeline, automatic index/view updater, child-result return/acknowledgement service, all-chat capture, or verified agent-specific access control. Local raw importer is a component, not the full pipeline.
 - Next step: implement the minimal compatible path for intake result manifests and linked child-result propagation, add fault-injection tests, then execute the UMC acceptance matrix. Do not create duplicate journals. PR #22 remains OPEN/DRAFT/UNMERGED; do not change `main`.
+
+
+## Implementation checkpoint — child result publication (2026-10-14)
+
+- Added `tools/branch_result_registry.py` and `tests/test_branch_result_registry.py`.
+- The tool appends a provenance-linked child result into the canonical AGENT_MEMORY_SYSTEM event log, not a parallel journal. Exact replay is idempotent; same identity with altered content is a conflict; a new revision key can append a correction while retaining prior history. Parent acknowledgement remains PENDING.
+- Added implementation status/limitations to `core/unified_memory_control_loop.md`.
+- Limits: no multi-writer locking; no automated owner notification/acknowledgement; no automatic EVENT_LOG or task-state projection refresh; not an all-chat service. UMC-08 is only partially implemented, not end-to-end passing.
+- Next: check exact-head CI and inspect test job; then implement safe acknowledgement/projection path or writer coordination, continuing the UMC acceptance matrix.
+- PR #22 remains OPEN/DRAFT/UNMERGED; do not change `main`.
