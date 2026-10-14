@@ -110,33 +110,6 @@ def apply_checkpoint(
             "writes_performed": False,
         }
 
-    # Recompute trust from canonical files at write time. An externally supplied
-    # verdict alone is not trusted: it may be stale or incorrectly fabricated.
-    handoff_path = task_state.with_name("HANDOFF.md")
-    try:
-        from context_extractor import extract_semantic_context
-        from context_trust_gate import authorize_next_step
-        from restore_session_packet import build_session_packet
-
-        packet = build_session_packet(task_state, handoff_path, event_log)
-        current_context = extract_semantic_context(packet)
-        current_verdict = authorize_next_step(current_context)
-    except Exception as exc:
-        return {
-            "status": "BLOCKED",
-            "reason": "TrustPolicyViolated",
-            "trust_status": "TRUST_RECHECK_FAILED",
-            "details": str(exc),
-            "writes_performed": False,
-        }
-    if current_verdict.get("status") != "AUTHORIZED_FOR_PLANNING":
-        return {
-            "status": "BLOCKED",
-            "reason": "TrustPolicyViolated",
-            "trust_status": current_verdict.get("status", "INVALID_TRUST_VERDICT"),
-            "writes_performed": False,
-        }
-
     lock_path = task_state.with_name(task_state.name + ".lock")
     try:
         lock_fd = os.open(lock_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
@@ -154,6 +127,40 @@ def apply_checkpoint(
         if marker in current_text:
             return {"status": "ALREADY_APPLIED" if proposal["checkpoint_markdown"].strip() in current_text[current_text.index(marker):]
                     else "CONFLICT", "update_id": proposal["update_id"], "writes_performed": False}
+
+        # Recompute trust only after acquiring the task-state lock and confirming
+        # the expected revision. This closes the task-state TOCTOU window.
+        handoff_path = task_state.with_name("HANDOFF.md")
+        try:
+            from context_extractor import extract_semantic_context
+            from context_trust_gate import authorize_next_step
+            from restore_session_packet import build_session_packet
+
+            packet = build_session_packet(task_state, handoff_path, event_log)
+            current_context = extract_semantic_context(packet)
+            current_verdict = authorize_next_step(current_context)
+        except Exception as exc:
+            return {
+                "status": "BLOCKED",
+                "reason": "TrustPolicyViolated",
+                "trust_status": "TRUST_RECHECK_FAILED",
+                "details": str(exc),
+                "writes_performed": False,
+            }
+        if current_verdict.get("status") != "AUTHORIZED_FOR_PLANNING":
+            return {
+                "status": "BLOCKED",
+                "reason": "TrustPolicyViolated",
+                "trust_status": current_verdict.get("status", "INVALID_TRUST_VERDICT"),
+                "writes_performed": False,
+            }
+        try:
+            event_ids = _load_event_ids(event_log)
+        except ValueError as exc:
+            return {"status": "REJECTED", "writes_performed": False, "errors": [str(exc)]}
+        if proposal["event_id"] not in event_ids:
+            return {"status": "REJECTED", "writes_performed": False,
+                    "errors": ["event_id is not present in the canonical event log"]}
 
         block = (
             f"\n\n## Checkpoint update {proposal['update_id']}\n\n"
