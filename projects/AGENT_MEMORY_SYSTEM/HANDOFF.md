@@ -279,3 +279,12 @@ Network-level resumption of the export transfer itself is still not implemented/
 - Added append-only `acknowledge_result(...)` API in `tools/branch_result_registry.py` and four tests. It acknowledges only a known child-result event; exact replay is idempotent, conflicting decision under the same identity is rejected, and no parent task file is mutated.
 - This separates delivery, owner acknowledgement and parent-task resolution. It is not authentication or an automatic chat signal; owner reference is supplied by caller.
 - Next: verify CI on exact latest HEAD; then implement a guarded derived-state update with expected revision, preserving append-only history. Multi-writer locking and dedicated CLI are still open.
+
+
+### Verification checkpoint — acknowledgement path (2026-10-14)
+
+- Exact-head CI PASS: [run #426](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38547428594), SHA `3507528dab41068ecb6a591f013123f6a8c97b72`.
+- The run passed memory/protocol validation, the unit-test suite, and knowledge-base/stack validation.
+- Preserved the regression trail: CI found a newline escaping issue, a malformed JSONL fixture, and an acknowledgement-identity bug. These were corrected and retested; the identity now conflicts if the same owner attempts to change the decision under the same acknowledgement reference.
+- The tested component is a local repository primitive, not an automatic cross-chat service. Multi-writer coordination, dedicated CLI acknowledgement, owner notification, and derived task-state projection remain open.
+- Next: add a clear CLI acknowledgement command and safe single-writer/locking policy; then design guarded projection update with expected revision and tests. PR #22 remains OPEN/DRAFT/UNMERGED.
