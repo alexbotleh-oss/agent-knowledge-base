@@ -135,6 +135,43 @@ class SemanticContextExtractorTests(unittest.TestCase):
         self.assertEqual(context["blockers"], [])
         self.assertEqual(context["last_event"], "UNKNOWN")
 
+    def test_missing_source_disables_freshness_and_usability(self):
+        self.task.write_text(
+            "- **Активная задача в текущей сессии:** сохранить контрольную точку.\\n",
+            encoding="utf-8",
+        )
+        packet = self._packet()
+        self.handoff.unlink()
+        context = extract_semantic_context(packet)
+        self.assertEqual(context["status"], "SOURCE_MISSING")
+        self.assertEqual(context["source_freshness"]["handoff"], "MISSING")
+        self.assertFalse(context["freshness_verified"])
+        self.assertFalse(context["semantic_context_usable"])
+
+    def test_partial_packet_separates_semantic_freshness_from_event_completeness(self):
+        self.task.write_text(
+            "- **Активная задача в текущей сессии:** проверить неполный журнал.\\n"
+            "- **Последнее событие:** EVT-MISSING-999\\n",
+            encoding="utf-8",
+        )
+        packet = self._packet()
+        self.assertEqual(packet["status"], "PARTIAL")
+        context = extract_semantic_context(packet)
+        self.assertTrue(context["freshness_verified"])
+        self.assertTrue(context["semantic_context_usable"])
+        self.assertFalse(context["event_linkage_complete"])
+        self.assertEqual(context["active_goal"], "проверить неполный журнал")
+
+    def test_verify_sources_false_never_claims_verified_freshness(self):
+        self.task.write_text(
+            "- **Активная задача в текущей сессии:** проверить без хеш-проверки.\\n",
+            encoding="utf-8",
+        )
+        context = extract_semantic_context(self._packet(), verify_sources=False)
+        self.assertFalse(context["freshness_verified"])
+        self.assertFalse(context["semantic_context_usable"])
+        self.assertFalse(context["event_linkage_complete"])
+
     def test_blocked_packet_is_handled_without_exception(self):
         packet = {
             "status": "BLOCKED",
