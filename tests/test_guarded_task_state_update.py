@@ -18,7 +18,9 @@ class GuardedTaskStateUpdateTests(unittest.TestCase):
         self.project.mkdir(parents=True)
         self.task_state = self.project / "TASK_STATE.md"
         self.task_state.write_text("# Task state\n\nOriginal checkpoint.\n", encoding="utf-8")
-        self.event_log = self.root / "events.jsonl"
+        event_dir = self.root / "projects" / "AGENT_MEMORY_SYSTEM"
+        event_dir.mkdir(parents=True)
+        self.event_log = event_dir / "events.jsonl"
         self.event_log.write_text(json.dumps({"event_id": "EVT-TEST-001", "type": "cross_branch_result"}) + "\n", encoding="utf-8")
         self.proposal = {
             "update_id": "UPDATE-TEST-001",
@@ -86,6 +88,16 @@ class GuardedTaskStateUpdateTests(unittest.TestCase):
         self.assertEqual(first["status"], "APPLIED")
         self.assertEqual(second["status"], "CONFLICT")
         self.assertEqual(before, self.task_state.read_bytes())
+
+
+    def test_arbitrary_target_path_is_rejected(self):
+        arbitrary = self.project / "notes.md"
+        arbitrary.write_text("do not mutate", encoding="utf-8")
+        before = arbitrary.read_bytes()
+        result = apply_checkpoint(arbitrary, self.event_log, self.proposal)
+        self.assertEqual(result["status"], "REJECTED")
+        self.assertEqual(before, arbitrary.read_bytes())
+
 
 
 if __name__ == "__main__":
