@@ -83,6 +83,32 @@ def apply_checkpoint(
         return {"status": "REJECTED", "errors": ["event evidence must come from an events.jsonl under a projects/ directory"], "writes_performed": False}
     if not task_state.is_file() or not event_log.is_file():
         return {"status": "REJECTED", "errors": ["task state and canonical event log must already exist"], "writes_performed": False}
+    # Recompute trust from canonical files at write time. An externally supplied
+    # verdict alone is not trusted: it may be stale or incorrectly fabricated.
+    handoff_path = task_state.with_name("HANDOFF.md")
+    try:
+        from context_extractor import extract_semantic_context
+        from context_trust_gate import authorize_next_step
+        from restore_session_packet import build_session_packet
+
+        packet = build_session_packet(task_state, handoff_path, event_log)
+        current_context = extract_semantic_context(packet)
+        current_verdict = authorize_next_step(current_context)
+    except Exception as exc:
+        return {
+            "status": "BLOCKED",
+            "reason": "TrustPolicyViolated",
+            "trust_status": "TRUST_RECHECK_FAILED",
+            "details": str(exc),
+            "writes_performed": False,
+        }
+    if current_verdict.get("status") != "AUTHORIZED_FOR_PLANNING":
+        return {
+            "status": "BLOCKED",
+            "reason": "TrustPolicyViolated",
+            "trust_status": current_verdict.get("status", "INVALID_TRUST_VERDICT"),
+            "writes_performed": False,
+        }
     marker = f"<!-- guarded-task-update:{proposal['update_id']} -->"
     current = task_state.read_bytes()
     current_text = current.decode("utf-8")
