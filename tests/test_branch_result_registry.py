@@ -138,11 +138,11 @@ class BranchResultRegistryTests(unittest.TestCase):
     def test_acknowledgement_requires_existing_child_result(self):
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "events.jsonl"
-            path.write_text('{"event_id":"OTHER","type":"observation"}\\n', encoding="utf-8")
+            path.write_text('{"event_id":"OTHER","type":"observation"}\n', encoding="utf-8")
             from branch_result_registry import acknowledge_result
             response = acknowledge_result(path, "OTHER", "accepted", "owner-ref", "2026-10-14T11:00:00Z")
             self.assertEqual(response["status"], "REJECTED")
-            self.assertEqual(path.read_text(encoding="utf-8"), '{"event_id":"OTHER","type":"observation"}\\n')
+            self.assertEqual(path.read_text(encoding="utf-8"), '{"event_id":"OTHER","type":"observation"}\n')
 
     def test_acknowledgement_does_not_allow_silent_decision_mutation(self):
         with tempfile.TemporaryDirectory() as tmp:
