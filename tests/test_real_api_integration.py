@@ -1,5 +1,8 @@
 # tests/test_real_api_integration.py
 import hashlib
+import json
+import os
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -235,3 +238,52 @@ class TestRealApiIntegration(unittest.TestCase):
             report_after_reread = build_report(str(event_log), [str(task_state)])
             self.assertIsInstance(report_after_reread, dict)
             self.assertEqual(report_after_reread.get("issues"), [])
+
+
+    def test_fresh_process_restores_semantics_from_persisted_files(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            event_log, task_state = self._project_files(tmp_dir)
+            handoff = task_state.with_name("HANDOFF.md")
+            event = {
+                "event_id": "EVT-RESTART-001",
+                "type": "checkpoint",
+                "summary": "Persisted recovery fixture",
+            }
+            event_log.write_text(json.dumps(event) + "\\n", encoding="utf-8")
+            task_state.write_text(
+                "# TASK_STATE\\n"
+                "- **Активная задача в текущей сессии:** проверить восстановление после рестарта\\n"
+                "- **Следующий шаг:** проверить новый процесс\\n"
+                "- **Последнее событие:** EVT-RESTART-001\\n",
+                encoding="utf-8",
+            )
+            handoff.write_text(
+                "# HANDOFF\\n- **Следующий шаг:** fallback шаг не должен переопределить TASK_STATE\\n",
+                encoding="utf-8",
+            )
+            script = (
+                "import json, sys; "
+                "from pathlib import Path; "
+                "from restore_session_packet import build_session_packet; "
+                "from context_extractor import extract_semantic_context; "
+                "p=build_session_packet(Path(sys.argv[1]), Path(sys.argv[2]), Path(sys.argv[3])); "
+                "c=extract_semantic_context(p); "
+                "print(json.dumps({'packet_status':p['status'],'active_goal':c['active_goal'],"
+                "'next_step':c['next_step'],'event_linkage_complete':c['event_linkage_complete'],"
+                "'freshness_verified':c['freshness_verified']}))"
+            )
+            env = os.environ.copy()
+            env["PYTHONPATH"] = str(tools_dir) + os.pathsep + env.get("PYTHONPATH", "")
+            completed = subprocess.run(
+                [sys.executable, "-c", script, str(task_state), str(handoff), str(event_log)],
+                check=True,
+                capture_output=True,
+                text=True,
+                env=env,
+            )
+            restored = json.loads(completed.stdout)
+            self.assertEqual(restored["packet_status"], "RESTORED_PACKET")
+            self.assertEqual(restored["active_goal"], "проверить восстановление после рестарта")
+            self.assertEqual(restored["next_step"], "проверить новый процесс")
+            self.assertTrue(restored["event_linkage_complete"])
+            self.assertTrue(restored["freshness_verified"])
