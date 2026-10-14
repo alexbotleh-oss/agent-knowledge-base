@@ -15,7 +15,7 @@ Status: initial static inventory, based on the implementation in this branch. Th
 
 | Path / operation | Persisted target | Current contract / review notes |
 | --- | --- | --- |
-| `tools/guarded_task_state_update.py:apply_checkpoint` | `projects/*/TASK_STATE.md` | Append-only checkpoint; restricts target name/path; validates proposal, expected SHA-256, event ID; duplicate ID is idempotent or conflict; requires external authorized verdict and recomputes trust from canonical files; uses lock and temp-file + fsync + replace. The final trust/event recheck is intended to be under the task-state lock. Event-log writers use a separate lock; cross-file snapshot consistency remains a race to review. |
+| `tools/guarded_task_state_update.py:apply_checkpoint` | `projects/*/TASK_STATE.md` | Append-only checkpoint; restricts target name/path; validates proposal, expected SHA-256, event ID; duplicate ID is idempotent or conflict; requires external authorized verdict and recomputes trust from canonical files. Acquires the shared `events.jsonl.lock` first, then `TASK_STATE.md.lock`, and holds both through final evidence/trust checks and atomic replacement. Lock contention fails closed. `HANDOFF.md` is not protected by this lock protocol and may still change externally; this is a residual race/limitation. |
 | `tools/branch_result_registry.py:publish_result` | `projects/*/events.jsonl` | Validates result envelope, stable event ID, exact replay no-op, same-ID/different-content conflict, append-only event representation, lock and atomic replacement. |
 | `tools/branch_result_registry.py:acknowledge_result` | `projects/*/events.jsonl` | Requires an existing child-result event and explicit decision/reference; appends linked acknowledgement, does not edit task state. Replay identity uses result ID + owner reference. |
 | `tools/archive_registry_staging.py:build` | staging record files and `archive_snapshot.json` | Reads export, hashes original bytes, generates source locators and staging records. It does not itself authorize canonical memory import. Review whether every manifest write is atomic and whether reruns safely reconcile existing staging output. |
@@ -43,6 +43,43 @@ Staging is not canonical memory. Preserve source digest, stable source locators,
 
 ### Derived reports and indexes
 Derived output should be rebuildable from canonical sources and must not silently mutate task state or event history. Clearly distinguish report creation from source-of-truth changes.
+
+## Verified lock protocol (branch implementation)
+
+For `apply_checkpoint`, the required order is:
+
+1. Acquire `events.jsonl.lock` using exclusive creation; if it exists, return `LOCKED` without writing.
+2. Acquire `TASK_STATE.md.lock`; if it exists, return `LOCKED` and release the journal lock.
+3. Re-read the task-state revision, rebuild the packet, recompute the trust verdict, and validate the supporting event while both locks are held.
+4. Write to a same-directory temporary file, flush/fsync, then atomically replace `TASK_STATE.md`.
+5. Release locks in reverse order.
+
+`branch_result_registry.publish_result` and `acknowledge_result` acquire only `events.jsonl.lock`, so the observed lock graph has no reverse task-state → journal acquisition in these implementations. The regression test verifies that an existing journal lock blocks a checkpoint write. This is not yet a full multiprocess stress proof: direct/manual writers and any future writer that bypasses the shared lock remain outside the protocol. Stale locks are not auto-broken; inspect the recorded PID and process state before manual recovery. `HANDOFF.md` remains outside the shared lock.
+
+## SQLite decision
+
+`resumable_chat_import.py` already uses SQLite transactions for its import staging database, with each batch's rows, cursor/offset update and import event written in one transaction. That database is not the canonical task-state store. A migration of `TASK_STATE.md` plus `events.jsonl` to SQLite is **deferred**, not approved: it changes storage formats and reader/writer APIs, and would not remove the need to coordinate `HANDOFF.md` or other external files. First validate the shared-lock protocol, concurrent writers, crash recovery and every remaining write path; then compare a SQLite-backed canonical store against the operational cost of a single shared lock protocol.
+
+## Write-path review checklist
+
+For every persistence operation, verify and record:
+
+- [ ] Exact target path and whether it is canonical, staging, or derived.
+- [ ] Contract classification in `tools/audit_write_contracts.py` and this document.
+- [ ] Source digest/revision checked immediately before commit.
+- [ ] Trust/evidence gate is recomputed from current canonical inputs for canonical writes.
+- [ ] Shared lock name/order is followed; lock contention fails closed.
+- [ ] Duplicate/replay is idempotent; same identity with different payload is a conflict.
+- [ ] Temp file is on the same filesystem; flush/fsync and atomic replace where applicable.
+- [ ] SQLite rows, resume cursor and audit event share a transaction where applicable.
+- [ ] Failure/restart leaves no cursor ahead of durable data and preserves prior records.
+- [ ] A regression test asserts both status and no-write/file-preservation behaviour.
+- [ ] Limitations, external writers and recovery procedure are documented.
+- [ ] CI ran against the exact commit under review.
+
+## Monitoring and stress-test status
+
+Current protection is fail-closed lock contention and explicit operation statuses; there is no always-on monitor or automated stale-lock reaper. Do not auto-delete stale lock files without process-level verification. Stress testing with independent processes, crash injection, archive staging collision/rerun tests, and importer interruption tests remain open. The AST audit is a tripwire and must not be treated as proof of complete write-path coverage.
 
 ## Audit limitations and next checks
 
