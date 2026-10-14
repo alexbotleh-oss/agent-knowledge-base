@@ -18,6 +18,18 @@ class MemoryIntakeContractTests(unittest.TestCase):
     def test_synthetic_manifest_and_artifact_hash_are_valid(self):
         self.assertEqual(validate_intake_manifest(self.manifest_path, ROOT), [])
 
+    def test_missing_capture_time_remains_unknown_not_invalid(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            folder = Path(tmp)
+            (folder / "records.jsonl").write_text((self.fixture / "records.jsonl").read_text(encoding="utf-8"), encoding="utf-8")
+            manifest = dict(self.manifest)
+            manifest["source"] = dict(self.manifest["source"])
+            manifest["source"].pop("captured_at", None)
+            manifest["artifacts"] = [dict(self.manifest["artifacts"][0], path="records.jsonl")]
+            path = folder / "manifest.json"
+            path.write_text(json.dumps(manifest), encoding="utf-8")
+            self.assertEqual(validate_intake_manifest(path, ROOT), [])
+
     def test_artifact_tampering_is_detected(self):
         with tempfile.TemporaryDirectory() as tmp:
             folder = Path(tmp)

@@ -100,7 +100,7 @@ def validate_intake_manifest(manifest_path, repo_root=None):
         if source.get("scope_status") not in {"COMPLETE", "PARTIAL", "UNKNOWN"}:
             errors.append(f"{manifest_path}: invalid source.scope_status")
         captured = source.get("captured_at")
-        if captured != "unknown" and not _has_timezone(captured):
+        if captured is not None and captured != "unknown" and not _has_timezone(captured):
             errors.append(f"{manifest_path}: source.captured_at must be timezone-aware ISO-8601 or unknown")
         ids = source.get("conversation_ids", [])
         if not isinstance(ids, list) or any(not isinstance(x, str) or not x for x in ids) or len(ids) != len(set(ids)):
