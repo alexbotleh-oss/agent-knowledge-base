@@ -183,7 +183,7 @@ Status meanings: **PARTIAL** means a component/test covers a narrow subcase but 
 
 | ID | Current status | Evidence / remaining gap |
 |---|---|---|
-| UMC-01 | BLOCKED | Raw export round-trip exists in `tests/test_current_session_roundtrip.py`; no new-session restore from TASK_STATE + linked decisions/events into a verified continuity packet. |
+| UMC-01 | PARTIAL | `tools/restore_session_packet.py` and `tests/test_restore_session_packet.py` build a source-backed packet from TASK_STATE/HANDOFF/events with hashes and linked events; automatic startup in a new ChatGPT chat and semantic goal verification remain unimplemented. |
 | UMC-02 | BLOCKED | Return rules are documented; no runtime dialogue controller classifying side branches and preserving/returning active goals. |
 | UMC-03 | BLOCKED | Intake planner carries observed tool/language/task tags; no runtime applicability evaluator that gates use of shared lessons. |
 | UMC-04 | PARTIAL | `tests/test_resumable_chat_import.py` covers replay/resume for immutable source snapshots; promotion and index refresh are not in that pipeline. |
