@@ -158,7 +158,9 @@ def extract_semantic_context(packet: dict[str, Any], *, verify_sources: bool = T
         freshness_verified and status in {"RESTORED_PACKET", "PARTIAL"}
     )
     event_linkage_complete = (
-        status == "RESTORED_PACKET" and not packet.get("missing_event_refs")
+        freshness_verified
+        and status == "RESTORED_PACKET"
+        and not packet.get("missing_event_refs")
     )
     return {
         **values,
