@@ -281,5 +281,44 @@ class ResumableChatImportTests(unittest.TestCase):
                 conn.close()
 
 
+    def test_truncated_source_is_never_marked_complete(self):
+        """A partial export is not a paused import and cannot become RAW_COMPLETE."""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            rows = sample_conversations(2)
+            # The first object is complete; the second object is deliberately truncated.
+            partial_json = "[" + json.dumps(rows[0], ensure_ascii=False) + ', {"id":"conversation-1","title":'
+            source = root / "truncated-conversations.json"
+            source.write_text(partial_json, encoding="utf-8")
+            out = root / "state"
+
+            with self.assertRaises(ValueError):
+                import_export(source, out, "TRUNCATED-EXPORT-001", batch_size=1)
+
+            conn = sqlite3.connect(out / "import.sqlite3")
+            try:
+                state = conn.execute(
+                    "SELECT status,last_error FROM imports WHERE archive_id=?",
+                    ("TRUNCATED-EXPORT-001",),
+                ).fetchone()
+                events = [
+                    row[0] for row in conn.execute(
+                        "SELECT event_type FROM import_events WHERE archive_id=? ORDER BY event_id",
+                        ("TRUNCATED-EXPORT-001",),
+                    )
+                ]
+                rows_saved = conn.execute(
+                    "SELECT source_ordinal,source_conversation_id FROM raw_conversations WHERE archive_id=? ORDER BY source_ordinal",
+                    ("TRUNCATED-EXPORT-001",),
+                ).fetchall()
+                self.assertEqual(state[0], "FAILED")
+                self.assertTrue(state[1])
+                self.assertEqual(rows_saved, [(0, "conversation-0")])
+                self.assertIn("FAILED", events)
+                self.assertNotIn("RAW_COMPLETE", events)
+            finally:
+                conn.close()
+
+
 if __name__ == "__main__":
     unittest.main()
