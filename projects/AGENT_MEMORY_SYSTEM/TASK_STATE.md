@@ -139,3 +139,15 @@
 - Exact test HEAD is f100e40e9d68cbdbf4a9a2099beb2afc7a2c8133. GitHub Actions run #38519660453 was in progress at the time of this checkpoint. Do not claim this added test passed until that run completes.
 - Previous exact code/docs state b7344e351c260dab55f24a03e1c355f953124988 passed run #38519573230; the additional ZIP test is beyond that evidence.
 - Continue from safe resumable importer; next inspect the exact-head run, fix any ZIP seek failure, then decide whether a concurrent-import guard is necessary before calling the prototype production-ready.
+
+
+## Новая концепция общей памяти — аудит и этапы внедрения — 2026-10-14
+
+- **Возврат к исходной цели:** пользователь передал концепцию независимого приёма и маршрутизации памяти из рабочих чатов. Обычный агент подготавливает маркированную выгрузку по общей инструкции; дальнейшая обработка должна идти независимо от исходного агента. Не сводить выгрузку только к «опыту» и «событиям»: возможны хронология, рабочий/краткосрочный контекст, кандидаты, утверждённые записи, связи и другие существующие библиотеки.
+- **Ключевая поправка:** не требовать заранее определять все будущие проекты применимости. На входе фиксировать наблюдаемые признаки (язык/стек, инструменты, тип задачи/операции, условия, симптом/результат, provenance и статус). Применимость к другому проекту выявляется позднее и должна оставаться проверяемой.
+- **Аудит выполнен:** добавлен `projects/AGENT_MEMORY_SYSTEM/MEMORY_PIPELINE_GAP_ANALYSIS_2026-10-14.md`. Проверены модель памяти, реестр стеков, шаблоны событий/уроков, валидатор, workflow, протокол сессий, протокол приёма источников и прототип импортёра.
+- **Подтверждено существующее:** `core/memory_model.md`, `core/stack_registry.json`, event/lesson templates, `tools/validate_memory.py`, `.github/workflows/validate.yml`, runtime/session handoff protocols. Это фундамент, но не доказательство сквозной автоматической маршрутизации.
+- **Статус импортёра исправлен концептуально:** `tools/resumable_chat_import.py` — изолированный прототип сохранения сырой истории и checkpoint, не готовый общий конвейер памяти. Его не считать согласованной конечной архитектурой; не удалять автоматически, не интегрировать дальше до сопоставления с контрактом входящей выгрузки.
+- **PR/CI:** перед изменением HEAD `b43f404034450f718f18e002356cdb926fd702ba` имел CI PASS, run [#38519704988](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38519704988). Новый audit document создан коммитом `70422903e899521ad6eca93d07395098787f7581`; CI для нового HEAD нужно перепроверить отдельно.
+- **Следующий шаг:** продолжить инвентаризацию фактических механизмов записи/индексации и workflow, сверить совместимость существующих форматов, затем определить минимальный versioned intake contract. Пока не писать новый маршрутизатор и не менять main.
+- **Безопасность:** PR #22 остаётся Draft/open/unmerged; ранее обнаруженный scope/preservation конфликт остаётся нерешённым. Этот аудит не разрешает merge.
