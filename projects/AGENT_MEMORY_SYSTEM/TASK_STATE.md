@@ -319,3 +319,12 @@ Tests added for first pass, completed replay, and a changed source under the sam
 - **Do not hide intermediate failures:** CI first caught an invalid newline parameter in the acknowledgement writer and a test fixture that encoded a literal backslash-n instead of a line break. After those were fixed, CI caught an identity bug: the acknowledgement ID included the decision, which allowed the same owner identity to create a different decision instead of a conflict. Identity now keys on result event + owner reference; a changed decision under that identity is rejected.
 - **Current verified scope:** the repository suite passed at exact SHA above, including seven result-publication tests and four acknowledgement tests. This validates the tested local primitive only, not cross-chat delivery or end-to-end memory continuity.
 - **Next step:** strengthen writer concurrency safety and add an explicit CLI path for owner acknowledgement; then plan the derived current-state projection update using expected-revision protection. Do not claim automated notification, cross-chat capture, or full UMC-01..12 completion.
+
+
+### Addendum — writer coordination and CLI (2026-10-14)
+
+- Added a fail-closed exclusive lock around read/validate/append in `tools/branch_result_registry.py`. An existing lock returns LOCKED without modifying the event log; stale locks are not automatically deleted.
+- Added explicit CLI modes `publish` and `ack`; acknowledgement no longer exists only as an internal Python API.
+- Added tests for lock conflict and CLI acknowledgement. Contract documentation now states limitations, including manual stale-lock recovery, no authenticated owner identity, no task projection update, and unverified distributed-filesystem semantics.
+- **Current validation must be taken from CI on the final branch HEAD after all code, test, and checkpoint changes.** Do not reuse an earlier passing SHA as proof of the newest state.
+- Next: exact-head CI and read-back. After that, decide the smallest safe task-state projection mechanism; it must use expected revision and never overwrite an intervening parent change.
