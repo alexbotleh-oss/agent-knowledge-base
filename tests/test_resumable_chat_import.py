@@ -8,7 +8,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
-from resumable_chat_import import import_export
+from resumable_chat_import import _commit_batch, connect, import_export, iter_json_array
 
 
 def sample_conversations(count=5):
@@ -107,6 +107,60 @@ class ResumableChatImportTests(unittest.TestCase):
             _, _, staged, _ = self.query_counts(root / "state")
             self.assertEqual(staged[0]["mapping"]["node-0-user"]["message"]["content"]["parts"], ["question 0"])
             self.assertEqual(staged[0]["mapping"]["node-0-user"]["children"], ["node-0-assistant"])
+
+    def test_replayed_committed_batch_models_lost_ack_without_duplicate(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            source = self.make_source(root, 2)
+            out = root / "state"
+            paused = import_export(source, out, "ARCHIVE-005", batch_size=1, stop_after_batches=1)
+            conn = connect(out / "import.sqlite3")
+            try:
+                record = conn.execute(
+                    "SELECT archive_id,source_sha256,source_locator,source_conversation_id,identity_method,source_ordinal,payload_json,payload_sha256,imported_at FROM raw_conversations ORDER BY source_ordinal LIMIT 1"
+                ).fetchone()
+                _commit_batch(conn, "ARCHIVE-005", paused["source_sha256"], [record])
+                count = conn.execute(
+                    "SELECT COUNT(*) FROM raw_conversations WHERE archive_id=? AND source_sha256=?",
+                    ("ARCHIVE-005", paused["source_sha256"]),
+                ).fetchone()[0]
+                self.assertEqual(count, 1)
+                cursor = conn.execute(
+                    "SELECT next_ordinal FROM imports WHERE archive_id=? AND source_sha256=?",
+                    ("ARCHIVE-005", paused["source_sha256"]),
+                ).fetchone()[0]
+                self.assertEqual(cursor, 1)
+            finally:
+                conn.close()
+            resumed = import_export(source, out, "ARCHIVE-005", batch_size=1)
+            self.assertEqual(resumed["status"], "RAW_COMPLETE")
+            self.assertEqual(resumed["committed_conversations"], 2)
+
+    def test_duplicate_source_conversation_ids_are_not_silently_dropped(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            source = root / "conversations.json"
+            rows = sample_conversations(2)
+            rows[1]["id"] = rows[0]["id"]
+            source.write_text(json.dumps(rows, ensure_ascii=False), encoding="utf-8")
+            with self.assertRaises(RuntimeError):
+                import_export(source, root / "state", "ARCHIVE-006", batch_size=1)
+            conn = sqlite3.connect(root / "state" / "import.sqlite3")
+            try:
+                state = conn.execute("SELECT status FROM imports").fetchone()[0]
+                count = conn.execute("SELECT COUNT(*) FROM raw_conversations").fetchone()[0]
+                self.assertEqual(state, "FAILED")
+                self.assertEqual(count, 1)
+            finally:
+                conn.close()
+
+    def test_incremental_decoder_handles_small_chunks_and_unicode(self):
+        import io
+        rows = [{"id": "один", "title": "Привет 🌍"}, {"id": "two", "title": "second"}]
+        stream = io.BytesIO(json.dumps(rows, ensure_ascii=False).encode("utf-8"))
+        parsed = list(iter_json_array(stream, chunk_size=5))
+        self.assertEqual([ordinal for ordinal, _ in parsed], [0, 1])
+        self.assertEqual(parsed[0][1]["title"], "Привет 🌍")
 
     def test_invalid_source_is_not_marked_complete(self):
         with tempfile.TemporaryDirectory() as tmp:
