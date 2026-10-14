@@ -93,3 +93,8 @@
 ## Cross-chat checkpoint gate
 
 When using a checkpoint owned by another chat/task/project, follow `core/cross_chat_checkpoint_agent_instructions.md` before acting. Identify its owner and exact revision; preserve the source history; create a linked child record; assess applicability; avoid repeating work already supported by evidence; record new work in the child branch; return meaningful results to the source owner; and inspect linked results before resuming the source task. A reference is not resolution, a child result is not delivery acknowledgement, and a resolved sub-question is not completion of the parent goal. If the registry/return path is unavailable, record a temporary link in TASK_STATE/HANDOFF and state the gap. Do not claim automatic synchronization unless implemented and tested.
+
+
+## Unified dialogue–memory control loop
+
+Apply `core/unified_memory_control_loop.md` as the integration contract across task control, shared-memory use, source intake, event continuity, side-branch return and handoff. It connects the existing protocols; it does not imply that each transition is automated. At session start restore the active goal from the owning task state, use linked evidence rather than a summary alone, and keep shared knowledge subordinate to the user's active goal. At meaningful boundaries record results and unresolved state. Treat the UMC acceptance matrix as the release gate for end-to-end testing; mark missing capabilities BLOCKED/NOT IMPLEMENTED instead of passing them by documentation alone.
