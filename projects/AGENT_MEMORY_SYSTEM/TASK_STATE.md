@@ -337,3 +337,13 @@ Tests added for first pass, completed replay, and a changed source under the sam
 - **Tested behaviors now include:** linked result publication; replay idempotency; changed payload conflict; missing provenance/unknown evidence rejection; corrupt journal preservation; append-only acknowledgement; acknowledgement replay; invalid target rejection; changed decision conflict; lock conflict fail-closed; acknowledgement CLI path.
 - **Still not implemented:** task-state projection updater with expected-revision guard, EVENT_LOG projection refresh, automatic owner notification/chat transport, automatic capture of every live chat, and full end-to-end UMC acceptance.
 - **Next action:** inspect whether existing task-state update utilities already exist before adding anything. If none, design a guarded proposal/apply operation that requires an expected file hash/revision, appends a linked event first, refuses stale writes, and never silently overwrites a newer parent state. Then add crash/retry tests.
+
+
+### Implementation checkpoint — guarded task-state projection (2026-10-14)
+
+- Added `tools/guarded_task_state_update.py`: appends a linked checkpoint to TASK_STATE only if the caller's expected SHA-256 still matches, the supporting event exists in a project event log, and a scoped lock can be acquired. It preserves existing text and rejects stale revisions, duplicate-ID content conflicts, missing evidence, arbitrary target paths and lock conflicts.
+- Added `tests/test_guarded_task_state_update.py` for append preservation, replay idempotency, stale revision, missing event, existing lock, malformed event log, duplicate update conflict and path restrictions.
+- Updated `core/unified_memory_control_loop.md` with implementation status and limits.
+- **Verification pending:** run CI against the final HEAD after these changes and read back files. Do not treat earlier green CI as proof for this new tool.
+- Limits: no combined transaction spans event publication and task-state append; no automatic HANDOFF/EVENT_LOG regeneration; a hard crash can leave a stale lock; tool caller must supply truthful checkpoint text. Full end-to-end recovery still unverified.
+- Next: exact-head CI. If green, add failure-injection/repair tests for interruption between child-result event and task-state projection; then map remaining UMC scenarios to concrete implemented tests vs BLOCKED components.
