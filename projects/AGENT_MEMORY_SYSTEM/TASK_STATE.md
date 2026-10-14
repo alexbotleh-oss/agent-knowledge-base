@@ -347,3 +347,12 @@ Tests added for first pass, completed replay, and a changed source under the sam
 - **Verification pending:** run CI against the final HEAD after these changes and read back files. Do not treat earlier green CI as proof for this new tool.
 - Limits: no combined transaction spans event publication and task-state append; no automatic HANDOFF/EVENT_LOG regeneration; a hard crash can leave a stale lock; tool caller must supply truthful checkpoint text. Full end-to-end recovery still unverified.
 - Next: exact-head CI. If green, add failure-injection/repair tests for interruption between child-result event and task-state projection; then map remaining UMC scenarios to concrete implemented tests vs BLOCKED components.
+
+
+### Verification checkpoint — linked child-return round trip (2026-10-14)
+
+- Added `tests/test_child_result_return_roundtrip.py` connecting the actual local components: child result publication → exact replay → explicit owner acknowledgement → guarded append to TASK_STATE.
+- The second integration test injects a parent-state change between proposal and apply, confirms STALE_REVISION/no write, then retries using the refreshed hash and preserves the intervening parent change.
+- Exact-head CI PASS for the test commit `74777aede3df8528cd3e455e9e0bcd72144d57e2`: [run #432](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38548227060). The workflow's validation and unit tests passed.
+- **Boundary:** this validates a local connected path under fixtures, not distributed atomicity or automatic chat delivery. A crash after event publication but before task-state append is recoverable by explicit replay/replanning; no automatic reconciler currently finds all pending returns.
+- **Next step:** add a reconciliation/report tool that scans the canonical event log for child results without acknowledgement or accepted acknowledgement without a linked checkpoint update, produces a dry-run repair plan, and never mutates state without explicit apply and expected hashes.
