@@ -104,3 +104,12 @@
 - CI passed on commit `d5bbb7a21e0e280c5fc6aa11ff4cc546bcac9774` (run [#38519218588](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38519218588)). A subsequent small payload-order fix and documentation/state updates created newer commits, so re-check exact HEAD CI before calling the current tree green.
 - Limitation to carry forward honestly: resume rescans the immutable source from the beginning to the saved ordinal; byte-offset/position index optimization remains future work. Source archive is byte-preserved, staged conversation payloads retain nested messages and parent/child links, but binary attachments are not extracted and no semantic analysis is performed.
 - Next action: check exact current HEAD and CI. Then add lost-ack/duplicate-ID recovery tests and optimize seek position only after tests remain green. PR #22 stays open/Draft/unmerged due to unresolved unrelated project-history preservation/scope concerns; never touch main.
+
+
+## Resume checkpoint — recovery tests added — 2026-10-14
+
+- Added tests for replaying a committed batch after a simulated lost acknowledgement (no duplicate), duplicate conversation IDs (must end FAILED, not silently lose a record), and UTF-8 streaming across tiny chunk boundaries.
+- Test commit: `31272906f2b2a904c230225249fd930e8c0c0cf4`; CI run [#38519357924](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38519357924) was in progress when this note was created. Verify conclusion before claiming pass.
+- Most recent prior exact code/docs commit `466f68801eb7fd8b75bdbc8171f4bae5ce213d32` passed run #38519320849. Later test additions are not covered by that pass.
+- Continue from the importer task, not the temporal-model tangent. Main remaining implementation trade-off: resume scans earlier conversation objects to reach the checkpoint ordinal. Improve this with a snapshot-bound position index after green test evidence. Preserve private source content locally; never commit exports.
+- PR #22 remains OPEN/DRAFT/UNMERGED; do not merge or touch main because unrelated project histories still require safe preservation and scope resolution.
