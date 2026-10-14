@@ -122,3 +122,12 @@
 - New exact-head workflow run [#38519357924](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38519357924) is running for commit `31272906f2b2a904c230225249fd930e8c0c0cf4`; result is not yet known at this checkpoint.
 - Previous implementation + documentation changes have PASS on run [#38519320849](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38519320849) for commit `466f68801eb7fd8b75bdbc8171f4bae5ce213d32`. Do not extend that PASS to the new test commit until its own run completes.
 - Next: inspect run #38519357924 and job logs if it fails; then optimize cursor seek only after tests are green. Current known limitation remains re-scanning from the start of the immutable snapshot on resume.
+
+
+## Checkpoint — offset-based resume and CI verification — 2026-10-14
+
+- Optimized tools/resumable_chat_import.py so a checkpoint stores both the next conversation ordinal and a byte offset immediately after the last committed conversation, plus the last source locator. The offset is bound to the immutable source snapshot SHA-256 and is advanced in the same SQLite transaction as the batch and event journal. Resume seeks to the offset rather than re-parsing earlier conversations; older DBs with zero/missing offset safely fall back to scanning from the beginning.
+- Added additive SQLite column migration, offset emission from the incremental JSON-array decoder, and a test asserting that resume starts from the saved offset. Small-chunk UTF-8 test covers non-ASCII text; lost-ack replay and duplicate-ID tests remain in the suite.
+- During this change CI caught a real bookkeeping bug (last was an ordinal but was indexed like a record). It was fixed in commit baf9240895b94d308b7f1f88d1f9ddb95a85535c; the subsequent exact-head run passed. The final code+docs HEAD at this checkpoint is b7344e351c260dab55f24a03e1c355f953124988, and workflow #38519573230 completed SUCCESS for that exact SHA.
+- PASS means repository validation and all unittest discovery checks passed on the exact code/docs SHA. This is not yet a production-scale performance benchmark, attachment completeness audit, or proof that every external conversation is present.
+- Next: inspect exact live PR head and run after checkpoint writes; add ZIP-resume test if needed; consider concurrent-run locking and crash injection around SQLite commit boundaries before treating the importer as production-ready. Keep PR #22 Draft/open/unmerged; scope/preservation issue still blocks merge.
