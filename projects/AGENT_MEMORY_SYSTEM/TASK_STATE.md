@@ -311,3 +311,11 @@ Tests added for first pass, completed replay, and a changed source under the sam
 - Parent task projection is deliberately not mutated by acknowledgement. The caller must still check the specific acceptance criterion and update TASK_STATE/HANDOFF separately. The owner reference is a supplied evidence locator, not an authentication mechanism.
 - Acknowledgement API is not yet wired to a dedicated CLI or automatic chat workflow. Multi-writer locking remains absent.
 - Next: verify exact-head CI and read back changed files. If green, implement/test derived-state update as a separate controlled operation, with optimistic expected-revision checks so stale child results cannot overwrite newer parent state.
+
+
+### Verification checkpoint — acknowledgement path (2026-10-14)
+
+- **Exact-head CI PASS:** [run #426](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38547428594), SHA `3507528dab41068ecb6a591f013123f6a8c97b72`. The workflow's memory/protocol validation, unit tests, and knowledge-base/stack validation all passed.
+- **Do not hide intermediate failures:** CI first caught an invalid newline parameter in the acknowledgement writer and a test fixture that encoded a literal backslash-n instead of a line break. After those were fixed, CI caught an identity bug: the acknowledgement ID included the decision, which allowed the same owner identity to create a different decision instead of a conflict. Identity now keys on result event + owner reference; a changed decision under that identity is rejected.
+- **Current verified scope:** the repository suite passed at exact SHA above, including seven result-publication tests and four acknowledgement tests. This validates the tested local primitive only, not cross-chat delivery or end-to-end memory continuity.
+- **Next step:** strengthen writer concurrency safety and add an explicit CLI path for owner acknowledgement; then plan the derived current-state projection update using expected-revision protection. Do not claim automated notification, cross-chat capture, or full UMC-01..12 completion.
