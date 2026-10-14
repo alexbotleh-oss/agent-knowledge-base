@@ -54,7 +54,7 @@ class SemanticContextExtractorTests(unittest.TestCase):
 
         context = extract_semantic_context(packet)
         self.assertEqual(context["active_goal"], "перенести опыт в agent-knowledge-base")
-        self.assertEqual(context["historical_goal"], "отладить Android-приложение.")
+        self.assertEqual(context["historical_goal"], "отладить Android-приложение")
         self.assertEqual(context["next_step"], "проверить сохранённый пакет восстановления")
         self.assertEqual(context["open_questions"], ["Где хранится подтверждённая ревизия?"])
         self.assertEqual(context["blockers"], ["не менять main без подтверждения"])
