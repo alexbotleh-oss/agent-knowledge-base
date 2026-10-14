@@ -123,6 +123,7 @@ class TrustPolicyEnforcedOnWriteTests(unittest.TestCase):
             "- **Последнее событие:** EVT-TEST-001\n",
             encoding="utf-8",
         )
+        self.handoff.write_text("# HANDOFF\n", encoding="utf-8")
         packet = build_session_packet(self.task_state, self.handoff, self.events)
         context = extract_semantic_context(packet)
         verdict = authorize_next_step(context)
