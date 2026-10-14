@@ -278,3 +278,15 @@ Tests added for first pass, completed replay, and a changed source under the sam
 - **Status:** the idea and operating rules are recorded. Automated ingestion from all chats, cross-chat discovery, agent debate orchestration and sandbox indexing are NOT implemented or verified.
 - **Next step:** inspect current source/event/edge schemas and existing indexes to map the idea-card format onto the current canonical structures, then implement a minimal compatible path and tests.
 - **Branch/PR guardrail:** work on `export/cross-project-experience-rollup-20261012`; PR #22 remains Draft/open/unmerged; do not modify `main`.
+
+
+## Active checkpoint — unified dialogue–memory loop (2026-10-14)
+
+- **User direction:** integrate Alice's useful mechanisms into the existing architecture, do not rebuild it; connect memory lifecycle and dialogue/goal control so idea, decision, context, task and goal survive context switches and can be contributed to from ChatGPT chats and external sources.
+- **Integration artifact added:** `core/unified_memory_control_loop.md`. It binds existing task state, handoff, append-only events, provenance/intake, idea sandbox, shared-memory applicability checks, child-branch result return, and checkpoint recovery into one operational contract. It includes 12 acceptance scenarios (UMC-01..12) and a definition of done.
+- **Runtime entry point linked:** `core/agent_runtime_protocol.md` now requires the unified contract. Added `tests/test_unified_memory_control_loop.py` to ensure the contract stays linked, its acceptance IDs remain present, and it does not falsely claim full deployment.
+- **Read-back:** new contract, test, and runtime reference were fetched from the working branch and checked.
+- **Exact-head CI at checkpoint time:** run 38545650884 was QUEUED on commit `0545ee77d79cead774258523dcd998ace0238dc5`. Later state-file updates change HEAD; check CI on the newest exact SHA before claiming PASS.
+- **Scope of this step:** integration contract and guard test only. This is not yet an end-to-end runtime. The importer works as a local-first raw staging prototype; the full route → reviewed promotion → index/view update → linked result publication → new-chat restore path is not yet connected. Automatic capture from all live ChatGPT chats, cross-chat availability in every environment, protected per-agent write permissions, and automatic child-result propagation remain unimplemented/unverified.
+- **Next implementation priority:** implement the smallest compatible end-to-end path on top of existing records (not a second memory store): intake result manifest with stable IDs, atomic/transactional staging and idempotent promotion, derived-view/index update status, and linked return to the owning TASK_STATE/HANDOFF. Add failure-injection tests for crash between commit/index/checkpoint and child-result acknowledgement. Then audit actual repository permissions and run UMC-01..12.
+- **Release gate:** project is not yet ready to enter the end-to-end test stage. PR #22 remains open/draft/unmerged; do not merge or modify `main`.
