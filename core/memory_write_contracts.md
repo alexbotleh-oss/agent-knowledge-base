@@ -79,7 +79,7 @@ For every persistence operation, verify and record:
 
 ## Monitoring and stress-test status
 
-Current protection is fail-closed lock contention and explicit operation statuses; there is no always-on monitor or automated stale-lock reaper. Do not auto-delete stale lock files without process-level verification. Stress testing with independent processes, crash injection, archive staging collision/rerun tests, and importer interruption tests remain open. The AST audit is a tripwire and must not be treated as proof of complete write-path coverage.
+Current protection is fail-closed lock contention and explicit operation statuses; there is no always-on monitor or automated stale-lock reaper. Do not auto-delete stale lock files without process-level verification. Independent-process checkpoint stress testing and controlled crash injection have CI evidence on the reviewed revisions below. Archive staging collision/rerun tests and importer interruption tests remain open. The AST audit is a tripwire and must not be treated as proof of complete write-path coverage.
 
 ## Audit limitations and next checks
 
@@ -104,3 +104,11 @@ These are verified test outcomes for the tested Linux CI environment and the inj
 
 Stale-lock cleanup is intentionally not automatic. A lock may represent a live or stalled writer, and guessing that it is stale can reintroduce concurrent mutation. Recovery remains an explicit operator action after checking that the owning process is no longer active. The tests' manual cleanup is test-fixture recovery, not production lock-reaping behavior.
 
+
+## Multiprocess checkpoint stress evidence (HEAD `98138f32f0495570917acd4846fc5c4b7416c6d4`)
+
+GitHub Actions validation run [#530](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38679829211) completed successfully on this exact HEAD. The workflow's `validate` job completed successfully, including the repository validation/test steps. The added `tests/test_checkpoint_multiprocess_stress.py` exercises the shared `apply_checkpoint` lock protocol with 32 independent Python processes by default (configurable with `CHECKPOINT_STRESS_WORKERS`, 2–100) released against the same expected task-state revision.
+
+The test asserts: exactly one `APPLIED`; all other outcomes are `LOCKED` or `STALE_REVISION`; exactly one checkpoint marker and one reported write; no lock files remain after all workers exit normally; and worker/barrier timeouts surface as failures. The test passed as part of run #530 on the exact HEAD above.
+
+Scope: this is evidence for concurrent callers using `apply_checkpoint` and the shared lock protocol in the tested GitHub Actions Linux environment. It does not establish race-freedom for manual/direct writers, external mutation of `HANDOFF.md`, other persistence paths, all filesystem failures, or every possible process interleaving. The HANDOFF write-path audit and archive/import stress tests remain open; this result does not close those items.
