@@ -77,6 +77,16 @@ class TurnLifecycleLedgerTests(unittest.TestCase):
         self.assertEqual(replay["status"], "ALREADY_RECORDED")
         self.assertEqual(len(ledger.read_events(self.path)), 2)
 
+    def test_receipt_replay_with_changed_checkpoint_conflicts(self):
+        self.receive()
+        with self.assertRaisesRegex(ValueError, "collision"):
+            ledger.record(
+                self.path, "TURN_RECEIVED", "T-001",
+                task_id="TASK-1", user_text="продолжай дальше",
+                user_text_sha256=ledger.digest("продолжай дальше"),
+                previous_checkpoint="CKPT-STALE",
+            )
+
     def test_event_for_unknown_turn_is_rejected(self):
         with self.assertRaisesRegex(ValueError, "unknown turn_id"):
             ledger.record(self.path, "WORK_STARTED", "missing")
