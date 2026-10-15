@@ -26,6 +26,7 @@
         "project_id": { "type": "string", "minLength": 1, "description": "Use unknown when the project cannot be established; do not guess." },
         "conversation_ids": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true },
         "source_locator": { "type": "string", "minLength": 1 },
+        "parser_version": { "type": "string", "minLength": 1, "description": "Parser that produced the source snapshot; not the semantic event time." },
         "captured_at": {
           "description": "Original capture time when known; never replace an unknown source time with review time.",
           "oneOf": [{ "type": "string", "format": "date-time" }, { "const": "unknown" }]
