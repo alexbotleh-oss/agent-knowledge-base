@@ -70,6 +70,48 @@ class SourceIngestionWriteContractTests(unittest.TestCase):
                 adapt_archive_staging_to_intake(snapshot, root / "intake")
             self.assertFalse((root / "intake").exists())
 
+    def test_concurrent_adapter_replay_publishes_one_consistent_batch(self):
+        import multiprocessing
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            snapshot = self._make_staging(root)
+            output = root / "intake"
+            context = multiprocessing.get_context("spawn")
+            barrier = context.Barrier(2)
+            queue = context.Queue()
+
+            def worker(snapshot_path, output_path, start_barrier, result_queue):
+                try:
+                    start_barrier.wait(timeout=10)
+                    result_queue.put(adapt_archive_staging_to_intake(
+                        Path(snapshot_path), Path(output_path)
+                    ))
+                except Exception as exc:
+                    result_queue.put({"status": "ERROR", "error": repr(exc)})
+
+            workers = [
+                context.Process(target=worker, args=(str(snapshot), str(output), barrier, queue))
+                for _ in range(2)
+            ]
+            for process in workers:
+                process.start()
+            results = [queue.get(timeout=20) for _ in workers]
+            for process in workers:
+                process.join(timeout=20)
+                self.assertFalse(process.is_alive(), "adapter worker did not exit")
+                self.assertEqual(process.exitcode, 0)
+
+            statuses = sorted(result.get("status") for result in results)
+            self.assertEqual(statuses, ["ADAPTED", "ALREADY_ADAPTED"], results)
+            batch_dirs = [path for path in output.iterdir() if path.is_dir() and not path.name.startswith(".")]
+            self.assertEqual(len(batch_dirs), 1)
+            batch_dir = batch_dirs[0]
+            manifest = json.loads((batch_dir / "manifest.json").read_text(encoding="utf-8"))
+            artifact = (batch_dir / "source_records.jsonl").read_bytes()
+            self.assertEqual(manifest["artifacts"][0]["sha256"], __import__("hashlib").sha256(artifact).hexdigest())
+            self.assertEqual(manifest["artifacts"][0]["record_count"], len(artifact.decode("utf-8").splitlines()))
+            self.assertFalse(any(path.name.startswith(".") and ".tmp-" in path.name for path in output.iterdir()))
+
     def test_registry_dry_run_apply_and_replay_preserve_single_revision(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
