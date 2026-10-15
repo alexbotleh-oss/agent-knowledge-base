@@ -225,7 +225,16 @@ def run_minimal_agent_loop(
         "retrieval": retrieval,
         "next_action_policy": (
             "REVIEW_CONTEXT_AND_CANDIDATES"
-            if context.get("semantic_context_usable") and retrieval["status"] not in {"BLOCKED", "NO_QUERY_TERMS"}
+            if (
+                context.get("semantic_context_usable")
+                and retrieval["status"] not in {"BLOCKED", "NO_QUERY_TERMS"}
+                and trust["status"] == "AUTHORIZED_FOR_PLANNING"
+            )
+            else "REVIEW_CANDIDATES_ONLY_NO_PLANNING"
+            if (
+                context.get("semantic_context_usable")
+                and retrieval["status"] not in {"BLOCKED", "NO_QUERY_TERMS"}
+            )
             else "STOP_AND_RECONCILE_SOURCES"
         ),
         "writes_performed": False,
