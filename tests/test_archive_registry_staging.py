@@ -87,5 +87,63 @@ class ArchiveRegistryStagingTests(unittest.TestCase):
             self.assertEqual(json.loads((out / "archive_snapshot.json").read_text())["archive_id"], "ARCHIVE-B")
 
 
+    def test_process_crash_before_manifest_publish_preserves_old_generation_and_recovers(self):
+        import subprocess
+        import sys
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            source = root / "conversations.json"
+            out = root / "staging"
+            source.write_text(json.dumps([{"id":"c1","mapping":{}}]), encoding="utf-8")
+            first = build(source, out, "ARCHIVE-CRASH-ATOMIC")
+            manifest_path = out / "archive_snapshot.json"
+            old_manifest = manifest_path.read_bytes()
+            old_records_path = out / first["records_file"]
+            old_records = old_records_path.read_bytes()
+
+            source.write_text(json.dumps([{"id":"c2","mapping":{}}]), encoding="utf-8")
+            crash_script = r'''
+import os
+import sys
+from pathlib import Path
+
+sys.path.insert(0, sys.argv[1])
+from archive_registry_staging import build
+
+original_replace = Path.replace
+def crash_before_manifest_publish(path, target):
+    if path.name == "archive_snapshot.json.tmp":
+        os._exit(73)
+    return original_replace(path, target)
+
+Path.replace = crash_before_manifest_publish
+build(Path(sys.argv[2]), Path(sys.argv[3]), "ARCHIVE-CRASH-ATOMIC")
+'''
+            crashed = subprocess.run(
+                [sys.executable, "-c", crash_script, str(ROOT / "tools"),
+                 str(source), str(out)],
+                capture_output=True, text=True, timeout=30,
+            )
+            self.assertEqual(crashed.returncode, 73, crashed.stderr)
+
+            # The old published pointer and its immutable generation must survive.
+            self.assertEqual(manifest_path.read_bytes(), old_manifest)
+            self.assertEqual(old_records_path.read_bytes(), old_records)
+            old_snapshot = json.loads(manifest_path.read_text(encoding="utf-8"))
+            self.assertEqual(old_snapshot["raw_sha256"], first["raw_sha256"])
+            self.assertTrue((out / old_snapshot["records_file"]).is_file())
+
+            # A new process can reacquire the OS lock and publish a consistent
+            # generation; the interrupted temporary manifest is not authoritative.
+            recovered = build(source, out, "ARCHIVE-CRASH-ATOMIC")
+            published = json.loads(manifest_path.read_text(encoding="utf-8"))
+            published_records = out / published["records_file"]
+            self.assertEqual(recovered["raw_sha256"], hashlib.sha256(source.read_bytes()).hexdigest())
+            self.assertEqual(published["raw_sha256"], recovered["raw_sha256"])
+            self.assertEqual(published["records_sha256"], hashlib.sha256(published_records.read_bytes()).hexdigest())
+            self.assertTrue(published_records.is_file())
+            self.assertEqual(json.loads(published_records.read_text(encoding="utf-8").splitlines()[0])["conversation_id"], "c2")
+
+
 if __name__ == "__main__":
     unittest.main()
