@@ -50,6 +50,40 @@ class ContextTrustGateTests(unittest.TestCase):
         selected = select_authoritative_checkpoint([old_verified, new_unverified])
         self.assertEqual(selected["checkpoint_id"], "cp-old")
 
+    def test_checkpoint_ordering_normalizes_timezone_offsets(self):
+        earlier_utc = {
+            "checkpoint_id": "cp-earlier",
+            "timestamp": "2026-10-15T00:00:00+02:00",
+            "freshness_verified": True,
+            "semantic_context_usable": True,
+            "event_linkage_complete": True,
+        }
+        later_utc = {
+            "checkpoint_id": "cp-later",
+            "timestamp": "2026-10-14T23:00:00Z",
+            "freshness_verified": True,
+            "semantic_context_usable": True,
+            "event_linkage_complete": True,
+        }
+        selected = select_authoritative_checkpoint([later_utc, earlier_utc])
+        self.assertEqual(selected["checkpoint_id"], "cp-later")
+
+    def test_invalid_or_missing_timestamp_is_not_selected(self):
+        invalid = {
+            "checkpoint_id": "cp-invalid",
+            "timestamp": "not-a-time",
+            "freshness_verified": True,
+            "semantic_context_usable": True,
+            "event_linkage_complete": True,
+        }
+        missing = {
+            "checkpoint_id": "cp-missing",
+            "freshness_verified": True,
+            "semantic_context_usable": True,
+            "event_linkage_complete": True,
+        }
+        self.assertIsNone(select_authoritative_checkpoint([invalid, missing]))
+
     def test_no_verified_checkpoint_means_reconciliation_not_guessing(self):
         selected = select_authoritative_checkpoint([
             {
