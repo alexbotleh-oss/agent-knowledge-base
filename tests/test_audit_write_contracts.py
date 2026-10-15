@@ -59,6 +59,10 @@ class TestAuditWriteContracts(unittest.TestCase):
         self.assertIn("tools/source_ingestion_runner.py", audit_module.CONTRACTS)
         self.assertIn("hash-chained transition ledger", audit_module.CONTRACTS["tools/source_ingestion_runner.py"])
 
+    def test_continuity_checkpoint_bundle_has_explicit_write_contract(self):
+        self.assertIn("tools/continuity_checkpoint_bundle.py", audit_module.CONTRACTS)
+        self.assertIn("single atomic CURRENT_CHECKPOINT pointer", audit_module.CONTRACTS["tools/continuity_checkpoint_bundle.py"])
+
     def test_untyped_path_parameter_is_not_guessed_as_path(self):
         # Conservative boundary: no false claim of a filesystem write without path evidence.
         hits = operations(
