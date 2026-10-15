@@ -110,6 +110,69 @@ class MinimalAgentLoopTests(unittest.TestCase):
         self.assertFalse(result["writes_performed"])
         self.assertFalse(result["execution_performed"])
 
+    def test_project_match_is_only_a_precondition_not_applicability(self):
+        self._write_events(self.experience, [
+            {
+                "event_id": "EVT-SAME-PROJECT",
+                "project_id": "CARD111",
+                "type": "lesson",
+                "summary": "QR cache invalidation after deploy",
+                "status": "verified",
+            },
+            {
+                "event_id": "EVT-OTHER-PROJECT",
+                "project_id": "ORGANISM",
+                "type": "lesson",
+                "summary": "QR cache invalidation after deploy",
+                "status": "verified",
+            },
+            {
+                "event_id": "EVT-UNKNOWN-PROJECT",
+                "type": "lesson",
+                "summary": "QR cache invalidation after deploy",
+                "status": "verified",
+            },
+        ])
+        result = retrieve_experience_candidates(
+            "QR cache invalidation after deploy",
+            [self.experience],
+            current_project_id="CARD111",
+        )
+        by_id = {item["event_id"]: item for item in result["candidates"]}
+        self.assertEqual(by_id["EVT-SAME-PROJECT"]["project_scope_match"], "MATCH")
+        self.assertEqual(
+            by_id["EVT-SAME-PROJECT"]["applicability_gate"],
+            "SCOPE_MATCHED_REQUIRES_REVIEW",
+        )
+        self.assertEqual(
+            by_id["EVT-OTHER-PROJECT"]["applicability_gate"],
+            "OUT_OF_PROJECT_SCOPE",
+        )
+        self.assertEqual(
+            by_id["EVT-UNKNOWN-PROJECT"]["applicability_gate"],
+            "PROJECT_SCOPE_UNKNOWN",
+        )
+        self.assertTrue(all(item["transfer_decision"] == "UNASSESSED" for item in by_id.values()))
+        self.assertTrue(result["applicability_policy"]["project_match_is_necessary_not_sufficient"])
+        self.assertEqual(
+            result["applicability_policy"]["task_branch_match"],
+            "NOT_EVALUATED_SCHEMA_FIELD_NOT_GUARANTEED",
+        )
+
+    def test_project_scope_is_unknown_without_explicit_current_project(self):
+        self._write_events(self.experience, [{
+            "event_id": "EVT-PROJECT",
+            "project_id": "CARD111",
+            "summary": "QR cache invalidation after deploy",
+        }])
+        result = retrieve_experience_candidates(
+            "QR cache invalidation after deploy", [self.experience]
+        )
+        candidate = result["candidates"][0]
+        self.assertEqual(candidate["project_scope_match"], "UNKNOWN")
+        self.assertEqual(candidate["applicability_gate"], "PROJECT_SCOPE_UNKNOWN")
+        self.assertEqual(candidate["transfer_decision"], "UNASSESSED")
+
     def test_disputed_and_conflicting_candidates_are_retained_separately(self):
         self._write_events(self.experience, [
             {
