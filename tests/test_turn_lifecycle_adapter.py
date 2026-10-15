@@ -127,7 +127,8 @@ class TurnLifecycleAdapterTests(unittest.TestCase):
         status, _, body = self.request("POST", "/v1/turns", {
             "turn_id": "turn-x", "task_id": "TASK", "user_text": "hello", "extra": "not allowed"
         })
-        self.assertEqual(status, 201)  # unknown top-level receive keys are ignored for forward compatibility
+        self.assertEqual(status, 400)
+        self.assertIn("unsupported fields", body["error"])
         status, _, body = self.request("POST", "/v1/turns/turn-x/events", {"event_type": "INVENTED"})
         self.assertEqual(status, 400)
         self.assertIn("unsupported event_type", body["error"])
