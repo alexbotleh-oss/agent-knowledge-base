@@ -31,6 +31,17 @@ class MemoryIntakeContractTests(unittest.TestCase):
             path.write_text(json.dumps(manifest), encoding="utf-8")
             self.assertEqual(validate_intake_manifest(path, ROOT), [])
 
+    def test_record_count_must_match_actual_jsonl_records(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            folder = Path(tmp)
+            records = self.fixture / "records.jsonl"
+            (folder / "records.jsonl").write_text(records.read_text(encoding="utf-8"), encoding="utf-8")
+            manifest = dict(self.manifest)
+            manifest["artifacts"] = [dict(self.manifest["artifacts"][0], path="records.jsonl", record_count=2)]
+            path = folder / "manifest.json"
+            path.write_text(json.dumps(manifest), encoding="utf-8")
+            errors = validate_intake_manifest(path, ROOT)
+            self.assertTrue(any("record_count 2 does not match actual JSONL count 1" in error for error in errors))
     def test_artifact_tampering_is_detected(self):
         with tempfile.TemporaryDirectory() as tmp:
             folder = Path(tmp)
