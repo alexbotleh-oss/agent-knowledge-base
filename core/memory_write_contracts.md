@@ -157,3 +157,14 @@ GitHub Actions run [#540](https://github.com/alexbotleh-oss/agent-knowledge-base
 - Protection against all aliases, symlinks, path tricks, or indirect writes merely because `generate_report.sh` checks the output basename. The guard is a targeted mitigation for that script and the listed names, not a repository-wide access-control boundary.
 
 **Boundary:** these guarantees apply only to the named mechanisms, exact tested revisions, and stated CI environment. They do not establish that all canonical-file writers have been found or that `HANDOFF.md` and `TASK_STATE.md` participate in one atomic transaction. Keep the HANDOFF race open until writer discovery and a synchronization/source-version contract are decided and tested.
+
+
+## Recoverable paired continuity checkpoint — `tools/continuity_checkpoint_bundle.py`
+
+The immutable generation under `projects/<project>/checkpoints/<checkpoint_id>.json` stores both `TASK_STATE.md` and `HANDOFF.md` projection contents, their hashes, the source event-log hash, source HEAD/CI metadata, and a hash-linked parent checkpoint. `CURRENT_CHECKPOINT.json` is the single commit point: write the immutable generation first, then atomically replace the pointer. If the process stops after pointer publication but before both Markdown projections are materialized, `recover` verifies the generation/parent chain and replays both projections. It never rewrites `events.jsonl`.
+
+- Exact replay of the current checkpoint ID with identical source hashes and metadata returns `ALREADY_CAPTURED`; reuse of an ID for different or stale content returns `CONFLICT`.
+- `verify` reports projection/source drift instead of silently treating old Markdown as current.
+- The pointer/generation are canonical for this tool. Git history remains the repository-level audit trail; immutable checkpoint generations preserve the previous paired state independently of projection rewrites.
+- This mechanism is not ChatGPT autosave and cannot recover response text that was never committed to the repository. It protects checkpoints after they are captured.
+- Acceptance tests: capture + verify; interruption after pointer commit; recovery of both projections; idempotent replay; immutable parent chain; tamper fail-closed; missing pointer fail-closed.
