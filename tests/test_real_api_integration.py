@@ -362,7 +362,25 @@ class TestRealApiIntegration(unittest.TestCase):
             self.assertEqual(replayed_update.get("status"), "ALREADY_APPLIED")
             self.assertEqual(task_state.read_bytes(), after_apply)
 
-            # Stage 4: a new interpreter reconstructs the packet only from persisted files.
+            # Stage 4: capture the paired task/handoff checkpoint, then interrupt
+            # after the pointer commit point and recover both projections.
+            import continuity_checkpoint_bundle as checkpoint_bundle
+            captured = checkpoint_bundle.capture(
+                task_state.parent,
+                checkpoint_id="CKPT-E2E-001",
+                summary="End-to-end branch-result recovery fixture",
+                source_head="test-source-head",
+                ci_run_id="test-ci-run",
+            )
+            self.assertEqual(captured.get("status"), "CAPTURED")
+            task_state.write_text("interrupted partial state", encoding="utf-8")
+            handoff.write_text("interrupted partial handoff", encoding="utf-8")
+            recovered_checkpoint = checkpoint_bundle.recover(task_state.parent)
+            self.assertEqual(recovered_checkpoint.get("status"), "RECOVERED")
+            self.assertEqual(task_state.read_bytes(), after_apply)
+            self.assertNotEqual(handoff.read_text(encoding="utf-8"), "interrupted partial handoff")
+
+            # Stage 5: a new interpreter reconstructs the packet only from persisted files.
             script = (
                 "import json, sys; from pathlib import Path; "
                 "from restore_session_packet import build_session_packet; "
