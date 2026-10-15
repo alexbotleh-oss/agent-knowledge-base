@@ -66,10 +66,8 @@ class SourceIngestionWriteContractTests(unittest.TestCase):
             metadata = json.loads(snapshot.read_text(encoding="utf-8"))
             records = snapshot.parent / metadata["records_file"]
             records.write_bytes(records.read_bytes() + b"{}\n")
-            result = adapt_archive_staging_to_intake(snapshot, root / "intake")
-            self.assertEqual(result["status"], "REJECTED")
-            self.assertFalse(result["writes_performed"])
-            self.assertIn("records_sha256 mismatch", result["error"])
+            with self.assertRaisesRegex(ValueError, "records_sha256 mismatch"):
+                adapt_archive_staging_to_intake(snapshot, root / "intake")
             self.assertFalse((root / "intake").exists())
 
     def test_registry_dry_run_apply_and_replay_preserve_single_revision(self):
