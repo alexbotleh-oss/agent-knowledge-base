@@ -60,7 +60,7 @@ class GuardedTaskStateUpdateTests(unittest.TestCase):
             ],
         }
         self.event_log.write_text(
-            json.dumps(result_event) + "\\n" + json.dumps(acknowledgement_event) + "\\n",
+            json.dumps(result_event) + "\n" + json.dumps(acknowledgement_event) + "\n",
             encoding="utf-8",
         )
         self.proposal = {
