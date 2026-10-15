@@ -575,3 +575,10 @@ This is a callable tool, not yet a ChatGPT/browser integration. It cannot observ
 - API: `tools/turn_lifecycle_adapter.py`; SDK: `clients/turn_lifecycle_client.js`; docs: `core/turn_lifecycle_client_adapter.md`; Python/Node tests are in place.
 - This is not yet wired into the current ChatGPT page. The next concrete step is a browser extension or app wrapper that registers exact input before dispatch, captures previous assistant output locally, detects rendered responses, and shows incomplete turns after reload. Verify on actual Yandex Browser Android; don't claim that it works before that test.
 - Use 10–12 minute work slices and persist each material milestone. Keep all exact text local/private. PR #27 remains Draft/open/unmerged; no main changes.
+
+## Active handoff — browser extension prototype, 2026-10-15
+
+- Verified static code HEAD `d707a91f9662cb1aa451db4fba1596baef8511a9`; [CI 38762303927](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38762303927) PASS: 227 Python tests (1 skipped), 4 Node tests, 92 write sites / 0 unclassified, extension JS syntax checks passed.
+- The extension is local-only (IndexedDB, no external upload), and the popup can inspect incomplete turns, copy a recovery prompt and export JSONL. The HTTP API/SDK remains available for trusted wrappers.
+- **Live browser validation is still pending.** Test installation and runtime in the user's actual Yandex Browser Android version. First use harmless prompts; verify no send before durable receipt, correct exact text/prior assistant capture, response detection, interruption recovery, and popup export. UI selectors may drift, so do not claim production readiness before those checks.
+- PR #27 stays Draft/open/unmerged; no changes to `main`. Use 10–12 minute work slices and checkpoint after each verified milestone.

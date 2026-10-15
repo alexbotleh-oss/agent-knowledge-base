@@ -575,3 +575,11 @@ Tests added for first pass, completed replay, and a changed source under the sam
 - **Implemented:** authenticated local HTTP adapter, client SDK, Python API tests, Node client tests, runtime protocol link, adapter integration documentation. SDK gates work until receipt and WORK_STARTED are acknowledged.
 - **Not yet implemented:** hook into the live ChatGPT web UI, actual Android browser send interception, visible-response observation and user-facing recovery UI. No claim of automatic capture yet.
 - **Next:** prototype a host-specific extension for Yandex Browser Android, keep the journal local-only, test send-gate and restart/recovery behavior in a real browser. PR #27 stays Draft/open/unmerged; main unchanged.
+
+## Verified checkpoint — ChatGPT browser extension prototype, 2026-10-15
+
+- **Code HEAD:** `d707a91f9662cb1aa451db4fba1596baef8511a9`; exact-head [CI run 38762303927](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38762303927) PASS.
+- **Validation:** 227 Python tests (1 skipped), 4 Node SDK tests, strict write audit 92/0, extension JavaScript syntax checks PASS.
+- **Prototype files:** `clients/chatgpt-web-extension/manifest.json`, `background.js`, `content_script.js`, `popup.html`, `popup.js`, `README.md`. It stores locally in IndexedDB, gates recognized text sends on durable registration, captures the previous assistant message, observes a final rendered answer, lists incomplete turns, copies a recovery prompt, and exports JSONL on explicit request.
+- **Not yet verified:** actual install/runtime on the user's Yandex Browser Android version, current ChatGPT DOM selectors, network interruption/reload behavior, and end-to-end send/response detection. CI is static only.
+- **Next:** live-device acceptance with harmless prompts, recording each criterion as PASS/FAIL/UNKNOWN and evidence. Keep work slices 10–12 minutes. PR #27 remains Draft/open/unmerged; main unchanged.
