@@ -1,6 +1,6 @@
 # HANDOFF.md writer-path audit
 
-Status: partial static audit on branch `test/real-api-integration-20261014`, HEAD `b285662c7601b4e12b56dc41b23589cc27863f81` (before this audit document). This is an implementation-path review, not proof that no external/manual writer exists.
+Status: partial static audit on branch `test/real-api-integration-20261014`; initial implementation review was based on HEAD `b285662c7601b4e12b56dc41b23589cc27863f81`. Caller-inventory follow-up commit: `d1e3a5024d8dfc803e157033ba5b147e479b42b0` (CI status not yet confirmed at the time of this edit). This is an implementation-path review, not proof that no external/manual writer exists.
 
 ## Findings
 
@@ -34,7 +34,7 @@ This does not cover manual edits, arbitrary external scripts, editor/IDE writes,
 
 | Source and line | Invocation / target | Classification | Evidence and limits |
 | --- | --- | --- | --- |
-| `README.md:~60` | `tools/generate_report.sh /path/to/project` | Safe documented default invocation; no explicit `OUT` argument | The second positional argument is omitted, so the script uses `$PROJECT/validation-report.md`. The line number is approximate pending a line-numbered read; do not treat it as an exact locator. |
+| `README.md:65` | `tools/generate_report.sh /path/to/project` | Safe documented default invocation; no explicit `OUT` argument | The second positional argument is omitted, so the script uses `$PROJECT/validation-report.md`. The line is in the `Запуск проверок` code block; the command omits the second positional argument, so the script uses `$PROJECT/validation-report.md`. |
 | `.github/workflows/validate.yml` (validation steps) | No direct invocation of `generate_report.sh` or `install_into_repo.sh` in the workflow content inspected | No caller found in this workflow | The workflow invokes `validate_project.sh`, not the report generator or installer. This does not rule out indirect invocation by another script. |
 | Repository documentation/scripts searched in this pass | No `install_into_repo.sh` invocation identified in the inspected content | No caller found in inspected content; coverage incomplete | The installer is a manually invoked utility taking only a destination repository argument. Its `rsync --ignore-existing` option protects existing destination files, but creation of a missing canonical file is still possible. |
 | External/manual callers | Unknown | Outside repository-static scope | A local grep over the complete checked-out branch would be needed to establish a broader invocation inventory. GitHub code search used here indexes the default branch, so it is not sufficient evidence for all callers on this PR branch. |
