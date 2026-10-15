@@ -144,7 +144,7 @@ class MinimalAgentLoopTests(unittest.TestCase):
         )
         self.assertEqual(result["context"]["next_step"], "UNKNOWN")
         self.assertEqual(result["trust_gate"]["status"], "REFUSED_UNKNOWN_NEXT_STEP")
-        self.assertEqual(result["next_action_policy"], "REVIEW_CONTEXT_AND_CANDIDATES")
+        self.assertEqual(result["next_action_policy"], "REVIEW_CANDIDATES_ONLY_NO_PLANNING")
 
     def test_invalid_event_log_fails_closed_without_partial_candidates(self):
         self.experience.write_text(
