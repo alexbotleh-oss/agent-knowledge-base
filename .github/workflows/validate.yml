@@ -13,7 +13,7 @@ jobs:
       - name: Validate memory protocol and records
         run: |
           python3 tools/validate_memory.py
-          python3 tools/audit_write_contracts.py
+          python3 tools/audit_write_contracts.py --strict
           python3 -m unittest discover -s tests -v
       - name: Validate knowledge base and detected stacks
         run: |
