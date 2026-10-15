@@ -492,3 +492,13 @@ ACTIVE / PARTIAL. Recovery checkpoint persisted in HANDOFF; not an automatic bac
 - Current connected path: archive staging → sanitized intake → metadata-only source registry. Planner is read-only. No semantic promotion executor or canonical index-refresh executor was found in the inspected `tools/*.py`; restore reads project TASK_STATE/HANDOFF/events and is not automatically triggered by source registration. This gap is now documented in `core/unified_memory_control_loop.md`.
 - Next single action: specify a resumable orchestration ledger for the existing first three stages only, with persistent per-stage status and idempotent reconciliation. It must explicitly stop at `SOURCE_REGISTERED` / downstream-not-implemented rather than claim full ingestion. Define crash-injection tests before implementation.
 - No merge, no main changes, no source-history rewrite/deletion. Status PARTIAL.
+
+
+## Handoff checkpoint — 2026-10-15, resumable intake runner
+
+- **Validated code HEAD:** `5481f6c1f6366ca09703554b9f3c82df1d3fbf76`; CI [#38748553229](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38748553229) PASS: 194 tests, one skipped; strict write audit 76 mutation sites / 0 unclassified. CI now runs the audit with `--strict`.
+- **Real defect fixed:** concurrent staging→intake publication produced `OSError(39, 'Directory not empty')` on the losing directory rename. The adapter now checks for the destination directory on rename failure, validates the already-published batch and returns replay only if the existing output matches. The two-process test passes. A prior failure caused by a local worker function under multiprocessing spawn was fixed by moving the worker to module scope.
+- **Runner added:** `tools/source_ingestion_runner.py` + `core/source_ingestion_run_ledger.md` + four/five behavioral tests (dry-run, apply/replay, crash after registry commit, tamper detection, missing projection rebuild). It uses an OS advisory lock, hash-chained event ledger and atomic state projection. A crash after source-registry commit is reconciled by replaying the idempotent registry operation.
+- **Hard boundary:** runner stops at `SOURCE_REGISTERED_DOWNSTREAM_PENDING`. Semantic promotion, canonical index refresh and next-session restore are not implemented/connected by this runner. Do not claim end-to-end completion.
+- **Next single action:** inspect the existing semantic-memory mutation mechanisms and their lifecycle/approval gates; determine whether a safe promotion executor already exists. If none exists, specify the contract and tests before writing one.
+- **PR #27 stays OPEN/DRAFT/UNMERGED; no `main` changes; no destructive source-history action.** Manual checkpoint only.
