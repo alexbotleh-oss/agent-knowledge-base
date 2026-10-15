@@ -80,6 +80,33 @@ class MinimalAgentLoopTests(unittest.TestCase):
         self.assertEqual(candidate["source"]["path"], str(self.experience))
         self.assertEqual(candidate["source"]["line"], 1)
         self.assertEqual(candidate["evidence_refs"][0]["ref"], "tests/test_staging.py")
+        self.assertEqual(
+            result["checkpoint_currentness_gate"]["status"],
+            "BLOCKED_CURRENTNESS_UNVERIFIED",
+        )
+        self.assertFalse(result["checkpoint_currentness_gate"]["authorized_for_planning"])
+        self.assertFalse(result["writes_performed"])
+        self.assertFalse(result["execution_performed"])
+
+    def test_real_agms_sources_do_not_claim_semantic_currentness_from_hashes(self):
+        # Exercise the actual repository checkpoint and event log, not a fixture.
+        project = ROOT / "projects" / "AGENT_MEMORY_SYSTEM"
+        result = run_minimal_agent_loop(
+            project / "TASK_STATE.md",
+            project / "HANDOFF.md",
+            project / "events.jsonl",
+            "memory archive reconciliation",
+            [project / "events.jsonl"],
+        )
+        self.assertEqual(
+            result["context"]["source_freshness"],
+            {"task_state": "CURRENT", "handoff": "CURRENT", "events": "CURRENT"},
+        )
+        self.assertEqual(
+            result["checkpoint_currentness_gate"]["status"],
+            "BLOCKED_CURRENTNESS_UNVERIFIED",
+        )
+        self.assertFalse(result["checkpoint_currentness_gate"]["authorized_for_planning"])
         self.assertFalse(result["writes_performed"])
         self.assertFalse(result["execution_performed"])
 
