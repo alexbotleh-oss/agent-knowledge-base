@@ -146,7 +146,8 @@ def append_event(path: Path, event: dict[str, Any]) -> dict[str, Any]:
                     prior_cmp = {k: v for k, v in prior.items() if k != "timestamp"}
                     event_cmp = {k: v for k, v in event.items() if k != "timestamp"}
                     if prior_cmp == event_cmp:
-                        return {"status": "ALREADY_RECORDED", "event": prior}
+                        status = "ALREADY_REGISTERED" if event.get("event_type") == "TURN_RECEIVED" else "ALREADY_RECORDED"
+                        return {"status": status, "event": prior}
                     raise ValueError(f"event_id collision with different content: {event.get('event_id')}")
             current = project_turns(existing)
             tid = event["turn_id"]
