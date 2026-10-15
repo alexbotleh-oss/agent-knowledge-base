@@ -53,12 +53,38 @@ def build_session_packet(task_state: Path, handoff: Path, event_log: Path,
             "missing_sources": missing,
             "writes_performed": False,
         }
+    if task_state.resolve().parent != handoff.resolve().parent:
+        return {
+            "status": "BLOCKED",
+            "reason": "TASK_STATE.md and HANDOFF.md must come from the same project directory.",
+            "project_scope": {
+                "task_state_path": str(task_state),
+                "handoff_path": str(handoff),
+                "event_log_path": str(event_log),
+            },
+            "writes_performed": False,
+        }
     try:
         task_text = task_state.read_text(encoding="utf-8")
         handoff_text = handoff.read_text(encoding="utf-8")
         events = load_events(event_log)
     except Exception as exc:
         return {"status": "BLOCKED", "reason": f"Source validation failed: {exc}", "writes_performed": False}
+
+    seen_event_ids: set[str] = set()
+    duplicate_event_ids: set[str] = set()
+    for event in events:
+        event_id = event["event_id"]
+        if event_id in seen_event_ids:
+            duplicate_event_ids.add(event_id)
+        seen_event_ids.add(event_id)
+    if duplicate_event_ids:
+        return {
+            "status": "BLOCKED",
+            "reason": "Duplicate event_id values make source linkage ambiguous.",
+            "duplicate_event_ids": sorted(duplicate_event_ids),
+            "writes_performed": False,
+        }
 
     task_slice = _tail_with_checkpoints(task_text, max_chars)
     handoff_slice = _tail_with_checkpoints(handoff_text, max_chars)
