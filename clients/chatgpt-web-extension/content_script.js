@@ -126,6 +126,7 @@
       sessionStorage.setItem(ACTIVE_KEY, turnId);
       lastObservedCount = before.length;
       const freshButton = sendButton() || button;
+      allowNextSubmit = true;
       if (freshButton && freshButton.isConnected && !freshButton.disabled) {
         allowNextSend = true;
         freshButton.click();
@@ -133,12 +134,13 @@
         allowNextSend = false;
         const form = input?.closest("form");
         if (!form || typeof form.requestSubmit !== "function") {
+          allowNextSubmit = false;
           toast("Сообщение сохранено, но отправку нельзя безопасно продолжить. Ход остался незавершённым.");
           return;
         }
-        allowNextSubmit = true;
         form.requestSubmit();
       }
+      setTimeout(() => { allowNextSubmit = false; }, 1000);
       scheduleResponseCheck();
     } catch (error) {
       toast("Сообщение НЕ отправлено: не удалось надёжно записать его в журнал. " + String(error.message || error));
