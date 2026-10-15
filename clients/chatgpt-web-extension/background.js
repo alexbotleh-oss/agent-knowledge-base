@@ -86,6 +86,8 @@ async function registerTurn(payload, sender) {
       typeof previous_assistant_message !== "string" || previous_assistant_message.length > MAX_TEXT_CHARS) {
     throw new Error("invalid_turn_payload");
   }
+  const hashBytes = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(user_text));
+  const userTextSha256 = Array.from(new Uint8Array(hashBytes), byte => byte.toString(16).padStart(2, "0")).join("");
   const db = await openDb();
   return new Promise((resolve, reject) => {
     const tx = db.transaction(STORE, "readwrite");
@@ -105,7 +107,7 @@ async function registerTurn(payload, sender) {
         return;
       }
       const received = makeEvent(turn_id, "TURN_RECEIVED", {
-        task_id, user_text, previous_checkpoint, user_text_sha256: null,
+        task_id, user_text, previous_checkpoint, user_text_sha256: userTextSha256,
         previous_assistant_message
       }, turn_id + ":TURN_RECEIVED");
       // WebCrypto is asynchronous; exact text is retained locally. The hash is a
