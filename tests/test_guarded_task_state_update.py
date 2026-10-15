@@ -197,7 +197,15 @@ class GuardedTaskStateUpdateTests(unittest.TestCase):
             "summary": "Local evidence for paired checkpoint test",
         }
         local_event_log.write_text(json.dumps(local_event) + "\n", encoding="utf-8")
-        proposal = dict(self.proposal, event_id="EVT-LOCAL-001")
+        self.task_state.write_text(
+            self.task_state.read_text(encoding="utf-8").replace("EVT-TEST-001", "EVT-LOCAL-001"),
+            encoding="utf-8",
+        )
+        proposal = dict(
+            self.proposal,
+            event_id="EVT-LOCAL-001",
+            expected_sha256=sha256_bytes(self.task_state.read_bytes()),
+        )
         result = apply_checkpoint(
             self.task_state, local_event_log, proposal,
             trust_verdict={"status": "AUTHORIZED_FOR_PLANNING"},
