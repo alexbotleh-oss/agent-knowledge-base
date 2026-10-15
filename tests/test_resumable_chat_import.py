@@ -860,7 +860,8 @@ importer.import_export(Path(sys.argv[2]), Path(sys.argv[3]), sys.argv[4], batch_
             self.assertEqual(paused["status"], "PAUSED")
             database = out / "import.sqlite3"
 
-            conn = sqlite3.connect(database)            try:
+            conn = sqlite3.connect(database)
+            try:
                 prefix_before = conn.execute(
                     """SELECT source_locator,source_conversation_id,source_ordinal,
                               payload_json,payload_sha256,imported_at,source_end_byte_offset
