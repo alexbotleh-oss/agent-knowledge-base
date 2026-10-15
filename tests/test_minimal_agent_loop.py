@@ -135,6 +135,44 @@ class MinimalAgentLoopTests(unittest.TestCase):
             "source-chat#message-17",
         )
 
+    def test_real_legacy_project_logs_remain_retrievable(self):
+        cases = [
+            (
+                "B77_HTML_PWA",
+                "Ingredient normalization requirements broken database access",
+                "EVT-B77-20260922-001",
+            ),
+            (
+                "CARD111",
+                "loyalty-card wallet manual entry QR barcode",
+                "EVT-CARD111-20261005-001",
+            ),
+            (
+                "ORGANISM",
+                "PWA prototype offline memory features",
+                "EVT-ORGANISM-20261008-002",
+            ),
+            (
+                "RECIPE_MANAGER",
+                "PopupMenuItem unexpected keyword argument text",
+                "EVT-20260927-001",
+            ),
+        ]
+        for project_id, query, expected_id in cases:
+            with self.subTest(project_id=project_id):
+                log = ROOT / "projects" / project_id / "events.jsonl"
+                result = retrieve_experience_candidates(
+                    query, [log], current_project_id=project_id
+                )
+                self.assertEqual(result["status"], "CANDIDATES_FOUND")
+                by_id = {item["event_id"]: item for item in result["candidates"]}
+                self.assertIn(expected_id, by_id)
+                candidate = by_id[expected_id]
+                self.assertEqual(candidate["project_scope_match"], "MATCH")
+                self.assertEqual(candidate["event_time_source_field"], "timestamp_legacy")
+                self.assertNotEqual(candidate["event_time"], "UNKNOWN")
+                self.assertEqual(candidate["source"]["path"], str(log))
+
     def test_explicit_project_id_overrides_path_inference(self):
         self._write_events(self.experience, [{
             "event_id": "EVT-OTHER-PROJECT",
