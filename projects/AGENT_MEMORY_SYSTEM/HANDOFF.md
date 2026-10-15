@@ -450,3 +450,15 @@ Before substantial writes or long multi-step work, update this HANDOFF checkpoin
 
 ### Status
 ACTIVE / PARTIAL. Recovery checkpoint persisted in HANDOFF; not an automatic background save or proof that ChatGPT will automatically resume after every disconnection. Exact-HEAD CI is green for the recorded revisions, but the 12 write-contract warnings and PR #26-to-#27 revision gap remain open.
+
+
+## Continuity checkpoint — 2026-10-15, recovered session
+
+- **Live state before this checkpoint:** PR #27, branch `integration/memory-core-clean-20261015`, HEAD `b35049a25fd41d6737c27cc8c248aa04eabe96c0`; OPEN/DRAFT/UNMERGED; exact-head CI run `38745130763` success. `main` unchanged.
+- **Checkpoint drift found:** this file's previous latest checkpoint referred to HEAD `ac7f64d70e008ea9b9cca9e5ac1713a063c8e11a`, so it did not match the live branch. TASK_STATE had a later active checkpoint, but handoff was stale. This is a process defect; do not treat a saved checkpoint as current until live HEAD/CI are compared.
+- **PR #26 → #27 audit:** later PR #26 HEAD `4830123fabc7d0a2835151eeba2ef6ceb06bb5ea` is six commits/six files ahead of the source revision recorded by PR #27 (`a7860d6562ba2078b636a69db6e3fb934e658c89`). None of the six newer file versions is present at PR #27 HEAD: context extractor, trust gate, guarded task-state writer, restore packet, and two regression test files. The changes carry project-scope metadata into the trust gate and refuse planning on unknown/mismatched event-log scope unless a validated cross-project relation exists.
+- **Important review guard:** in the newer guarded writer, `cross_project_linkage_verified` is set only after `_validate_supporting_event` succeeds; that validator requires an accepted cross-branch acknowledgement with matching task/checkpoint/result relations. Preserve this contract; never set the flag merely because paths differ.
+- **Completed:** live PR/CI refresh and six-file comparison. No source changes made during the comparison.
+- **Open tasks:** inspect and resolve all 12 unclassified mutation sites; port compatible project-scope guard changes and tests; test the connected staging → sanitized intake → source registry append path; separately record remaining unconnected promotion/index/restore routes; rerun exact-head CI after patches.
+- **Next single action:** inspect the existing write-contract audit artifact and source code for the 12 sites; choose a minimal evidence-backed patch. Do not re-run the accepted agent-report reconciliation, do not modify `main`, do not merge any PR, and do not delete/rewrite preserved source history.
+- **Status:** ACTIVE / PARTIAL; manual checkpoint only, not automatic resume.
