@@ -293,6 +293,70 @@ class MinimalAgentLoopTests(unittest.TestCase):
         self.assertEqual(candidate["transfer_decision"], "UNASSESSED")
         self.assertFalse(result["writes_performed"])
 
+    def test_empty_local_evidence_file_blocks_verified_candidate(self):
+        evidence_root = self.root / "evidence-root"
+        evidence_root.mkdir()
+        (evidence_root / "empty.txt").write_bytes(b"")
+
+        self._write_events(self.experience, [{
+            "event_id": "EVT-EMPTY-EVIDENCE",
+            "project_id": "CARD111",
+            "type": "test_result",
+            "summary": "QR cache recovery verified",
+            "status": "verified",
+            "evidence": [{"kind": "file", "ref": "empty.txt"}],
+        }])
+        result = retrieve_experience_candidates(
+            "QR cache recovery",
+            [self.experience],
+            current_project_id="CARD111",
+            evidence_root=evidence_root,
+        )
+        candidate = result["candidates"][0]
+        self.assertEqual(candidate["evidence_source_validation"]["status"], "EMPTY_SOURCE")
+        self.assertEqual(
+            candidate["evidence_source_validation"]["references"][0]["status"],
+            "EMPTY_FILE",
+        )
+        self.assertEqual(
+            candidate["candidate_review_gate"],
+            "SCOPE_MATCHED_EVIDENCE_SOURCE_UNAVAILABLE_BLOCKED",
+        )
+        self.assertEqual(candidate["transfer_decision"], "UNASSESSED")
+        self.assertFalse(result["writes_performed"])
+
+    def test_binary_local_evidence_file_blocks_verified_candidate(self):
+        evidence_root = self.root / "evidence-root"
+        evidence_root.mkdir()
+        (evidence_root / "binary.dat").write_bytes(b"\\x00\\x01\\xff")
+
+        self._write_events(self.experience, [{
+            "event_id": "EVT-BINARY-EVIDENCE",
+            "project_id": "CARD111",
+            "type": "test_result",
+            "summary": "QR cache recovery verified",
+            "status": "verified",
+            "evidence": [{"kind": "file", "ref": "binary.dat"}],
+        }])
+        result = retrieve_experience_candidates(
+            "QR cache recovery",
+            [self.experience],
+            current_project_id="CARD111",
+            evidence_root=evidence_root,
+        )
+        candidate = result["candidates"][0]
+        self.assertEqual(candidate["evidence_source_validation"]["status"], "BINARY_SOURCE")
+        self.assertEqual(
+            candidate["evidence_source_validation"]["references"][0]["status"],
+            "BINARY_FILE",
+        )
+        self.assertEqual(
+            candidate["candidate_review_gate"],
+            "SCOPE_MATCHED_EVIDENCE_SOURCE_UNAVAILABLE_BLOCKED",
+        )
+        self.assertEqual(candidate["transfer_decision"], "UNASSESSED")
+        self.assertFalse(result["writes_performed"])
+
     def test_local_evidence_validation_requires_explicit_root(self):
         self._write_events(self.experience, [{
             "event_id": "EVT-UNSCOPED-EVIDENCE",
