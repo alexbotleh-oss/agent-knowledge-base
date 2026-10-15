@@ -502,3 +502,40 @@ ACTIVE / PARTIAL. Recovery checkpoint persisted in HANDOFF; not an automatic bac
 - **Hard boundary:** runner stops at `SOURCE_REGISTERED_DOWNSTREAM_PENDING`. Semantic promotion, canonical index refresh and next-session restore are not implemented/connected by this runner. Do not claim end-to-end completion.
 - **Next single action:** inspect the existing semantic-memory mutation mechanisms and their lifecycle/approval gates; determine whether a safe promotion executor already exists. If none exists, specify the contract and tests before writing one.
 - **PR #27 stays OPEN/DRAFT/UNMERGED; no `main` changes; no destructive source-history action.** Manual checkpoint only.
+
+
+## Current active handoff — 2026-10-15, recoverable checkpoint bundle
+
+**Use this section as the current continuation point. Older sections remain historical evidence and may contain stale HEADs.**
+
+### Live and validated state
+- Repository: `alexbotleh-oss/agent-knowledge-base`.
+- Working branch: `integration/memory-core-clean-20261015`.
+- PR #27: OPEN / DRAFT / UNMERGED; `main` unchanged.
+- Tested code HEAD: `30be5e944d6dd2d8a60395626b52ef07ff898640`.
+- Exact-head CI: [#38750630421](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38750630421) PASS; 201 tests, one skipped; strict write audit: 85 mutation sites / 0 unclassified.
+- After this code validation, only checkpoint/event/task/handoff records have been updated. Re-fetch the live PR HEAD and verify exact-head CI before relying on the final branch state.
+
+### Completed in this continuation
+- Added `tools/continuity_checkpoint_bundle.py` and `tests/test_continuity_checkpoint_bundle.py`.
+- Contract: immutable generation stores paired TASK_STATE/HANDOFF contents and hashes; `CURRENT_CHECKPOINT.json` is the single commit point; generation parent chain is hash-verified; recover can restore both projections after interruption between pointer publication and materialization.
+- Added six tests covering capture/verify, crash-window recovery, idempotent replay, parent-chain retention, tamper rejection, and missing-pointer fail-closed behavior.
+- Added strict write-contract classification and documented the capture/verify/recover procedure in `core/agent_runtime_protocol.md`.
+- Persisted `CONTINUITY_CHECKPOINT.json` and event `EVT-AGMS-20261015-001`.
+
+### Still incomplete — do not mark as done
+1. Inspect semantic record schemas and lifecycle/approval gates; define a safe promotion contract and tests.
+2. Implement/verify semantic promotion only after the contract is grounded in existing schemas and user approval semantics.
+3. Implement/verify canonical index refresh; do not mistake the read-only archive temporal search tool for a canonical-memory index builder.
+4. Connect the ingestion runner to approved promotion, index refresh and state/restore handoff with resumable stage statuses and idempotent reconciliation.
+5. Run full interruption/failure-injection tests across the connected path and verify exact final HEAD/CI.
+
+### Next single action
+Inspect `schemas/source_record.schema.json`, the event/lesson/memory record schemas and templates, current registries, and all existing canonical write gates. Return a compact mapping of accepted fields, approval/lifecycle rules, and target paths; then write the semantic-promotion acceptance tests before implementation.
+
+### Hard boundaries
+- Do not merge PR #27 or modify `main`.
+- Do not delete/rewrite source-history exports without explicit authorization.
+- Do not mix CARD111, ORGANISM, RECIPE_MANAGER and B77_HTML_PWA project histories into this core task.
+- Do not claim ChatGPT autosave. A checkpoint is durable only after a successful repository write and read-back.
+- If interruption occurs: refresh live PR/HEAD/CI first, inspect `CONTINUITY_CHECKPOINT.json`, then run `verify`/ `recover` for the bundle if a workspace exists. Continue from the first unchecked item; do not rerun completed scans without a stated reason.
