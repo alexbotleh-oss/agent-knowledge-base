@@ -117,3 +117,10 @@ For a repository workspace that contains `tools/continuity_checkpoint_bundle.py`
 6. Preserve checkpoint generations. Reuse of a checkpoint ID with changed content is a conflict. A report or answer that was never captured and committed is not recoverable verbatim; save the verified findings first, then deliver the response.
 
 This is a repository-level recovery primitive. It does not automatically capture ChatGPT messages, synchronize remote GitHub with a local workspace, or guarantee that a response survives before the checkpoint command commits.
+
+
+
+## TURN LIFECYCLE AND BOUNDED EXECUTION
+
+For environments with observed long-session/network interruptions, follow `core/turn_lifecycle_and_interruption_recovery.md`. Use 10–12 minute work slices as a risk target, persist each material verified milestone, and stop before beginning another large phase. On resume, inspect open turn states and correlate suspicious empty/partial artifacts with event history, checkpoint, Git and CI. Never infer “no work happened” merely because no report is visible; never infer delivery without a real acknowledgement. The lifecycle ledger is a callable primitive only: automatic ChatGPT message capture and delivery acknowledgement require a client/platform integration and must not be claimed before verified.
+
