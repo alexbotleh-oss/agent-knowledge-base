@@ -472,3 +472,16 @@ Tests added for first pass, completed replay, and a changed source under the sam
 - **Blocked/failed operation:** attempted CARD111 scoped-PR creation did not complete because the multi-operation tool call was blocked; verified no branch `memory/CARD111-structured-history-20261015` exists.
 - **Next action:** compare exact PR #26 source revisions against PR #27; do not start another project-history transfer until this core integration gap is resolved.
 - **Detailed durable checkpoint:** see the latest “Continuity checkpoint — 2026-10-15 16:40 local” section in `HANDOFF.md`.
+
+
+## Continuation checkpoint — 2026-10-15, after connection recovery
+
+- **Live PR #27 state re-fetched:** branch `integration/memory-core-clean-20261015`; pre-checkpoint HEAD `b35049a25fd41d6737c27cc8c248aa04eabe96c0`; PR OPEN/DRAFT/UNMERGED. Exact-head GitHub Actions run `38745130763` completed `success`. `main` remains unchanged.
+- **Checkpoint discrepancy:** TASK_STATE contains a current active-checkpoint section, but HANDOFF's latest dated checkpoint still records the older HEAD `ac7f64d70e008ea9b9cca9e5ac1713a063c8e11a`. The branch moved after that checkpoint; update HANDOFF whenever a substantial step is completed.
+- **PR #26 → #27 comparison:** compare from source revision `a7860d6562ba2078b636a69db6e3fb934e658c89` to later PR #26 HEAD `4830123fabc7d0a2835151eeba2ef6ceb06bb5ea` reports six commits/six changed files. The newer versions of these six paths are not present in PR #27 at pre-checkpoint HEAD `b35049a25fd41d6737c27cc8c248aa04eabe96c0`: `tools/context_extractor.py`, `tools/context_trust_gate.py`, `tools/guarded_task_state_update.py`, `tools/restore_session_packet.py`, `tests/test_context_trust_gate.py`, `tests/test_minimal_agent_loop.py`.
+- **Meaning of the missing changes:** project scope fields are propagated from restore packet to extracted context; the trust gate refuses planning when event-log project scope is mismatched/unknown unless an explicitly validated cross-project linkage exists; regression tests cover cross-project boundaries. Do not blindly copy code: verify the guarded writer's accepted cross-branch acknowledgement contract and ensure a path mismatch alone never counts as proof of linkage.
+- **Completed in this continuation:** recovered current PR/CI state; compared exact PR #26 revisions; confirmed the six changed files are not ported into PR #27. No source code changed in this comparison.
+- **Still open:** (1) port the semantically valid scope-guard fixes and tests into PR #27; (2) investigate all 12 unclassified write-contract sites from the 67-site audit without blanket allowlisting; (3) validate the connected source staging → sanitized intake → source registry route and separately list unconnected promotion/index/restore routes; (4) rerun exact-head CI and read back final state.
+- **Constraints:** no changes to `main`; no PR merge; no deletion or rewrite of source histories; no new project-history transfer until core integration gaps are resolved.
+- **Next action:** inspect the 12-site write-contract audit and the six-file scope-guard diff together, then make the smallest safe patch with targeted regression tests.
+- **Status:** ACTIVE / PARTIAL. This is a manual checkpoint and does not establish automatic background persistence.
