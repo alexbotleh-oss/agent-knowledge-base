@@ -460,3 +460,15 @@ Tests added for first pass, completed replay, and a changed source under the sam
 - **Выполняемая коррекция:** reject branch-result `project_id` overrides; align intake event-record required fields with the existing event template; use synthetic boundary fixtures when full project histories are intentionally absent.
 - **Следующий шаг:** inspect exact-head CI on this clean branch, fix failures without touching `main`, then close the remaining source-staging → intake/promotion/index/recovery integration gap.
 - **Ограничения:** do not merge or modify `main`; do not delete or rewrite preserved source history without a separate explicit decision; do not claim the intake pipeline is end-to-end until the stages are connected and tested.
+
+## Current active checkpoint — 2026-10-15
+
+- **Active goal:** complete clean integration of PR #25/#26 memory mechanisms into PR #27; preserve provenance and project boundaries; do not merge or change `main`.
+- **Current integration branch:** `integration/memory-core-clean-20261015`; pre-checkpoint HEAD `ac7f64d70e008ea9b9cca9e5ac1713a063c8e11a`; PR #27 OPEN/DRAFT/UNMERGED.
+- **Last exact-head validation:** PR #27 CI run `38742475979` passed 180 tests; write-contract audit still reports 12 unclassified mutation sites out of 67.
+- **Other active source branch:** PR #26 HEAD `4830123fabc7d0a2835151eeba2ef6ceb06bb5ea`; CI run `38739494738` passed. PR #27 documents an older source revision `a7860d6562ba2078b636a69db6e3fb934e658c89`; porting the later changes is not yet verified.
+- **Completed:** live PR/CI recovery; confirmed PR #27 scope; no merge/main change.
+- **Not completed:** compare PR #26 revisions and port needed fixes; resolve 12 write-contract warnings; verify full connected intake/restore path; final exact-head CI.
+- **Blocked/failed operation:** attempted CARD111 scoped-PR creation did not complete because the multi-operation tool call was blocked; verified no branch `memory/CARD111-structured-history-20261015` exists.
+- **Next action:** compare exact PR #26 source revisions against PR #27; do not start another project-history transfer until this core integration gap is resolved.
+- **Detailed durable checkpoint:** see the latest “Continuity checkpoint — 2026-10-15 16:40 local” section in `HANDOFF.md`.
