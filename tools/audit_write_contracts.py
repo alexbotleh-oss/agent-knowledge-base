@@ -38,6 +38,8 @@ def _is_path_expression(node: ast.AST, names: set[str]) -> bool:
     """Conservatively recognize common pathlib values without treating str.replace as a write."""
     if isinstance(node, ast.Name):
         return node.id in names
+    if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Div):
+        return _is_path_expression(node.left, names)
     if isinstance(node, ast.Call):
         if isinstance(node.func, ast.Name) and node.func.id in {"Path", "PurePath"}:
             return True
@@ -68,7 +70,6 @@ def _path_names(tree: ast.AST) -> set[str]:
             annotation = node.annotation
             if isinstance(annotation, ast.Name) and annotation.id in {"Path", "PurePath"}:
                 names.add(node.target.id)
-    # Iterate to resolve simple aliases and path derivations regardless of statement order.
     changed = True
     while changed:
         changed = False
