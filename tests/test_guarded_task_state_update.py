@@ -74,6 +74,28 @@ class GuardedTaskStateUpdateTests(unittest.TestCase):
     def tearDown(self):
         self.tmp.cleanup()
 
+    def test_unacknowledged_child_result_cannot_update_task_state(self):
+        proposal = dict(self.proposal, event_id="EVT-TEST-RESULT")
+        before = self.task_state.read_bytes()
+        result = apply_checkpoint(
+            self.task_state, self.event_log, proposal,
+            trust_verdict={"status": "AUTHORIZED_FOR_PLANNING"},
+        )
+        self.assertEqual(result["status"], "REJECTED")
+        self.assertIn("must be acknowledged", result["errors"][0])
+        self.assertEqual(self.task_state.read_bytes(), before)
+
+    def test_wrong_parent_checkpoint_blocks_accepted_cross_project_result(self):
+        proposal = dict(self.proposal, parent_checkpoint_id="CKPT-WRONG")
+        before = self.task_state.read_bytes()
+        result = apply_checkpoint(
+            self.task_state, self.event_log, proposal,
+            trust_verdict={"status": "AUTHORIZED_FOR_PLANNING"},
+        )
+        self.assertEqual(result["status"], "REJECTED")
+        self.assertIn("checkpoint", result["errors"][0])
+        self.assertEqual(self.task_state.read_bytes(), before)
+
     def test_appends_linked_checkpoint_without_removing_history(self):
         result = apply_checkpoint(self.task_state, self.event_log, self.proposal, trust_verdict={"status": "AUTHORIZED_FOR_PLANNING"})
         text = self.task_state.read_text(encoding="utf-8")
