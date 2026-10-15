@@ -102,8 +102,8 @@ class RestoreSessionPacketTests(unittest.TestCase):
                 "event_id": "EVT-TEST-001",
                 "type": "cross_branch_result",
                 "summary": "Original child result.",
-            }) + "\\n"
-            + json.dumps(acknowledgement) + "\\n",
+            }) + "\n"
+            + json.dumps(acknowledgement) + "\n",
             encoding="utf-8",
         )
 
@@ -133,7 +133,7 @@ class RestoreSessionPacketTests(unittest.TestCase):
             "related_event_ids": ["EVT-TEST-MISSING"],
             "relations": [{"type": "acknowledges_result", "event_id": "EVT-TEST-MISSING"}],
             "acknowledgement": {"result_event_id": "EVT-TEST-MISSING"},
-        }) + "\\n", encoding="utf-8")
+        }) + "\n", encoding="utf-8")
 
         packet = build_session_packet(self.task, self.handoff, self.events)
 
