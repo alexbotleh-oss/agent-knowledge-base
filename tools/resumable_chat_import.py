@@ -8,6 +8,7 @@ Only Python's standard library is required.
 from __future__ import annotations
 
 import argparse
+import contextlib
 import hashlib
 import json
 import os
@@ -243,8 +244,8 @@ def add_event(conn: sqlite3.Connection, archive_id: str, digest: str,
     )
 
 
-def import_export(source: Path, output: Path, archive_id: str, batch_size: int = 100,
-                  stop_after_batches: int | None = None) -> dict[str, Any]:
+def _import_export_unlocked(source: Path, output: Path, archive_id: str, batch_size: int = 100,
+                            stop_after_batches: int | None = None) -> dict[str, Any]:
     if batch_size < 1:
         raise ValueError("batch_size must be at least 1")
     source = source.resolve()
@@ -357,6 +358,52 @@ def import_export(source: Path, output: Path, archive_id: str, batch_size: int =
                 archive.close()
     finally:
         conn.close()
+
+
+
+@contextlib.contextmanager
+def _exclusive_import_lock(lock_path: Path):
+    """Serialize importers for one output directory; OS releases the lock on process exit."""
+    lock_path.parent.mkdir(parents=True, exist_ok=True)
+    with lock_path.open("a+b") as stream:
+        if os.name == "nt":
+            import msvcrt
+            stream.seek(0)
+            if stream.read(1) == b"":
+                stream.seek(0)
+                stream.write(b"0")
+                stream.flush()
+            stream.seek(0)
+            msvcrt.locking(stream.fileno(), msvcrt.LK_LOCK, 1)
+            try:
+                yield
+            finally:
+                stream.seek(0)
+                msvcrt.locking(stream.fileno(), msvcrt.LK_UNLCK, 1)
+        else:
+            import fcntl
+            fcntl.flock(stream.fileno(), fcntl.LOCK_EX)
+            try:
+                yield
+            finally:
+                fcntl.flock(stream.fileno(), fcntl.LOCK_UN)
+
+
+def import_export(source: Path, output: Path, archive_id: str, batch_size: int = 100,
+                  stop_after_batches: int | None = None) -> dict[str, Any]:
+    """Run one serialized import operation for the output directory.
+
+    The lock covers snapshot registration, every batch/checkpoint, and final status.
+    It is an OS advisory lock, so a killed process releases it without stale-lock
+    cleanup. All cooperating importers must use this entry point.
+    """
+    output = output.resolve()
+    output.mkdir(parents=True, exist_ok=True)
+    with _exclusive_import_lock(output / ".resumable_chat_import.lock"):
+        return _import_export_unlocked(
+            source, output, archive_id, batch_size=batch_size,
+            stop_after_batches=stop_after_batches,
+        )
 
 
 def _commit_batch(conn: sqlite3.Connection, archive_id: str, digest: str, batch: list[tuple]) -> int:
