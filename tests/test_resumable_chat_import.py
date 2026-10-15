@@ -247,8 +247,7 @@ importer.import_export(Path(sys.argv[2]), Path(sys.argv[3]), sys.argv[4], batch_
             self.assertEqual(staged[0]["mapping"]["node-0-user"]["children"], ["node-0-assistant"])
 
     def test_zip_resume_seeks_within_conversations_member(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            root = Path(tmp)
+        with tempfile.TemporaryDirectory() as tmp:            root = Path(tmp)
             source = root / "export.zip"
             rows = sample_conversations(4)
             with zipfile.ZipFile(source, "w") as archive:
@@ -332,6 +331,119 @@ importer.import_export(Path(sys.argv[2]), Path(sys.argv[3]), sys.argv[4], batch_
             finally:
                 conn.close()
 
+
+    def test_fresh_process_restarts_from_committed_checkpoint_without_rewriting_prefix(self):
+        """A new OS process must resume only from the durable checkpoint."""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            source = self.make_source(root, 6)
+            out = root / "state"
+            archive_id = "FRESH-PROCESS-CHECKPOINT-001"
+
+            partial = import_export(
+                source, out, archive_id, batch_size=2, stop_after_batches=1
+            )
+            self.assertEqual(partial["status"], "PAUSED")
+            self.assertEqual(partial["next_ordinal"], 2)
+            self.assertGreater(partial["next_byte_offset"], 0)
+            digest = partial["source_sha256"]
+            database = out / "import.sqlite3"
+
+            # Snapshot every committed row field and every event field before
+            # the original importer call returns control to a fresh OS process.
+            conn = sqlite3.connect(database)
+            try:
+                checkpoint_before = conn.execute(
+                    """SELECT status,next_ordinal,next_byte_offset,last_source_locator,
+                              committed_conversations,updated_at,last_error
+                       FROM imports WHERE archive_id=? AND source_sha256=?""",
+                    (archive_id, digest),
+                ).fetchone()
+                prefix_before = conn.execute(
+                    """SELECT source_locator,source_conversation_id,identity_method,
+                              source_ordinal,payload_json,payload_sha256,imported_at,
+                              source_end_byte_offset
+                       FROM raw_conversations WHERE archive_id=? AND source_sha256=?
+                       ORDER BY source_ordinal""",
+                    (archive_id, digest),
+                ).fetchall()
+                events_before = conn.execute(
+                    """SELECT event_id,event_type,ordinal,details_json,occurred_at
+                       FROM import_events WHERE archive_id=? AND source_sha256=?
+                       ORDER BY event_id""",
+                    (archive_id, digest),
+                ).fetchall()
+            finally:
+                conn.close()
+
+            self.assertEqual(checkpoint_before[0:5], (
+                "PAUSED", 2, partial["next_byte_offset"],
+                partial["last_source_locator"], 2,
+            ))
+            self.assertEqual(len(prefix_before), 2)
+
+            # Invoke the actual CLI in a new interpreter process. It receives
+            # no in-memory cursor from the first pass; only source/output/id.
+            resumed_process = subprocess.run(
+                [
+                    sys.executable, str(ROOT / "tools" / "resumable_chat_import.py"),
+                    str(source), "--out", str(out), "--archive-id", archive_id,
+                    "--batch-size", "2",
+                ],
+                capture_output=True, text=True, timeout=60,
+            )
+            self.assertEqual(
+                resumed_process.returncode, 0,
+                msg=f"stdout={resumed_process.stdout} stderr={resumed_process.stderr}",
+            )
+            result = json.loads(resumed_process.stdout)
+            self.assertEqual(result["run_mode"], "RESUME")
+            self.assertEqual(result["status"], "RAW_COMPLETE")
+            self.assertEqual(result["source_sha256"], digest)
+            self.assertEqual(result["committed_conversations"], 6)
+            self.assertEqual(result["next_ordinal"], 6)
+
+            conn = sqlite3.connect(database)
+            try:
+                prefix_after = conn.execute(
+                    """SELECT source_locator,source_conversation_id,identity_method,
+                              source_ordinal,payload_json,payload_sha256,imported_at,
+                              source_end_byte_offset
+                       FROM raw_conversations WHERE archive_id=? AND source_sha256=?
+                       ORDER BY source_ordinal LIMIT 2""",
+                    (archive_id, digest),
+                ).fetchall()
+                events_after = conn.execute(
+                    """SELECT event_id,event_type,ordinal,details_json,occurred_at
+                       FROM import_events WHERE archive_id=? AND source_sha256=?
+                       ORDER BY event_id""",
+                    (archive_id, digest),
+                ).fetchall()
+                final_rows = conn.execute(
+                    """SELECT source_ordinal,source_conversation_id,payload_sha256
+                       FROM raw_conversations WHERE archive_id=? AND source_sha256=?
+                       ORDER BY source_ordinal""",
+                    (archive_id, digest),
+                ).fetchall()
+                final_checkpoint = conn.execute(
+                    """SELECT status,next_ordinal,next_byte_offset,last_source_locator,
+                              committed_conversations
+                       FROM imports WHERE archive_id=? AND source_sha256=?""",
+                    (archive_id, digest),
+                ).fetchone()
+            finally:
+                conn.close()
+
+            self.assertEqual(prefix_after, prefix_before)
+            self.assertEqual(events_after[:len(events_before)], events_before)
+            self.assertEqual([row[0] for row in final_rows], list(range(6)))
+            self.assertEqual([row[1] for row in final_rows],
+                             [f"conversation-{i}" for i in range(6)])
+            self.assertEqual(len({row[2] for row in final_rows}), 6)
+            self.assertEqual(final_checkpoint, (
+                "RAW_COMPLETE", 6, result["next_byte_offset"],
+                result["last_source_locator"], 6,
+            ))
 
     def test_explicit_second_pass_resumes_from_last_confirmed_checkpoint(self):
         """A fresh second pass must use the persisted cursor, not agent/chat memory."""
@@ -497,8 +609,7 @@ importer.import_export(Path(sys.argv[2]), Path(sys.argv[3]), sys.argv[4], batch_
                        FROM import_events WHERE archive_id=? AND source_sha256=?
                        ORDER BY event_id""",
                     (archive_id, first["source_sha256"]),
-                ).fetchall()
-                state_before = conn.execute(
+                ).fetchall()                state_before = conn.execute(
                     """SELECT status,next_ordinal,next_byte_offset,last_source_locator,
                               committed_conversations,updated_at,last_error
                        FROM imports WHERE archive_id=? AND source_sha256=?""",
@@ -747,8 +858,7 @@ importer.import_export(Path(sys.argv[2]), Path(sys.argv[3]), sys.argv[4], batch_
             self.assertEqual(paused["status"], "PAUSED")
             database = out / "import.sqlite3"
 
-            conn = sqlite3.connect(database)
-            try:
+            conn = sqlite3.connect(database)            try:
                 prefix_before = conn.execute(
                     """SELECT source_locator,source_conversation_id,source_ordinal,
                               payload_json,payload_sha256,imported_at,source_end_byte_offset
