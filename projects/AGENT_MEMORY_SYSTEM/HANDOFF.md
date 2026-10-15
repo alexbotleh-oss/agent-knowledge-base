@@ -588,3 +588,13 @@ This is a callable tool, not yet a ChatGPT/browser integration. It cannot observ
 - Exact code HEAD `066327fe5e2bf367aea3fb36a513eafce51fb429` passed [CI 38762527651](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38762527651): 227 Python tests (1 skipped), 4 Node tests, strict write audit 92/0, extension syntax checks PASS.
 - Live Android browser test is still the blocking gate. In Yandex Browser, verify the extension installs; exact message and previous assistant output are captured; recognized send is blocked if local persistence fails; response rendering closes the correct turn; reload/network loss leaves a recoverable turn; popup copies recovery prompt and exports JSONL. Test with harmless prompts first.
 - Do not claim production readiness before live tests. PR #27 stays Draft/open/unmerged; main unchanged. Work in 10–12 minute slices.
+
+
+## Verified handoff — causal restore cycle and ingestion audit, 2026-10-15
+
+- Code HEAD `e30450a5ed516ab1f76f65c3c7874cdd2b951c40` passed exact-head [CI run 38772804206](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38772804206): 230 Python tests (1 skipped), 4 Node tests, strict write audit 92/0, extension JS syntax checks PASS.
+- The restore packet now follows explicit causal event references transitively and preserves event-journal order. Missing transitive references produce PARTIAL instead of silently omitting ancestry. Regression tests cover both the complete chain and missing referenced source.
+- The integration scenario covers branch result publication, owner acknowledgement, guarded task-state update, checkpoint bundle capture/recovery after simulated projection interruption, and fresh-process restore. It verifies that the original child result is present in the restored packet.
+- Source ingestion is already connected through `source_ingestion_runner.py`: archive staging → intake adapter → route plan validation → source registry. Existing tests cover replay and crash/recovery around registry commit. The runner expressly stops before semantic promotion, canonical index refresh and verified session restore.
+- Do not call these remaining downstream stages implemented. Do not claim live extension behavior on Android based on CI.
+- **Return point:** await the user's external-agent analyses. Once received, compile them against current evidence, separate verified facts from proposals/unknowns, and then decide the next repository/architecture step. No merge or changes to `main`; PR #27 stays Draft.
