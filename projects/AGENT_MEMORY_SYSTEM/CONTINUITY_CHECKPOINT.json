@@ -1,12 +1,12 @@
 {
   "schema_version": "1.0",
-  "checkpoint_id": "CKPT-AGMS-20261015-INTERRUPTION-RECOVERY-01",
+  "checkpoint_id": "CKPT-AGMS-20261015-INTERRUPTION-RECOVERY-02",
   "project_id": "AGENT_MEMORY_SYSTEM",
   "task_id": "AGMS-2026-10-15-MEMORY-PIPELINE-CONTINUITY",
   "recorded_at": "2026-10-15",
   "recorded_time_precision": "day",
   "source_chat": "Настройка Агента",
-  "source_message": "User requested completion of the persistent memory mechanism after a network interruption caused a report upload failure.",
+  "source_message": "User asked to complete the persistent memory mechanism so network interruptions do not force repeated work.",
   "goal": "Make work recoverable after connection/session interruption without repeating already verified steps; connect source ingestion, approved semantic-memory processing, index refresh, and next-session restore, while preserving provenance and project boundaries.",
   "branch": "integration/memory-core-clean-20261015",
   "pr": {
@@ -18,13 +18,13 @@
     "base": "main"
   },
   "source_code_checkpoint": {
-    "head": "7686f0d17f975200dd3b924f965b228da67c85e1",
-    "ci_run_id": 38748706421,
-    "ci_url": "https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38748706421",
+    "head": "30be5e944d6dd2d8a60395626b52ef07ff898640",
+    "ci_run_id": 38750630421,
+    "ci_url": "https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38750630421",
     "ci_conclusion": "success",
-    "tests": 194,
+    "tests": 201,
     "skipped": 1,
-    "write_audit_mutation_sites": 76,
+    "write_audit_mutation_sites": 85,
     "write_audit_unclassified": 0
   },
   "confirmed_completed": [
@@ -32,7 +32,11 @@
     "Archive staging to sanitized intake to metadata-only source registry is implemented.",
     "Concurrent intake publication race was reproduced, fixed, and covered by a two-process regression test.",
     "Strict write-contract audit is enabled in CI.",
-    "The runner explicitly stops at SOURCE_REGISTERED_DOWNSTREAM_PENDING and does not claim semantic promotion, canonical index refresh, or automatic next-session restore."
+    "The runner explicitly stops at SOURCE_REGISTERED_DOWNSTREAM_PENDING and does not claim semantic promotion, canonical index refresh, or automatic next-session restore.",
+    "Added tools/continuity_checkpoint_bundle.py: immutable paired TASK_STATE/HANDOFF generation, hash-linked parent generations, atomic CURRENT_CHECKPOINT pointer as the commit point, OS-managed lock, drift verification, and replay recovery after interruption.",
+    "Added six behavioral tests covering capture/verify, interruption after pointer publication, paired projection recovery, idempotent replay, parent-chain preservation, tamper rejection, and missing-pointer fail-closed behavior (five named test methods plus idempotent replay; total six tests).",
+    "Added strict write-contract classification for the checkpoint bundle and documented capture/verify/recover usage in core/agent_runtime_protocol.md.",
+    "Exact-head CI for 30be5e944d6dd2d8a60395626b52ef07ff898640 passed: 201 tests, one skipped; 85 mutation sites, zero unclassified."
   ],
   "confirmed_open": [
     {
@@ -56,7 +60,7 @@
       "description": "A report that was never durably written to the repository cannot be reconstructed verbatim after a network interruption. Future work must persist concise checkpoints after each material verified milestone and distinguish persisted records from undelivered response text."
     }
   ],
-  "next_action": "Implement a versioned, append-only canonical checkpoint record with atomic publication and recovery validation; then add behavioral tests and connect TASK_STATE/HANDOFF materialization without claiming two-file atomicity. After this protection is tested, continue semantic promotion and index/restore integration.",
+  "next_action": "Append a new authoritative continuation checkpoint to TASK_STATE.md and HANDOFF.md and record the implementation event; then inspect memory-record schemas and lifecycle/approval gates to specify semantic promotion, canonical index refresh, and next-session restore contracts. Do not mark end-to-end memory processing complete until these stages are implemented and tested.",
   "constraints": [
     "Do not merge PR #27 or modify main without explicit user approval.",
     "Do not delete or rewrite source-history exports without a separate explicit decision.",
