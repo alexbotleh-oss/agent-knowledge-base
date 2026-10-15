@@ -25,7 +25,7 @@ class GenerateReportTargetGuardTests(unittest.TestCase):
             )
 
             self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
-            self.assertIn("refusing to overwrite canonical memory file", result.stderr)
+            self.assertIn("Refusing to overwrite canonical memory file", result.stderr)
             self.assertEqual(handoff.read_text(encoding="utf-8"), original)
 
     def test_allows_derived_report_target(self):
