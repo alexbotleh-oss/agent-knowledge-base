@@ -380,6 +380,7 @@ class TestRealApiIntegration(unittest.TestCase):
             self.assertEqual(restored["status"], "RESTORED_PACKET")
             self.assertEqual(restored["missing"], [])
             self.assertIn(ack_event_id, restored["linked_ids"])
+            self.assertIn(result_event_id, restored["linked_ids"])
             self.assertFalse(restored["writes"])
             self.assertEqual(
                 restored["hashes"]["task_state_sha256"],
