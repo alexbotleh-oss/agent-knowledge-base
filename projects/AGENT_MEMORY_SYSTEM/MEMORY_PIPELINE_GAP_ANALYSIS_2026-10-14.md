@@ -1,0 +1,134 @@
+# Аудит архитектуры памяти и поэтапное внедрение общей маршрутизации
+
+Дата проверки: 2026-10-14  
+Статус: **этап 1 — инвентаризация и карта разрывов; архитектура согласована как направление, runtime-конвейер ещё не подтверждён**.  
+Рабочая ветка: `export/cross-project-experience-rollup-20261012`. PR #22 остаётся Draft/open/unmerged; документ не является разрешением на merge.
+
+## 1. Цель, восстановленная из концепции пользователя
+
+Рабочие агенты из разных чатов создают материалы по общей инструкции и помещают их в согласованную входящую область репозитория. После этого независимая инфраструктура должна продолжить работу без исходного агента: сохранить источник, проверить маркировку, распределить записи по существующим библиотекам памяти, обновить связи и индексы, зафиксировать результат и сделать новые адреса доступными агентам других проектов.
+
+Выгрузка не сводится к двум типам «опыт» и «событие». Она может включать исходную хронологию, контекст текущей задачи, краткосрочные сведения, кандидатов на долговременное хранение, подтверждённые записи, решения, ошибки, уроки, связи и ссылки на вложения. Сам факт передачи файла не означает, что каждая запись одобрена для долгосрочной памяти.
+
+Применимость к неизвестным будущим проектам нельзя требовать определять заранее. На входе следует сохранять известные признаки и условия возникновения записи; переносимость обнаруживается позднее и остаётся проверяемой гипотезой, пока нет оснований для более сильного вывода.
+
+## 2. Фактически обнаруженные компоненты
+
+| Компонент | Подтверждённое состояние | Граница доказательства |
+|---|---|---|
+| `core/memory_model.md` (main) | Описывает уровни памяти, происхождение, статусы, связи, отрицательный опыт, конфликты и защиту истории | Это нормативная модель, не автоматический обработчик |
+| `core/stack_registry.json` (main) | Содержит признаки и адаптеры стеков, включая Python, Java, Flutter, JavaScript/TypeScript и другие | Реестр обнаруживает стек проекта; он не доказывает семантическую применимость урока |
+| `templates/event_record.jsonl.example`, `templates/lesson_record.jsonl.example` (main) | Есть примеры структурированных событий и уроков | Требуется проверить достаточность схем для смешанной выгрузки и разных состояний памяти |
+| `tools/validate_memory.py`, `.github/workflows/validate.yml` (main) | Выполняется структурная проверка и набор unit-тестов при поддерживаемых событиях GitHub | Проверка не является маршрутизацией входящих документов и не обновляет автоматически все библиотеки |
+| `core/agent_runtime_protocol.md`, `core/session_handoff.md` (main) | Описан цикл восстановления цели и передачи контекста | Это инструкция агенту; сама по себе она не обеспечивает сохранение после разрыва соединения |
+| `core/source_ingestion_protocol.md` (PR #22) | Описаны слои приёма, происхождение, полнота, статусы, отдельный импорт и последующий анализ | Документ ветки; нельзя считать каждую описанную возможность реализованной |
+| `tools/resumable_chat_import.py`, `tests/test_resumable_chat_import.py` (PR #22) | Изолированный прототип сохраняет снимок, импортирует беседы в локальную SQLite, хранит checkpoint и журнал событий; предусмотрены тесты повторного запуска/возобновления | Это низкоуровневый импорт сырой истории. Он не реализует распределение в библиотеки, семантический анализ, извлечение вложений, обновление индексов или публикацию адресов для агентов |
+| `core/continuous_agent_architecture.md` (PR #22) | Описывает архитектуру непрерывного агента и стек возврата из боковых веток | Архитектурное описание не доказывает, что runtime-механизмы уже существуют |
+
+## 3. Выявленные разрывы
+
+1. **Нет подтверждённого end-to-end цикла** от добавления подготовленной выгрузки до записи в библиотеки, обновлённых индексов и доступного агентам манифеста результата.
+2. **Нет единого проверенного контракта входящей выгрузки**, который покрывает все существующие виды памяти, версии схем, источники, маркеры назначения, статусы утверждения и связи между записями.
+3. **Не подтверждено безопасное исполнение по сигналу.** Нужны чёткие условия запуска и права GitHub Actions; маркер `IMPORT_READY` — команда обработки, но не средство авторизации и не разрешение на произвольное выполнение кода.
+4. **Технологические метки уже существуют, но пока не доказано их использование в общем поиске памяти.** Нужны проверяемые атрибуты языка/стека, инструментов, типа задачи и операции, а не предсказание всех будущих проектов, где урок пригодится.
+5. **Не подтверждён полный жизненный цикл записей:** кандидат → проверка/утверждение → долговременная запись, включая отклонённые и неизвестные назначения, карантин, конфликты и последующие исправления.
+6. **Не подтверждена обратная адресация:** результат обработки должен возвращать устойчивые ID/пути созданных записей и обновлённых индексов; агенту не следует повторно разбирать исходную выгрузку.
+7. **Разрыв сессии и разрыв pipeline — разные отказы.** GitHub Actions может возобновлять собственную задачу только при наличии реализованных устойчивых checkpoint; он не может восстановить материал, который агент не успел сохранить/передать в репозиторий.
+8. **Нужны end-to-end тесты потерь и восстановления:** частичный входной файл, отсутствие маркера готовности, повторная доставка, ошибка маршрута, несуществующая связь, сбой между сохранением записей и обновлением индекса, повторный запуск и восстановление после сетевой ошибки.
+
+## 4. Принципы, которые не следует менять
+
+- Сначала сохранять исходник и provenance; производные записи всегда ссылаются на исходный материал.
+- Не смешивать импорт сырья с семантическим анализом и обобщением.
+- Не выводить причинность только из соседства сообщений и не объединять разные эпизоды из-за сходства формулировок.
+- Неизвестное назначение отправлять в безопасное состояние ожидания/карантин, а не угадывать.
+- Сохранять разницу между фактом, гипотезой, решением пользователя, предложением агента, действием и проверенным результатом.
+- На входе фиксировать наблюдаемые признаки: стек/язык/инструменты, тип задачи, действие, симптом, результат, источник и уровень подтверждения. Не требовать заранее знать все проекты будущей применимости.
+- Долговременное утверждение и обобщение — отдельный управляемый переход, не автоматическое следствие загрузки файла.
+- История изменений append-only там, где переписывание уничтожило бы доказательства; производные индексы можно перестроить из канонических записей.
+- Повторная доставка должна быть идемпотентной; неизвестная версия схемы и неоднозначный маркер должны останавливать маршрутизацию с отчётом.
+- Ни одна проверка или автоматизация не считается работающей без проверяемого результата и read-back.
+
+## 5. Поэтапное внедрение
+
+### Этап 1 — инвентаризация и карта разрывов (этот документ)
+
+Сопоставить существующие протоколы, реестры, схемы, валидаторы, workflow и прототипы. Зафиксировать, что подтверждено кодом/тестами, что только описано, что отсутствует. Не добавлять второй набор библиотек или конкурирующую модель памяти.
+
+**Критерий выхода:** есть проверенная карта компонентов и пробелов; импортер не объявляется готовым конвейером памяти.
+
+### Этап 2 — контракт входящей выгрузки и жизненный цикл
+
+На основе существующих схем определить версионированный манифест партии: идентификатор партии, источник/чат/проект, версии формата, контрольные суммы, записи разных типов, provenance/locator, статусы, наблюдаемые технологические признаки, отношения и ожидаемый состав. Определить сигнал готовности, проверку полноты, карантин и обратный манифест результата. Сначала проверить совместимость с имеющимися форматами и добавить только недостающие поля/адаптеры.
+
+**Критерий выхода:** фикстуры проходят схему; старые записи читаются; неизвестные значения не превращаются в выдуманные; неподтверждённые кандидаты не попадают автоматически в утверждённую память.
+
+### Этап 3 — безопасный независимый обработчик
+
+Подключить обработку только для валидной готовой партии. Начать с dry-run: сформировать план маршрутизации и отчёт без изменения библиотек. Затем — идемпотентная запись разрешённых типов, журнал событий, карантин и проверка связей. Никакого выполнения кода из входящей выгрузки. Разделить права чтения и записи, а автоматическую публикацию выполнять в ограниченном контуре.
+
+**Критерий выхода:** повторная доставка не создаёт дубликатов; частичная/невалидная партия не меняет каноническую память; ошибки видимы и восстанавливаемы.
+
+### Этап 4 — индексы и обратные адреса
+
+После успешной записи обновлять или перестраивать индексы из канонических записей и выдавать манифест результата с ID и путями. Поддержать поиск сначала по явным атрибутам и ссылкам, затем — по более сложным признакам. Проверять, что агент из другого проекта может найти запись без повторного чтения всей исходной выгрузки.
+
+**Критерий выхода:** тестовый агент находит запись по стеку/инструменту/типу задачи и получает ссылку на первоисточник; результат поиска не утверждает применимость без проверки условий.
+
+### Этап 5 — сквозное испытание непрерывности
+
+Испытать: неполный файл; отключение/повтор workflow; потерянное подтверждение; дубликат партии; конфликт IDs; неизвестный тип; неверную связь; сбой между канонической записью и индексом; новый чат, который восстанавливает задачу по handoff и ссылкам результата.
+
+**Критерий выхода:** каждый сценарий либо завершён с проверяемым результатом, либо остановлен безопасно; нет молчаливой потери источника, двойной записи или ложного статуса завершения.
+
+## 6. Статус текущего импортёра
+
+`tools/resumable_chat_import.py` следует считать **изолированным прототипом низкоуровневого приёма сырой истории**, а не утверждённой архитектурой всей памяти. Его тесты проверяют часть сохранения/возобновления на уровне бесед, но не покрывают полный путь «входящая выгрузка → маршрутизация → библиотеки → индексы → доступ агента». До завершения этапов 1–2 нельзя объявлять его интегрированным в общий конвейер. Удаление или слияние прототипа не выполнять автоматически; решение принимается после сопоставления контракта и тестов.
+
+## 7. Следующий конкретный шаг
+
+Продолжить этап 1 на активной ветке: проверить все существующие канонические пути записи/индексации, форматы и workflow по фактическим файлам и тестам; затем составить список повторно используемых механизмов и минимальных изменений для этапа 2. Не начинать новую реализацию маршрутизатора до этой проверки.
+
+## 8. Текущие ограничения и безопасность
+
+- PR #22 содержит несвязанные проектные истории и по ранее зафиксированному аудиту не готов к merge. Данный документ не разрешает merge.
+- `main` не изменяется.
+- Проверка CI для текущего HEAD подтверждает только проход имеющихся проверок, а не архитектурную полноту и не эксплуатационную готовность всей системы.
+- Источники чатов/вложений и их полнота остаются отдельной задачей; импорт одного доступного снимка не доказывает полноту всей истории.
+
+
+## Second-pass implementation inventory — 2026-10-14
+
+The follow-up check found additional existing components that narrow the implementation gap:
+
+- `core/memory_registry_and_multidimensional_index.md` already defines one logical linked registry with multidimensional views, stable source locators, ImportRun/RecordRevision concepts, provenance traversal and rebuildable indexes. Do not create independent duplicate libraries/catalogs merely to represent different dimensions.
+- `templates/memory_record.json.example` already contains lifecycle/evidence/decision statuses, provenance, relations, revision metadata, classification, content and coverage fields. It is an example, not a versioned JSON Schema.
+- `tools/archive_registry_staging.py` builds local source records and an archive snapshot manifest, but reads the full export into memory, sorts derived records by event time, and rewrites the output as a whole. It is useful as a field inventory, not a resumable canonical writer.
+- `tools/archive_temporal_index.py` is a read-only query utility; it loads the export into memory and builds transient lists/maps. It is not a persistent, rebuildable index connected to the canonical registry.
+- `tools/temporal_memory_model.py` adds dependency-free snapshot comparability, assertion validation/as-of views and downstream impact discovery. Tests cover primitives, but the model is not yet wired into the intake/canonical write path or downstream state/lesson/handoff updates.
+- `core/source_ingestion_protocol.md` defines RAW/INVENTORY/EXTRACTED/CANDIDATE/CANONICAL and import completeness requirements. This protocol should be reconciled with the manifest contract, not duplicated.
+- `.github/workflows/validate.yml` runs validation on pull requests and pushes to main. No intake-triggered processing workflow was found in the inspected workflow directory.
+- Current CI for HEAD `58f237c80d74709a334b5e57e8c4cfcfb9ace500` was queued as run [#38520584849](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38520584849); re-check after contract changes.
+
+**Updated conclusion:** the repository has several useful, partially overlapping prototypes and a detailed target registry contract. The next implementation should add the smallest versioned *intake envelope* around existing artifact formats, validate it, and preserve the distinction between intake acceptance and long-term-memory approval. It should not build a new competing registry or a generic arbitrary-path router.
+
+
+## Этап 3 — dry-run план маршрутизации — 2026-10-14
+
+- Добавлен `tools/plan_memory_intake.py`. Он сначала вызывает валидатор манифеста, затем сопоставляет только известные `kind` с логическими представлениями единого реестра. Произвольные destination paths из манифеста не принимаются.
+- Добавлены `tests/test_memory_intake_planner.py`: кандидат направляется в candidate view; явно одобренная запись сохраняет статус одобрения; неверный хеш отклоняет всю партию без маршрутов; неизвестный тип отправляется в карантин.
+- Планировщик только печатает JSON-план и всегда сообщает `writes_performed: false`. Он не пишет в канонические библиотеки, не применяет task state/handoff и не перестраивает индексы.
+- Это первый проверяемый маршрут от манифеста к плану, не автоматический intake workflow и не end-to-end конвейер.
+
+
+## Correction after branch-vs-main verification — 2026-10-14
+
+A live fetch of the referenced paths against both refs corrected an overstatement in the second-pass inventory above:
+
+- `core/memory_registry_and_multidimensional_index.md` and `templates/memory_record.json.example` are present on the PR branch but returned 404 when fetched from `main`. They are proposed additions in PR #22, not pre-existing canonical files on the default branch. Treat the registry description as a target contract under review, not as an already deployed storage system.
+- Existing baseline components confirmed on `main` include `core/memory_model.md`, `core/stack_registry.json`, event/lesson examples, `tools/validate_memory.py` and `.github/workflows/validate.yml`. The workflow validates on pull requests and pushes to `main`; no intake-triggered workflow was found in the inspected workflow configuration.
+- Current branch implementations still do not provide a canonical write/index adapter: `tools/archive_registry_staging.py` writes local staging output; `tools/temporal_memory_model.py` provides standalone primitives; `tools/plan_memory_intake.py` is read-only. The intake validator checks manifest fields, relative paths and artifact hashes, but does not validate each artifact payload against a per-kind record schema or resolve relation endpoints against a canonical ID registry.
+- Existing relation shapes are not yet unified: event records contain nested relations using `event_id`, while the proposed registry contract describes typed relations with source/target identity and evidence. Decision records are currently Markdown. Do not assume one generic writer can append all kinds safely without explicit adapters and round-trip tests.
+- Therefore the next safe step is a compatibility map and tests for each allowed artifact kind: source-record staging, event records, lesson records, decision proposals, memory candidates and relations. Define how endpoint IDs are resolved (in-batch, existing canonical record, or unresolved/quarantined) before any canonical write. Keep the planner read-only until this gate passes.
+
+Verification snapshot before this correction commit: PR #22 was OPEN / DRAFT / UNMERGED at HEAD `fa382dab2cce0b01caf7fdf292ace80432c649b7` with 116 changed paths. GitHub Actions reported the Validate knowledge base workflow completed successfully for that HEAD. That is a CI result only; it does not establish full pipeline readiness. The PR body still contains older path-count/HEAD metadata and remains stale; PR scope/preservation issues are unresolved.
