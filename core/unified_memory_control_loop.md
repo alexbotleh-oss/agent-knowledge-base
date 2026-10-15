@@ -219,6 +219,28 @@ Implemented prototype: `tools/minimal_agent_loop.py`; tests: `tests/test_minimal
 The loop applies independent, non-authorizing review dimensions:
 - **Scope filter:** explicit `--project-id` matching routes same-project candidates to review; mismatches remain `OUT_OF_PROJECT_SCOPE`; missing identity remains `PROJECT_SCOPE_UNKNOWN`.
 - **Evidence-quality filter:** classifies the record's status metadata and whether recognized evidence pointers exist. A `verified` label is not proof of claim validity.
+- **Local source-availability check:** when the caller explicitly supplies `--evidence-root`, each `evidence`/`evidence_refs` item with `kind: file` and a repository-relative `ref` is checked under that root for existence, regular-file type, non-empty content and a text-like UTF-8 sample (up to 8192 bytes). Empty files are classified `EMPTY_FILE`; samples containing a NUL byte or invalid UTF-8 are classified `BINARY_FILE`. An incomplete UTF-8 sequence only at the sample boundary is tolerated so a multibyte character split by the 8192-byte limit is not misclassified. Path traversal and absolute paths are not followed outside the root. URLs, commit IDs, test names and other non-file references are not fetched or validated.
+
+#### Evidence source validation levels
+
+| Level | Check | Per-reference / aggregate status | Review effect |
+|---|---|---|---|
+| 1. Root supplied | Is `--evidence-root` explicit? | `NOT_CHECKED_NO_EVIDENCE_ROOT` when absent | Not a pass; candidate remains review-only |
+| 2. Path safety | Does the resolved path remain inside the root? | `OUTSIDE_EVIDENCE_ROOT` | Not followed outside root; routed to review, not treated as valid evidence |
+| 3. Existence and type | Does the path exist and point to a regular file? | `MISSING` / `MISSING_SOURCE`; `NOT_A_FILE` / `INVALID_SOURCE_TYPE` | Blocks the same-project evidence-source review route |
+| 4. Readability | Can the file be opened and the bounded sample read? | `UNREADABLE` / `UNREADABLE_SOURCE` | Blocks the same-project evidence-source review route |
+| 5. Content sanity | Is the file non-empty, with a text-like UTF-8 sample within the first 8192 bytes? | `EMPTY_FILE` / `EMPTY_SOURCE`; `BINARY_FILE` / `BINARY_SOURCE` | Blocks the same-project evidence-source review route |
+| 6. Claim support | Does the source actually support the event claim? | Not evaluated by this check; `claim_validated: false` | Requires a separate evidence-backed assessment |
+
+Aggregate source statuses also include `ALL_LOCAL_FILES_READABLE` when all checked local file references pass the availability/format screen, and `NO_LOCAL_FILE_REFS` when no local file references are available to check. The check is local-only and runs only with an explicit evidence root.
+
+Important limitations:
+- A file passing the availability/format screen is only a suitable carrier for textual evidence; it is not proof that the file supports the claim or that the lesson transfers to the current task.
+- Semantic validation of evidence content remains unimplemented.
+- Every candidate remains `transfer_decision: UNASSESSED`; no gate authorizes use, promotion, writes or execution.
+The loop applies independent, non-authorizing review dimensions:
+- **Scope filter:** explicit `--project-id` matching routes same-project candidates to review; mismatches remain `OUT_OF_PROJECT_SCOPE`; missing identity remains `PROJECT_SCOPE_UNKNOWN`.
+- **Evidence-quality filter:** classifies the record's status metadata and whether recognized evidence pointers exist. A `verified` label is not proof of claim validity.
 - **Local source-availability check:** when the caller explicitly supplies `--evidence-root`, each `evidence`/`evidence_refs` item with `kind: file` and a repository-relative `ref` is checked under that root for existence, regular-file type, non-empty content and a text-like UTF-8 sample (up to 8192 bytes). Empty files are classified `EMPTY_FILE`; samples containing a NUL byte or invalid UTF-8 are classified `BINARY_FILE`. Path traversal and absolute paths are not followed outside the root. URLs, commit IDs, test names and other non-file references are not fetched or validated.
 - If a local file reference is missing, unreadable, not a regular file, empty or classified as binary, `candidate_review_gate` becomes `SCOPE_MATCHED_EVIDENCE_SOURCE_UNAVAILABLE_BLOCKED`. Aggregate statuses include `EMPTY_SOURCE` and `BINARY_SOURCE` when any referenced local file has the corresponding condition. If no evidence root is supplied, the check is explicitly `NOT_CHECKED_NO_EVIDENCE_ROOT`; it must not be interpreted as a pass.
 - Passing this local check only establishes that the referenced file is available and has non-empty text-like content under the bounded sample heuristic. It does not prove that the file supports the event claim or that the lesson transfers to the current task. Candidates remain `transfer_decision: UNASSESSED`; no review gate authorizes use, promotion, writes or execution.
