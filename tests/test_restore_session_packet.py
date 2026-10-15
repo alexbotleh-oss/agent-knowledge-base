@@ -79,6 +79,68 @@ class RestoreSessionPacketTests(unittest.TestCase):
         self.assertEqual(packet["status"], "PARTIAL")
         self.assertIn("EVT-TEST-001", packet["missing_event_refs"])
 
+    def test_restores_transitive_event_references_in_journal_order(self):
+        acknowledgement = {
+            "event_id": "EVT-TEST-002",
+            "type": "cross_branch_result_acknowledged",
+            "related_event_ids": ["EVT-TEST-001"],
+            "relations": [{"type": "acknowledges_result", "event_id": "EVT-TEST-001"}],
+            "acknowledgement": {"result_event_id": "EVT-TEST-001"},
+        }
+        self.task.write_text(
+            "# TASK_STATE\n- Goal: preserve memory continuity.\n"
+            "## Active checkpoint — test\n- Next step: restore source-backed state.\n"
+            "- Evidence: EVT-TEST-002\n",
+            encoding="utf-8",
+        )
+        self.handoff.write_text(
+            "# HANDOFF\n## Checkpoint test\n- Continue from EVT-TEST-002.\n",
+            encoding="utf-8",
+        )
+        self.events.write_text(
+            json.dumps({
+                "event_id": "EVT-TEST-001",
+                "type": "cross_branch_result",
+                "summary": "Original child result.",
+            }) + "\\n"
+            + json.dumps(acknowledgement) + "\\n",
+            encoding="utf-8",
+        )
+
+        packet = build_session_packet(self.task, self.handoff, self.events)
+
+        self.assertEqual(packet["status"], "RESTORED_PACKET")
+        self.assertEqual(
+            [event["event_id"] for event in packet["linked_events"]],
+            ["EVT-TEST-001", "EVT-TEST-002"],
+        )
+        self.assertEqual(packet["missing_event_refs"], [])
+
+    def test_missing_transitive_event_reference_yields_partial(self):
+        self.task.write_text(
+            "# TASK_STATE\n- Goal: preserve memory continuity.\n"
+            "## Active checkpoint — test\n- Next step: restore source-backed state.\n"
+            "- Evidence: EVT-TEST-002\n",
+            encoding="utf-8",
+        )
+        self.handoff.write_text(
+            "# HANDOFF\n## Checkpoint test\n- Continue from EVT-TEST-002.\n",
+            encoding="utf-8",
+        )
+        self.events.write_text(json.dumps({
+            "event_id": "EVT-TEST-002",
+            "type": "cross_branch_result_acknowledged",
+            "related_event_ids": ["EVT-TEST-MISSING"],
+            "relations": [{"type": "acknowledges_result", "event_id": "EVT-TEST-MISSING"}],
+            "acknowledgement": {"result_event_id": "EVT-TEST-MISSING"},
+        }) + "\\n", encoding="utf-8")
+
+        packet = build_session_packet(self.task, self.handoff, self.events)
+
+        self.assertEqual(packet["status"], "PARTIAL")
+        self.assertEqual(packet["missing_event_refs"], ["EVT-TEST-MISSING"])
+        self.assertEqual([event["event_id"] for event in packet["linked_events"]], ["EVT-TEST-002"])
+
     def test_missing_canonical_file_yields_blocked(self):
         packet = build_session_packet(self.task, self.handoff, self.root / "missing.jsonl")
         self.assertEqual(packet["status"], "BLOCKED")
