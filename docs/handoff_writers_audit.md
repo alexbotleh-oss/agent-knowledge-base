@@ -16,6 +16,28 @@ Status: partial static audit on branch `test/real-api-integration-20261014`; ini
 | `tools/resumable_chat_import.py:38-59, 177-...` | Writes immutable snapshots and SQLite import database | File replacement for snapshots; SQLite transactions for import state | No HANDOFF target found; not a canonical HANDOFF writer. |
 
 
+## Stable import contracts (verified)
+
+This section is the quick-reference contract surface. Each claim is tied to a behavioral test and a successful CI run; its scope is intentionally narrower than a general claim of importer or filesystem reliability.
+
+### PRINCIPLE 1 — Idempotency of a completed import
+
+Re-running a completed import with the same `archive_id` and identical source bytes is a verification/no-op operation, not a rewrite. It must not change the committed event history, event timestamps, payload checksums, or persisted checkpoint state.
+
+- **Behavioral evidence:** `test_completed_exact_source_is_not_reimported`.
+- **Test commit:** `bd4ff3f464e22fff8c61ff65b32e72fe5e39aa54`.
+- **CI:** [run #548](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38690579785) passed on the exact test commit; [run #549](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38690594334) passed on the subsequent documentation commit.
+- **Boundary:** applies to the tested completed-source replay through `tools/resumable_chat_import.py`. Direct SQLite writes, manual edits, arbitrary filesystem/kernel failures, and untested paths are outside this evidence.
+
+### PRINCIPLE 2 — Separation of logical sources
+
+Identical source bytes with different `archive_id` values represent different logical sources. Their event histories, checkpoints, and progress must remain independent and must not be mixed.
+
+- **Behavioral evidence:** `test_same_source_bytes_with_different_archive_ids_are_independent`. The test pauses archive A, completes archive B using the same bytes/digest, then resumes A and verifies independent records, events, and checkpoints.
+- **Test commit:** `f68372756a05525d8925c63bff6a5e1c48647a0a`.
+- **CI:** [run #551](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38691451002) passed on the exact test commit; [run #552](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38691490708) passed on the subsequent documentation commit.
+- **Boundary:** applies to the tested importer entry point and scenario. It does not establish safety for direct database mutations or untested failure modes.
+
 ## Import idempotency coverage (branch review)
 
 Coverage was inspected in `tests/test_resumable_chat_import.py` and `tests/test_archive_registry_staging.py` before changing tests.
