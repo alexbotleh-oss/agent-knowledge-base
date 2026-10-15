@@ -258,6 +258,21 @@ def _acknowledge_result_unlocked(
 
 
 
+def _target_path_error(event_log: Path) -> str | None:
+    """Prevent this registry from writing into another in-repository project journal."""
+    repository_root = Path(__file__).resolve().parents[1]
+    target = Path(event_log).resolve()
+    try:
+        target.relative_to(repository_root)
+    except ValueError:
+        # Temporary external paths are useful for isolated tests and tooling.
+        return None
+    canonical = (repository_root / "projects" / "AGENT_MEMORY_SYSTEM" / "events.jsonl").resolve()
+    if target != canonical:
+        return "In-repository branch-result writes are restricted to projects/AGENT_MEMORY_SYSTEM/events.jsonl"
+    return None
+
+
 def _run_exclusive(event_log: Path, operation, *args) -> dict[str, Any]:
     """Fail closed if another writer holds the journal lock; never auto-break stale locks."""
     event_log = Path(event_log)
@@ -282,6 +297,9 @@ def _run_exclusive(event_log: Path, operation, *args) -> dict[str, Any]:
 
 
 def publish_result(event_log: Path, result: dict[str, Any]) -> dict[str, Any]:
+    path_error = _target_path_error(event_log)
+    if path_error:
+        return {"status": "REJECTED", "errors": [path_error], "writes_performed": False}
     return _run_exclusive(event_log, _publish_result_unlocked, result)
 
 
@@ -293,6 +311,9 @@ def acknowledge_result(
     acknowledged_at: str,
     notes: str = "",
 ) -> dict[str, Any]:
+    path_error = _target_path_error(event_log)
+    if path_error:
+        return {"status": "REJECTED", "errors": [path_error], "writes_performed": False}
     return _run_exclusive(
         event_log, _acknowledge_result_unlocked,
         result_event_id, decision, owner_ref, acknowledged_at, notes,
