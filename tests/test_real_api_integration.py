@@ -287,3 +287,108 @@ class TestRealApiIntegration(unittest.TestCase):
             self.assertEqual(restored["next_step"], "проверить новый процесс")
             self.assertTrue(restored["event_linkage_complete"])
             self.assertTrue(restored["freshness_verified"])
+
+
+    def test_end_to_end_cycle_is_resumable_and_restores_persisted_evidence(self):
+        """Exercise publish -> acknowledgement -> guarded update -> fresh-process restore.
+
+        Repeated calls model a restart at durable boundaries: each stage must either
+        apply once or return its idempotent replay status without changing bytes.
+        """
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            event_log, task_state = self._project_files(tmp_dir)
+            handoff = task_state.with_name("HANDOFF.md")
+            parent_checkpoint_id = "root-cp-e2e-001"
+
+            # Stage 1: child result is durably published; interruption before ack is safe.
+            result_event_id = self._publish_result(str(event_log), parent_checkpoint_id)
+            published_bytes = event_log.read_bytes()
+            replay_payload = {
+                "child_branch_id": "branch-side-001",
+                "parent_task_id": "task-main-123",
+                "parent_checkpoint_id": parent_checkpoint_id,
+                "result_status": "RESULT_REPORTED",
+                "evidence_status": "verified",
+                "summary": "Archive reconciled",
+                "source_refs": ["commit-abc123"],
+                "reported_at": "2026-10-15T10:00:00Z",
+                "result_key": "key-side-001",
+            }
+            replayed_result = publish_result(str(event_log), replay_payload)
+            self.assertEqual(replayed_result["status"], "ALREADY_PUBLISHED")
+            self.assertEqual(event_log.read_bytes(), published_bytes)
+
+            # Stage 2: owner decision is a separate durable event, never an in-place edit.
+            ack_event_id = self._acknowledge_result(
+                str(event_log), result_event_id, "owner-e2e-001"
+            )
+            acknowledged_bytes = event_log.read_bytes()
+            replayed_ack = acknowledge_result(
+                str(event_log), result_event_id=result_event_id,
+                decision="accepted", owner_ref="owner-e2e-001",
+                acknowledged_at="2026-10-15T10:05:00Z",
+            )
+            self.assertEqual(replayed_ack["status"], "ALREADY_ACKNOWLEDGED")
+            self.assertEqual(event_log.read_bytes(), acknowledged_bytes)
+
+            # An interruption here must remain visible as an unresolved transition.
+            pending_report = build_report(str(event_log), [str(task_state)])
+            self.assertTrue(any(
+                issue.get("kind") == "accepted_ack_without_task_checkpoint"
+                for issue in pending_report.get("issues", [])
+            ))
+
+            # Stage 3: guarded update consumes the accepted ack and preserves old state.
+            state_content = self._state_content(ack_event_id)
+            task_state.write_text(state_content, encoding="utf-8")
+            original_bytes = task_state.read_bytes()
+            proposal = {
+                "update_id": "upd-e2e-001",
+                "expected_sha256": hashlib.sha256(original_bytes).hexdigest(),
+                "parent_checkpoint_id": parent_checkpoint_id,
+                "event_id": ack_event_id,
+                "checkpoint_markdown": "- Resumed from accepted child result; source linkage retained.",
+            }
+            verdict = self._trust_verdict(task_state, event_log)
+            self.assertEqual(verdict.get("status"), "AUTHORIZED_FOR_PLANNING")
+            applied = apply_checkpoint(task_state, event_log, proposal, trust_verdict=verdict)
+            self.assertEqual(applied.get("status"), "APPLIED")
+            after_apply = task_state.read_bytes()
+            self.assertIn(b"Original", after_apply)
+            self.assertIn(ack_event_id.encode("utf-8"), after_apply)
+
+            # Simulated restart/replay after the state write must not append twice.
+            replayed_update = apply_checkpoint(task_state, event_log, proposal, trust_verdict=verdict)
+            self.assertEqual(replayed_update.get("status"), "ALREADY_APPLIED")
+            self.assertEqual(task_state.read_bytes(), after_apply)
+
+            # Stage 4: a new interpreter reconstructs the packet only from persisted files.
+            script = (
+                "import json, sys; from pathlib import Path; "
+                "from restore_session_packet import build_session_packet; "
+                "p=build_session_packet(Path(sys.argv[1]), Path(sys.argv[2]), Path(sys.argv[3])); "
+                "print(json.dumps({'status':p['status'], 'linked_ids':[e['event_id'] for e in p['linked_events']], "
+                "'missing':p['missing_event_refs'], 'hashes':p['source_hashes'], 'writes':p['writes_performed']}))"
+            )
+            env = os.environ.copy()
+            env["PYTHONPATH"] = str(tools_dir) + os.pathsep + env.get("PYTHONPATH", "")
+            completed = subprocess.run(
+                [sys.executable, "-c", script, str(task_state), str(handoff), str(event_log)],
+                check=True, capture_output=True, text=True, env=env,
+            )
+            restored = json.loads(completed.stdout)
+            self.assertEqual(restored["status"], "RESTORED_PACKET")
+            self.assertEqual(restored["missing"], [])
+            self.assertIn(ack_event_id, restored["linked_ids"])
+            self.assertFalse(restored["writes"])
+            self.assertEqual(
+                restored["hashes"]["task_state_sha256"],
+                hashlib.sha256(after_apply).hexdigest(),
+            )
+            rows = [json.loads(line) for line in event_log.read_text(encoding="utf-8").splitlines()]
+            self.assertIn(result_event_id, {row["event_id"] for row in rows})
+            ack_row = next(row for row in rows if row["event_id"] == ack_event_id)
+            self.assertIn(result_event_id, ack_row["related_event_ids"])
+
+            final_report = build_report(str(event_log), [str(task_state)])
+            self.assertEqual(final_report.get("issues"), [])
