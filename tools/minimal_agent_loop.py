@@ -185,7 +185,7 @@ def _validate_evidence_sources(
                     else:
                         if not sample:
                             result["status"] = "EMPTY_FILE"
-                        elif b"\\x00" in sample:
+                        elif b"\x00" in sample:
                             result["status"] = "BINARY_FILE"
                         else:
                             try:
