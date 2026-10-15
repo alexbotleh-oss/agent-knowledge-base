@@ -403,7 +403,7 @@ class MinimalAgentLoopTests(unittest.TestCase):
         )
         self.assertEqual(
             candidate["candidate_review_gate"],
-            "SCOPE_MATCHED_EVIDENCE_SOURCE_UNAVAILABLE_BLOCKED",
+            "SCOPE_MATCHED_EVIDENCE_SOURCE_OUTSIDE_ROOT_REVIEW_REQUIRED",
         )
         self.assertEqual(candidate["transfer_decision"], "UNASSESSED")
         self.assertFalse(result["writes_performed"])
