@@ -155,7 +155,7 @@ These guarantees are supported by the named behavioral tests and CI runs in the 
 
 A successful `RAW_COMPLETE` status is necessary but not sufficient evidence of correctness: the scenario's persisted-state invariants must also hold. Do not extend these claims beyond the tests and boundaries cited here.
 
-## Remaining-risk audit at HEAD `9a45f89b675dc8a7bba6079bcea9975265e2aa46`
+## Remaining-risk audit (writer-classifier code HEAD `0b35c21153a35c52f72412320dfa61f994e29a2e`; documentation evidence refreshed through `410d65bb7ce1ec61f01bc1dbfd66b05aa1abcbca`)
 
 This is a scoped audit of evidence available in the current branch, not a claim of complete system reliability.
 
@@ -174,6 +174,20 @@ This is a scoped audit of evidence available in the current branch, not a claim 
 | `HANDOFF.md` changing between trust re-check and `TASK_STATE.md` replacement | **Known open race; requires design decision** | The current lock protocol does not lock or version `HANDOFF.md`. A test can demonstrate the race, but a durable fix likely needs a shared mutation protocol or immutable/versioned source reference. Do not claim atomicity across these files. |
 | Static AST mutation inventory | **Advisory; classifier refined, still heuristic** | CI run #572 on code HEAD `0b35c21153a35c52f72412320dfa61f994e29a2e` reports 55 candidates and zero unclassified findings. The classifier now distinguishes common inferred `pathlib` receivers and `os.replace` from pure string/date `.replace()` calls. Four regression tests passed in CI #573 on test HEAD `df54bc6d048102e8145df1f715a32ae6686a0c6e`. This reduces known noise but does not prove the candidate count equals all real file/database mutations. |
 | Complete inventory of report/installer callers and indirect invocation paths | **Audit still required** | The current caller inventory is explicitly partial. Run a branch-local search over tracked files and record all call sites/targets before declaring the writer audit complete. |
+
+
+
+### Operational-source scan (code HEAD `0b35c21153a35c52f72412320dfa61f994e29a2e`)
+
+A follow-up scan reviewed every tracked file in `tools/*.py` and `tools/*.sh`, both core validation wrappers, `.github/workflows/validate.yml`, `README.md`, and all 30 tracked `stacks/*/*.sh` adapters at the cited code revision. This is an executable-source inventory, not yet a literal-content scan of every tracked Markdown/archive/history file or every external/manual caller.
+
+- `README.md` contains the documented invocation `tools/generate_report.sh /path/to/project`; it omits the output argument, so the script's default derived-report path is used.
+- No invocation of `tools/generate_report.sh` or `tools/install_into_repo.sh` was found in the inspected workflow, core wrappers, tool scripts, or stack adapters. The installer remains manually invokable.
+- The inspected write paths include staging-record/manifest replacement in `tools/archive_registry_staging.py`; atomic `events.jsonl` replacement in `tools/branch_result_registry.py`; guarded atomic `TASK_STATE.md` replacement in `tools/guarded_task_state_update.py`; snapshot replacement and SQLite persistence in `tools/resumable_chat_import.py`; and the guarded caller-selected report output in `tools/generate_report.sh`.
+- The inspected `tools/guarded_task_state_update.py` path reads `HANDOFF.md` but does not write it. The known race remains: HANDOFF is not protected by the lock pair used for the event journal and TASK_STATE replacement.
+- No canonical-memory write target was found in the 30 stack adapter scripts. This statement is limited to the tracked adapter contents at the cited revision; it is not a guarantee about commands launched by external tooling or dynamically injected configuration.
+
+**Disposition:** executable-source review is broader and found no additional report/installer callers in the inspected paths. The full tracked-content search, dynamic/indirect caller review, and external/manual invocation inventory remain open; do not mark the writer audit complete yet.
 
 
 ### Disclaimer: static write-audit limitations
@@ -200,6 +214,6 @@ The following branch files were inspected for explicit report/installer calls, s
 - `core/validation_router.sh` and `tools/validate_project.sh` delegate to stack validation adapters; no report-generator or installer call was identified in those inspected wrappers.
 - No in-repository invocation of `install_into_repo.sh` was identified in the inspected files. It remains a manually invokable broad copy path.
 - `tools/generate_report.sh` accepts a caller-provided output path but refuses the enumerated canonical-memory basenames. That is a basename guard, not a proof against every alias, indirect path, or external writer.
-- The CI AST inventory is not a complete or exact writer count: pure string/date `.replace()` calls are currently classified as mutation candidates, including the unclassified line noted in the risk table.
+- At this historical scan HEAD, the AST inventory still classified some pure string/date `.replace()` calls as mutation candidates. The classifier was subsequently refined at code HEAD `0b35c21153a35c52f72412320dfa61f994e29a2e`; see the disclaimer and updated risk row above. The inventory remains heuristic, not an exact writer count.
 
 **Disposition:** this is stronger evidence for the inspected branch paths, but it is still not an exhaustive scan of every tracked document, external caller, dynamically constructed shell command, or editor/manual write. Keep the caller-inventory item open until a complete checked-out-branch search is recorded; do not infer that no other writer exists from the absence of a call in the files listed above.
