@@ -195,8 +195,8 @@ class SemanticContextExtractorTests(unittest.TestCase):
         for label, expected in cases:
             with self.subTest(label=label):
                 self.task.write_text(
-                    f"- **{label}:** {expected}\\n"
-                    "- **Последнее событие:** EVT-TEST-001\\n",
+                    f"- **{label}:** {expected}\n"
+                    "- **Последнее событие:** EVT-TEST-001\n",
                     encoding="utf-8",
                 )
                 context = extract_semantic_context(self._packet())
