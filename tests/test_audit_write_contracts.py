@@ -63,6 +63,10 @@ class TestAuditWriteContracts(unittest.TestCase):
         self.assertIn("tools/continuity_checkpoint_bundle.py", audit_module.CONTRACTS)
         self.assertIn("single atomic CURRENT_CHECKPOINT pointer", audit_module.CONTRACTS["tools/continuity_checkpoint_bundle.py"])
 
+    def test_turn_lifecycle_ledger_has_explicit_local_journal_contract(self):
+        self.assertIn("tools/turn_lifecycle_ledger.py", audit_module.CONTRACTS)
+        self.assertIn("protected local append-only turn journal", audit_module.CONTRACTS["tools/turn_lifecycle_ledger.py"])
+
     def test_untyped_path_parameter_is_not_guessed_as_path(self):
         # Conservative boundary: no false claim of a filesystem write without path evidence.
         hits = operations(
