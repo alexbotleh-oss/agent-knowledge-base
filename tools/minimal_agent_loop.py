@@ -179,11 +179,21 @@ def _validate_evidence_sources(
                 else:
                     try:
                         with resolved.open("rb") as handle:
-                            handle.read(1)
+                            sample = handle.read(8192)
                     except OSError:
                         result["status"] = "UNREADABLE"
                     else:
-                        result["status"] = "EXISTS_READABLE"
+                        if not sample:
+                            result["status"] = "EMPTY_FILE"
+                        elif b"\\x00" in sample:
+                            result["status"] = "BINARY_FILE"
+                        else:
+                            try:
+                                sample.decode("utf-8")
+                            except UnicodeDecodeError:
+                                result["status"] = "BINARY_FILE"
+                            else:
+                                result["status"] = "EXISTS_READABLE"
         refs.append(result)
 
     statuses = [item["status"] for item in refs]
@@ -195,6 +205,10 @@ def _validate_evidence_sources(
         status = "UNREADABLE_SOURCE"
     elif "NOT_A_FILE" in statuses:
         status = "INVALID_SOURCE_TYPE"
+    elif "EMPTY_FILE" in statuses:
+        status = "EMPTY_SOURCE"
+    elif "BINARY_FILE" in statuses:
+        status = "BINARY_SOURCE"
     elif "OUTSIDE_EVIDENCE_ROOT" in statuses:
         status = "OUTSIDE_EVIDENCE_ROOT"
     elif "NOT_CHECKED_NO_EVIDENCE_ROOT" in statuses:
@@ -219,7 +233,7 @@ def _candidate_review_gate(
         return "OUT_OF_PROJECT_SCOPE"
     if scope_match != "MATCH":
         return "PROJECT_SCOPE_UNKNOWN"
-    if source_status in {"MISSING_SOURCE", "UNREADABLE_SOURCE", "INVALID_SOURCE_TYPE"}:
+    if source_status in {"MISSING_SOURCE", "UNREADABLE_SOURCE", "INVALID_SOURCE_TYPE", "EMPTY_SOURCE", "BINARY_SOURCE"}:
         return "SCOPE_MATCHED_EVIDENCE_SOURCE_UNAVAILABLE_BLOCKED"
     if evidence_state == "DISPUTED_OR_CONFLICTED":
         return "SCOPE_MATCHED_DISPUTED_REQUIRES_CONFLICT_REVIEW"
