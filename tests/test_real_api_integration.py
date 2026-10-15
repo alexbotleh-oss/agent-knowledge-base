@@ -354,7 +354,7 @@ class TestRealApiIntegration(unittest.TestCase):
             applied = apply_checkpoint(task_state, event_log, proposal, trust_verdict=verdict)
             self.assertEqual(applied.get("status"), "APPLIED")
             after_apply = task_state.read_bytes()
-            self.assertIn(b"Original", after_apply)
+            self.assertTrue(after_apply.startswith(original_bytes))
             self.assertIn(ack_event_id.encode("utf-8"), after_apply)
 
             # Simulated restart/replay after the state write must not append twice.
