@@ -472,3 +472,13 @@ ACTIVE / PARTIAL. Recovery checkpoint persisted in HANDOFF; not an automatic bac
 - **CI qualification:** run `38746534810` was in progress on parent commit `8739304e...`; the latest test assertion was subsequently corrected in `ec33ca0e...`. Wait for exact-head CI on the latest branch after this checkpoint update before reporting these new tests as passing.
 - **Residuals:** the adapter has no whole-operation lock for competing same-batch writers and no directory-fsync guarantee; registry stale-lock recovery is manual; semantic promotion, derived index refresh, and complete next-session restore remain disconnected. These are recorded limitations, not resolved items.
 - **Next single action:** check exact-head CI for the newest PR #27 SHA after checkpoint commits. If it fails, inspect the job and patch only the demonstrated failure; if it passes, run/inspect the strict write-contract audit and update the final status. Keep PR Draft; no merge or main changes.
+
+
+## Validation checkpoint — 2026-10-15, write-contract fix verified
+
+- **Code HEAD validated:** `18b605a4dd88dff81aa9188d1e1abd2b862f9d79`; GitHub Actions [#38746665445](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38746665445) is `success`. CI ran 187 tests with `OK (skipped=1)`.
+- **Static write audit:** workflow log reports `Mutation sites: 67; unclassified: 0`. This is classification coverage for the scanner's known mutation-shaped calls, not proof of complete detection or universal safety.
+- **Regression-test failure resolved:** run #38746560137 failed because the test expected a return object from the adapter's tamper path, while the function contract is to raise `ValueError`. The test now asserts that exception and confirms the intake output was not published; it passed on the validated code HEAD.
+- **Scope guard:** the six missing PR #26 changes have been ported with the cross-project boundary test; the code commit's CI passed separately before the write-contract tests were added.
+- **Open residuals:** PR #27 stays OPEN/DRAFT/UNMERGED; no main change. Adapter concurrent same-batch calls lack a whole-operation lock; registry stale-lock recovery is manual; semantic promotion, derived indexes and complete next-session restore remain unconnected/unverified.
+- **Next single action:** re-fetch PR #27 and read back TASK_STATE/HANDOFF after this checkpoint commit, then verify CI on the resulting exact HEAD. If green, continue with adapter concurrency and end-to-end pipeline gaps; do not merge.
