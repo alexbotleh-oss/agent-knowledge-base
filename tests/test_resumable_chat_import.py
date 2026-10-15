@@ -736,6 +736,155 @@ importer.import_export(Path(sys.argv[2]), Path(sys.argv[3]), sys.argv[4], batch_
                 conn.close()
 
 
+    def test_concurrent_same_source_recovers_after_lock_holder_crashes(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            source = self.make_source(root, 6)
+            out = root / "state"
+            archive_id = "ARCHIVE-CONCURRENT-CRASH"
+            paused = import_export(source, out, archive_id, batch_size=2, stop_after_batches=1)
+            self.assertEqual(paused["status"], "PAUSED")
+            database = out / "import.sqlite3"
+
+            conn = sqlite3.connect(database)
+            try:
+                prefix_before = conn.execute(
+                    """SELECT source_locator,source_conversation_id,source_ordinal,
+                              payload_json,payload_sha256,imported_at,source_end_byte_offset
+                       FROM raw_conversations WHERE archive_id=? AND source_sha256=?
+                       ORDER BY source_ordinal""",
+                    (archive_id, paused["source_sha256"]),
+                ).fetchall()
+                events_before = conn.execute(
+                    """SELECT event_id,event_type,ordinal,details_json,occurred_at
+                       FROM import_events WHERE archive_id=? AND source_sha256=?
+                       ORDER BY event_id""",
+                    (archive_id, paused["source_sha256"]),
+                ).fetchall()
+            finally:
+                conn.close()
+            self.assertEqual(len(prefix_before), 2)
+
+            ready = root / "crash-ready"
+            release = root / "allow-crash"
+            crash_script = r'''
+import os
+import sqlite3
+import sys
+import time
+from pathlib import Path
+
+sys.path.insert(0, sys.argv[1])
+import resumable_chat_import as importer
+
+ready = Path(sys.argv[5])
+release = Path(sys.argv[6])
+real_connect = sqlite3.connect
+
+class HoldThenCrashConnection(sqlite3.Connection):
+    def execute(self, sql, parameters=()):
+        cursor = super().execute(sql, parameters)
+        if sql.lstrip().upper().startswith("INSERT INTO RAW_CONVERSATIONS"):
+            ready.write_text("inserted-inside-uncommitted-batch", encoding="utf-8")
+            deadline = time.monotonic() + 20
+            while not release.exists() and time.monotonic() < deadline:
+                time.sleep(0.01)
+            os._exit(73)
+        return cursor
+
+def crash_connect(database, *args, **kwargs):
+    kwargs["factory"] = HoldThenCrashConnection
+    return real_connect(database, *args, **kwargs)
+
+sqlite3.connect = crash_connect
+importer.import_export(Path(sys.argv[2]), Path(sys.argv[3]), sys.argv[4], batch_size=2)
+'''
+            crashing = subprocess.Popen(
+                [sys.executable, "-c", crash_script, str(ROOT / "tools"),
+                 str(source), str(out), archive_id, str(ready), str(release)],
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+            )
+            try:
+                deadline = time.monotonic() + 10
+                while not ready.exists() and crashing.poll() is None and time.monotonic() < deadline:
+                    time.sleep(0.01)
+                self.assertTrue(ready.exists(), "crash process did not reach the injected in-transaction point")
+
+                # Start a cooperating importer while the first process still owns
+                # the output-directory lock and has an uncommitted row.
+                survivor = subprocess.Popen(
+                    [sys.executable, str(ROOT / "tools" / "resumable_chat_import.py"),
+                     str(source), "--out", str(out), "--archive-id", archive_id,
+                     "--batch-size", "2"],
+                    stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+                )
+                time.sleep(0.25)
+                self.assertIsNone(survivor.poll(), "second importer unexpectedly exited while the lock holder was paused")
+            finally:
+                release.touch()
+            crash_stdout, crash_stderr = crashing.communicate(timeout=30)
+            self.assertEqual(crashing.returncode, 73, msg=f"stdout={crash_stdout} stderr={crash_stderr}")
+            survivor_stdout, survivor_stderr = survivor.communicate(timeout=60)
+            self.assertEqual(survivor.returncode, 0, msg=f"stdout={survivor_stdout} stderr={survivor_stderr}")
+            self.assertEqual(json.loads(survivor_stdout)["status"], "RAW_COMPLETE")
+
+            conn = sqlite3.connect(database)
+            try:
+                recovered_prefix = conn.execute(
+                    """SELECT source_locator,source_conversation_id,source_ordinal,
+                              payload_json,payload_sha256,imported_at,source_end_byte_offset
+                       FROM raw_conversations WHERE archive_id=? AND source_sha256=?
+                       ORDER BY source_ordinal""",
+                    (archive_id, paused["source_sha256"]),
+                ).fetchall()
+                recovered_events = conn.execute(
+                    """SELECT event_id,event_type,ordinal,details_json,occurred_at
+                       FROM import_events WHERE archive_id=? AND source_sha256=?
+                       ORDER BY event_id""",
+                    (archive_id, paused["source_sha256"]),
+                ).fetchall()
+                recovered_state = conn.execute(
+                    """SELECT status,next_ordinal,committed_conversations
+                       FROM imports WHERE archive_id=? AND source_sha256=?""",
+                    (archive_id, paused["source_sha256"]),
+                ).fetchone()
+            finally:
+                conn.close()
+
+            self.assertEqual(recovered_prefix[:2], prefix_before)
+            self.assertEqual(len(recovered_prefix), 6)
+            self.assertEqual([row[2] for row in recovered_prefix], list(range(6)))
+            self.assertEqual(recovered_events[:len(events_before)], events_before)
+            self.assertEqual(recovered_state, ("RAW_COMPLETE", 6, 6))
+
+            # Same bytes under a different archive_id remain a separate logical source.
+            other = import_export(source, out, "ARCHIVE-CONCURRENT-CRASH-OTHER", batch_size=2)
+            self.assertEqual(other["status"], "RAW_COMPLETE")
+            conn = sqlite3.connect(database)
+            try:
+                rows_by_archive = conn.execute(
+                    """SELECT archive_id,COUNT(*),COUNT(DISTINCT source_locator)
+                       FROM raw_conversations WHERE source_sha256=?
+                       GROUP BY archive_id ORDER BY archive_id""",
+                    (paused["source_sha256"],),
+                ).fetchall()
+                states_by_archive = conn.execute(
+                    """SELECT archive_id,status,next_ordinal,committed_conversations
+                       FROM imports WHERE source_sha256=? ORDER BY archive_id""",
+                    (paused["source_sha256"],),
+                ).fetchall()
+            finally:
+                conn.close()
+            self.assertEqual(rows_by_archive, [
+                ("ARCHIVE-CONCURRENT-CRASH", 6, 6),
+                ("ARCHIVE-CONCURRENT-CRASH-OTHER", 6, 6),
+            ])
+            self.assertEqual(states_by_archive, [
+                ("ARCHIVE-CONCURRENT-CRASH", "RAW_COMPLETE", 6, 6),
+                ("ARCHIVE-CONCURRENT-CRASH-OTHER", "RAW_COMPLETE", 6, 6),
+            ])
+
+
     def test_stale_replayed_batch_does_not_regress_checkpoint(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
