@@ -77,7 +77,7 @@
       "description": "The ChatGPT web extension is a prototype verified by static CI only. Must be installed and tested in the user's actual Yandex Browser Android version. Verify send gate (no send before durable receipt), exact text and prior assistant message capture, interrupted connection recovery, response DOM detection, multiple incomplete turns, extension restart, and UI-selector drift. Until these pass, do not claim end-to-end capture is operational."
     }
   ],
-  "next_action": "Run live-device acceptance of clients/chatgpt-web-extension in Yandex Browser Android. Test with harmless prompts first: successful registration before send; forced journal failure blocks send; refresh/network interruption leaves a recoverable incomplete turn; visible completed response closes the turn; popup can copy recovery prompt and export JSONL. Record each result as PASS/FAIL/UNKNOWN with evidence. Keep each work slice 10–12 minutes.",
+  "next_action": "Live-device acceptance in Yandex Browser Android: test install, registration-before-send, blocked send when persistence fails, exact user/previous assistant capture, response DOM detection, refresh/network interruption recovery, multiple incomplete turns, and JSONL export. Record evidence and PASS/FAIL/UNKNOWN. Do not claim end-to-end operation until tested on device.",
   "constraints": [
     "Do not merge PR #27 or modify main without explicit user approval.",
     "Do not delete or rewrite source-history exports without a separate explicit decision.",
@@ -89,9 +89,9 @@
   "status": "ACTIVE_PARTIAL",
   "checkpoint_semantics": "This is a durable task checkpoint committed to the integration branch. It is not an automatic ChatGPT autosave or proof that an undelivered response was saved.",
   "repository_state": {
-    "last_verified_branch_head": "d707a91f9662cb1aa451db4fba1596baef8511a9",
-    "exact_head_ci_run_id": 38762303927,
-    "exact_head_ci_url": "https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38762303927",
+    "last_verified_code_head": "066327fe5e2bf367aea3fb36a513eafce51fb429",
+    "exact_head_ci_run_id": 38762527651,
+    "exact_head_ci_url": "https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38762527651",
     "exact_head_ci_conclusion": "success",
     "python_tests": 227,
     "python_skipped": 1,
@@ -99,6 +99,6 @@
     "write_audit_mutation_sites": 92,
     "write_audit_unclassified": 0,
     "extension_js_syntax": "PASS",
-    "note": "CI verifies static tests and syntax at this code head; it does not validate the extension in a real mobile browser. This checkpoint-only commit changes HEAD; refresh PR/CI before continuing."
+    "note": "CI run 38762527651 verified exact code/metadata HEAD 066327fe5e2bf367aea3fb36a513eafce51fb429. The following commit consolidates checkpoint/handoff/event metadata only; no application code is changed."
   }
 }

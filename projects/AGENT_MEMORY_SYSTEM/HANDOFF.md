@@ -582,3 +582,9 @@ This is a callable tool, not yet a ChatGPT/browser integration. It cannot observ
 - The extension is local-only (IndexedDB, no external upload), and the popup can inspect incomplete turns, copy a recovery prompt and export JSONL. The HTTP API/SDK remains available for trusted wrappers.
 - **Live browser validation is still pending.** Test installation and runtime in the user's actual Yandex Browser Android version. First use harmless prompts; verify no send before durable receipt, correct exact text/prior assistant capture, response detection, interruption recovery, and popup export. UI selectors may drift, so do not claim production readiness before those checks.
 - PR #27 stays Draft/open/unmerged; no changes to `main`. Use 10–12 minute work slices and checkpoint after each verified milestone.
+
+## Exact-head verification and next step — 2026-10-15
+
+- Exact code HEAD `066327fe5e2bf367aea3fb36a513eafce51fb429` passed [CI 38762527651](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38762527651): 227 Python tests (1 skipped), 4 Node tests, strict write audit 92/0, extension syntax checks PASS.
+- Live Android browser test is still the blocking gate. In Yandex Browser, verify the extension installs; exact message and previous assistant output are captured; recognized send is blocked if local persistence fails; response rendering closes the correct turn; reload/network loss leaves a recoverable turn; popup copies recovery prompt and exports JSONL. Test with harmless prompts first.
+- Do not claim production readiness before live tests. PR #27 stays Draft/open/unmerged; main unchanged. Work in 10–12 minute slices.

@@ -583,3 +583,9 @@ Tests added for first pass, completed replay, and a changed source under the sam
 - **Prototype files:** `clients/chatgpt-web-extension/manifest.json`, `background.js`, `content_script.js`, `popup.html`, `popup.js`, `README.md`. It stores locally in IndexedDB, gates recognized text sends on durable registration, captures the previous assistant message, observes a final rendered answer, lists incomplete turns, copies a recovery prompt, and exports JSONL on explicit request.
 - **Not yet verified:** actual install/runtime on the user's Yandex Browser Android version, current ChatGPT DOM selectors, network interruption/reload behavior, and end-to-end send/response detection. CI is static only.
 - **Next:** live-device acceptance with harmless prompts, recording each criterion as PASS/FAIL/UNKNOWN and evidence. Keep work slices 10–12 minutes. PR #27 remains Draft/open/unmerged; main unchanged.
+
+## Exact-head verification — 2026-10-15
+
+- Code/extension HEAD `066327fe5e2bf367aea3fb36a513eafce51fb429` passed [CI run 38762527651](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38762527651): 227 Python tests (1 skipped), 4 Node tests, 92 write sites / 0 unclassified, extension JavaScript syntax checks PASS.
+- The extension is still a prototype. CI does not run it inside ChatGPT or prove mobile-browser compatibility. Next step is controlled live-device acceptance in Yandex Browser Android; record each criterion as PASS/FAIL/UNKNOWN with evidence.
+- The current metadata consolidation changes only checkpoint/task/handoff/event records; application code is unchanged.
