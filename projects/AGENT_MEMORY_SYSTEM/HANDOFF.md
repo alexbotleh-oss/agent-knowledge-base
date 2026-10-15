@@ -415,3 +415,38 @@ The bounded PR #22 path review is persisted in [PR22_MIXED_PATH_REVIEW_2026-10-1
 - **Подтверждённая коррекция атрибуции:** HTML/SQLite события отнесены к B77_HTML_PWA; в текущем дереве RECIPE_MANAGER оставлены явные ссылки на B77, а не дубликат B77-события под N99 ID.
 - **Следующий шаг:** получить CI на exact HEAD новой ветки; после успешного CI отдельно реализовать и протестировать отсутствующий переход source staging → validated intake/source registry → approved promotion/index update → linked result and recovery.
 - **Не утверждать:** что cross-chat capture, source registry, promotion or end-to-end recovery уже автоматизированы.
+
+## Continuity checkpoint — 2026-10-15 16:40 local
+
+### Active goal
+Finish the read-only-to-verified integration of memory mechanisms from PR #25/#26 into the clean PR #27 based on `main`, preserve project boundaries and provenance, and make session recovery explicit. Do not merge any PR or change `main` without separate user approval.
+
+### Verified live state
+- PR #27 `integration/memory-core-clean-20261015`, HEAD `ac7f64d70e008ea9b9cca9e5ac1713a063c8e11a`, base `main` at `a0c12ba849a3416f50e1289d8f0dd20844e1e51f`; OPEN / DRAFT / UNMERGED.
+- Exact-HEAD CI run `38742475979` passed; 180 tests passed. This is not end-to-end acceptance.
+- Write-contract audit on that exact head reported 67 mutation sites and 12 unclassified sites, including writes in `tools/adapt_archive_staging_to_intake.py` and `tools/source_evidence_registry.py`. CI being green does not close these warnings.
+- PR #26 `feature/minimal-agent-loop-20261015`, HEAD `4830123fabc7d0a2835151eeba2ef6ceb06bb5ea`, base `test/real-api-integration-20261014`; OPEN / DRAFT / UNMERGED. Exact-head CI run `38739494738` passed.
+- PR #25 remains OPEN / DRAFT / UNMERGED. `main` was not changed.
+- PR #27's integration-scope document names PR #26 source revision `a7860d6562ba2078b636a69db6e3fb934e658c89`, not the later live PR #26 HEAD `4830123fabc7d0a2835151eeba2ef6ceb06bb5ea`. It is **not yet verified** that every later PR #26 fix has been ported to PR #27. Compare the two exact heads before declaring integration complete.
+- An attempted multi-operation write for a separate CARD111 structured-memory PR was blocked before completion. A branch lookup confirmed that `memory/CARD111-structured-history-20261015` does not exist. Do not report a CARD111 PR as created.
+
+### Completed in this continuation
+- Recovered live PR metadata rather than trusting the vanished response.
+- Confirmed PR #27 exists and read its purpose/scope. It is intended to port memory core from PR #25/#26 onto a clean branch from `main`, excluding full project histories and raw chat payloads.
+- Read exact-head CI result for PR #27 and found the 12 unclassified write sites.
+- Confirmed latest PR #26 exact-head CI is green, without assuming that its newer changes are already present in PR #27.
+- No merge, no main-branch write, no destructive cleanup.
+
+### Open tasks — do not mark complete until verified
+1. Diff PR #26 HEAD `4830123fabc7d0a2835151eeba2ef6ceb06bb5ea` against the PR #26 source revision recorded by PR #27 `a7860d6562ba2078b636a69db6e3fb934e658c89`; map every material fix to PR #27 or explicitly record why it is excluded.
+2. Resolve all 12 unclassified mutation sites from PR #27's exact-head audit. Inspect their real write contracts; do not merely silence warnings or add blanket allow-list entries.
+3. Verify the end-to-end path that PR #27 says is connected: source ZIP → deterministic archive staging → sanitized intake manifest → source registry append. Then separately classify remaining unconnected steps: semantic classification/promotion, derived index refresh, source inventory/reference operations, branch-result publication, next-session restore.
+4. Check whether the restore/trust/write guards block mixed-project task state and invalid cross-project event application, using the actual contracts and fixtures.
+5. Re-run exact-head CI after any changes; read back the final files and record the final SHA/run here.
+6. Keep PR #27 Draft/open until the above gaps are resolved and the user authorizes any merge. PR #22 remains separate and unmerged; do not delete source history or rewrite Git history without explicit approval.
+
+### Interruption/resume protocol for this task
+Before substantial writes or long multi-step work, update this HANDOFF checkpoint with: active goal, current branch/HEAD, completed checks, open items, blocked operations, and the single next action. After each material step, read back the changed file and verify the resulting commit/HEAD. If the connection drops, resume by fetching live PR/branch HEAD and CI first, then continue from the first unchecked item above; do not repeat completed scans without a stated reason.
+
+### Status
+ACTIVE / PARTIAL. Recovery checkpoint persisted in HANDOFF; not an automatic background save or proof that ChatGPT will automatically resume after every disconnection. Exact-HEAD CI is green for the recorded revisions, but the 12 write-contract warnings and PR #26-to-#27 revision gap remain open.
