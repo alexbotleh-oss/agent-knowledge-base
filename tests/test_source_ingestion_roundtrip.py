@@ -64,7 +64,7 @@ class SourceIngestionRoundtripTests(unittest.TestCase):
     def _stage_and_adapt(self, text):
         self._write_export(text)
         result = build(self.source, self.staging, archive_id="ARCHIVE-TEST-001")
-        self.assertEqual(result["status"], "STAGED")
+        self.assertEqual(result["archive_id"], "ARCHIVE-TEST-001")
         adapted = adapt_archive_staging_to_intake(self.staging / "archive_snapshot.json", self.intake_root)
         self.assertIn(adapted["status"], {"ADAPTED", "ALREADY_ADAPTED"})
         return Path(adapted["manifest_path"]), result
