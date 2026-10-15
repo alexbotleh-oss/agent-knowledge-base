@@ -197,6 +197,32 @@ def capture(project_dir: Path, *, checkpoint_id: str, summary: str,
         task_bytes = (project_dir / "TASK_STATE.md").read_bytes()
         handoff_bytes = (project_dir / "HANDOFF.md").read_bytes()
         event_bytes = (project_dir / "events.jsonl").read_bytes()
+        generation_path = generations_dir / f"{checkpoint_id}.json"
+        if generation_path.exists():
+            try:
+                existing_raw = generation_path.read_bytes()
+                existing = json.loads(existing_raw.decode("utf-8"))
+            except Exception as exc:
+                return {"status": "BLOCKED", "error": f"existing checkpoint generation is unreadable: {exc}",
+                        "writes_performed": False}
+            current_hashes = {
+                "TASK_STATE.md": sha256_bytes(task_bytes),
+                "HANDOFF.md": sha256_bytes(handoff_bytes),
+                "events.jsonl": sha256_bytes(event_bytes),
+            }
+            if (
+                previous_pointer
+                and previous_pointer.get("checkpoint_id") == checkpoint_id
+                and previous_pointer.get("generation_sha256") == sha256_bytes(existing_raw)
+                and existing.get("summary") == summary.strip()
+                and existing.get("source_head") == source_head
+                and existing.get("ci_run_id") == ci_run_id
+                and existing.get("source_hashes") == current_hashes
+            ):
+                return {"status": "ALREADY_CAPTURED", "checkpoint_id": checkpoint_id,
+                        "generation_sha256": previous_pointer["generation_sha256"], "writes_performed": False}
+            return {"status": "CONFLICT", "error": "checkpoint_id already exists with different or stale content",
+                    "writes_performed": False}
         body = {
             "schema_version": SCHEMA_VERSION,
             "checkpoint_id": checkpoint_id,
