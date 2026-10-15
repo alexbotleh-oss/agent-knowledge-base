@@ -412,6 +412,129 @@ class ResumableChatImportTests(unittest.TestCase):
                 conn.close()
 
 
+    def test_same_source_bytes_with_different_archive_ids_are_independent(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            source = self.make_source(root, 3)
+            original_bytes = source.read_bytes()
+            out = root / "state"
+
+            # Archive A pauses after one committed conversation. Archive B uses
+            # the exact same source bytes/digest but must have its own import row,
+            # records, events, and checkpoint.
+            first_a = import_export(
+                source, out, "ARCHIVE-SAME-BYTES-A", batch_size=1,
+                stop_after_batches=1,
+            )
+            self.assertEqual(first_a["status"], "PAUSED")
+            self.assertEqual(first_a["next_ordinal"], 1)
+
+            first_b = import_export(
+                source, out, "ARCHIVE-SAME-BYTES-B", batch_size=1,
+            )
+            self.assertEqual(first_b["status"], "RAW_COMPLETE")
+            self.assertEqual(first_b["run_mode"], "FIRST_PASS")
+            self.assertEqual(first_a["source_sha256"], first_b["source_sha256"])
+            self.assertEqual(source.read_bytes(), original_bytes)
+
+            conn = sqlite3.connect(out / "import.sqlite3")
+            try:
+                import_rows = conn.execute(
+                    """SELECT archive_id,source_sha256,status,next_ordinal,
+                              committed_conversations,next_byte_offset,last_source_locator
+                       FROM imports WHERE source_sha256=?
+                       ORDER BY archive_id""",
+                    (first_a["source_sha256"],),
+                ).fetchall()
+                self.assertEqual(len(import_rows), 2)
+                by_archive = {row[0]: row[1:] for row in import_rows}
+                self.assertEqual(
+                    by_archive["ARCHIVE-SAME-BYTES-A"],
+                    (first_a["source_sha256"], "PAUSED", 1, 1,
+                     first_a["next_byte_offset"], first_a["last_source_locator"]),
+                )
+                self.assertEqual(
+                    by_archive["ARCHIVE-SAME-BYTES-B"],
+                    (first_b["source_sha256"], "RAW_COMPLETE", 3, 3,
+                     first_b["next_byte_offset"], first_b["last_source_locator"]),
+                )
+
+                rows_a = conn.execute(
+                    """SELECT source_locator,source_ordinal,payload_sha256
+                       FROM raw_conversations WHERE archive_id=? AND source_sha256=?
+                       ORDER BY source_ordinal""",
+                    ("ARCHIVE-SAME-BYTES-A", first_a["source_sha256"]),
+                ).fetchall()
+                rows_b = conn.execute(
+                    """SELECT source_locator,source_ordinal,payload_sha256
+                       FROM raw_conversations WHERE archive_id=? AND source_sha256=?
+                       ORDER BY source_ordinal""",
+                    ("ARCHIVE-SAME-BYTES-B", first_b["source_sha256"]),
+                ).fetchall()
+                self.assertEqual([(r[1], r[2]) for r in rows_a], [(0, rows_b[0][2])])
+                self.assertEqual([r[1] for r in rows_b], [0, 1, 2])
+                self.assertTrue(all(r[0].startswith("ARCHIVE-SAME-BYTES-A/") for r in rows_a))
+                self.assertTrue(all(r[0].startswith("ARCHIVE-SAME-BYTES-B/") for r in rows_b))
+                self.assertTrue(set(r[0] for r in rows_a).isdisjoint(r[0] for r in rows_b))
+
+                events_a_before_resume = conn.execute(
+                    """SELECT event_type,ordinal,details_json
+                       FROM import_events WHERE archive_id=? AND source_sha256=?
+                       ORDER BY event_id""",
+                    ("ARCHIVE-SAME-BYTES-A", first_a["source_sha256"]),
+                ).fetchall()
+                events_b = conn.execute(
+                    """SELECT event_type,ordinal,details_json
+                       FROM import_events WHERE archive_id=? AND source_sha256=?
+                       ORDER BY event_id""",
+                    ("ARCHIVE-SAME-BYTES-B", first_b["source_sha256"]),
+                ).fetchall()
+                self.assertIn("PAUSED_FOR_TEST", [row[0] for row in events_a_before_resume])
+                self.assertIn("RAW_COMPLETE", [row[0] for row in events_b])
+                self.assertNotIn("RAW_COMPLETE", [row[0] for row in events_a_before_resume])
+                self.assertNotIn("PAUSED_FOR_TEST", [row[0] for row in events_b])
+            finally:
+                conn.close()
+
+            resumed_a = import_export(source, out, "ARCHIVE-SAME-BYTES-A", batch_size=1)
+            self.assertEqual(resumed_a["run_mode"], "RESUME")
+            self.assertEqual(resumed_a["status"], "RAW_COMPLETE")
+            self.assertEqual(resumed_a["source_sha256"], first_b["source_sha256"])
+
+            conn = sqlite3.connect(out / "import.sqlite3")
+            try:
+                final_counts = conn.execute(
+                    """SELECT archive_id,COUNT(*),COUNT(DISTINCT source_locator),
+                              MIN(source_ordinal),MAX(source_ordinal)
+                       FROM raw_conversations WHERE source_sha256=?
+                       GROUP BY archive_id ORDER BY archive_id""",
+                    (first_a["source_sha256"],),
+                ).fetchall()
+                self.assertEqual(
+                    final_counts,
+                    [
+                        ("ARCHIVE-SAME-BYTES-A", 3, 3, 0, 2),
+                        ("ARCHIVE-SAME-BYTES-B", 3, 3, 0, 2),
+                    ],
+                )
+                events_by_archive = {
+                    archive_id: [row[0] for row in conn.execute(
+                        """SELECT event_type FROM import_events
+                           WHERE archive_id=? AND source_sha256=? ORDER BY event_id""",
+                        (archive_id, first_a["source_sha256"]),
+                    ).fetchall()]
+                    for archive_id in ("ARCHIVE-SAME-BYTES-A", "ARCHIVE-SAME-BYTES-B")
+                }
+                self.assertEqual(events_by_archive["ARCHIVE-SAME-BYTES-A"].count("REGISTERED"), 1)
+                self.assertEqual(events_by_archive["ARCHIVE-SAME-BYTES-B"].count("REGISTERED"), 1)
+                self.assertIn("RESUME", events_by_archive["ARCHIVE-SAME-BYTES-A"])
+                self.assertNotIn("RESUME", events_by_archive["ARCHIVE-SAME-BYTES-B"])
+                self.assertIn("RAW_COMPLETE", events_by_archive["ARCHIVE-SAME-BYTES-A"])
+                self.assertIn("RAW_COMPLETE", events_by_archive["ARCHIVE-SAME-BYTES-B"])
+            finally:
+                conn.close()
+
+
     def test_same_operation_with_changed_source_is_new_snapshot_not_resume(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
