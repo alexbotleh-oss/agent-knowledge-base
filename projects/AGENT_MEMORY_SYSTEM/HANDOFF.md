@@ -539,3 +539,25 @@ Inspect `schemas/source_record.schema.json`, the event/lesson/memory record sche
 - Do not mix CARD111, ORGANISM, RECIPE_MANAGER and B77_HTML_PWA project histories into this core task.
 - Do not claim ChatGPT autosave. A checkpoint is durable only after a successful repository write and read-back.
 - If interruption occurs: refresh live PR/HEAD/CI first, inspect `CONTINUITY_CHECKPOINT.json`, then run `verify`/ `recover` for the bundle if a workspace exists. Continue from the first unchecked item; do not rerun completed scans without a stated reason.
+
+## Current active handoff — 2026-10-15, interrupted-turn detection
+
+### User-observed failure pattern
+Mobile-network switching and long sessions can leave the UI at “connection lost / waiting for response”; sometimes a delayed answer arrives, sometimes it does not and the user must stop/refresh/reissue the instruction. The longest observed interval was about 15 minutes. Treat that as an observed risk boundary, not a guaranteed timeout.
+
+### Implemented
+- `tools/turn_lifecycle_ledger.py`: append-only local lifecycle journal. It retains the exact incoming user instruction, task ID, previous checkpoint, progress milestones, artifact references and last known state. It distinguishes report prepared, response submitted and delivery acknowledged.
+- `tests/test_turn_lifecycle_ledger.py`: regression coverage for interrupted work, unconfirmed report/submission, explicit delivery acknowledgement, idempotent receive, conflict detection, terminal state and corrupt journal.
+- `core/turn_lifecycle_and_interruption_recovery.md`: documents the lifecycle, artifact scan, privacy boundary and 10–12 minute work-slice target.
+- `scan-artifacts` finds zero-byte and suspicious partial/temp files, but flags ownership as UNKNOWN; correlation is required and no cleanup is automatic.
+
+### Critical limits
+This is a callable tool, not yet a ChatGPT/browser integration. It cannot observe this chat's every message or infer a real delivery receipt without a client hook. Until that integration exists, automatic capture and automatic detection of future session disconnects remain NOT IMPLEMENTED. The exact user text should be stored only in protected local storage, never in the public KB ledger.
+
+### Resume order
+1. Refresh live PR #27 head and CI.
+2. Inspect incomplete turns and correlate their last event with checkpoint, Git diff/status, CI and temporary/empty artifacts.
+3. Resume from the first unverified milestone; do not repeat completed checks without contradictory evidence.
+4. Work in 10–12 minute bounded slices, checkpointing each material result.
+5. Keep PR #27 Draft/open/unmerged; do not change `main`.
+
