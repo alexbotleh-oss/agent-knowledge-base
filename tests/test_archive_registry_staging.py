@@ -70,5 +70,22 @@ class ArchiveRegistryStagingTests(unittest.TestCase):
             self.assertTrue((out / current["records_file"]).exists())
 
 
+
+    def test_same_bytes_with_different_archive_ids_keep_separate_generations(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            source = tmp / "conversations.json"
+            source.write_text(json.dumps([{"id":"c","mapping":{"n":{
+                "parent":None,"children":[],"message":{"id":"m","create_time":1,
+                "author":{"role":"user"},"content":{"parts":["same"]},"metadata":{}}}}}]), encoding="utf-8")
+            out = tmp / "staging"
+            first = build(source, out, "ARCHIVE-A")
+            first_records = (out / first["records_file"]).read_bytes()
+            second = build(source, out, "ARCHIVE-B")
+            self.assertNotEqual(first["records_file"], second["records_file"])
+            self.assertEqual((out / first["records_file"]).read_bytes(), first_records)
+            self.assertEqual(json.loads((out / "archive_snapshot.json").read_text())["archive_id"], "ARCHIVE-B")
+
+
 if __name__ == "__main__":
     unittest.main()
