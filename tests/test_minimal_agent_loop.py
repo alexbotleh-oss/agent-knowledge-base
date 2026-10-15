@@ -257,6 +257,61 @@ class MinimalAgentLoopTests(unittest.TestCase):
         self.assertTrue(result["applicability_policy"]["verified_label_alone_is_never_sufficient"])
         self.assertTrue(result["applicability_policy"]["evidence_quality_is_metadata_not_claim_validation"])
 
+    def test_missing_local_evidence_file_blocks_verified_candidate(self):
+        evidence_root = self.root / "evidence-root"
+        evidence_root.mkdir()
+        evidence_file = evidence_root / "test_result.txt"
+        evidence_file.write_text("temporary supporting material", encoding="utf-8")
+        evidence_file.unlink()
+
+        self._write_events(self.experience, [{
+            "event_id": "EVT-BROKEN-EVIDENCE",
+            "project_id": "CARD111",
+            "type": "test_result",
+            "summary": "QR cache recovery verified",
+            "status": "verified",
+            "evidence": [{"kind": "file", "ref": "test_result.txt"}],
+        }])
+        result = retrieve_experience_candidates(
+            "QR cache recovery",
+            [self.experience],
+            current_project_id="CARD111",
+            evidence_root=evidence_root,
+        )
+        candidate = result["candidates"][0]
+        self.assertEqual(
+            candidate["evidence_source_validation"]["status"], "MISSING_SOURCE"
+        )
+        self.assertEqual(
+            candidate["evidence_source_validation"]["references"][0]["status"],
+            "MISSING",
+        )
+        self.assertEqual(
+            candidate["candidate_review_gate"],
+            "SCOPE_MATCHED_EVIDENCE_SOURCE_UNAVAILABLE_BLOCKED",
+        )
+        self.assertEqual(candidate["transfer_decision"], "UNASSESSED")
+        self.assertFalse(result["writes_performed"])
+
+    def test_local_evidence_validation_requires_explicit_root(self):
+        self._write_events(self.experience, [{
+            "event_id": "EVT-UNSCOPED-EVIDENCE",
+            "project_id": "CARD111",
+            "type": "test_result",
+            "summary": "QR cache recovery verified",
+            "status": "verified",
+            "evidence": [{"kind": "file", "ref": "test_result.txt"}],
+        }])
+        result = retrieve_experience_candidates(
+            "QR cache recovery", [self.experience], current_project_id="CARD111"
+        )
+        candidate = result["candidates"][0]
+        self.assertEqual(
+            candidate["evidence_source_validation"]["status"],
+            "NOT_CHECKED_NO_EVIDENCE_ROOT",
+        )
+        self.assertEqual(candidate["transfer_decision"], "UNASSESSED")
+
     def test_disputed_and_conflicting_candidates_are_retained_separately(self):
         self._write_events(self.experience, [
             {
