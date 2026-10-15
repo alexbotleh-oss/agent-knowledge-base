@@ -69,6 +69,95 @@ def _event_search_text(event: dict[str, Any]) -> str:
     return " ".join(pieces)
 
 
+def _evidence_quality(event: dict[str, Any]) -> dict[str, Any]:
+    """Describe evidence metadata conservatively; never validate the claim itself."""
+    status = event.get("status")
+    status_norm = status.casefold().strip() if isinstance(status, str) else "unknown"
+    lifecycle = event.get("lifecycle_status")
+    lifecycle_norm = lifecycle.casefold().strip() if isinstance(lifecycle, str) else "unknown"
+    decision = event.get("decision_status")
+    decision_norm = decision.casefold().strip() if isinstance(decision, str) else "unknown"
+
+    evidence_items: list[Any] = []
+    for field in ("evidence", "evidence_refs"):
+        value = event.get(field)
+        if isinstance(value, list):
+            evidence_items.extend(value)
+        elif isinstance(value, dict):
+            evidence_items.append(value)
+    refs = []
+    for item in evidence_items:
+        if isinstance(item, str) and item.strip():
+            refs.append(item.strip())
+        elif isinstance(item, dict):
+            ref = item.get("ref")
+            if isinstance(ref, str) and ref.strip():
+                refs.append(ref.strip())
+    ref_count = len(refs)
+
+    disputed_states = {"disputed", "conflict", "conflicted", "needs_review", "contested"}
+    rejected_states = {"rejected", "invalid"}
+    quarantined_states = {"quarantined", "blocked"}
+    if decision_norm in rejected_states or lifecycle_norm in rejected_states:
+        state = "REJECTED"
+        interpretation = "Explicit rejected/invalid lifecycle or decision state; do not use as a lesson."
+    elif decision_norm in disputed_states or lifecycle_norm in disputed_states:
+        state = "DISPUTED_OR_CONFLICTED"
+        interpretation = "Conflict state requires reconciliation; preserve this candidate but do not treat it as settled."
+    elif lifecycle_norm in quarantined_states or decision_norm in quarantined_states:
+        state = "QUARANTINED_OR_BLOCKED"
+        interpretation = "Quarantined/blocked state requires separate review before use."
+    elif status_norm == "verified" and ref_count:
+        state = "VERIFIED_LABEL_WITH_EVIDENCE_POINTERS"
+        interpretation = "The record says verified and supplies reference pointers; neither fact independently proves the references support this claim."
+    elif status_norm == "verified":
+        state = "VERIFIED_LABEL_WITHOUT_EVIDENCE_POINTERS"
+        interpretation = "The verified label has no usable evidence reference in the recognized fields."
+    elif status_norm == "observed" and ref_count:
+        state = "OBSERVED_WITH_EVIDENCE_POINTERS"
+        interpretation = "Observation with reference pointers; claim-level validation and applicability remain unassessed."
+    elif status_norm == "observed":
+        state = "OBSERVED_WITHOUT_EVIDENCE_POINTERS"
+        interpretation = "Observation without a usable evidence reference; corroboration remains unknown."
+    elif status_norm in {"reported", "hypothesis", "inferred", "proposed", "draft"}:
+        state = "REPORTED_OR_HYPOTHESIS"
+        interpretation = "Reported/inferred/proposed state is not an established fact."
+    else:
+        state = "UNKNOWN_OR_INSUFFICIENT"
+        interpretation = "Recognized evidence-quality metadata is insufficient to characterize the claim."
+    return {
+        "state": state,
+        "status_label": status if isinstance(status, str) else "UNKNOWN",
+        "lifecycle_status": lifecycle if isinstance(lifecycle, str) else "UNKNOWN",
+        "decision_status": decision if isinstance(decision, str) else "UNKNOWN",
+        "evidence_pointer_count": ref_count,
+        "interpretation": interpretation,
+    }
+
+
+def _candidate_review_gate(scope_match: str, evidence_state: str) -> str:
+    """Combine explicit project scope with metadata quality without granting applicability."""
+    if scope_match == "MISMATCH":
+        return "OUT_OF_PROJECT_SCOPE"
+    if scope_match != "MATCH":
+        return "PROJECT_SCOPE_UNKNOWN"
+    if evidence_state == "DISPUTED_OR_CONFLICTED":
+        return "SCOPE_MATCHED_DISPUTED_REQUIRES_CONFLICT_REVIEW"
+    if evidence_state in {"REJECTED", "QUARANTINED_OR_BLOCKED"}:
+        return "SCOPE_MATCHED_EVIDENCE_STATE_BLOCKED"
+    if evidence_state == "VERIFIED_LABEL_WITH_EVIDENCE_POINTERS":
+        return "SCOPE_MATCHED_VERIFIED_LABEL_WITH_REFS_REVIEW_REQUIRED"
+    if evidence_state == "VERIFIED_LABEL_WITHOUT_EVIDENCE_POINTERS":
+        return "SCOPE_MATCHED_VERIFIED_LABEL_NO_REFS_REVIEW_REQUIRED"
+    if evidence_state == "OBSERVED_WITH_EVIDENCE_POINTERS":
+        return "SCOPE_MATCHED_OBSERVED_WITH_REFS_REVIEW_REQUIRED"
+    if evidence_state == "OBSERVED_WITHOUT_EVIDENCE_POINTERS":
+        return "SCOPE_MATCHED_OBSERVED_NO_REFS_REVIEW_REQUIRED"
+    if evidence_state == "REPORTED_OR_HYPOTHESIS":
+        return "SCOPE_MATCHED_LOW_EVIDENCE_REVIEW_REQUIRED"
+    return "SCOPE_MATCHED_EVIDENCE_UNKNOWN_REVIEW_REQUIRED"
+
+
 def retrieve_experience_candidates(
     query: str,
     log_paths: list[Path],
@@ -152,6 +241,7 @@ def retrieve_experience_candidates(
                 scope_match = "MATCH"
             else:
                 scope_match = "MISMATCH"
+            evidence_quality = _evidence_quality(event)
             indexed.append({
                 "event_id": event["event_id"],
                 "score": round(min(score, 1.25), 4),
@@ -169,6 +259,10 @@ def retrieve_experience_candidates(
                     else "OUT_OF_PROJECT_SCOPE"
                     if scope_match == "MISMATCH"
                     else "PROJECT_SCOPE_UNKNOWN"
+                ),
+                "evidence_quality": evidence_quality,
+                "candidate_review_gate": _candidate_review_gate(
+                    scope_match, evidence_quality["state"]
                 ),
                 "event_time": event.get("event_time", "UNKNOWN"),
                 "source_time": event.get("source_time", "UNKNOWN"),
@@ -209,9 +303,14 @@ def retrieve_experience_candidates(
             "project_match_is_necessary_not_sufficient": True,
             "task_branch_match": "NOT_EVALUATED_SCHEMA_FIELD_NOT_GUARANTEED",
             "same_project_does_not_promote_candidate": True,
+            "evidence_quality_is_metadata_not_claim_validation": True,
+            "verified_label_alone_is_never_sufficient": True,
+            "candidate_review_gate_is_explanatory_not_authorization": True,
         },
         "warnings": [
             "Candidates are evidence pointers, not accepted lessons or instructions.",
+            "A verified status label and a non-empty evidence pointer do not prove that the cited source supports the claim.",
+            "Evidence quality and project scope only route candidates for review; transfer_decision remains UNASSESSED.",
             "Conflicting and disputed records are retained; this pass does not resolve them.",
             "Technology/tool/language tags are descriptors, not proof of transferability.",
             "No memory writes, promotion, task-state updates, or action execution occurred.",
