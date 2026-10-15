@@ -112,3 +112,16 @@ GitHub Actions validation run [#530](https://github.com/alexbotleh-oss/agent-kno
 The test asserts: exactly one `APPLIED`; all other outcomes are `LOCKED` or `STALE_REVISION`; exactly one checkpoint marker and one reported write; no lock files remain after all workers exit normally; and worker/barrier timeouts surface as failures. The test passed as part of run #530 on the exact HEAD above.
 
 Scope: this is evidence for concurrent callers using `apply_checkpoint` and the shared lock protocol in the tested GitHub Actions Linux environment. It does not establish race-freedom for manual/direct writers, external mutation of `HANDOFF.md`, other persistence paths, all filesystem failures, or every possible process interleaving. The HANDOFF write-path audit and archive/import stress tests remain open; this result does not close those items.
+
+
+## Proven checkpoint-write invariants and current boundaries
+
+**Verified stress-test evidence:** CI run [#530](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38679829211) passed on exact test HEAD `98138f32f0495570917acd4846fc5c4b7416c6d4`. The test uses 32 independent processes by default against one expected task-state revision and asserts exactly one `APPLIED`, all other outcomes `LOCKED` or `STALE_REVISION`, one checkpoint marker/write, no remaining locks after normal worker completion, and failure on worker/barrier timeouts. This is evidence for the tested Linux CI environment and the `apply_checkpoint` shared-lock path only; it does not cover bypass writers, external `HANDOFF.md` mutation, or other persistence operations.
+
+## Known bypass paths and mitigations
+
+Audit reference: `docs/handoff_writers_audit.md` (partial static audit; external/manual/dynamic writers are not proven absent).
+
+- `tools/generate_report.sh` previously accepted any caller-supplied output path and could overwrite a canonical file such as `HANDOFF.md`. The current branch adds a fail-closed basename guard for `HANDOFF.md`, `TASK_STATE.md`, `PROJECT_STATE.md`, `DECISIONS.md`, `LESSONS.md`, `EVENT_LOG.md`, `events.jsonl`, and `lessons.jsonl`, plus a regression test that checks refusal and byte preservation. This mitigation is **pending CI confirmation on the current HEAD** at the time of this edit; do not describe it as verified until that run passes. The guard covers this report generator and these names, not every writer or indirect path.
+- `tools/install_into_repo.sh` uses `rsync --ignore-existing`: it may populate a missing file, but is not intended to overwrite an existing `HANDOFF.md`.
+- `HANDOFF.md` remains outside the `apply_checkpoint` lock protocol. Therefore trust-check plus `TASK_STATE.md` replacement is not an atomic transaction over all input sources. The target guard above does not close that separate race.
