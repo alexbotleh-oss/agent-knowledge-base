@@ -376,6 +376,115 @@ class MinimalAgentLoopTests(unittest.TestCase):
         )
         self.assertEqual(candidate["transfer_decision"], "UNASSESSED")
 
+    def test_evidence_path_traversal_is_blocked(self):
+        evidence_root = self.root / "evidence-root"
+        evidence_root.mkdir()
+        (self.root / "outside.txt").write_text("outside evidence", encoding="utf-8")
+        self._write_events(self.experience, [{
+            "event_id": "EVT-OUTSIDE-EVIDENCE",
+            "project_id": "CARD111",
+            "type": "test_result",
+            "summary": "QR cache recovery verified",
+            "status": "verified",
+            "evidence": [{"kind": "file", "ref": "../outside.txt"}],
+        }])
+        result = retrieve_experience_candidates(
+            "QR cache recovery", [self.experience],
+            current_project_id="CARD111", evidence_root=evidence_root,
+        )
+        candidate = result["candidates"][0]
+        self.assertEqual(
+            candidate["evidence_source_validation"]["references"][0]["status"],
+            "OUTSIDE_EVIDENCE_ROOT",
+        )
+        self.assertEqual(
+            candidate["evidence_source_validation"]["status"],
+            "OUTSIDE_EVIDENCE_ROOT",
+        )
+        self.assertEqual(
+            candidate["candidate_review_gate"],
+            "SCOPE_MATCHED_EVIDENCE_SOURCE_UNAVAILABLE_BLOCKED",
+        )
+        self.assertEqual(candidate["transfer_decision"], "UNASSESSED")
+        self.assertFalse(result["writes_performed"])
+
+    def test_short_text_evidence_file_is_readable(self):
+        evidence_root = self.root / "evidence-root"
+        evidence_root.mkdir()
+        (evidence_root / "short.txt").write_text("valid text", encoding="utf-8")
+        self._write_events(self.experience, [{
+            "event_id": "EVT-SHORT-EVIDENCE",
+            "project_id": "CARD111",
+            "type": "test_result",
+            "summary": "QR cache recovery verified",
+            "status": "verified",
+            "evidence": [{"kind": "file", "ref": "short.txt"}],
+        }])
+        result = retrieve_experience_candidates(
+            "QR cache recovery", [self.experience],
+            current_project_id="CARD111", evidence_root=evidence_root,
+        )
+        candidate = result["candidates"][0]
+        self.assertEqual(
+            candidate["evidence_source_validation"]["references"][0]["status"],
+            "EXISTS_READABLE",
+        )
+        self.assertEqual(
+            candidate["evidence_source_validation"]["status"],
+            "ALL_LOCAL_FILES_READABLE",
+        )
+        self.assertEqual(candidate["transfer_decision"], "UNASSESSED")
+
+    def test_exact_8192_byte_text_evidence_file_is_readable(self):
+        evidence_root = self.root / "evidence-root"
+        evidence_root.mkdir()
+        payload = b"a" * 8190 + "é".encode("utf-8")
+        self.assertEqual(len(payload), 8192)
+        (evidence_root / "boundary.txt").write_bytes(payload)
+        self._write_events(self.experience, [{
+            "event_id": "EVT-8192-EVIDENCE",
+            "project_id": "CARD111",
+            "type": "test_result",
+            "summary": "QR cache recovery verified",
+            "status": "verified",
+            "evidence": [{"kind": "file", "ref": "boundary.txt"}],
+        }])
+        result = retrieve_experience_candidates(
+            "QR cache recovery", [self.experience],
+            current_project_id="CARD111", evidence_root=evidence_root,
+        )
+        candidate = result["candidates"][0]
+        self.assertEqual(
+            candidate["evidence_source_validation"]["references"][0]["status"],
+            "EXISTS_READABLE",
+        )
+        self.assertEqual(candidate["transfer_decision"], "UNASSESSED")
+
+    def test_utf8_codepoint_split_at_sample_boundary_is_not_binary(self):
+        evidence_root = self.root / "evidence-root"
+        evidence_root.mkdir()
+        payload = b"a" * 8191 + "é".encode("utf-8")
+        self.assertEqual(len(payload), 8193)
+        (evidence_root / "split.txt").write_bytes(payload)
+        self._write_events(self.experience, [{
+            "event_id": "EVT-UTF8-SPLIT-EVIDENCE",
+            "project_id": "CARD111",
+            "type": "test_result",
+            "summary": "QR cache recovery verified",
+            "status": "verified",
+            "evidence": [{"kind": "file", "ref": "split.txt"}],
+        }])
+        result = retrieve_experience_candidates(
+            "QR cache recovery", [self.experience],
+            current_project_id="CARD111", evidence_root=evidence_root,
+        )
+        candidate = result["candidates"][0]
+        self.assertEqual(
+            candidate["evidence_source_validation"]["references"][0]["status"],
+            "EXISTS_READABLE",
+        )
+        self.assertEqual(candidate["transfer_decision"], "UNASSESSED")
+
     def test_disputed_and_conflicting_candidates_are_retained_separately(self):
         self._write_events(self.experience, [
             {
