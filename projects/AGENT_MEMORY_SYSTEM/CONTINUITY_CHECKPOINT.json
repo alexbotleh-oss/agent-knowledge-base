@@ -49,7 +49,11 @@
     "Added core/turn_lifecycle_client_adapter.md and linked the adapter contract from core/agent_runtime_protocol.md.",
     "Added clients/chatgpt-web-extension/ as a local-only MV3 prototype for the ChatGPT web interface: send interception, durable IndexedDB registration before dispatch, exact user text plus previous assistant message capture, lifecycle events, DOM-based final-answer observation, incomplete-turn popup, recovery prompt copy, and explicit JSONL export.",
     "Added static extension contract tests and CI JavaScript syntax checks. Exact branch HEAD d707a91f9662cb1aa451db4fba1596baef8511a9 passed GitHub Actions run 38762303927: 227 Python tests, 1 skipped, 4 Node SDK tests, strict write audit 92 mutation sites / 0 unclassified, extension JS syntax checks passed.",
-    "Yandex Browser's official Android documentation confirms third-party extension installation and developer-mode testing are supported in principle; actual behavior on the user's installed version remains unverified."
+    "Yandex Browser's official Android documentation confirms third-party extension installation and developer-mode testing are supported in principle; actual behavior on the user's installed version remains unverified.",
+    "At code HEAD e30450a5ed516ab1f76f65c3c7874cdd2b951c40, exact-head CI run 38772804206 passed: 230 Python tests (1 skipped), 4 Node tests, strict write audit 92 mutation sites / 0 unclassified, extension JavaScript syntax checks passed.",
+    "Closed the causal restoration gap: restore_session_packet follows explicit event links transitively, keeps journal order, and reports PARTIAL for missing transitive event references; unit tests cover complete and incomplete ancestry.",
+    "Extended the end-to-end regression scenario across branch result publication, owner acknowledgement, guarded task update, paired checkpoint capture/recovery after simulated projection interruption, and fresh-process restore.",
+    "Audited the source-ingestion route: source_ingestion_runner connects staging → intake adapter → route validation → metadata-only source registration; existing tests cover replay, crash after registry commit, projection rebuild, and tamper rejection. Semantic promotion and canonical index refresh remain NOT_IMPLEMENTED; next-session restore remains NOT_VERIFIED."
   ],
   "confirmed_open": [
     {
@@ -77,7 +81,7 @@
       "description": "The ChatGPT web extension is a prototype verified by static CI only. Must be installed and tested in the user's actual Yandex Browser Android version. Verify send gate (no send before durable receipt), exact text and prior assistant message capture, interrupted connection recovery, response DOM detection, multiple incomplete turns, extension restart, and UI-selector drift. Until these pass, do not claim end-to-end capture is operational."
     }
   ],
-  "next_action": "Live-device acceptance in Yandex Browser Android: test install, registration-before-send, blocked send when persistence fails, exact user/previous assistant capture, response DOM detection, refresh/network interruption recovery, multiple incomplete turns, and JSONL export. Record evidence and PASS/FAIL/UNKNOWN. Do not claim end-to-end operation until tested on device.",
+  "next_action": "Await the user's independent AI-agent analyses. When supplied, compare them against the verified repository state, distinguish facts from hypotheses and unknowns, and compile a decision brief before choosing the successor-repository plan.",
   "constraints": [
     "Do not merge PR #27 or modify main without explicit user approval.",
     "Do not delete or rewrite source-history exports without a separate explicit decision.",
@@ -89,16 +93,16 @@
   "status": "ACTIVE_PARTIAL",
   "checkpoint_semantics": "This is a durable task checkpoint committed to the integration branch. It is not an automatic ChatGPT autosave or proof that an undelivered response was saved.",
   "repository_state": {
-    "last_verified_code_head": "066327fe5e2bf367aea3fb36a513eafce51fb429",
-    "exact_head_ci_run_id": 38762527651,
-    "exact_head_ci_url": "https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38762527651",
+    "last_verified_code_head": "e30450a5ed516ab1f76f65c3c7874cdd2b951c40",
+    "exact_head_ci_run_id": 38772804206,
+    "exact_head_ci_url": "https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38772804206",
     "exact_head_ci_conclusion": "success",
-    "python_tests": 227,
+    "python_tests": 230,
     "python_skipped": 1,
     "node_tests": 4,
     "write_audit_mutation_sites": 92,
     "write_audit_unclassified": 0,
     "extension_js_syntax": "PASS",
-    "note": "CI run 38762527651 verified exact code/metadata HEAD 066327fe5e2bf367aea3fb36a513eafce51fb429. The following commit consolidates checkpoint/handoff/event metadata only; no application code is changed."
+    "note": "Exact-head CI verifies code HEAD e30450a5ed516ab1f76f65c3c7874cdd2b951c40. Following commits update checkpoint/task/handoff metadata only; application code remains unchanged."
   }
 }
