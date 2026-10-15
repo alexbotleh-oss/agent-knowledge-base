@@ -29,14 +29,17 @@ def sample_result(**overrides):
 
 class BranchResultRegistryTests(unittest.TestCase):
     def test_registry_refuses_to_write_into_another_project_journal(self):
-        path = ROOT / "projects" / "CARD111" / "events.jsonl"
-        before = path.read_bytes()
-        response = publish_result(path, sample_result())
-        self.assertEqual(response["status"], "REJECTED")
-        self.assertIn("restricted to projects/AGENT_MEMORY_SYSTEM/events.jsonl", response["errors"][0])
-        self.assertFalse(response["writes_performed"])
-        self.assertEqual(path.read_bytes(), before)
-        self.assertFalse(path.with_name(path.name + ".lock").exists())
+        projects_root = ROOT / "projects"
+        with tempfile.TemporaryDirectory(prefix="foreign-project-journal-", dir=projects_root) as tmp:
+            path = Path(tmp) / "events.jsonl"
+            path.write_text('{"event_id":"EXISTING-1"}\\n', encoding="utf-8")
+            before = path.read_bytes()
+            response = publish_result(path, sample_result())
+            self.assertEqual(response["status"], "REJECTED")
+            self.assertIn("restricted to projects/AGENT_MEMORY_SYSTEM/events.jsonl", response["errors"][0])
+            self.assertFalse(response["writes_performed"])
+            self.assertEqual(path.read_bytes(), before)
+            self.assertFalse(path.with_name(path.name + ".lock").exists())
 
     def test_project_id_override_is_rejected_without_write(self):
         with tempfile.TemporaryDirectory() as tmp:
