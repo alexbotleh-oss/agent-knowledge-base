@@ -212,29 +212,31 @@ def run_minimal_agent_loop(
         logs = [Path(event_log)]
     retrieval = retrieve_experience_candidates(query, logs, limit=limit)
 
+    candidates_reviewable = (
+        context.get("semantic_context_usable")
+        and retrieval["status"] not in {"BLOCKED", "NO_QUERY_TERMS"}
+    )
+    # Source hashes prove that bytes have not changed since packet creation;
+    # they do not prove that this checkpoint still represents the user's live goal.
+    currentness_gate = {
+        "status": "BLOCKED_CURRENTNESS_UNVERIFIED",
+        "authorized_for_planning": False,
+        "reason": (
+            "This tool verifies source-byte freshness, not whether the checkpoint "
+            "still matches the live user goal or current repository/PR state."
+        ),
+    }
     return {
         "loop_version": "0.1",
-        "status": (
-            "READY_FOR_REVIEW"
-            if context.get("semantic_context_usable") and retrieval["status"] not in {"BLOCKED", "NO_QUERY_TERMS"}
-            else "CONTEXT_OR_RETRIEVAL_BLOCKED"
-        ),
+        "status": "READY_FOR_REVIEW" if candidates_reviewable else "CONTEXT_OR_RETRIEVAL_BLOCKED",
         "restore_packet_status": packet.get("status", "UNKNOWN"),
         "context": context,
         "trust_gate": trust,
+        "checkpoint_currentness_gate": currentness_gate,
         "retrieval": retrieval,
         "next_action_policy": (
-            "REVIEW_CONTEXT_AND_CANDIDATES"
-            if (
-                context.get("semantic_context_usable")
-                and retrieval["status"] not in {"BLOCKED", "NO_QUERY_TERMS"}
-                and trust["status"] == "AUTHORIZED_FOR_PLANNING"
-            )
-            else "REVIEW_CANDIDATES_ONLY_NO_PLANNING"
-            if (
-                context.get("semantic_context_usable")
-                and retrieval["status"] not in {"BLOCKED", "NO_QUERY_TERMS"}
-            )
+            "REVIEW_CANDIDATES_ONLY_NO_PLANNING"
+            if candidates_reviewable
             else "STOP_AND_RECONCILE_SOURCES"
         ),
         "writes_performed": False,
