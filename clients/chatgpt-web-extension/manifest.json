@@ -3,9 +3,6 @@
   "name": "Chat Turn Continuity",
   "version": "0.1.0",
   "description": "Local-only capture and recovery of incomplete ChatGPT web turns.",
-  "permissions": [
-    "storage"
-  ],
   "host_permissions": [
     "https://chatgpt.com/*",
     "https://chat.openai.com/*"
