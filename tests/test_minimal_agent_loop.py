@@ -110,6 +110,50 @@ class MinimalAgentLoopTests(unittest.TestCase):
         self.assertFalse(result["writes_performed"])
         self.assertFalse(result["execution_performed"])
 
+    def test_legacy_timestamp_and_evidence_refs_remain_searchable_and_scoped(self):
+        self._write_events(self.experience, [{
+            "event_id": "EVT-LEGACY-B77-001",
+            "project_id": "TEST",
+            "timestamp": "2026-10-08T10:15:00Z",
+            "type": "lesson",
+            "summary": "QR cache invalidation after deploy",
+            "status": "validated",
+            "evidence_refs": [{"kind": "chat", "ref": "source-chat#message-17"}],
+        }])
+        result = run_minimal_agent_loop(
+            self.task, self.handoff, self.events,
+            "QR cache invalidation after deploy", [self.experience],
+        )
+        self.assertEqual(result["current_project_id"], "TEST")
+        self.assertEqual(result["current_project_id_source"], "task_state_path")
+        candidate = result["retrieval"]["candidates"][0]
+        self.assertEqual(candidate["project_scope_match"], "MATCH")
+        self.assertEqual(candidate["event_time"], "2026-10-08T10:15:00Z")
+        self.assertEqual(candidate["event_time_source_field"], "timestamp_legacy")
+        self.assertEqual(
+            candidate["evidence_refs"][0]["ref"],
+            "source-chat#message-17",
+        )
+
+    def test_explicit_project_id_overrides_path_inference(self):
+        self._write_events(self.experience, [{
+            "event_id": "EVT-OTHER-PROJECT",
+            "project_id": "CARD111",
+            "summary": "QR cache invalidation after deploy",
+            "status": "reported",
+        }])
+        result = run_minimal_agent_loop(
+            self.task, self.handoff, self.events,
+            "QR cache invalidation after deploy", [self.experience],
+            current_project_id="ORGANISM",
+        )
+        self.assertEqual(result["current_project_id"], "ORGANISM")
+        self.assertEqual(result["current_project_id_source"], "explicit_argument")
+        self.assertEqual(
+            result["retrieval"]["candidates"][0]["project_scope_match"],
+            "MISMATCH",
+        )
+
     def test_project_match_is_only_a_precondition_not_applicability(self):
         self._write_events(self.experience, [
             {
