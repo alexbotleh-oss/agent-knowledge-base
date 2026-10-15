@@ -610,7 +610,8 @@ importer.import_export(Path(sys.argv[2]), Path(sys.argv[3]), sys.argv[4], batch_
                        FROM import_events WHERE archive_id=? AND source_sha256=?
                        ORDER BY event_id""",
                     (archive_id, first["source_sha256"]),
-                ).fetchall()                state_before = conn.execute(
+                ).fetchall()
+                state_before = conn.execute(
                     """SELECT status,next_ordinal,next_byte_offset,last_source_locator,
                               committed_conversations,updated_at,last_error
                        FROM imports WHERE archive_id=? AND source_sha256=?""",
