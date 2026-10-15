@@ -14,6 +14,17 @@ from archive_registry_staging import build as build_staging
 from source_evidence_registry import append_source_records
 
 
+
+
+def _adapter_worker(snapshot_path, output_path, start_barrier, result_queue):
+    try:
+        start_barrier.wait(timeout=10)
+        result_queue.put(adapt_archive_staging_to_intake(
+            Path(snapshot_path), Path(output_path)
+        ))
+    except Exception as exc:
+        result_queue.put({"status": "ERROR", "error": repr(exc)})
+
 class SourceIngestionWriteContractTests(unittest.TestCase):
     def _make_staging(self, root: Path) -> Path:
         source = root / "conversations.json"
@@ -80,17 +91,8 @@ class SourceIngestionWriteContractTests(unittest.TestCase):
             barrier = context.Barrier(2)
             queue = context.Queue()
 
-            def worker(snapshot_path, output_path, start_barrier, result_queue):
-                try:
-                    start_barrier.wait(timeout=10)
-                    result_queue.put(adapt_archive_staging_to_intake(
-                        Path(snapshot_path), Path(output_path)
-                    ))
-                except Exception as exc:
-                    result_queue.put({"status": "ERROR", "error": repr(exc)})
-
             workers = [
-                context.Process(target=worker, args=(str(snapshot), str(output), barrier, queue))
+                context.Process(target=_adapter_worker, args=(str(snapshot), str(output), barrier, queue))
                 for _ in range(2)
             ]
             for process in workers:
