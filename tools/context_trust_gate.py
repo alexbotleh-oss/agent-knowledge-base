@@ -23,6 +23,14 @@ def authorize_next_step(context: dict[str, Any]) -> dict[str, str]:
             "status": "PLAN_REQUIRES_CONFIRMATION",
             "reason": "Event history is incomplete; do not infer previous steps.",
         }
+    if (
+        context.get("event_log_scope_match") is not True
+        and context.get("cross_project_linkage_verified") is not True
+    ):
+        return {
+            "status": "PLAN_REQUIRES_CONFIRMATION",
+            "reason": "Event-log project scope is mismatched or unknown; validate an explicit cross-project link before planning.",
+        }
     next_step = context.get("next_step", "UNKNOWN")
     if not isinstance(next_step, str) or not next_step.strip() or next_step == "UNKNOWN":
         return {
@@ -56,6 +64,10 @@ def select_authoritative_checkpoint(candidates: list[dict[str, Any]]) -> dict[st
             candidate.get("freshness_verified") is True
             and candidate.get("semantic_context_usable") is True
             and candidate.get("event_linkage_complete") is True
+            and (
+                candidate.get("event_log_scope_match") is True
+                or candidate.get("cross_project_linkage_verified") is True
+            )
         ):
             continue
         timestamp = _timestamp_key(candidate.get("timestamp"))
