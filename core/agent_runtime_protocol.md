@@ -102,3 +102,18 @@ When using a checkpoint owned by another chat/task/project, follow `core/cross_c
 ## Unified dialogue–memory control loop
 
 Apply `core/unified_memory_control_loop.md` as the integration contract across task control, shared-memory use, source intake, event continuity, side-branch return and handoff. It connects the existing protocols; it does not imply that each transition is automated. At session start restore the active goal from the owning task state, use linked evidence rather than a summary alone, and keep shared knowledge subordinate to the user's active goal. At meaningful boundaries record results and unresolved state. Treat the UMC acceptance matrix as the release gate for end-to-end testing; mark missing capabilities BLOCKED/NOT IMPLEMENTED instead of passing them by documentation alone.
+
+
+## Recoverable paired checkpoint bundle
+
+For a repository workspace that contains `tools/continuity_checkpoint_bundle.py`, use the bundle as the commit point for paired `TASK_STATE.md` and `HANDOFF.md` updates.
+
+1. Before a long or interruption-prone step, and after each material verified milestone, ensure both files and `events.jsonl` contain the latest confirmed state.
+2. Capture a uniquely identified checkpoint, including the source code HEAD and CI run when known:
+   `python tools/continuity_checkpoint_bundle.py capture projects/AGENT_MEMORY_SYSTEM --checkpoint-id CKPT-<unique-id> --summary "<verified milestone>" --source-head <sha> --ci-run-id <run-id>`
+3. Require status `CAPTURED` or `ALREADY_CAPTURED`; any other status is not a successful save. Then run `verify` and read back the current pointer.
+4. On resume, run `verify` first. If it reports `PROJECTION_OR_SOURCE_DRIFT`, inspect the drift. When the current pointer and immutable generation validate, run `recover` to reconstruct both Markdown projections; do not overwrite the generation or event log.
+5. A generation is written before `CURRENT_CHECKPOINT.json`; that pointer is the single commit point. A crash before pointer publication leaves the previous checkpoint current. A crash after pointer publication is recovered by replaying both projections from the pointed generation.
+6. Preserve checkpoint generations. Reuse of a checkpoint ID with changed content is a conflict. A report or answer that was never captured and committed is not recoverable verbatim; save the verified findings first, then deliver the response.
+
+This is a repository-level recovery primitive. It does not automatically capture ChatGPT messages, synchronize remote GitHub with a local workspace, or guarantee that a response survives before the checkpoint command commits.
