@@ -10,6 +10,7 @@ import argparse
 import hashlib
 import json
 import os
+import re
 import tempfile
 from pathlib import Path
 from typing import Any
@@ -23,8 +24,8 @@ def _canonical(value: Any) -> str:
     return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
 
 
-def _load_event_ids(event_log: Path) -> set[str]:
-    ids: set[str] = set()
+def _load_event_records(event_log: Path) -> dict[str, dict[str, Any]]:
+    records: dict[str, dict[str, Any]] = {}
     for number, line in enumerate(event_log.read_text(encoding="utf-8").splitlines(), 1):
         if not line.strip():
             continue
@@ -34,8 +35,83 @@ def _load_event_ids(event_log: Path) -> set[str]:
             raise ValueError(f"Invalid event log at line {number}: {exc}") from exc
         if not isinstance(event, dict) or not isinstance(event.get("event_id"), str):
             raise ValueError(f"Invalid event record at line {number}: event_id is required")
-        ids.add(event["event_id"])
-    return ids
+        event_id = event["event_id"]
+        if event_id in records:
+            raise ValueError(f"Duplicate event_id {event_id!r} at line {number}")
+        records[event_id] = event
+    return records
+
+
+def _task_id_from_state(task_state: Path) -> str | None:
+    text = task_state.read_text(encoding="utf-8")
+    match = re.search(r"^#\\s*(?:TASK_STATE|Task state)\\s*[—-]\\s*(\\S+)", text, re.I | re.M)
+    return match.group(1).strip() if match else None
+
+
+def _relation_value(event: dict[str, Any], relation_type: str, key: str) -> Any:
+    relations = event.get("relations")
+    if not isinstance(relations, list):
+        return None
+    for relation in relations:
+        if isinstance(relation, dict) and relation.get("type") == relation_type:
+            return relation.get(key)
+    return None
+
+
+def _validate_supporting_event(
+    event_records: dict[str, dict[str, Any]],
+    event_id: str,
+    proposal: dict[str, Any],
+    task_state: Path,
+    event_log: Path,
+) -> str | None:
+    event = event_records.get(event_id)
+    if event is None:
+        return "event_id is not present in the canonical event log"
+
+    task_project = task_state.resolve().parent.name
+    event_project = event_log.resolve().parent.name
+    event_type = event.get("type")
+
+    if event_type == "cross_branch_result":
+        return "cross_branch_result must be acknowledged before it can update task state"
+
+    if event_type == "cross_branch_result_acknowledged":
+        acknowledgement = event.get("acknowledgement")
+        if not isinstance(acknowledgement, dict):
+            return "cross-branch acknowledgement metadata is missing"
+        if event.get("outcome") != "accepted" or acknowledgement.get("decision") != "accepted":
+            return "only an explicitly accepted cross-branch result may update task state"
+        task_id = _task_id_from_state(task_state)
+        if not task_id:
+            return "target TASK_STATE.md must declare its task ID for cross-project result application"
+        if acknowledgement.get("parent_checkpoint_id") != proposal.get("parent_checkpoint_id"):
+            return "acknowledgement parent checkpoint does not match the proposed checkpoint"
+        if _relation_value(event, "reports_to_checkpoint", "checkpoint_id") != proposal.get("parent_checkpoint_id"):
+            return "acknowledgement checkpoint relation does not match the proposed checkpoint"
+        if _relation_value(event, "belongs_to_task", "task_id") != task_id:
+            return "acknowledgement task relation does not match target TASK_STATE.md"
+        result_id = acknowledgement.get("result_event_id")
+        result_event = event_records.get(result_id) if isinstance(result_id, str) else None
+        if not isinstance(result_event, dict) or result_event.get("type") != "cross_branch_result":
+            return "acknowledgement does not reference an existing cross_branch_result"
+        branch_return = result_event.get("branch_return")
+        if not isinstance(branch_return, dict):
+            return "cross-branch result metadata is missing"
+        if branch_return.get("parent_checkpoint_id") != proposal.get("parent_checkpoint_id"):
+            return "child result parent checkpoint does not match the proposed checkpoint"
+        if branch_return.get("parent_task_id") != task_id:
+            return "child result parent task does not match target TASK_STATE.md"
+        if _relation_value(event, "acknowledges_result", "event_id") != result_id:
+            return "acknowledgement relation does not match its result event"
+        return None
+
+    if task_project != event_project:
+        return "cross-project event evidence requires an accepted, explicitly linked cross-branch acknowledgement"
+    recorded_project = event.get("project_id")
+    if isinstance(recorded_project, str) and recorded_project.strip() and recorded_project != task_project:
+        return "event project_id does not match target project directory"
+    return None
 
 
 def apply_checkpoint(
@@ -85,12 +161,14 @@ def apply_checkpoint(
         return {"status": "STALE_REVISION", "writes_performed": False,
                 "expected_sha256": proposal["expected_sha256"], "actual_sha256": actual_hash}
     try:
-        event_ids = _load_event_ids(event_log)
+        event_records = _load_event_records(event_log)
     except ValueError as exc:
         return {"status": "REJECTED", "writes_performed": False, "errors": [str(exc)]}
-    if proposal["event_id"] not in event_ids:
-        return {"status": "REJECTED", "writes_performed": False,
-                "errors": ["event_id is not present in the canonical event log"]}
+    evidence_error = _validate_supporting_event(
+        event_records, proposal["event_id"], proposal, task_state, event_log
+    )
+    if evidence_error:
+        return {"status": "REJECTED", "writes_performed": False, "errors": [evidence_error]}
 
     # No-write validation (schema, path, idempotency, revision and event evidence)
     # runs before trust authorization so callers receive precise conflict/stale
@@ -175,12 +253,14 @@ def apply_checkpoint(
                 "writes_performed": False,
             }
         try:
-            event_ids = _load_event_ids(event_log)
+            event_records = _load_event_records(event_log)
         except ValueError as exc:
             return {"status": "REJECTED", "writes_performed": False, "errors": [str(exc)]}
-        if proposal["event_id"] not in event_ids:
-            return {"status": "REJECTED", "writes_performed": False,
-                    "errors": ["event_id is not present in the canonical event log"]}
+        evidence_error = _validate_supporting_event(
+            event_records, proposal["event_id"], proposal, task_state, event_log
+        )
+        if evidence_error:
+            return {"status": "REJECTED", "writes_performed": False, "errors": [evidence_error]}
 
         block = (
             f"\n\n## Checkpoint update {proposal['update_id']}\n\n"
