@@ -204,7 +204,13 @@ def apply_checkpoint(
         marker_pos = current_text.index(marker)
         prior_block = current_text[marker_pos:]
         if proposal["checkpoint_markdown"].strip() in prior_block:
-            return {"status": "ALREADY_APPLIED", "update_id": proposal["update_id"], "writes_performed": False}
+            return {
+                "status": "ALREADY_APPLIED",
+                "update_id": proposal["update_id"],
+                "paired_checkpoint_confirmed": False,
+                "checkpoint_status": "NOT_RECHECKED",
+                "writes_performed": False,
+            }
         return {"status": "CONFLICT", "update_id": proposal["update_id"], "writes_performed": False,
                 "error": "Update ID already exists with different content."}
 
@@ -274,8 +280,15 @@ def apply_checkpoint(
             return {"status": "STALE_REVISION", "writes_performed": False,
                     "expected_sha256": proposal["expected_sha256"], "actual_sha256": actual_hash}
         if marker in current_text:
-            return {"status": "ALREADY_APPLIED" if proposal["checkpoint_markdown"].strip() in current_text[current_text.index(marker):]
-                    else "CONFLICT", "update_id": proposal["update_id"], "writes_performed": False}
+            if proposal["checkpoint_markdown"].strip() not in current_text[current_text.index(marker):]:
+                return {"status": "CONFLICT", "update_id": proposal["update_id"], "writes_performed": False}
+            return {
+                "status": "ALREADY_APPLIED",
+                "update_id": proposal["update_id"],
+                "paired_checkpoint_confirmed": False,
+                "checkpoint_status": "NOT_RECHECKED",
+                "writes_performed": False,
+            }
 
         # Trust is recomputed while both canonical files are protected by the
         # lock protocol. HANDOFF is still externally mutable and not covered by
