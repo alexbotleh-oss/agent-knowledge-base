@@ -1,6 +1,6 @@
 # HANDOFF.md writer-path audit
 
-Status: partial static audit on branch `test/real-api-integration-20261014`; initial implementation review was based on HEAD `b285662c7601b4e12b56dc41b23589cc27863f81`. Caller-inventory follow-up commit: `d1e3a5024d8dfc803e157033ba5b147e479b42b0` (CI status not yet confirmed at the time of this edit). This is an implementation-path review, not proof that no external/manual writer exists.
+Status: **partial static writer audit; tracked-file search completed for the documented patterns, external/manual and dynamic paths remain open.** Current tracked-file scan: HEAD `8666d1ab03fec9332778cf0d4bed120faa1d3b0a`. Latest documentation update: commit `4e17dd7d2a2971b9f58c840ecf1ea2f2699910ed`, CI #577 passed. Historical implementation and caller-review checkpoints remain in the document for chronology. This is an implementation-path review, not proof that no external/manual writer exists.
 
 ## Findings
 
