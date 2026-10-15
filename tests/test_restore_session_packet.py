@@ -49,6 +49,30 @@ class RestoreSessionPacketTests(unittest.TestCase):
         self.assertFalse(packet["writes_performed"])
         self.assertEqual(before, (self.task.read_bytes(), self.handoff.read_bytes(), self.events.read_bytes()))
 
+    def test_task_state_and_handoff_from_different_projects_are_blocked(self):
+        other_project = self.root / "projects" / "OTHER_PROJECT"
+        other_project.mkdir(parents=True)
+        other_handoff = other_project / "HANDOFF.md"
+        other_handoff.write_text(
+            "# HANDOFF\n- **Следующий шаг:** unrelated project step\n",
+            encoding="utf-8",
+        )
+        packet = build_session_packet(self.task, other_handoff, self.events)
+        self.assertEqual(packet["status"], "BLOCKED")
+        self.assertIn("same project directory", packet["reason"])
+        self.assertFalse(packet["writes_performed"])
+
+    def test_duplicate_event_ids_block_ambiguous_source_linkage(self):
+        self.events.write_text(
+            json.dumps({"event_id": "EVT-TEST-001", "summary": "first"}) + "\n"
+            + json.dumps({"event_id": "EVT-TEST-001", "summary": "different second record"}) + "\n",
+            encoding="utf-8",
+        )
+        packet = build_session_packet(self.task, self.handoff, self.events)
+        self.assertEqual(packet["status"], "BLOCKED")
+        self.assertEqual(packet["duplicate_event_ids"], ["EVT-TEST-001"])
+        self.assertFalse(packet["writes_performed"])
+
     def test_missing_referenced_event_yields_partial_not_false_success(self):
         self.events.write_text("", encoding="utf-8")
         packet = build_session_packet(self.task, self.handoff, self.events)

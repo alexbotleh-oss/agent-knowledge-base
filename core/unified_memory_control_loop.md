@@ -209,3 +209,57 @@ The tool reads TASK_STATE, HANDOFF and the canonical event log, records exact so
 - `BLOCKED`: a canonical source is missing or invalid.
 
 It is read-only. It does not infer that all dialogue was captured, and it does not independently decide which excerpted statements are accepted facts. The agent must still interpret statuses, conflicts and next steps. This is a source-backed packet builder, not automatic session startup in every ChatGPT chat; callers must have access to the files and invoke it.
+
+## 12. Bounded restore and experience-candidate pass
+
+Implemented prototype: `tools/minimal_agent_loop.py`; tests: `tests/test_minimal_agent_loop.py`.
+
+### Two-tier review plus local evidence-source availability
+
+The loop applies independent, non-authorizing review dimensions:
+- **Scope filter:** explicit `--project-id` matching routes same-project candidates to review; mismatches remain `OUT_OF_PROJECT_SCOPE`; missing identity remains `PROJECT_SCOPE_UNKNOWN`.
+- **Evidence-quality filter:** classifies the record's status metadata and whether recognized evidence pointers exist. A `verified` label is not proof of claim validity.
+- **Local source-availability check:** when the caller explicitly supplies `--evidence-root`, each `evidence`/`evidence_refs` item with `kind: file` and a repository-relative `ref` is checked under that root for existence, regular-file type, non-empty content and a text-like UTF-8 sample (up to 8192 bytes). Empty files are classified `EMPTY_FILE`; samples containing a NUL byte or invalid UTF-8 are classified `BINARY_FILE`. An incomplete UTF-8 sequence only at the sample boundary is tolerated so a multibyte character split by the 8192-byte limit is not misclassified. Path traversal and absolute paths are not followed outside the root. URLs, commit IDs, test names and other non-file references are not fetched or validated.
+
+#### Evidence source validation levels
+
+| Level | Check | Per-reference / aggregate status | Review effect |
+|---|---|---|---|
+| 1. Root supplied | Is `--evidence-root` explicit? | `NOT_CHECKED_NO_EVIDENCE_ROOT` when absent | Not a pass; candidate remains review-only |
+| 2. Path safety | Does the resolved path remain inside the root? | `OUTSIDE_EVIDENCE_ROOT` | Not followed outside root; routed to review, not treated as valid evidence |
+| 3. Existence and type | Does the path exist and point to a regular file? | `MISSING` / `MISSING_SOURCE`; `NOT_A_FILE` / `INVALID_SOURCE_TYPE` | Blocks the same-project evidence-source review route |
+| 4. Readability | Can the file be opened and the bounded sample read? | `UNREADABLE` / `UNREADABLE_SOURCE` | Blocks the same-project evidence-source review route |
+| 5. Content sanity | Is the file non-empty, with a text-like UTF-8 sample within the first 8192 bytes? | `EMPTY_FILE` / `EMPTY_SOURCE`; `BINARY_FILE` / `BINARY_SOURCE` | Blocks the same-project evidence-source review route |
+| 6. Claim support | Does the source actually support the event claim? | Not evaluated by this check; `claim_validated: false` | Requires a separate evidence-backed assessment |
+
+Aggregate source statuses also include `ALL_LOCAL_FILES_READABLE` when all checked local file references pass the availability/format screen, and `NO_LOCAL_FILE_REFS` when no local file references are available to check. The check is local-only and runs only with an explicit evidence root.
+
+Important limitations:
+- A file passing the availability/format screen is only a suitable carrier for textual evidence; it is not proof that the file supports the claim or that the lesson transfers to the current task.
+- Semantic validation of evidence content remains unimplemented.
+- Every candidate remains `transfer_decision: UNASSESSED`; no gate authorizes use, promotion, writes or execution.
+The command explicitly connects existing components in this order:
+1. Build the source-backed restore packet from the supplied `TASK_STATE.md`, `HANDOFF.md` and canonical event log.
+2. Extract semantic fields with source-hash freshness checks and preserve `UNKNOWN` / stale states.
+3. Ask the existing trust gate whether the restored context is sufficient for planning.
+4. Search explicitly supplied JSONL event logs for lexical experience candidates using the current request, restored active goal and explicit blockers as the query.
+5. Return candidates with event ID, matched terms, source path/hash/line, evidence references, event/lifecycle status and time fields.
+
+Safety and interpretation:
+- This is a read-only local command. It does not write memory, promote candidates, update TASK_STATE/HANDOFF, resolve conflicts or execute the next step.
+- Disputed and apparently conflicting records remain separate candidates. The retriever does not decide which is true.
+- Every candidate starts with `transfer_decision: UNASSESSED`. Tool/language tags are descriptive only; applicability to the current project requires a separate evidence-backed assessment.
+- First conservative scope criterion: when the caller explicitly supplies `--project-id`, a candidate with the exact same `project_id` receives `SCOPE_MATCHED_REQUIRES_REVIEW`; a different project receives `OUT_OF_PROJECT_SCOPE`; missing candidate or current project identity receives `PROJECT_SCOPE_UNKNOWN`. A project match is necessary for this same-project path but is not sufficient for applicability or promotion.
+- The candidate-level `evidence_quality` classifier distinguishes a `verified` status label with/without recognized evidence-reference pointers, observed records, reported/hypothesis-like states, disputed/conflicted states, rejected/quarantined states, and unknown metadata. It does not independently inspect or validate the cited source content.
+- When `--evidence-root` is supplied, `evidence_source_validation` checks repository-relative `kind: file` pointers for local existence/readability and rejects empty or binary-like files using a bounded UTF-8 sample check; missing, unreadable, non-file, empty or binary-like sources are blocked from the review path. Without an explicit root the result remains `NOT_CHECKED_NO_EVIDENCE_ROOT`. This is source availability/format screening, not claim validation.
+- `candidate_review_gate` combines explicit project scope with that evidence-metadata state. A project mismatch remains `OUT_OF_PROJECT_SCOPE`; unknown scope remains `PROJECT_SCOPE_UNKNOWN`; same-project candidates receive specific review/blocking routes such as `SCOPE_MATCHED_VERIFIED_LABEL_WITH_REFS_REVIEW_REQUIRED` or `SCOPE_MATCHED_DISPUTED_REQUIRES_CONFLICT_REVIEW`.
+- A `verified` label alone is never sufficient: even a verified label plus a file that passes the local availability/format screen does not prove the file supports the claim or that the lesson transfers to the current task. Every candidate remains `transfer_decision: UNASSESSED`; these gates route review, not authorization or promotion.
+- The current event schema does not guarantee a canonical `task_branch` field, so branch matching is deliberately `NOT_EVALUATED`, not guessed from paths or prose. This pass also does not treat an event's `type` or `status` alone as a trust verdict.
+- Missing or malformed requested logs fail closed; partial results are not presented as a complete search.
+- Even if the lower-level context trust gate returns `AUTHORIZED_FOR_PLANNING`, this coordinator blocks planning by default with `BLOCKED_CURRENTNESS_UNVERIFIED`. Source hashes prove byte freshness relative to packet creation; they do not prove that the checkpoint still matches the live user goal or current repository/PR state.
+- Candidate review may still be offered, but the returned policy explicitly says `REVIEW_CANDIDATES_ONLY_NO_PLANNING`. A future currentness gate must compare a stable task/checkpoint identity and relevant live state against authoritative evidence before it can lift this block.
+
+Limitations:
+- Retrieval is lexical, not embedding/semantic retrieval, and it searches supplied event logs only; it is not yet a complete query over every canonical MemoryRecord, lesson, decision and relation.
+- It does not classify dialogue turns, preserve parent goals across side branches, publish child results automatically, or run at new-chat startup.
+- The prototype does not complete UMC-01, UMC-02 or UMC-03. The acceptance matrix above remains unchanged until end-to-end behavior is demonstrated.

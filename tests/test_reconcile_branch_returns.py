@@ -60,11 +60,60 @@ class ReconcileBranchReturnsTests(unittest.TestCase):
             self.event_log, self.published["event_id"], "accepted",
             "owner-confirmation://recon", "2026-10-14T13:05:00Z",
         )
-        self.task_state.write_text("# Current state\n\nAcknowledgement: " + ack["event_id"] + "\n", encoding="utf-8")
+        self.task_state.write_text(
+            "# TASK_STATE — TASK-RECON-1\n"
+            "parent_task_id: TASK-RECON-1\n"
+            "## Checkpoint update UPDATE-RECON-1\n"
+            "- Parent checkpoint: `CKPT-RECON-1`\n"
+            f"- Supporting event: `{ack['event_id']}`\n",
+            encoding="utf-8",
+        )
         report = build_report(self.event_log, [self.task_state])
         self.assertEqual(report["status"], "CONSISTENT")
         self.assertEqual(report["issues"], [])
 
+    def test_acknowledgement_mentioned_in_prose_is_not_a_checkpoint(self):
+        ack = acknowledge_result(
+            self.event_log, self.published["event_id"], "accepted",
+            "owner-confirmation://prose-only", "2026-10-14T13:05:00Z",
+        )
+        self.task_state.write_text(
+            "# TASK_STATE — TASK-RECON-1\n"
+            "parent_task_id: TASK-RECON-1\n"
+            "This note mentions " + ack["event_id"] + " but is not a checkpoint.\n",
+            encoding="utf-8",
+        )
+        report = build_report(self.event_log, [self.task_state])
+        self.assertTrue(any(
+            issue["kind"] == "accepted_ack_without_task_checkpoint"
+            for issue in report["issues"]
+        ))
+
+    def test_dangling_acknowledgement_target_is_reported(self):
+        self.event_log.write_text(
+            json.dumps({
+                "event_id": "EVT-DANGLING-ACK",
+                "type": "cross_branch_result_acknowledged",
+                "acknowledgement": {
+                    "result_event_id": "EVT-MISSING-RESULT",
+                    "decision": "accepted",
+                    "parent_checkpoint_id": "CKPT-MISSING",
+                },
+            }) + "\n",
+            encoding="utf-8",
+        )
+        report = build_report(self.event_log, [self.task_state])
+        self.assertTrue(any(
+            issue["kind"] == "dangling_acknowledgement_target"
+            for issue in report["issues"]
+        ))
+
+    def test_duplicate_event_ids_are_rejected(self):
+        duplicate = json.dumps({"event_id": "EVT-DUPLICATE", "type": "observation"})
+        self.event_log.write_text(duplicate + "\n" + duplicate + "\n", encoding="utf-8")
+        report = build_report(self.event_log, [self.task_state])
+        self.assertEqual(report["status"], "REJECTED")
+        self.assertIn("Duplicate event_id", report["errors"][0])
     def test_malformed_event_log_is_rejected_read_only(self):
         self.event_log.write_text("{broken json\n", encoding="utf-8")
         before = self.event_log.read_bytes()

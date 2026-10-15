@@ -186,6 +186,27 @@ class SemanticContextExtractorTests(unittest.TestCase):
         self.assertFalse(context["semantic_context_usable"])
 
 
+    def test_existing_english_and_pr_task_labels_restore_active_goal(self):
+        cases = [
+            ("Current task", "continue B77 history reconciliation"),
+            ("Задача этого PR", "transfer CARD111 memory without app edits"),
+            ("Текущая задача", "verify legacy project checkpoint"),
+        ]
+        for label, expected in cases:
+            with self.subTest(label=label):
+                self.task.write_text(
+                    f"- **{label}:** {expected}\n"
+                    "- **Последнее событие:** EVT-TEST-001\n",
+                    encoding="utf-8",
+                )
+                context = extract_semantic_context(self._packet())
+                self.assertEqual(context["active_goal"], expected)
+                self.assertTrue(context["semantic_context_usable"])
+                self.assertEqual(
+                    context["provenance"]["active_goal"]["source"],
+                    "TASK_STATE.md",
+                )
+
     def test_real_recipe_manager_sources_keep_session_and_project_scopes_distinct(self):
         task = ROOT / "projects" / "RECIPE_MANAGER" / "TASK_STATE.md"
         handoff = ROOT / "projects" / "RECIPE_MANAGER" / "HANDOFF.md"

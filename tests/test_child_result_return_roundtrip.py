@@ -24,7 +24,7 @@ class ChildResultReturnRoundTripTests(unittest.TestCase):
             event_log = project / "events.jsonl"
             task_state = project / "TASK_STATE.md"
             event_log.write_text("", encoding="utf-8")
-            task_state.write_text("# Task state\n- **Активная задача в текущей сессии:** проверить результат дочерней ветки\n- **Следующий шаг:** проверить подтверждение владельца\n\nParent checkpoint CKPT-1.\n", encoding="utf-8")
+            task_state.write_text("# Task state — TASK-1\n- **Активная задача в текущей сессии:** проверить результат дочерней ветки\n- **Следующий шаг:** проверить подтверждение владельца\n\nParent checkpoint CKPT-1.\n", encoding="utf-8")
             handoff = project / "HANDOFF.md"
             handoff.write_text("# HANDOFF\n- **Следующий шаг:** проверить подтверждение владельца\n", encoding="utf-8")
 
@@ -81,7 +81,7 @@ class ChildResultReturnRoundTripTests(unittest.TestCase):
             project.mkdir(parents=True)
             event_log = project / "events.jsonl"
             task_state = project / "TASK_STATE.md"
-            event_log.write_text(json.dumps({"event_id": "EVT-1", "type": "cross_branch_result"}) + "\n", encoding="utf-8")
+            event_log.write_text(json.dumps({"event_id": "EVT-1", "project_id": "TEST_PROJECT", "type": "observation"}) + "\n", encoding="utf-8")
             task_state.write_text("# Initial\n- **Активная задача в текущей сессии:** проверить устаревшую ревизию\n- **Следующий шаг:** повторно проверить контрольную точку\n- **Последнее событие:** EVT-1\n", encoding="utf-8")
             handoff = project / "HANDOFF.md"
             handoff.write_text("# HANDOFF\n- **Следующий шаг:** повторно проверить контрольную точку\n", encoding="utf-8")

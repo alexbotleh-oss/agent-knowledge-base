@@ -44,9 +44,9 @@ def load_archive(path: str) -> tuple[list[dict], list[dict]]:
     source = Path(path)
     if source.suffix.lower() == ".zip":
         with zipfile.ZipFile(source) as archive:
-            candidates = [name for name in archive.namelist() if name.endswith("conversations.json")]
-            if not candidates:
-                raise ValueError("ZIP does not contain conversations.json")
+            candidates = [name for name in archive.namelist() if Path(name).name == "conversations.json"]
+            if len(candidates) != 1:
+                raise ValueError(f"Expected exactly one conversations.json in ZIP; found {len(candidates)}")
             raw = json.loads(archive.read(candidates[0]))
     else:
         raw = json.loads(source.read_text(encoding="utf-8"))
