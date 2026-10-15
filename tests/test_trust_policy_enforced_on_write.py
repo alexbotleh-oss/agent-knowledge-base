@@ -133,6 +133,88 @@ class TrustPolicyEnforcedOnWriteTests(unittest.TestCase):
         self.assertFalse(result["writes_performed"])
         self.assertEqual(before, self.task_state.read_bytes())
 
+    def test_handoff_change_after_authorization_refuses_write(self):
+        # HANDOFF supplies the next step because TASK_STATE intentionally omits it.
+        self.task_state.write_text(
+            "# TASK_STATE\n"
+            "- **Активная задача в текущей сессии:** проверить изменение HANDOFF\n"
+            "- **Последнее событие:** EVT-TEST-001\n",
+            encoding="utf-8",
+        )
+        _, context, verdict = self._restore_and_decide()
+        self.assertEqual(context["next_step"], "проверить контрольную точку")
+        self.assertEqual(verdict["status"], "AUTHORIZED_FOR_PLANNING")
+
+        # The proposal and TASK_STATE revision remain unchanged; only HANDOFF changes.
+        self.handoff.write_text("# HANDOFF\n", encoding="utf-8")
+        before = self.task_state.read_bytes()
+        result = apply_checkpoint(
+            self.task_state, self.events, self._proposal(), trust_verdict=verdict
+        )
+
+        self.assertEqual(result["status"], "BLOCKED")
+        self.assertEqual(result["trust_status"], "REFUSED_UNKNOWN_NEXT_STEP")
+        self.assertFalse(result["writes_performed"])
+        self.assertEqual(before, self.task_state.read_bytes())
+
+    def test_independent_processes_cannot_both_apply_same_revision(self):
+        _, _, verdict = self._restore_and_decide()
+        expected_hash = hashlib.sha256(self.task_state.read_bytes()).hexdigest()
+        go_file = self.root / "GO"
+        worker = r\''' 
+import json, sys, time
+from pathlib import Path
+sys.path.insert(0, sys.argv[1])
+from guarded_task_state_update import apply_checkpoint
+task_state, events = Path(sys.argv[2]), Path(sys.argv[3])
+proposal = {
+    "update_id": sys.argv[4],
+    "expected_sha256": sys.argv[5],
+    "parent_checkpoint_id": "CKPT-MP",
+    "event_id": "EVT-TEST-001",
+    "checkpoint_markdown": "- Independent process checkpoint.",
+}
+verdict = json.loads(sys.argv[6])
+go_file = Path(sys.argv[7])
+deadline = time.monotonic() + 10
+while not go_file.exists():
+    if time.monotonic() > deadline:
+        raise SystemExit("start barrier timed out")
+    time.sleep(0.005)
+print(json.dumps(apply_checkpoint(task_state, events, proposal, trust_verdict=verdict)))
+\''' 
+        import os
+        import subprocess
+
+        command_args = [
+            sys.executable, "-c", worker, str(ROOT / "tools"),
+            str(self.task_state), str(self.events), "UPDATE-PROCESS-A",
+            expected_hash, json.dumps(verdict), str(go_file),
+        ]
+        command_args_b = list(command_args)
+        command_args_b[command_args_b.index("UPDATE-PROCESS-A")] = "UPDATE-PROCESS-B"
+        first = subprocess.Popen(command_args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        second = subprocess.Popen(command_args_b, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        go_file.write_text("go", encoding="utf-8")
+        out_a, err_a = first.communicate(timeout=15)
+        out_b, err_b = second.communicate(timeout=15)
+        self.assertEqual(first.returncode, 0, err_a)
+        self.assertEqual(second.returncode, 0, err_b)
+        results = [json.loads(out_a), json.loads(out_b)]
+        statuses = [item["status"] for item in results]
+        self.assertEqual(statuses.count("APPLIED"), 1, statuses)
+        self.assertEqual(sum(status in {"LOCKED", "STALE_REVISION"} for status in statuses), 1, statuses)
+        state = self.task_state.read_text(encoding="utf-8")
+        self.assertEqual(
+            sum(marker in state for marker in (
+                "guarded-task-update:UPDATE-PROCESS-A",
+                "guarded-task-update:UPDATE-PROCESS-B",
+            )),
+            1,
+        )
+        self.assertFalse(self.events.with_name(self.events.name + ".lock").exists())
+        self.assertFalse(self.task_state.with_name(self.task_state.name + ".lock").exists())
+
     def test_concurrent_checkpoint_writers_cannot_both_apply_same_revision(self):
         _, _, verdict = self._restore_and_decide()
         base_hash = hashlib.sha256(self.task_state.read_bytes()).hexdigest()
