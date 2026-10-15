@@ -567,3 +567,11 @@ Tests added for first pass, completed replay, and a changed source under the sam
 - **Failure found and corrected:** first lifecycle CI exposed an idempotent replay status mismatch (`ALREADY_RECORDED` vs expected `ALREADY_REGISTERED` for duplicate turn receipt). The receipt-specific status was corrected; the exact code-head run above passed afterward.
 - **Current implementation boundary:** local callable ledger and artifact scanner are implemented/tested. Automatic ChatGPT message capture, disconnect detection and delivery acknowledgement remain NOT IMPLEMENTED without a client/platform hook.
 - **Next action:** refresh live PR #27 HEAD/CI after this checkpoint-only metadata update, then design the client adapter; do not claim end-to-end automation until integration tests prove it.
+
+## Verified checkpoint — client adapter API and SDK, 2026-10-15
+
+- **Verified code HEAD:** `cf78d65d1ffa2421ce6e8a24d262812550ab30c9`; exact-head [CI run 38761636991](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38761636991) PASS.
+- **Validation:** 223 Python tests (1 skipped), 4 Node SDK tests; strict write audit 92 mutation sites, 0 unclassified.
+- **Implemented:** authenticated local HTTP adapter, client SDK, Python API tests, Node client tests, runtime protocol link, adapter integration documentation. SDK gates work until receipt and WORK_STARTED are acknowledged.
+- **Not yet implemented:** hook into the live ChatGPT web UI, actual Android browser send interception, visible-response observation and user-facing recovery UI. No claim of automatic capture yet.
+- **Next:** prototype a host-specific extension for Yandex Browser Android, keep the journal local-only, test send-gate and restart/recovery behavior in a real browser. PR #27 stays Draft/open/unmerged; main unchanged.

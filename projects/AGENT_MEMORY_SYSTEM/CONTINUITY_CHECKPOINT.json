@@ -42,7 +42,11 @@
     "Added tools/turn_lifecycle_ledger.py and tests/test_turn_lifecycle_ledger.py: exact user instruction/checkpoint capture when invoked by a client, append-only turn lifecycle, progress/artifact/report/submission/delivery states, idempotent replay, corrupt-journal fail-closed behavior, and empty/partial artifact scan.",
     "Added core/turn_lifecycle_and_interruption_recovery.md and linked it from core/agent_runtime_protocol.md; documented 10–12 minute work slices, uncertainty semantics, artifact correlation, and the hard boundary that automatic ChatGPT capture requires a client integration.",
     "Exact code HEAD 49b11d8ba6cb52fa9cef1159dd3e0d4132cae529 passed GitHub Actions run 38753181276: 212 tests, 1 skipped; write audit 90 mutation sites / 0 unclassified.",
-    "Preserved append-only chronology correction EVT-AGMS-20261015-003 for the temporal edge in EVT-AGMS-20261015-002."
+    "Preserved append-only chronology correction EVT-AGMS-20261015-003 for the temporal edge in EVT-AGMS-20261015-002.",
+    "Added authenticated loopback HTTP adapter tools/turn_lifecycle_adapter.py with exact-origin CORS allowlist, bearer-token auth, body/field validation, inspection endpoints, and fail-closed handling for corrupt ledger reads.",
+    "Added clients/turn_lifecycle_client.js. runTrackedTurn blocks the work callback until the durable incoming-message receipt and WORK_STARTED event are acknowledged; SDK distinguishes prepared report, submitted response and explicit delivery acknowledgement.",
+    "Added Python HTTP integration tests and Node SDK tests; CI now runs both test suites. Exact code HEAD cf78d65d1ffa2421ce6e8a24d262812550ab30c9 passed GitHub Actions run 38761636991: 223 Python tests (1 skipped), 4 Node tests; strict write audit passed with no unclassified mutation sites.",
+    "Added core/turn_lifecycle_client_adapter.md and linked the adapter contract from core/agent_runtime_protocol.md."
   ],
   "confirmed_open": [
     {
@@ -66,11 +70,11 @@
       "description": "A report that was never durably written to the repository cannot be reconstructed verbatim after a network interruption. Future work must persist concise checkpoints after each material verified milestone and distinguish persisted records from undelivered response text."
     },
     {
-      "id": "OPEN-CHAT-CLIENT-INTEGRATION",
-      "description": "The local turn ledger does not receive ChatGPT messages or host delivery acknowledgements on its own. A trusted app/client/wrapper integration must persist exact input before processing and emit lifecycle events; delivery remains unconfirmed if the host has no receipt."
+      "id": "OPEN-CHATGPT-UI-HOOK",
+      "description": "The authenticated local HTTP adapter and SDK are callable, but the current ChatGPT web UI does not invoke them. A host-specific integration (likely an extension or app wrapper) must capture the send action before dispatch, persist exact text and prior assistant output, and observe rendered assistant responses; it must be tested on the user's actual Yandex Browser Android version before claiming end-to-end capture."
     }
   ],
-  "next_action": "After verifying the exact final PR head/CI following this checkpoint metadata commit, design and test a real client adapter for pre-work message registration and host lifecycle signals. Until then, describe turn lifecycle capture as a callable primitive, not automatic ChatGPT autosave.",
+  "next_action": "Implement a host-specific ChatGPT web integration prototype suitable for Yandex Browser on Android (official docs indicate extension support), with local durable journal, send gate, response-render observation, and an incomplete-turn recovery view. Keep it isolated, no external message transmission, and do not claim success before real-browser testing.",
   "constraints": [
     "Do not merge PR #27 or modify main without explicit user approval.",
     "Do not delete or rewrite source-history exports without a separate explicit decision.",
@@ -82,14 +86,15 @@
   "status": "ACTIVE_PARTIAL",
   "checkpoint_semantics": "This is a durable task checkpoint committed to the integration branch. It is not an automatic ChatGPT autosave or proof that an undelivered response was saved.",
   "repository_state": {
-    "last_verified_branch_head": "49b11d8ba6cb52fa9cef1159dd3e0d4132cae529",
-    "exact_head_ci_run_id": 38753181276,
-    "exact_head_ci_url": "https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38753181276",
+    "last_verified_branch_head": "cf78d65d1ffa2421ce6e8a24d262812550ab30c9",
+    "exact_head_ci_run_id": 38761636991,
+    "exact_head_ci_url": "https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38761636991",
     "exact_head_ci_conclusion": "success",
-    "tests": 212,
-    "skipped": 1,
-    "write_audit_mutation_sites": 90,
+    "python_tests": 223,
+    "python_skipped": 1,
+    "node_tests": 4,
+    "write_audit_mutation_sites": 92,
     "write_audit_unclassified": 0,
-    "note": "CI run verifies the code head above. This metadata consolidation is a checkpoint-only commit; refresh the live PR HEAD and CI before the next operation."
+    "note": "CI verifies the exact code head above; this checkpoint/event metadata commit will change branch HEAD, so refresh live PR HEAD/CI before continuing."
   }
 }

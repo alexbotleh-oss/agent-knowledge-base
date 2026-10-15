@@ -568,3 +568,10 @@ This is a callable tool, not yet a ChatGPT/browser integration. It cannot observ
 - Lifecycle tool, tests, artifact scan and protocol documentation are present and read back from GitHub. Event chronology correction is appended as EVT-AGMS-20261015-003; original records remain intact.
 - Resume: refresh live PR head/CI after the checkpoint metadata consolidation; then design the client adapter that calls `receive` before work and records lifecycle events. The local tool does not itself observe ChatGPT messages, network disconnects or delivery receipts.
 - Keep PR #27 Draft/open/unmerged; `main` unchanged. Work in 10–12 minute slices; do not delete suspected partial artifacts without correlation and authorization.
+
+## Active handoff — client adapter API/SDK verified, 2026-10-15
+
+- Code HEAD `cf78d65d1ffa2421ce6e8a24d262812550ab30c9` passed exact-head CI [38761636991](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38761636991): 223 Python tests (1 skipped), 4 Node tests, 92 mutation sites / 0 unclassified.
+- API: `tools/turn_lifecycle_adapter.py`; SDK: `clients/turn_lifecycle_client.js`; docs: `core/turn_lifecycle_client_adapter.md`; Python/Node tests are in place.
+- This is not yet wired into the current ChatGPT page. The next concrete step is a browser extension or app wrapper that registers exact input before dispatch, captures previous assistant output locally, detects rendered responses, and shows incomplete turns after reload. Verify on actual Yandex Browser Android; don't claim that it works before that test.
+- Use 10–12 minute work slices and persist each material milestone. Keep all exact text local/private. PR #27 remains Draft/open/unmerged; no main changes.
