@@ -124,7 +124,11 @@ print(json.dumps(apply_checkpoint(task, events, proposal, trust_verdict=verdict)
 
             final_state = task.read_text(encoding="utf-8")
             self.assertEqual(final_state.count("<!-- guarded-task-update:"), 1)
-            self.assertEqual(len(list(project.glob("*.lock"))), 0, "successful workers should release locks")
+            remaining_locks = [
+                path.name for path in project.glob("*.lock")
+                if path.name != ".continuity-checkpoint.lock"
+            ]
+            self.assertEqual(remaining_locks, [], "writer locks should be released; persistent OS lock file is expected")
 
 
 if __name__ == "__main__":
