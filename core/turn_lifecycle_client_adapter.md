@@ -71,3 +71,9 @@ Use work slices of 10–12 minutes as a target in environments with observed int
 ## Validation scope
 
 The HTTP adapter tests exercise the real local server in-process, auth, origin checks, exact-text registration, incomplete-turn inspection, event ordering, and delivery acknowledgement. SDK tests verify the work gate and event ordering. These do not prove integration with ChatGPT's current UI or Android browser capabilities.
+
+## Browser extension prototype for the current ChatGPT UI
+
+A separate local-only prototype now lives in `clients/chatgpt-web-extension/`. It uses IndexedDB in the browser profile rather than requiring a Python server to be running on the phone. It intercepts known text-send controls/form submissions, persists the exact message and previous assistant message before dispatch, records a visible final assistant response when DOM observation is confident, shows incomplete turns in a popup, and supports user-initiated JSONL export. It makes no external network requests.
+
+**Status: implementation prototype; live-device acceptance is still pending.** Static CI verifies manifest scope, the local-only/send-gate contract and JavaScript syntax. It cannot verify that the current ChatGPT mobile DOM, Yandex Browser Android's extension runtime, click timing or response selectors behave as expected on the user's device. See `clients/chatgpt-web-extension/README.md` for install and limitations. The extension does not have a canonical checkpoint bridge yet, so the prior checkpoint field is explicitly UNKNOWN/null. If selectors stop matching, automatic capture may fail; do not rely on the extension until the real-browser acceptance tests pass.
