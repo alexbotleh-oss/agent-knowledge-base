@@ -38,6 +38,27 @@ Identical source bytes with different `archive_id` values represent different lo
 - **CI:** [run #551](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38691451002) passed on the exact test commit; [run #552](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38691490708) passed on the subsequent documentation commit.
 - **Boundary:** applies to the tested importer entry point and scenario. It does not establish safety for direct database mutations or untested failure modes.
 
+### PRINCIPLE 3 — Recovery after an abrupt process crash
+
+If a process exits after writing part of a batch but before the SQLite transaction commits, the uncommitted batch must roll back. A subsequent cooperating importer must recover from the last durable checkpoint without duplicating records or changing the previously committed prefix and event history.
+
+- **Behavioral evidence:** `test_process_crash_mid_batch_rolls_back_uncommitted_rows_and_resumes`.
+- **Test commit:** `52fd5f693f8649504f167c959b9cb71e0f5b1a2c`.
+- **CI:** [run #556](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38692448056) passed on the exact test commit.
+- **Boundary:** verified for the injected process-exit point and SQLite transaction path on Ubuntu 24.04 in GitHub Actions. This is not evidence for power loss, disk failure, arbitrary filesystem/kernel faults, or all operating systems.
+
+## Dependencies and prohibitions for future changes
+
+Every future importer logic change and every new interruption/recovery test must preserve all three verified principles above:
+
+1. **Idempotency:** a completed-source replay must not rewrite committed records, event history/timestamps, payload checksums, or persisted checkpoint state.
+2. **Logical-source separation:** different `archive_id` values retain independent records, event histories, and progress even when the source bytes and digest are identical.
+3. **Crash recovery:** uncommitted batch work must not survive as partial rows or advance the durable checkpoint; retry must resume without duplicates or mutation of the previously committed prefix.
+
+**Critical-defect rule:** violating any one of these principles is a critical defect, even if the importer eventually reports `RAW_COMPLETE` or appears to have read all source records. A successful final status does not override a failed invariant.
+
+These are test-backed constraints, not a claim that every failure mode is covered. Each new guarantee must name its behavioral test, exact test commit, CI run on that commit, and explicit applicability boundary.
+
 ## Recovery dependencies (verified invariants)
 
 Every interruption/restart test must verify recovery **and** preservation of the two stable import contracts above. Reaching `RAW_COMPLETE` is not sufficient if previously committed records, event timestamps, checksums, source identity, or checkpoint state were changed.
