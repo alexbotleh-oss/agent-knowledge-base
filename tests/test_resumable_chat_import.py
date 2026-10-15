@@ -247,7 +247,8 @@ importer.import_export(Path(sys.argv[2]), Path(sys.argv[3]), sys.argv[4], batch_
             self.assertEqual(staged[0]["mapping"]["node-0-user"]["children"], ["node-0-assistant"])
 
     def test_zip_resume_seeks_within_conversations_member(self):
-        with tempfile.TemporaryDirectory() as tmp:            root = Path(tmp)
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
             source = root / "export.zip"
             rows = sample_conversations(4)
             with zipfile.ZipFile(source, "w") as archive:
