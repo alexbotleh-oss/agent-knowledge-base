@@ -139,6 +139,15 @@ def append_event(path: Path, event: dict[str, Any]) -> dict[str, Any]:
                     existing.append(json.loads(line))
                 except json.JSONDecodeError as exc:
                     raise ValueError(f"corrupt ledger JSON at line {line_no}; refusing append") from exc
+            # Stable event IDs make retries idempotent even when a caller loses
+            # the acknowledgement after the append reached durable storage.
+            for prior in existing:
+                if prior.get("event_id") == event.get("event_id"):
+                    prior_cmp = {k: v for k, v in prior.items() if k != "timestamp"}
+                    event_cmp = {k: v for k, v in event.items() if k != "timestamp"}
+                    if prior_cmp == event_cmp:
+                        return {"status": "ALREADY_RECORDED", "event": prior}
+                    raise ValueError(f"event_id collision with different content: {event.get('event_id')}")
             current = project_turns(existing)
             tid = event["turn_id"]
             if event["event_type"] == "TURN_RECEIVED":
