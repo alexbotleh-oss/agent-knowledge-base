@@ -424,5 +424,36 @@ class ResumableChatImportTests(unittest.TestCase):
                 conn.close()
 
 
+    def test_stale_replayed_batch_does_not_regress_checkpoint(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            source = self.make_source(root, 4)
+            out = root / "state"
+            done = import_export(source, out, "ARCHIVE-STALE-REPLAY", batch_size=1)
+            conn = connect(out / "import.sqlite3")
+            try:
+                record = conn.execute(
+                    """SELECT archive_id,source_sha256,source_locator,source_conversation_id,
+                              identity_method,source_ordinal,payload_json,payload_sha256,
+                              imported_at,source_end_byte_offset
+                       FROM raw_conversations WHERE source_ordinal=0"""
+                ).fetchone()
+                before = conn.execute(
+                    """SELECT next_ordinal,next_byte_offset,last_source_locator,committed_conversations
+                       FROM imports WHERE archive_id=? AND source_sha256=?""",
+                    ("ARCHIVE-STALE-REPLAY", done["source_sha256"]),
+                ).fetchone()
+                _commit_batch(conn, "ARCHIVE-STALE-REPLAY", done["source_sha256"], [record])
+                after = conn.execute(
+                    """SELECT next_ordinal,next_byte_offset,last_source_locator,committed_conversations
+                       FROM imports WHERE archive_id=? AND source_sha256=?""",
+                    ("ARCHIVE-STALE-REPLAY", done["source_sha256"]),
+                ).fetchone()
+                self.assertEqual(after, before)
+                self.assertEqual(after[0], 4)
+            finally:
+                conn.close()
+
+
 if __name__ == "__main__":
     unittest.main()
