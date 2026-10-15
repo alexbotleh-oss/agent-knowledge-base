@@ -1,0 +1,70 @@
+{
+  "schema_version": "1.0",
+  "checkpoint_id": "CKPT-AGMS-20261015-INTERRUPTION-RECOVERY-01",
+  "project_id": "AGENT_MEMORY_SYSTEM",
+  "task_id": "AGMS-2026-10-15-MEMORY-PIPELINE-CONTINUITY",
+  "recorded_at": "2026-10-15",
+  "recorded_time_precision": "day",
+  "source_chat": "Настройка Агента",
+  "source_message": "User requested completion of the persistent memory mechanism after a network interruption caused a report upload failure.",
+  "goal": "Make work recoverable after connection/session interruption without repeating already verified steps; connect source ingestion, approved semantic-memory processing, index refresh, and next-session restore, while preserving provenance and project boundaries.",
+  "branch": "integration/memory-core-clean-20261015",
+  "pr": {
+    "number": 27,
+    "url": "https://github.com/alexbotleh-oss/agent-knowledge-base/pull/27",
+    "state": "open",
+    "draft": true,
+    "merged": false,
+    "base": "main"
+  },
+  "source_code_checkpoint": {
+    "head": "7686f0d17f975200dd3b924f965b228da67c85e1",
+    "ci_run_id": 38748706421,
+    "ci_url": "https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38748706421",
+    "ci_conclusion": "success",
+    "tests": 194,
+    "skipped": 1,
+    "write_audit_mutation_sites": 76,
+    "write_audit_unclassified": 0
+  },
+  "confirmed_completed": [
+    "Resumable source-ingestion runner exists and has CI tests for dry-run, apply/replay, uncertain registry acknowledgement after crash, tampered ledger, and missing state projection reconstruction.",
+    "Archive staging to sanitized intake to metadata-only source registry is implemented.",
+    "Concurrent intake publication race was reproduced, fixed, and covered by a two-process regression test.",
+    "Strict write-contract audit is enabled in CI.",
+    "The runner explicitly stops at SOURCE_REGISTERED_DOWNSTREAM_PENDING and does not claim semantic promotion, canonical index refresh, or automatic next-session restore."
+  ],
+  "confirmed_open": [
+    {
+      "id": "OPEN-SEMANTIC-PROMOTION",
+      "description": "Inspect existing lifecycle/approval contracts. No canonical semantic-promotion executor was found in inspected tools. Specify and test an executor before implementing; never treat metadata-only source registration as accepted memory."
+    },
+    {
+      "id": "OPEN-CANONICAL-INDEX",
+      "description": "No verified canonical memory-index refresh executor is connected to the ingestion runner. archive_temporal_index.py is a read-only archive search/index, not a canonical memory index rebuild."
+    },
+    {
+      "id": "OPEN-RESTORE-ORCHESTRATION",
+      "description": "Restore reads project TASK_STATE.md, HANDOFF.md and events.jsonl; source registration does not automatically update or restore these records."
+    },
+    {
+      "id": "OPEN-PAIRED-CHECKPOINT",
+      "description": "TASK_STATE.md and HANDOFF.md are not protected by a single paired-write protocol. Their history contains stale checkpoints; the latest verified repository state must be compared with checkpoint metadata before resuming."
+    },
+    {
+      "id": "OPEN-REPORT-PERSISTENCE",
+      "description": "A report that was never durably written to the repository cannot be reconstructed verbatim after a network interruption. Future work must persist concise checkpoints after each material verified milestone and distinguish persisted records from undelivered response text."
+    }
+  ],
+  "next_action": "Implement a versioned, append-only canonical checkpoint record with atomic publication and recovery validation; then add behavioral tests and connect TASK_STATE/HANDOFF materialization without claiming two-file atomicity. After this protection is tested, continue semantic promotion and index/restore integration.",
+  "constraints": [
+    "Do not merge PR #27 or modify main without explicit user approval.",
+    "Do not delete or rewrite source-history exports without a separate explicit decision.",
+    "Keep project histories isolated; unknown project applicability remains unknown.",
+    "Preserve chronology, failed attempts, uncertainty, and source provenance.",
+    "No semantic record is accepted merely because source metadata was registered.",
+    "Never report CI success for a SHA other than the exact checked SHA."
+  ],
+  "status": "ACTIVE_PARTIAL",
+  "checkpoint_semantics": "This is a durable task checkpoint committed to the integration branch. It is not an automatic ChatGPT autosave or proof that an undelivered response was saved."
+}
