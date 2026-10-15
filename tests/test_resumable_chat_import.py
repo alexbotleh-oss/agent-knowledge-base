@@ -397,5 +397,32 @@ class ResumableChatImportTests(unittest.TestCase):
                 conn.close()
 
 
+    def test_two_concurrent_import_calls_are_serialized(self):
+        from concurrent.futures import ThreadPoolExecutor
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            source = self.make_source(root, 8)
+            out = root / "state"
+            with ThreadPoolExecutor(max_workers=2) as pool:
+                futures = [
+                    pool.submit(import_export, source, out, "ARCHIVE-CONCURRENT", batch_size=2),
+                    pool.submit(import_export, source, out, "ARCHIVE-CONCURRENT", batch_size=2),
+                ]
+                results = [future.result(timeout=30) for future in futures]
+            self.assertEqual({result["status"] for result in results}, {"RAW_COMPLETE"})
+            conn = sqlite3.connect(out / "import.sqlite3")
+            try:
+                count, distinct_count = conn.execute(
+                    "SELECT COUNT(*), COUNT(DISTINCT source_locator) FROM raw_conversations"
+                ).fetchone()
+                state = conn.execute(
+                    "SELECT status,next_ordinal,committed_conversations FROM imports"
+                ).fetchone()
+                self.assertEqual((count, distinct_count), (8, 8))
+                self.assertEqual(state, ("RAW_COMPLETE", 8, 8))
+            finally:
+                conn.close()
+
+
 if __name__ == "__main__":
     unittest.main()
