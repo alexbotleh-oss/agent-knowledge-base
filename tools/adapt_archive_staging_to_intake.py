@@ -215,7 +215,11 @@ def adapt_archive_staging_to_intake(snapshot_path: Path, output_root: Path | Non
         _durable_write(temp_dir / "manifest.json", manifest_bytes)
         try:
             temp_dir.rename(batch_dir)
-        except FileExistsError:
+        except OSError:
+            # Concurrent publishers may surface EEXIST or ENOTEMPTY depending
+            # on platform when the competing complete directory wins the race.
+            if not batch_dir.is_dir():
+                raise
             shutil.rmtree(temp_dir, ignore_errors=True)
             return _existing_batch_status(batch_dir, artifact_bytes, batch_id, raw_sha)
     finally:
