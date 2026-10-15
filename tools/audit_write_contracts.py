@@ -33,6 +33,7 @@ CONTRACTS = {
     "tools/adapt_archive_staging_to_intake.py": "derived intake batch publication: source hashes/counts checked; exclusive temp files, fsync, complete-directory rename; replay/conflict check; no canonical registry writes",
     "tools/source_evidence_registry.py": "metadata-only source registry append: strict target-path guard, source/manifest revalidation under exclusive lock, idempotent key/conflict checks, fsync and atomic replacement; no semantic promotion",
     "tools/source_ingestion_runner.py": "resumable orchestration ledger: OS advisory run lock, hash-chained transition ledger, atomic state projection, idempotent source-registry reconciliation after uncertain acknowledgement; explicitly stops before semantic promotion/index refresh/restore",
+    "tools/continuity_checkpoint_bundle.py": "paired TASK_STATE/HANDOFF checkpoint: immutable generation, hash-verified parent chain, single atomic CURRENT_CHECKPOINT pointer, OS lock, recoverable projections",
 }
 DEFAULT_MUTATING_SUFFIXES = (".md", ".jsonl", ".json", ".sqlite", ".db")
 
