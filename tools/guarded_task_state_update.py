@@ -38,7 +38,19 @@ def _load_event_ids(event_log: Path) -> set[str]:
     return ids
 
 
-def apply_checkpoint(task_state: Path, event_log: Path, proposal: dict[str, Any]) -> dict[str, Any]:
+def apply_checkpoint(
+    task_state: Path,
+    event_log: Path,
+    proposal: dict[str, Any],
+    *,
+    trust_verdict: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Apply a checkpoint only when an explicit trust-gate decision authorizes planning.
+
+    The verdict is an input contract, not cryptographic proof of its origin. Callers
+    must obtain it from context_trust_gate.authorize_next_step; this function fails
+    closed when it is absent, malformed, or not explicitly authorized.
+    """
     required = ("update_id", "expected_sha256", "parent_checkpoint_id", "event_id", "checkpoint_markdown")
     errors = [f"missing:{key}" for key in required if key not in proposal or proposal[key] is None]
     for key in ("update_id", "expected_sha256", "parent_checkpoint_id", "event_id", "checkpoint_markdown"):
@@ -80,14 +92,51 @@ def apply_checkpoint(task_state: Path, event_log: Path, proposal: dict[str, Any]
         return {"status": "REJECTED", "writes_performed": False,
                 "errors": ["event_id is not present in the canonical event log"]}
 
-    lock_path = task_state.with_name(task_state.name + ".lock")
+    # No-write validation (schema, path, idempotency, revision and event evidence)
+    # runs before trust authorization so callers receive precise conflict/stale
+    # statuses. The gate remains mandatory before any write attempt.
+    if not isinstance(trust_verdict, dict):
+        return {
+            "status": "BLOCKED",
+            "reason": "TrustPolicyViolated",
+            "trust_status": "MISSING_TRUST_VERDICT",
+            "writes_performed": False,
+        }
+    if trust_verdict.get("status") != "AUTHORIZED_FOR_PLANNING":
+        return {
+            "status": "BLOCKED",
+            "reason": "TrustPolicyViolated",
+            "trust_status": trust_verdict.get("status", "INVALID_TRUST_VERDICT"),
+            "writes_performed": False,
+        }
+
+    # Global lock order: journal lock -> task-state lock. Event registry writers
+    # acquire only the journal lock, so this order avoids lock-order cycles and
+    # keeps event evidence stable through the final trust check and state replace.
+    journal_lock_path = event_log.with_name(event_log.name + ".lock")
+    task_lock_path = task_state.with_name(task_state.name + ".lock")
+    acquired: list[Path] = []
     try:
-        lock_fd = os.open(lock_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
-    except FileExistsError:
-        return {"status": "LOCKED", "writes_performed": False, "error": f"Lock exists: {lock_path}"}
-    try:
-        os.close(lock_fd)
-        # Re-read under lock; a stale proposal must never overwrite a concurrent update.
+        for lock_path, label in (
+            (journal_lock_path, "Journal"),
+            (task_lock_path, "Task-state"),
+        ):
+            try:
+                lock_fd = os.open(lock_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+            except FileExistsError:
+                return {
+                    "status": "LOCKED",
+                    "writes_performed": False,
+                    "error": f"{label} lock exists: {lock_path}. Verify no writer is active before manual stale-lock recovery.",
+                }
+            acquired.append(lock_path)
+            with os.fdopen(lock_fd, "w", encoding="utf-8") as lock_stream:
+                lock_stream.write(json.dumps({"pid": os.getpid(), "started_at": __import__("datetime").datetime.now(__import__("datetime").timezone.utc).isoformat()}))
+                lock_stream.flush()
+                os.fsync(lock_stream.fileno())
+
+        # Re-read under both locks. The shared journal lock prevents the event
+        # registry from changing evidence until this operation completes.
         current = task_state.read_bytes()
         actual_hash = sha256_bytes(current)
         current_text = current.decode("utf-8")
@@ -97,6 +146,41 @@ def apply_checkpoint(task_state: Path, event_log: Path, proposal: dict[str, Any]
         if marker in current_text:
             return {"status": "ALREADY_APPLIED" if proposal["checkpoint_markdown"].strip() in current_text[current_text.index(marker):]
                     else "CONFLICT", "update_id": proposal["update_id"], "writes_performed": False}
+
+        # Trust is recomputed while both canonical files are protected by the
+        # lock protocol. HANDOFF is still externally mutable and not covered by
+        # these locks; source freshness checks therefore remain mandatory.
+        handoff_path = task_state.with_name("HANDOFF.md")
+        try:
+            from context_extractor import extract_semantic_context
+            from context_trust_gate import authorize_next_step
+            from restore_session_packet import build_session_packet
+
+            packet = build_session_packet(task_state, handoff_path, event_log)
+            current_context = extract_semantic_context(packet)
+            current_verdict = authorize_next_step(current_context)
+        except Exception as exc:
+            return {
+                "status": "BLOCKED",
+                "reason": "TrustPolicyViolated",
+                "trust_status": "TRUST_RECHECK_FAILED",
+                "details": str(exc),
+                "writes_performed": False,
+            }
+        if current_verdict.get("status") != "AUTHORIZED_FOR_PLANNING":
+            return {
+                "status": "BLOCKED",
+                "reason": "TrustPolicyViolated",
+                "trust_status": current_verdict.get("status", "INVALID_TRUST_VERDICT"),
+                "writes_performed": False,
+            }
+        try:
+            event_ids = _load_event_ids(event_log)
+        except ValueError as exc:
+            return {"status": "REJECTED", "writes_performed": False, "errors": [str(exc)]}
+        if proposal["event_id"] not in event_ids:
+            return {"status": "REJECTED", "writes_performed": False,
+                    "errors": ["event_id is not present in the canonical event log"]}
 
         block = (
             f"\n\n## Checkpoint update {proposal['update_id']}\n\n"
@@ -119,7 +203,10 @@ def apply_checkpoint(task_state: Path, event_log: Path, proposal: dict[str, Any]
                 "event_id": proposal["event_id"], "new_sha256": sha256_bytes(new_bytes),
                 "writes_performed": True}
     finally:
-        lock_path.unlink(missing_ok=True)
+        # Release in reverse acquisition order. Never break a lock automatically:
+        # a leftover lock requires operator inspection before recovery.
+        for lock_path in reversed(acquired):
+            lock_path.unlink(missing_ok=True)
 
 
 def main(argv=None) -> int:
@@ -127,9 +214,14 @@ def main(argv=None) -> int:
     parser.add_argument("task_state", type=Path)
     parser.add_argument("event_log", type=Path)
     parser.add_argument("proposal_json", type=Path)
+    parser.add_argument(
+        "--trust-verdict-json", type=Path, required=True,
+        help="JSON decision produced by context_trust_gate.py; only AUTHORIZED_FOR_PLANNING permits writes",
+    )
     args = parser.parse_args(argv)
     proposal = json.loads(args.proposal_json.read_text(encoding="utf-8"))
-    result = apply_checkpoint(args.task_state, args.event_log, proposal)
+    trust_verdict = json.loads(args.trust_verdict_json.read_text(encoding="utf-8"))
+    result = apply_checkpoint(args.task_state, args.event_log, proposal, trust_verdict=trust_verdict)
     print(json.dumps(result, ensure_ascii=False, indent=2))
     return 0 if result["status"] in {"APPLIED", "ALREADY_APPLIED"} else 2
 

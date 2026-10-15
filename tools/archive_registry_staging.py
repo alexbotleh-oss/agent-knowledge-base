@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Build local staging records from a ChatGPT export; never uploads source text."""
 from __future__ import annotations
-import argparse, hashlib, json, zipfile
+import argparse, contextlib, hashlib, json, os, zipfile
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -42,7 +42,7 @@ def load_export(source: Path) -> tuple[bytes, list[dict]]:
         raise ValueError("Export root must be a JSON array")
     return raw, payload
 
-def build(source: Path, output: Path, archive_id: str) -> dict:
+def _build_unlocked(source: Path, output: Path, archive_id: str) -> dict:
     raw, conversations = load_export(source)
     digest = sha256(raw)
     records, timestamps, seen = [], [], set()
@@ -94,8 +94,11 @@ def build(source: Path, output: Path, archive_id: str) -> dict:
             })
     records.sort(key=lambda x: (x["event_time_unix"] is None, x["event_time_unix"] or 0, x["source_locator"]))
     output.mkdir(parents=True, exist_ok=True)
-    record_path = output / "source_records.jsonl"
-    tmp_path = output / "source_records.jsonl.tmp"
+    # Versioned immutable generations prevent a crash between record and manifest
+    # publication from making the old manifest point at newly replaced records.
+    archive_key = sha256(archive_id.encode("utf-8"))[:12]
+    record_path = output / f"source_records.{archive_key}.{digest}.source-registry-staging-v1.jsonl"
+    tmp_path = output / (record_path.name + ".tmp")
     with tmp_path.open("w", encoding="utf-8", newline="\n") as stream:
         for record in records:
             stream.write(json.dumps(record, ensure_ascii=False, sort_keys=True) + "\n")
@@ -121,8 +124,44 @@ def build(source: Path, output: Path, archive_id: str) -> dict:
         "immutability": "raw-input-read-only; derived-output-rebuildable",
         "notes": "Local staging only. Do not commit private raw message text to a public repository."
     }
-    (output / "archive_snapshot.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    manifest_tmp = output / "archive_snapshot.json.tmp"
+    manifest_tmp.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    manifest_tmp.replace(output / "archive_snapshot.json")
     return manifest
+
+
+@contextlib.contextmanager
+def _exclusive_staging_lock(lock_path: Path):
+    """Serialize staging generations; advisory locks are released if a process exits."""
+    with lock_path.open("a+b") as stream:
+        if os.name == "nt":
+            import msvcrt
+            stream.seek(0)
+            if stream.read(1) == b"":
+                stream.seek(0)
+                stream.write(b"0")
+                stream.flush()
+            stream.seek(0)
+            msvcrt.locking(stream.fileno(), msvcrt.LK_LOCK, 1)
+            try:
+                yield
+            finally:
+                stream.seek(0)
+                msvcrt.locking(stream.fileno(), msvcrt.LK_UNLCK, 1)
+        else:
+            import fcntl
+            fcntl.flock(stream.fileno(), fcntl.LOCK_EX)
+            try:
+                yield
+            finally:
+                fcntl.flock(stream.fileno(), fcntl.LOCK_UN)
+
+
+def build(source: Path, output: Path, archive_id: str) -> dict:
+    output.mkdir(parents=True, exist_ok=True)
+    with _exclusive_staging_lock(output / ".archive_registry_staging.lock"):
+        return _build_unlocked(source, output, archive_id)
+
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)

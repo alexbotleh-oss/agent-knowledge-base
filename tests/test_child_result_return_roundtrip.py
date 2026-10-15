@@ -10,6 +10,9 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
 from branch_result_registry import acknowledge_result, publish_result
 from guarded_task_state_update import apply_checkpoint, sha256_bytes
+from context_extractor import extract_semantic_context
+from context_trust_gate import authorize_next_step
+from restore_session_packet import build_session_packet
 
 
 class ChildResultReturnRoundTripTests(unittest.TestCase):
@@ -21,7 +24,9 @@ class ChildResultReturnRoundTripTests(unittest.TestCase):
             event_log = project / "events.jsonl"
             task_state = project / "TASK_STATE.md"
             event_log.write_text("", encoding="utf-8")
-            task_state.write_text("# Task state\n\nParent checkpoint CKPT-1.\n", encoding="utf-8")
+            task_state.write_text("# Task state\n- **Активная задача в текущей сессии:** проверить результат дочерней ветки\n- **Следующий шаг:** проверить подтверждение владельца\n\nParent checkpoint CKPT-1.\n", encoding="utf-8")
+            handoff = project / "HANDOFF.md"
+            handoff.write_text("# HANDOFF\n- **Следующий шаг:** проверить подтверждение владельца\n", encoding="utf-8")
 
             result_payload = {
                 "child_branch_id": "CHILD-1",
@@ -46,6 +51,9 @@ class ChildResultReturnRoundTripTests(unittest.TestCase):
             )
             self.assertEqual(ack["status"], "ACKNOWLEDGED")
 
+            task_state.write_text(task_state.read_text(encoding="utf-8") + f"\n- **Последнее событие:** {ack['event_id']}\n", encoding="utf-8")
+            packet = build_session_packet(task_state, handoff, event_log)
+            verdict = authorize_next_step(extract_semantic_context(packet))
             proposal = {
                 "update_id": "UPDATE-1",
                 "expected_sha256": sha256_bytes(task_state.read_bytes()),
@@ -53,8 +61,8 @@ class ChildResultReturnRoundTripTests(unittest.TestCase):
                 "event_id": ack["event_id"],
                 "checkpoint_markdown": "- Child result accepted by owner; parent goal remains open until its remaining criteria are checked.",
             }
-            applied = apply_checkpoint(task_state, event_log, proposal)
-            repeated = apply_checkpoint(task_state, event_log, proposal)
+            applied = apply_checkpoint(task_state, event_log, proposal, trust_verdict=verdict)
+            repeated = apply_checkpoint(task_state, event_log, proposal, trust_verdict=verdict)
             rows = [json.loads(line) for line in event_log.read_text(encoding="utf-8").splitlines()]
             state_text = task_state.read_text(encoding="utf-8")
 
@@ -74,7 +82,9 @@ class ChildResultReturnRoundTripTests(unittest.TestCase):
             event_log = project / "events.jsonl"
             task_state = project / "TASK_STATE.md"
             event_log.write_text(json.dumps({"event_id": "EVT-1", "type": "cross_branch_result"}) + "\n", encoding="utf-8")
-            task_state.write_text("# Initial\n", encoding="utf-8")
+            task_state.write_text("# Initial\n- **Активная задача в текущей сессии:** проверить устаревшую ревизию\n- **Следующий шаг:** повторно проверить контрольную точку\n- **Последнее событие:** EVT-1\n", encoding="utf-8")
+            handoff = project / "HANDOFF.md"
+            handoff.write_text("# HANDOFF\n- **Следующий шаг:** повторно проверить контрольную точку\n", encoding="utf-8")
             proposal = {
                 "update_id": "UPDATE-2",
                 "expected_sha256": sha256_bytes(task_state.read_bytes()),
@@ -82,14 +92,18 @@ class ChildResultReturnRoundTripTests(unittest.TestCase):
                 "event_id": "EVT-1",
                 "checkpoint_markdown": "- New child result was reviewed.",
             }
-            task_state.write_text("# Parent changed while child work was running.\n", encoding="utf-8")
+            task_state.write_text("# Parent changed while child work was running.\n- **Активная задача в текущей сессии:** проверить устаревшую ревизию\n- **Следующий шаг:** повторно проверить контрольную точку\n- **Последнее событие:** EVT-1\n", encoding="utf-8")
             before = task_state.read_bytes()
-            stale = apply_checkpoint(task_state, event_log, proposal)
+            packet = build_session_packet(task_state, handoff, event_log)
+            verdict = authorize_next_step(extract_semantic_context(packet))
+            stale = apply_checkpoint(task_state, event_log, proposal, trust_verdict=verdict)
             self.assertEqual(stale["status"], "STALE_REVISION")
             self.assertEqual(task_state.read_bytes(), before)
 
             refreshed = dict(proposal, expected_sha256=sha256_bytes(task_state.read_bytes()))
-            retried = apply_checkpoint(task_state, event_log, refreshed)
+            refreshed_packet = build_session_packet(task_state, handoff, event_log)
+            refreshed_verdict = authorize_next_step(extract_semantic_context(refreshed_packet))
+            retried = apply_checkpoint(task_state, event_log, refreshed, trust_verdict=refreshed_verdict)
             self.assertEqual(retried["status"], "APPLIED")
             self.assertIn("Parent changed while child work was running.", task_state.read_text(encoding="utf-8"))
 
