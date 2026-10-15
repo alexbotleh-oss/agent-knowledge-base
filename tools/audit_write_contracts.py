@@ -35,6 +35,7 @@ CONTRACTS = {
     "tools/source_ingestion_runner.py": "resumable orchestration ledger: OS advisory run lock, hash-chained transition ledger, atomic state projection, idempotent source-registry reconciliation after uncertain acknowledgement; explicitly stops before semantic promotion/index refresh/restore",
     "tools/continuity_checkpoint_bundle.py": "paired TASK_STATE/HANDOFF checkpoint: immutable generation, hash-verified parent chain, single atomic CURRENT_CHECKPOINT pointer, OS lock, recoverable projections",
     "tools/turn_lifecycle_ledger.py": "protected local append-only turn journal: advisory lock, fsync, exact-input hash, explicit lifecycle states, fail-closed corrupt journal; workspace artifact scan is read-only and ownership remains UNKNOWN",
+    "tools/turn_lifecycle_adapter.py": "authenticated local HTTP adapter: request/response socket writes are protocol output, while all durable state changes delegate to the protected turn lifecycle ledger; loopback by default, bearer auth, body/origin validation",
 }
 DEFAULT_MUTATING_SUFFIXES = (".md", ".jsonl", ".json", ".sqlite", ".db")
 
