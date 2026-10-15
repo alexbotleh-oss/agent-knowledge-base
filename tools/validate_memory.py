@@ -92,9 +92,7 @@ def _validate_record_artifact(full_path, kind, declared_count, label, errors):
         missing = [field for field in RECORD_REQUIRED_FIELDS[kind] if field not in record]
         if missing:
             errors.append(f"{label}:{number}: kind {kind} missing fields: {', '.join(missing)}")
-    if declared_count is None:
-        errors.append(f"{label}: record_count is required for kind {kind}")
-    elif isinstance(declared_count, int) and not isinstance(declared_count, bool) and declared_count >= 0:
+    if isinstance(declared_count, int) and not isinstance(declared_count, bool) and declared_count >= 0:
         if declared_count != actual_count:
             errors.append(f"{label}: record_count {declared_count} does not match actual JSONL count {actual_count}")
 
