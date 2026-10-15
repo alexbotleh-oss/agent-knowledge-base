@@ -30,6 +30,8 @@ CONTRACTS = {
     "tools/reconcile_branch_returns.py": "reconciliation report: derived/read-only report contract; must not mutate canonical task state",
     "tools/archive_temporal_index.py": "derived temporal index: rebuildability and source provenance required",
     "tools/plan_memory_intake.py": "planning output: proposal only; no canonical write authorization",
+    "tools/adapt_archive_staging_to_intake.py": "derived intake batch publication: source hashes/counts checked; exclusive temp files, fsync, complete-directory rename; replay/conflict check; no canonical registry writes",
+    "tools/source_evidence_registry.py": "metadata-only source registry append: strict target-path guard, source/manifest revalidation under exclusive lock, idempotent key/conflict checks, fsync and atomic replacement; no semantic promotion",
 }
 DEFAULT_MUTATING_SUFFIXES = (".md", ".jsonl", ".json", ".sqlite", ".db")
 

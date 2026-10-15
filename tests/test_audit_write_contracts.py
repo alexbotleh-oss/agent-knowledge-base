@@ -49,6 +49,12 @@ class TestAuditWriteContracts(unittest.TestCase):
             [("publish", "replace")],
         )
 
+    def test_adapter_and_source_registry_mutations_have_explicit_contracts(self):
+        self.assertIn("tools/adapt_archive_staging_to_intake.py", audit_module.CONTRACTS)
+        self.assertIn("tools/source_evidence_registry.py", audit_module.CONTRACTS)
+        self.assertNotEqual(audit_module.CONTRACTS["tools/adapt_archive_staging_to_intake.py"], "UNCLASSIFIED")
+        self.assertNotEqual(audit_module.CONTRACTS["tools/source_evidence_registry.py"], "UNCLASSIFIED")
+
     def test_untyped_path_parameter_is_not_guessed_as_path(self):
         # Conservative boundary: no false claim of a filesystem write without path evidence.
         hits = operations(
