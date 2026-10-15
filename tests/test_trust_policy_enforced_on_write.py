@@ -182,8 +182,8 @@ while not go_file.exists():
         raise SystemExit("start barrier timed out")
     time.sleep(0.005)
 print(json.dumps(apply_checkpoint(task_state, events, proposal, trust_verdict=verdict)))
-\''' 
-        import os
+'''
+
         import subprocess
 
         command_args = [
