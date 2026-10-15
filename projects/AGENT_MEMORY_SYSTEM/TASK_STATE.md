@@ -497,3 +497,14 @@ Tests added for first pass, completed replay, and a changed source under the sam
 - **Completed:** scope guard changes and tests ported; 12 mutation sites located and classified; four behavior tests added; write-contract documentation updated; source files read back after writes.
 - **Next action:** verify GitHub Actions on the final exact HEAD after this checkpoint write. If green, inspect the audit output/strict exit and then test or document the remaining adapter concurrency and downstream pipeline gaps. Do not merge or modify `main`.
 - **Status:** ACTIVE / PARTIAL. Checkpoint is manual; no automatic background save is claimed.
+
+
+## Validation checkpoint — 2026-10-15, write-contract fix verified
+
+- **Exact validated code HEAD:** `18b605a4dd88dff81aa9188d1e1abd2b862f9d79` on `integration/memory-core-clean-20261015`; GitHub Actions run [#38746665445](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38746665445) completed `success`.
+- **CI evidence:** 187 tests ran; result `OK (skipped=1)`. The static write audit printed `Mutation sites: 67; unclassified: 0`. This confirms classification coverage for the current scanner's 67 detected sites; it does not prove that the scanner detects every possible write path or that every operation is race-free.
+- **Failure/correction preserved:** prior run #38746560137 failed one newly added test because the adapter raises `ValueError` on a staging hash mismatch rather than returning a status object. The test was corrected to assert the actual exception contract and verify no intake directory was published. The corrected test passed in run #38746665445.
+- **Scope-guard result:** the later PR #26 cross-project trust changes are now present on PR #27; run #38746426334 passed on the scope-guard code commit before the subsequent write-contract tests were added.
+- **Current limits:** PR #27 remains Draft and unmerged. Adapter concurrent same-batch publication is not serialized by a shared lock; source registry stale-lock recovery remains manual; semantic promotion/index refresh/next-session restore are not a fully verified end-to-end chain. No main changes.
+- **Next action:** refresh live PR HEAD after this checkpoint write, verify checkpoint read-back, then check exact-head CI for the checkpoint commit. Continue only from that live state; no merge without explicit approval.
+- **Status:** ACTIVE / PARTIAL. Manual checkpoint, not automatic background save.
