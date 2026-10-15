@@ -173,6 +173,90 @@ class MinimalAgentLoopTests(unittest.TestCase):
         self.assertEqual(candidate["applicability_gate"], "PROJECT_SCOPE_UNKNOWN")
         self.assertEqual(candidate["transfer_decision"], "UNASSESSED")
 
+    def test_evidence_quality_gate_requires_review_and_never_auto_accepts_verified(self):
+        self._write_events(self.experience, [
+            {
+                "event_id": "EVT-VERIFIED-WITH-REF",
+                "project_id": "CARD111",
+                "summary": "QR cache recovery verified",
+                "status": "verified",
+                "evidence": [{"kind": "test", "ref": "tests/test_cache.py"}],
+            },
+            {
+                "event_id": "EVT-VERIFIED-NO-REF",
+                "project_id": "CARD111",
+                "summary": "QR cache recovery verified",
+                "status": "verified",
+            },
+            {
+                "event_id": "EVT-OBSERVED",
+                "project_id": "CARD111",
+                "summary": "QR cache recovery observed",
+                "status": "observed",
+            },
+            {
+                "event_id": "EVT-REPORTED",
+                "project_id": "CARD111",
+                "summary": "QR cache recovery reported",
+                "status": "reported",
+            },
+            {
+                "event_id": "EVT-DISPUTED",
+                "project_id": "CARD111",
+                "summary": "QR cache recovery disputed",
+                "status": "verified",
+                "lifecycle_status": "disputed",
+                "evidence": [{"kind": "test", "ref": "tests/test_cache.py"}],
+            },
+            {
+                "event_id": "EVT-OTHER-SCOPE",
+                "project_id": "ORGANISM",
+                "summary": "QR cache recovery verified",
+                "status": "verified",
+                "evidence": [{"kind": "test", "ref": "tests/test_cache.py"}],
+            },
+        ])
+        result = retrieve_experience_candidates(
+            "QR cache recovery", [self.experience], current_project_id="CARD111"
+        )
+        by_id = {item["event_id"]: item for item in result["candidates"]}
+
+        self.assertEqual(
+            by_id["EVT-VERIFIED-WITH-REF"]["evidence_quality"]["state"],
+            "VERIFIED_LABEL_WITH_EVIDENCE_POINTERS",
+        )
+        self.assertEqual(
+            by_id["EVT-VERIFIED-WITH-REF"]["candidate_review_gate"],
+            "SCOPE_MATCHED_VERIFIED_LABEL_WITH_REFS_REVIEW_REQUIRED",
+        )
+        self.assertEqual(
+            by_id["EVT-VERIFIED-NO-REF"]["evidence_quality"]["state"],
+            "VERIFIED_LABEL_WITHOUT_EVIDENCE_POINTERS",
+        )
+        self.assertEqual(
+            by_id["EVT-VERIFIED-NO-REF"]["candidate_review_gate"],
+            "SCOPE_MATCHED_VERIFIED_LABEL_NO_REFS_REVIEW_REQUIRED",
+        )
+        self.assertEqual(
+            by_id["EVT-OBSERVED"]["candidate_review_gate"],
+            "SCOPE_MATCHED_OBSERVED_NO_REFS_REVIEW_REQUIRED",
+        )
+        self.assertEqual(
+            by_id["EVT-REPORTED"]["candidate_review_gate"],
+            "SCOPE_MATCHED_LOW_EVIDENCE_REVIEW_REQUIRED",
+        )
+        self.assertEqual(
+            by_id["EVT-DISPUTED"]["candidate_review_gate"],
+            "SCOPE_MATCHED_DISPUTED_REQUIRES_CONFLICT_REVIEW",
+        )
+        self.assertEqual(
+            by_id["EVT-OTHER-SCOPE"]["candidate_review_gate"],
+            "OUT_OF_PROJECT_SCOPE",
+        )
+        self.assertTrue(all(item["transfer_decision"] == "UNASSESSED" for item in by_id.values()))
+        self.assertTrue(result["applicability_policy"]["verified_label_alone_is_never_sufficient"])
+        self.assertTrue(result["applicability_policy"]["evidence_quality_is_metadata_not_claim_validation"])
+
     def test_disputed_and_conflicting_candidates_are_retained_separately(self):
         self._write_events(self.experience, [
             {
