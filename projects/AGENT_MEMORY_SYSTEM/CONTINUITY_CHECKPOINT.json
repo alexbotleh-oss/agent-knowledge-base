@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "checkpoint_id": "CKPT-AGMS-20261015-INTERRUPTION-RECOVERY-02",
+  "checkpoint_id": "CKPT-AGMS-20261015-INTERRUPTION-RECOVERY-03",
   "project_id": "AGENT_MEMORY_SYSTEM",
   "task_id": "AGMS-2026-10-15-MEMORY-PIPELINE-CONTINUITY",
   "recorded_at": "2026-10-15",
@@ -36,7 +36,9 @@
     "Added tools/continuity_checkpoint_bundle.py: immutable paired TASK_STATE/HANDOFF generation, hash-linked parent generations, atomic CURRENT_CHECKPOINT pointer as the commit point, OS-managed lock, drift verification, and replay recovery after interruption.",
     "Added six behavioral tests covering capture/verify, interruption after pointer publication, paired projection recovery, idempotent replay, parent-chain preservation, tamper rejection, and missing-pointer fail-closed behavior (five named test methods plus idempotent replay; total six tests).",
     "Added strict write-contract classification for the checkpoint bundle and documented capture/verify/recover usage in core/agent_runtime_protocol.md.",
-    "Exact-head CI for 30be5e944d6dd2d8a60395626b52ef07ff898640 passed: 201 tests, one skipped; 85 mutation sites, zero unclassified."
+    "Exact-head CI for 30be5e944d6dd2d8a60395626b52ef07ff898640 passed: 201 tests, one skipped; 85 mutation sites, zero unclassified.",
+    "Updated TASK_STATE.md and HANDOFF.md with a current continuation checkpoint and the next single action; preserved prior checkpoint history rather than replacing it.",
+    "Appended implementation event EVT-AGMS-20261015-001 to the AGENT_MEMORY_SYSTEM event journal."
   ],
   "confirmed_open": [
     {
@@ -60,7 +62,7 @@
       "description": "A report that was never durably written to the repository cannot be reconstructed verbatim after a network interruption. Future work must persist concise checkpoints after each material verified milestone and distinguish persisted records from undelivered response text."
     }
   ],
-  "next_action": "Append a new authoritative continuation checkpoint to TASK_STATE.md and HANDOFF.md and record the implementation event; then inspect memory-record schemas and lifecycle/approval gates to specify semantic promotion, canonical index refresh, and next-session restore contracts. Do not mark end-to-end memory processing complete until these stages are implemented and tested.",
+  "next_action": "On resume, re-fetch the live PR #27 HEAD and exact-head CI first. Then inspect semantic record schemas, templates, existing canonical registries and approval gates; design a no-guessing promotion contract and acceptance tests. Keep the end-to-end status PARTIAL until approved promotion, canonical index refresh and restore are connected and tested.",
   "constraints": [
     "Do not merge PR #27 or modify main without explicit user approval.",
     "Do not delete or rewrite source-history exports without a separate explicit decision.",
@@ -70,5 +72,16 @@
     "Never report CI success for a SHA other than the exact checked SHA."
   ],
   "status": "ACTIVE_PARTIAL",
-  "checkpoint_semantics": "This is a durable task checkpoint committed to the integration branch. It is not an automatic ChatGPT autosave or proof that an undelivered response was saved."
+  "checkpoint_semantics": "This is a durable task checkpoint committed to the integration branch. It is not an automatic ChatGPT autosave or proof that an undelivered response was saved.",
+  "repository_state": {
+    "last_verified_branch_head": "b26e8ea0c4520772da19c2c7c136fbd1bbb2f50d",
+    "exact_head_ci_run_id": 38750795948,
+    "exact_head_ci_url": "https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38750795948",
+    "exact_head_ci_conclusion": "success",
+    "tests": 201,
+    "skipped": 1,
+    "write_audit_mutation_sites": 85,
+    "write_audit_unclassified": 0,
+    "note": "This is the last verified branch head before this checkpoint-only update. Always re-fetch live PR HEAD and CI on resume."
+  }
 }
