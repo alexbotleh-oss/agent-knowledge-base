@@ -61,7 +61,7 @@ These are test-backed constraints, not a claim that every failure mode is covere
 
 ## Recovery dependencies (verified invariants)
 
-Every interruption/restart test must verify recovery **and** preservation of all three stable import contracts above. Reaching `RAW_COMPLETE` is not sufficient if previously committed records, event timestamps, checksums, source identity, or checkpoint state were changed.
+The recovery test suite must collectively verify recovery **and** preservation of all three stable import contracts above. Not every scenario exercises every principle independently; the scenario-specific assertions and boundaries below define exactly what each test proves. Reaching `RAW_COMPLETE` is not sufficient if previously committed records, event timestamps, checksums, source identity, or checkpoint state were changed.
 
 - **PRINCIPLE 1 — idempotency:** previously committed rows and their payload checksums/import timestamps remain unchanged; previously committed event rows and timestamps remain unchanged; a failed uncommitted batch does not advance the durable cursor or duplicate records when retried.
 - **PRINCIPLE 2 — logical-source separation:** different `archive_id` values must retain independent event histories, records, and checkpoints even when source bytes/digests match and one process is interrupted.
@@ -121,7 +121,7 @@ This does not cover manual edits, arbitrary external scripts, editor/IDE writes,
 - `generate_report.sh` now rejects the known canonical-memory filenames (`HANDOFF.md`, `TASK_STATE.md`, `PROJECT_STATE.md`, `DECISIONS.md`, `LESSONS.md`, `EVENT_LOG.md`, `events.jsonl`, `lessons.jsonl`) as report targets. The regression test passed in CI run #537 on the exact HEAD recorded in `core/memory_write_contracts.md`; the basename guard does not replace a complete writer audit.
 - `install_into_repo.sh` can populate a missing HANDOFF but is configured not to overwrite existing files.
 - The guarded checkpoint's trust check does not make HANDOFF mutation atomic with TASK_STATE mutation. Until HANDOFF has a shared mutation protocol or immutable/versioned source reference, this remains an explicit limitation.
-- Next audit step: review caller documentation and all invocation sites for `generate_report.sh` and `install_into_repo.sh`; retain the target-guard regression in CI; then test importer/archive restart and collision behavior. Do not claim complete writer coverage based on this partial static audit.
+- Next audit step: run a branch-local search across all tracked files for `generate_report.sh`, `install_into_repo.sh`, wrappers, indirect `bash`/`sh` calls, and explicit output targets. Importer restart, source-collision, changed-source, and concurrent-lock scenarios are now covered by the tests listed above, within their stated boundaries. Do not claim complete writer coverage based on this partial static audit.
 
 
 ## Caller / invocation audit (limited to files read at this revision)
@@ -133,4 +133,28 @@ This does not cover manual edits, arbitrary external scripts, editor/IDE writes,
 | Repository documentation/scripts searched in this pass | No `install_into_repo.sh` invocation identified in the inspected content | No caller found in inspected content; coverage incomplete | The installer is a manually invoked utility taking only a destination repository argument. Its `rsync --ignore-existing` option protects existing destination files, but creation of a missing canonical file is still possible. |
 | External/manual callers | Unknown | Outside repository-static scope | A local grep over the complete checked-out branch would be needed to establish a broader invocation inventory. GitHub code search used here indexes the default branch, so it is not sufficient evidence for all callers on this PR branch. |
 
-This caller inventory is deliberately scoped: it records only source files actually read and does not claim repository-wide exhaustive search. Before declaring the invocation audit complete, run a branch-local search across tracked files for both script names, shell wrappers, and indirect `bash`/`sh` invocations; record exact line numbers and every explicit output target. CI run #540 passed on reviewed HEAD `165c39a69549af3c1f04ece75e7d930a8ee40f60`; the current documentation follow-up does not yet have a confirmed CI result.
+This caller inventory is deliberately scoped: it records only source files actually read and does not claim repository-wide exhaustive search. Before declaring the invocation audit complete, run a branch-local search across tracked files for both script names, shell wrappers, and indirect `bash`/`sh` invocations; record exact line numbers and every explicit output target. CI run #540 passed on reviewed HEAD `165c39a69549af3c1f04ece75e7d930a8ee40f60`. The later documentation HEAD `f6ec021e7d99f49ac6b9e75e692fe2eb0cf58f22` passed validation in CI run [#566](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38695331178). This validates the repository's configured checks at that exact HEAD; it does not make the caller inventory exhaustive.
+
+
+## Remaining-risk audit at HEAD `f6ec021e7d99f49ac6b9e75e692fe2eb0cf58f22`
+
+This is a scoped audit of evidence available in the current branch, not a claim of complete system reliability.
+
+| Area | Disposition | Evidence / reason |
+| --- | --- | --- |
+| Completed-source replay with the same `archive_id` and bytes | **Covered** | `test_completed_exact_source_is_not_reimported`; CI #548 passed on its exact test commit. The test compares persisted rows, event history/timestamps, and checkpoint state before and after replay. |
+| Identical bytes under different `archive_id` values | **Covered** | `test_same_source_bytes_with_different_archive_ids_are_independent`; CI #551 passed on its exact test commit. |
+| Abrupt process exit during an uncommitted SQLite batch | **Covered** | `test_process_crash_mid_batch_rolls_back_uncommitted_rows_and_resumes`; CI #556 passed on its exact test commit. |
+| Concurrent same-source import after lock-holder crash | **Covered** | `test_concurrent_same_source_recovers_after_lock_holder_crashes`; CI #559 passed on its exact test commit. Scope: cooperating importer processes on the tested Ubuntu runner. |
+| Restart in a fresh interpreter from a committed checkpoint | **Covered** | `test_fresh_process_restarts_from_committed_checkpoint_without_rewriting_prefix`; CI #565 passed on the exact test HEAD. The documentation update then passed CI #566 on the current HEAD. |
+| Source bytes change between import passes | **Covered for the tested behavior** | `test_same_operation_with_changed_source_is_new_snapshot_not_resume` exists in the current test file. This is not a guarantee for arbitrary external edits to the SQLite database or snapshot files. |
+| Stale/replayed batch attempting to move the cursor backwards | **Covered for the tested path** | `test_stale_replayed_batch_does_not_regress_checkpoint` exists in the current test file. |
+| Direct SQLite writes, manual database edits, non-cooperating writers | **Intentionally outside the importer contract** | They bypass the importer entry point and its lock/transaction protocol. Do not describe importer tests as protecting against these actors. |
+| Power loss, disk failure, database/WAL corruption, arbitrary OS/filesystem/kernel faults | **Intentionally not covered** | Current tests inject process termination at controlled points; they do not simulate hardware or storage failure. Add such testing only if these failure modes become explicit product requirements and can be tested meaningfully. |
+| Windows/macOS and other filesystem locking semantics | **Not established by current CI evidence** | The documented crash/concurrency evidence is from Ubuntu 24.04. If cross-platform support is a release requirement, add a platform matrix and targeted lock/recovery checks; otherwise retain this as a stated boundary. |
+| `HANDOFF.md` changing between trust re-check and `TASK_STATE.md` replacement | **Known open race; requires design decision** | The current lock protocol does not lock or version `HANDOFF.md`. A test can demonstrate the race, but a durable fix likely needs a shared mutation protocol or immutable/versioned source reference. Do not claim atomicity across these files. |
+| Complete inventory of report/installer callers and indirect invocation paths | **Audit still required** | The current caller inventory is explicitly partial. Run a branch-local search over tracked files and record all call sites/targets before declaring the writer audit complete. |
+
+### Audit conclusion
+
+The current importer recovery evidence is sufficient to document the five named recovery/idempotency/source-identity scenarios within their boundaries. **No additional importer crash scenario is justified solely to increase the test count.** The next meaningful action is to close the branch-local caller inventory and decide whether the known `HANDOFF.md`/ `TASK_STATE.md` race is in scope for this PR. Hardware/storage failures and direct database mutation remain explicit exclusions unless the requirements change.
