@@ -211,7 +211,9 @@ def _validate_evidence_sources(
     }
 
 
-def _candidate_review_gate(\n    scope_match: str, evidence_state: str, source_status: str\n) -> str:
+def _candidate_review_gate(
+    scope_match: str, evidence_state: str, source_status: str
+) -> str:
     """Combine explicit project scope with metadata quality without granting applicability."""
     if scope_match == "MISMATCH":
         return "OUT_OF_PROJECT_SCOPE"
