@@ -120,6 +120,12 @@ This is a repository-level recovery primitive. It does not automatically capture
 
 
 
+## Guarded writer and paired-checkpoint contract
+
+`tools/guarded_task_state_update.py` must report the paired-checkpoint outcome, not imply that an atomic write to TASK_STATE.md also commits HANDOFF.md. After a successful same-project update, it invokes `continuity_checkpoint_bundle.py` and returns `APPLIED` only when the paired bundle is confirmed. If the target project's canonical `events.jsonl` is missing, the supporting event log belongs to another project, or bundle capture fails, the task-state update has already occurred and the result must be `APPLIED_CHECKPOINT_PENDING` with the reason attached. Callers must not treat that status as a fully checkpointed success.
+
+Cross-project evidence must not be copied into the target project's event journal to satisfy the bundle. A target project needs its own canonical event record and journal before a paired checkpoint can be confirmed. Idempotent replay of a previously applied task-state update is reported separately as `ALREADY_APPLIED`; that status alone is not proof that a paired checkpoint is current. The checkpoint bundle remains the recovery commit point for its captured TASK_STATE/HANDOFF pair.
+
 ## TURN LIFECYCLE AND BOUNDED EXECUTION
 
 For environments with observed long-session/network interruptions, follow `core/turn_lifecycle_and_interruption_recovery.md`. Use 10–12 minute work slices as a risk target, persist each material verified milestone, and stop before beginning another large phase. On resume, inspect open turn states and correlate suspicious empty/partial artifacts with event history, checkpoint, Git and CI. Never infer “no work happened” merely because no report is visible; never infer delivery without a real acknowledgement. The lifecycle ledger is a callable primitive only: automatic ChatGPT message capture and delivery acknowledgement require a client/platform integration and must not be claimed before verified.
