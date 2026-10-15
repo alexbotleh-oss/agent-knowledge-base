@@ -106,9 +106,14 @@ def make_handler(ledger_path: Path, token: str, allowed_origins: set[str]):
                 return
             if parsed.path == "/v1/turns":
                 query = parse_qs(parsed.query)
-                result = inspect(ledger_path)
+                try:
+                    result = inspect(ledger_path)
+                except (OSError, ValueError):
+                    self._send(500, {"status": "ERROR", "error": "ledger_unavailable_or_corrupt"}, origin=self.headers.get("Origin"))
+                    return
                 if query.get("incomplete", ["false"])[0].lower() in {"1", "true", "yes"}:
                     result["turns"] = [t for t in result["turns"] if t["turn_id"] in result["incomplete_turn_ids"]]
+                    result["incomplete_turn_ids"] = [t["turn_id"] for t in result["turns"]]
                 self._send(200, result, origin=self.headers.get("Origin"))
                 return
             if parsed.path.startswith("/v1/turns/"):
@@ -116,9 +121,13 @@ def make_handler(ledger_path: Path, token: str, allowed_origins: set[str]):
                 if not turn_id or "/" in turn_id:
                     self._send(400, {"status": "ERROR", "error": "invalid_turn_id"})
                     return
-                result = inspect(ledger_path, turn_id)
+                try:
+                    result = inspect(ledger_path, turn_id)
+                except (OSError, ValueError):
+                    self._send(500, {"status": "ERROR", "error": "ledger_unavailable_or_corrupt"}, origin=self.headers.get("Origin"))
+                    return
                 if not result["turns"]:
-                    self._send(404, {"status": "ERROR", "error": "turn_not_found"})
+                    self._send(404, {"status": "ERROR", "error": "turn_not_found"}, origin=self.headers.get("Origin"))
                     return
                 self._send(200, result["turns"][0], origin=self.headers.get("Origin"))
                 return
