@@ -81,7 +81,7 @@
       "description": "The ChatGPT web extension is a prototype verified by static CI only. Must be installed and tested in the user's actual Yandex Browser Android version. Verify send gate (no send before durable receipt), exact text and prior assistant message capture, interrupted connection recovery, response DOM detection, multiple incomplete turns, extension restart, and UI-selector drift. Until these pass, do not claim end-to-end capture is operational."
     }
   ],
-  "next_action": "Await the user's independent AI-agent analyses. When supplied, compare them against the verified repository state, distinguish facts from hypotheses and unknowns, and compile a decision brief before choosing the successor-repository plan.",
+  "next_action": "P1: make the historical source checkpoint, latest verified code HEAD/CI, and metadata revision unambiguous in task state, handoff, checkpoint JSON, and PR description; then read back the resulting revision and report exact evidence.",
   "constraints": [
     "Do not merge PR #27 or modify main without explicit user approval.",
     "Do not delete or rewrite source-history exports without a separate explicit decision.",
@@ -93,6 +93,19 @@
   "status": "ACTIVE_PARTIAL",
   "checkpoint_semantics": "This is a durable task checkpoint committed to the integration branch. It is not an automatic ChatGPT autosave or proof that an undelivered response was saved.",
   "repository_state": {
+    "last_verified_code_head": "86c18cfd6266517c2a3488bddf21b7f65ea339fa",
+    "exact_head_ci_run_id": 38804578271,
+    "exact_head_ci_url": "https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38804578271",
+    "exact_head_ci_conclusion": "success",
+    "python_tests": 232,
+    "python_skipped": 1,
+    "node_tests": 4,
+    "write_audit_mutation_sites": 92,
+    "write_audit_unclassified": 0,
+    "extension_js_syntax": "PASS",
+    "note": "This is the latest verified code HEAD as of 2026-10-15, before the P1 metadata-only update. CI evidence applies only to this exact code SHA; subsequent metadata commits do not imply code changed or that CI ran on those metadata-only commits."
+  },
+  "historical_repository_state": {
     "last_verified_code_head": "e30450a5ed516ab1f76f65c3c7874cdd2b951c40",
     "exact_head_ci_run_id": 38772804206,
     "exact_head_ci_url": "https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38772804206",
@@ -104,5 +117,11 @@
     "write_audit_unclassified": 0,
     "extension_js_syntax": "PASS",
     "note": "Exact-head CI verifies code HEAD e30450a5ed516ab1f76f65c3c7874cdd2b951c40. Following commits update checkpoint/task/handoff metadata only; application code remains unchanged."
+  },
+  "revision_semantics": {
+    "source_code_checkpoint": "Historical milestone retained in the original source_code_checkpoint object; it is not the current code HEAD.",
+    "latest_verified_code_head": "repository_state.last_verified_code_head; paired only with repository_state.exact_head_ci_run_id and its exact-head result.",
+    "metadata_revision": "The Git commit containing this metadata is the authoritative metadata revision. It is intentionally not embedded as a self-referential SHA in this file; record the resulting commit SHA in the handoff and PR description after write/read-back.",
+    "chronology_rule": "Do not overwrite earlier checkpoint evidence when a newer code or metadata revision appears. Append a new verification record or preserve the earlier state under historical_repository_state."
   }
 }
