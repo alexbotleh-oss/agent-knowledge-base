@@ -239,6 +239,14 @@ def apply_checkpoint(
 
             packet = build_session_packet(task_state, handoff_path, event_log)
             current_context = extract_semantic_context(packet)
+            event_records = _load_event_records(event_log)
+            evidence_error = _validate_supporting_event(
+                event_records, proposal["event_id"], proposal, task_state, event_log
+            )
+            if evidence_error:
+                return {"status": "REJECTED", "writes_performed": False, "errors": [evidence_error]}
+            if task_state.resolve().parent != event_log.resolve().parent:
+                current_context["cross_project_linkage_verified"] = True
             current_verdict = authorize_next_step(current_context)
         except Exception as exc:
             return {
@@ -255,15 +263,6 @@ def apply_checkpoint(
                 "trust_status": current_verdict.get("status", "INVALID_TRUST_VERDICT"),
                 "writes_performed": False,
             }
-        try:
-            event_records = _load_event_records(event_log)
-        except ValueError as exc:
-            return {"status": "REJECTED", "writes_performed": False, "errors": [str(exc)]}
-        evidence_error = _validate_supporting_event(
-            event_records, proposal["event_id"], proposal, task_state, event_log
-        )
-        if evidence_error:
-            return {"status": "REJECTED", "writes_performed": False, "errors": [evidence_error]}
 
         block = (
             f"\n\n## Checkpoint update {proposal['update_id']}\n\n"

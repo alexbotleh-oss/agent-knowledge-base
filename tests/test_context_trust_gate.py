@@ -9,6 +9,7 @@ class ContextTrustGateTests(unittest.TestCase):
             "freshness_verified": True,
             "semantic_context_usable": True,
             "event_linkage_complete": True,
+            "event_log_scope_match": True,
             "active_goal": "continue memory transfer",
             "next_step": "verify checkpoint conflict",
         }
@@ -28,6 +29,17 @@ class ContextTrustGateTests(unittest.TestCase):
         self.assertEqual(decision["status"], "PLAN_REQUIRES_CONFIRMATION")
         self.assertIn("do not infer", decision["reason"])
 
+    def test_cross_project_scope_requires_explicit_link_verification(self):
+        unverified = authorize_next_step(self._context(event_log_scope_match=False))
+        self.assertEqual(unverified["status"], "PLAN_REQUIRES_CONFIRMATION")
+        self.assertIn("explicit cross-project link", unverified["reason"])
+
+        verified = authorize_next_step(self._context(
+            event_log_scope_match=False,
+            cross_project_linkage_verified=True,
+        ))
+        self.assertEqual(verified["status"], "AUTHORIZED_FOR_PLANNING")
+
     def test_unknown_next_step_is_not_authorized(self):
         decision = authorize_next_step(self._context(next_step="UNKNOWN"))
         self.assertEqual(decision["status"], "REFUSED_UNKNOWN_NEXT_STEP")
@@ -39,6 +51,7 @@ class ContextTrustGateTests(unittest.TestCase):
             "freshness_verified": True,
             "semantic_context_usable": True,
             "event_linkage_complete": True,
+            "event_log_scope_match": True,
         }
         new_unverified = {
             "checkpoint_id": "cp-new",
@@ -46,6 +59,7 @@ class ContextTrustGateTests(unittest.TestCase):
             "freshness_verified": False,
             "semantic_context_usable": False,
             "event_linkage_complete": False,
+            "event_log_scope_match": True,
         }
         selected = select_authoritative_checkpoint([old_verified, new_unverified])
         self.assertEqual(selected["checkpoint_id"], "cp-old")
@@ -57,6 +71,7 @@ class ContextTrustGateTests(unittest.TestCase):
             "freshness_verified": True,
             "semantic_context_usable": True,
             "event_linkage_complete": True,
+            "event_log_scope_match": True,
         }
         later_utc = {
             "checkpoint_id": "cp-later",
@@ -64,6 +79,7 @@ class ContextTrustGateTests(unittest.TestCase):
             "freshness_verified": True,
             "semantic_context_usable": True,
             "event_linkage_complete": True,
+            "event_log_scope_match": True,
         }
         selected = select_authoritative_checkpoint([later_utc, earlier_utc])
         self.assertEqual(selected["checkpoint_id"], "cp-later")
@@ -75,12 +91,14 @@ class ContextTrustGateTests(unittest.TestCase):
             "freshness_verified": True,
             "semantic_context_usable": True,
             "event_linkage_complete": True,
+            "event_log_scope_match": True,
         }
         missing = {
             "checkpoint_id": "cp-missing",
             "freshness_verified": True,
             "semantic_context_usable": True,
             "event_linkage_complete": True,
+            "event_log_scope_match": True,
         }
         self.assertIsNone(select_authoritative_checkpoint([invalid, missing]))
 
@@ -92,6 +110,7 @@ class ContextTrustGateTests(unittest.TestCase):
                 "freshness_verified": True,
                 "semantic_context_usable": True,
                 "event_linkage_complete": False,
+            "event_log_scope_match": True,
             }
         ])
         self.assertIsNone(selected)

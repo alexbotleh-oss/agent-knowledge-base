@@ -10,6 +10,7 @@ if str(TOOLS) not in sys.path:
     sys.path.insert(0, str(TOOLS))
 
 from context_extractor import extract_semantic_context
+from context_trust_gate import authorize_next_step
 from minimal_agent_loop import retrieve_experience_candidates, run_minimal_agent_loop
 from restore_session_packet import build_session_packet
 
@@ -52,6 +53,23 @@ class MinimalAgentLoopTests(unittest.TestCase):
             "".join(json.dumps(item, ensure_ascii=False) + "\n" for item in events),
             encoding="utf-8",
         )
+
+    def test_cross_project_event_log_requires_explicit_link_verification(self):
+        central_dir = self.root / "projects" / "AGENT_MEMORY_SYSTEM"
+        central_dir.mkdir(parents=True)
+        central_events = central_dir / "events.jsonl"
+        self._write_events(central_events, [{
+            "event_id": "EVT-CURRENT-1",
+            "project_id": "AGENT_MEMORY_SYSTEM",
+            "type": "cross_branch_result",
+            "summary": "A result from another project",
+        }])
+        packet = build_session_packet(self.task, self.handoff, central_events)
+        context = extract_semantic_context(packet)
+        self.assertFalse(context["event_log_scope_match"])
+        verdict = authorize_next_step(context)
+        self.assertEqual(verdict["status"], "PLAN_REQUIRES_CONFIRMATION")
+        self.assertIn("explicit cross-project link", verdict["reason"])
 
     def test_restore_then_retrieve_returns_provenance_without_auto_applicability(self):
         self._write_events(self.experience, [
