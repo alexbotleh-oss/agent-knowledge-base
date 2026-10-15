@@ -111,9 +111,11 @@ The importer-level identical-byte/different-`archive_id` scenario is now covered
 
 ## Search scope and limits
 
-Inspected all listed `tools/*.py` and `tools/*.sh` files plus `.github/workflows/validate.yml` at the branch revision above for HANDOFF references and common write shapes (`write_text`, `write_bytes`, `open`, `os.replace`, `shutil.copy/move`, shell redirection, `cp`, `mv`, `tee`, and `rsync`). No dedicated function that updates an existing `HANDOFF.md` was identified in these files.
+The initial executable-source scan reviewed `tools/*.py`, `tools/*.sh`, both core validation wrappers, `.github/workflows/validate.yml`, `README.md`, and all 30 `stacks/*/*.sh` adapters. A second pass then scanned the remaining 158 tracked files at HEAD `8666d1ab03fec9332778cf0d4bed120faa1d3b0a` for explicit report/installer invocations, subprocess/shell launch patterns, common file-write APIs, redirections, and canonical-memory target names. Combined with the unchanged executable-source inventory, this covers all 209 tracked blobs at that HEAD for those search patterns.
 
-This does not cover manual edits, arbitrary external scripts, editor/IDE writes, commands run outside repository tools, dynamically constructed paths, dependency code, or every indirect process invocation. The AST audit is advisory and is not a complete data-flow analysis.
+No production invocation of `tools/install_into_repo.sh` was found. `README.md` documents `tools/generate_report.sh /path/to/project`; `tests/test_generate_report_target_guard.py` invokes that script only as a regression test, using temporary directories to verify both canonical-target refusal and derived-report creation. The numerous `.write_text()` / `.write_bytes()` calls found in `tests/*.py` initialize or mutate test fixtures and temporary state; they are test setup, not additional production writer entry points. Historical exports and Markdown contain references to canonical filenames and code examples, but no additional executable caller was identified by this scan.
+
+This repository-wide tracked-file result does not cover manual edits, arbitrary external scripts, editor/IDE writes, commands run outside repository tools, runtime-generated paths, dependency code, or every indirect process invocation. The AST audit remains advisory and is not a complete data-flow analysis.
 
 ## Current disposition
 
@@ -121,7 +123,7 @@ This does not cover manual edits, arbitrary external scripts, editor/IDE writes,
 - `generate_report.sh` now rejects the known canonical-memory filenames (`HANDOFF.md`, `TASK_STATE.md`, `PROJECT_STATE.md`, `DECISIONS.md`, `LESSONS.md`, `EVENT_LOG.md`, `events.jsonl`, `lessons.jsonl`) as report targets. The regression test passed in CI run #537 on the exact HEAD recorded in `core/memory_write_contracts.md`; the basename guard does not replace a complete writer audit.
 - `install_into_repo.sh` can populate a missing HANDOFF but is configured not to overwrite existing files.
 - The guarded checkpoint's trust check does not make HANDOFF mutation atomic with TASK_STATE mutation. Until HANDOFF has a shared mutation protocol or immutable/versioned source reference, this remains an explicit limitation.
-- Next audit step: run a branch-local search across all tracked files for `generate_report.sh`, `install_into_repo.sh`, wrappers, indirect `bash`/`sh` calls, and explicit output targets. Importer restart, source-collision, changed-source, and concurrent-lock scenarios are now covered by the tests listed above, within their stated boundaries. Do not claim complete writer coverage based on this partial static audit.
+- The branch-local tracked-file search is now recorded below. Remaining audit limits are external/manual callers, runtime-generated paths, dynamic or indirect invocation paths that static text search cannot resolve, and the heuristic completeness boundary of the AST inventory. Importer restart, source-collision, changed-source, and concurrent-lock scenarios remain covered only within their stated test boundaries. Do not claim complete system-wide writer coverage.
 
 
 ## Caller / invocation audit (limited to files read at this revision)
@@ -130,10 +132,10 @@ This does not cover manual edits, arbitrary external scripts, editor/IDE writes,
 | --- | --- | --- | --- |
 | `README.md:65` | `tools/generate_report.sh /path/to/project` | Safe documented default invocation; no explicit `OUT` argument | The second positional argument is omitted, so the script uses `$PROJECT/validation-report.md`. |
 | `.github/workflows/validate.yml` (validation steps) | No direct invocation of `generate_report.sh` or `install_into_repo.sh` in the workflow content inspected | No caller found in this workflow | The workflow invokes `validate_project.sh`, not the report generator or installer. This does not rule out indirect invocation by another script. |
-| Repository documentation/scripts searched in this pass | No `install_into_repo.sh` invocation identified in the inspected content | No caller found in inspected content; coverage incomplete | The installer is a manually invoked utility taking only a destination repository argument. Its `rsync --ignore-existing` option protects existing destination files, but creation of a missing canonical file is still possible. |
+| Tracked files at HEAD 8666d1a | No production invocation of `install_into_repo.sh`; one documented `generate_report.sh` invocation in `README.md`; test-only invocations in `tests/test_generate_report_target_guard.py` | Tracked-file search completed for the listed patterns | The installer remains manually invokable. `generate_report.sh` test calls use temporary directories; no production workflow/core-wrapper/stack-adapter caller was found. External/manual callers remain unknown. |
 | External/manual callers | Unknown | Outside repository-static scope | A local grep over the complete checked-out branch would be needed to establish a broader invocation inventory. GitHub code search used here indexes the default branch, so it is not sufficient evidence for all callers on this PR branch. |
 
-This caller inventory is deliberately scoped: it records only source files actually read and does not claim repository-wide exhaustive search. Before declaring the invocation audit complete, run a branch-local search across tracked files for both script names, shell wrappers, and indirect `bash`/`sh` invocations; record exact line numbers and every explicit output target. CI run #540 passed on reviewed HEAD `165c39a69549af3c1f04ece75e7d930a8ee40f60`. The later documentation HEAD `f6ec021e7d99f49ac6b9e75e692fe2eb0cf58f22` passed validation in CI run [#566](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38695331178). This validates the repository's configured checks at that exact HEAD; it does not make the caller inventory exhaustive.
+The branch-local tracked-file search is now complete for the patterns described in **Search scope and limits** at HEAD `8666d1ab03fec9332778cf0d4bed120faa1d3b0a`; this supersedes the earlier instruction to run that search. Historical validation evidence remains: CI #540 passed on reviewed HEAD `165c39a69549af3c1f04ece75e7d930a8ee40f60`, and CI #566 passed on documentation HEAD `f6ec021e7d99f49ac6b9e75e692fe2eb0cf58f22`. These runs validate configured checks at their exact HEADs, not external callers or dynamic paths.
 
 
 ## Scope of guarantees for `tools/resumable_chat_import.py`
@@ -173,7 +175,7 @@ This is a scoped audit of evidence available in the current branch, not a claim 
 | Windows/macOS and other filesystem locking semantics | **Not established by current CI evidence** | The documented crash/concurrency evidence is from Ubuntu 24.04. If cross-platform support is a release requirement, add a platform matrix and targeted lock/recovery checks; otherwise retain this as a stated boundary. |
 | `HANDOFF.md` changing between trust re-check and `TASK_STATE.md` replacement | **Known open race; requires design decision** | The current lock protocol does not lock or version `HANDOFF.md`. A test can demonstrate the race, but a durable fix likely needs a shared mutation protocol or immutable/versioned source reference. Do not claim atomicity across these files. |
 | Static AST mutation inventory | **Advisory; classifier refined, still heuristic** | CI run #572 on code HEAD `0b35c21153a35c52f72412320dfa61f994e29a2e` reports 55 candidates and zero unclassified findings. The classifier now distinguishes common inferred `pathlib` receivers and `os.replace` from pure string/date `.replace()` calls. Four regression tests passed in CI #573 on test HEAD `df54bc6d048102e8145df1f715a32ae6686a0c6e`. This reduces known noise but does not prove the candidate count equals all real file/database mutations. |
-| Complete inventory of report/installer callers and indirect invocation paths | **Audit still required** | The current caller inventory is explicitly partial. Run a branch-local search over tracked files and record all call sites/targets before declaring the writer audit complete. |
+| Tracked-file inventory of report/installer callers | **Completed for static search patterns; external/dynamic coverage remains open** | The tracked-file scan at HEAD `8666d1ab03fec9332778cf0d4bed120faa1d3b0a` found the README's documented report-generator invocation and test-only calls to the generator, but no production caller for either report generator or installer in the inspected repository paths. Manual/external callers and dynamically constructed invocations remain unknown. |
 
 
 
@@ -187,8 +189,27 @@ A follow-up scan reviewed every tracked file in `tools/*.py` and `tools/*.sh`, b
 - The inspected `tools/guarded_task_state_update.py` path reads `HANDOFF.md` but does not write it. The known race remains: HANDOFF is not protected by the lock pair used for the event journal and TASK_STATE replacement.
 - No canonical-memory write target was found in the 30 stack adapter scripts. This statement is limited to the tracked adapter contents at the cited revision; it is not a guarantee about commands launched by external tooling or dynamically injected configuration.
 
-**Disposition:** executable-source review is broader and found no additional report/installer callers in the inspected paths. The full tracked-content search, dynamic/indirect caller review, and external/manual invocation inventory remain open; do not mark the writer audit complete yet.
+**Disposition:** the tracked-file search has now been completed for the static patterns listed above and found no additional production report/installer callers. Dynamic/indirect invocation review and external/manual caller inventory remain open; do not mark the writer audit or system-wide writer coverage complete.
 
+
+
+
+### Tracked-file writer inventory (HEAD `8666d1ab03fec9332778cf0d4bed120faa1d3b0a`)
+
+| File / occurrence | Type | Target or effect | Status |
+|---|---|---|---|
+| `README.md:66` | Documentation example | `tools/generate_report.sh /path/to/project`; default target is `validation-report.md` in the project directory | **Documented invocation only**, not an automated caller |
+| `tests/test_generate_report_target_guard.py:19,37` | Test-only subprocess calls | One case attempts `HANDOFF.md` and verifies it remains unchanged; another creates the derived report in a temporary directory | **Verified test harness**, not a production workflow |
+| `tools/generate_report.sh:5-15` | Executable writer | Caller-selected output path; default `$PROJECT/validation-report.md`; refuses the enumerated canonical basenames | **Guard verified by regression test**; alias/indirect path bypasses are not proven impossible |
+| `tools/install_into_repo.sh:9` | Executable copy/install utility | `rsync -av --ignore-existing --exclude='.git' "$SRC/" "$DEST/"`; may create missing files but is configured not to replace existing files | **No tracked production caller found**; remains manually invokable |
+| `tools/archive_registry_staging.py` | Executable staging writer | Versioned staging records and `archive_snapshot.json` under the caller-supplied output directory | **Existing staging contract/tests**; not canonical-memory import authorization |
+| `tools/branch_result_registry.py` | Executable canonical event-journal writer | Atomic replacement of the configured `events.jsonl` path | **Existing contract/tests**; cooperating lock protocol applies only to callers that use it |
+| `tools/guarded_task_state_update.py` | Executable checkpoint writer | Atomic replacement of `TASK_STATE.md` plus lock handling; reads but does not write `HANDOFF.md` | **Guarded path reviewed**; HANDOFF/TASK_STATE race remains open |
+| `tools/resumable_chat_import.py` | Executable importer | Immutable source snapshots and SQLite import records/events/checkpoint | **Scenario-scoped importer guarantees documented above** |
+| `tests/*.py` | Test-fixture writes | Temporary project files, source archives, event logs, checkpoint files, locks, and report outputs | **Test setup / fault injection**, not additional production writer entry points |
+| Tracked Markdown, JSON/JSONL, raw conversation exports | Documentation/history/data | References to canonical filenames, code snippets, quoted shell/Markdown syntax, historical descriptions | **No additional executable report/installer invocation identified** by the tracked-file search |
+
+**Result:** no additional production invocation or write target was identified in the tracked-file pass beyond the executable paths already listed in this document. This is a static repository result at the cited HEAD, not a claim about manual edits, external scripts, runtime-generated commands, or every possible dynamic path.
 
 
 ### Evolution of static audit metrics (code HEAD `0b35c21153a35c52f72412320dfa61f994e29a2e`; documentation HEAD `c45ae0d18cce092bae9ca207a9d7cb8f43c237d2`)
