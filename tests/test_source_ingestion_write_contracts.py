@@ -91,7 +91,7 @@ class SourceIngestionWriteContractTests(unittest.TestCase):
             first_bytes = registry.read_bytes()
             rows = [json.loads(line) for line in first_bytes.splitlines()]
             self.assertEqual(len(rows), 1)
-            self.assertEqual(rows[0]["project_id"] if "project_id" in rows[0] else "unknown", "unknown")
+            self.assertNotIn("project_id", rows[0])
 
             replay = append_source_records(manifest, registry, apply=True)
             self.assertEqual(replay["status"], "ALREADY_REGISTERED")
