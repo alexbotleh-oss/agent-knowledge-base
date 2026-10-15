@@ -209,3 +209,26 @@ The tool reads TASK_STATE, HANDOFF and the canonical event log, records exact so
 - `BLOCKED`: a canonical source is missing or invalid.
 
 It is read-only. It does not infer that all dialogue was captured, and it does not independently decide which excerpted statements are accepted facts. The agent must still interpret statuses, conflicts and next steps. This is a source-backed packet builder, not automatic session startup in every ChatGPT chat; callers must have access to the files and invoke it.
+
+## 12. Bounded restore and experience-candidate pass
+
+Implemented prototype: `tools/minimal_agent_loop.py`; tests: `tests/test_minimal_agent_loop.py`.
+
+The command explicitly connects existing components in this order:
+1. Build the source-backed restore packet from the supplied `TASK_STATE.md`, `HANDOFF.md` and canonical event log.
+2. Extract semantic fields with source-hash freshness checks and preserve `UNKNOWN` / stale states.
+3. Ask the existing trust gate whether the restored context is sufficient for planning.
+4. Search explicitly supplied JSONL event logs for lexical experience candidates using the current request, restored active goal and explicit blockers as the query.
+5. Return candidates with event ID, matched terms, source path/hash/line, evidence references, event/lifecycle status and time fields.
+
+Safety and interpretation:
+- This is a read-only local command. It does not write memory, promote candidates, update TASK_STATE/HANDOFF, resolve conflicts or execute the next step.
+- Disputed and apparently conflicting records remain separate candidates. The retriever does not decide which is true.
+- Every candidate starts with `transfer_decision: UNASSESSED`. Tool/language tags are descriptive only; applicability to the current project requires a separate evidence-backed assessment.
+- Missing or malformed requested logs fail closed; partial results are not presented as a complete search.
+- If the trust gate refuses planning, candidate review may still be offered, but the returned policy explicitly says `REVIEW_CANDIDATES_ONLY_NO_PLANNING`.
+
+Limitations:
+- Retrieval is lexical, not embedding/semantic retrieval, and it searches supplied event logs only; it is not yet a complete query over every canonical MemoryRecord, lesson, decision and relation.
+- It does not classify dialogue turns, preserve parent goals across side branches, publish child results automatically, or run at new-chat startup.
+- The prototype does not complete UMC-01, UMC-02 or UMC-03. The acceptance matrix above remains unchanged until end-to-end behavior is demonstrated.
