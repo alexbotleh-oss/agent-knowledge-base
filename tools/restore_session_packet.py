@@ -90,8 +90,46 @@ def build_session_packet(task_state: Path, handoff: Path, event_log: Path,
     handoff_slice = _tail_with_checkpoints(handoff_text, max_chars)
     referenced_ids = set(EVENT_ID_RE.findall(task_text[:5000] + "\n" + task_slice + "\n" + handoff_slice))
     event_by_id = {event["event_id"]: event for event in events}
-    linked_events = [event_by_id[event_id] for event_id in sorted(referenced_ids) if event_id in event_by_id]
-    missing_event_refs = sorted(referenced_ids - set(event_by_id))
+
+    # Resolve the explicit causal references of each linked event as well as
+    # direct references from TASK_STATE/HANDOFF. This restores the source event
+    # behind an acknowledgement, correction, or other linked event without
+    # guessing from semantic similarity.
+    pending_ids = list(sorted(referenced_ids))
+    linked_event_ids: set[str] = set()
+    missing_event_ids: set[str] = set()
+    while pending_ids:
+        event_id = pending_ids.pop()
+        if event_id in linked_event_ids or event_id in missing_event_ids:
+            continue
+        event = event_by_id.get(event_id)
+        if event is None:
+            missing_event_ids.add(event_id)
+            continue
+        linked_event_ids.add(event_id)
+        related_ids = event.get("related_event_ids", [])
+        if isinstance(related_ids, list):
+            pending_ids.extend(
+                related_id for related_id in related_ids
+                if isinstance(related_id, str) and EVENT_ID_RE.fullmatch(related_id)
+            )
+        relations = event.get("relations", [])
+        if isinstance(relations, list):
+            pending_ids.extend(
+                relation["event_id"] for relation in relations
+                if isinstance(relation, dict)
+                and isinstance(relation.get("event_id"), str)
+                and EVENT_ID_RE.fullmatch(relation["event_id"])
+            )
+        acknowledgement = event.get("acknowledgement")
+        if isinstance(acknowledgement, dict):
+            result_event_id = acknowledgement.get("result_event_id")
+            if isinstance(result_event_id, str) and EVENT_ID_RE.fullmatch(result_event_id):
+                pending_ids.append(result_event_id)
+
+    # Keep journal order (not lexicographic ID order) to preserve source chronology.
+    linked_events = [event for event in events if event["event_id"] in linked_event_ids]
+    missing_event_refs = sorted(missing_event_ids)
     latest_task_checkpoint = task_slice
     latest_handoff_checkpoint = handoff_slice
 
