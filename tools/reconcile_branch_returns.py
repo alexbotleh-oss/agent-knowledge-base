@@ -35,10 +35,10 @@ def load_events(path: Path) -> list[dict[str, Any]]:
 
 
 def _task_id_from_state(text: str) -> str | None:
-    explicit = re.search(r"^\\s*parent_task_id\\s*:\\s*(\\S+)", text, re.I | re.M)
+    explicit = re.search(r"^\s*parent_task_id\s*:\s*(\S+)", text, re.I | re.M)
     if explicit:
         return explicit.group(1).strip()
-    heading = re.search(r"^#\\s*(?:TASK_STATE|Task state)\\s*[—-]\\s*(\\S+)", text, re.I | re.M)
+    heading = re.search(r"^#\s*(?:TASK_STATE|Task state)\s*[—-]\s*(\S+)", text, re.I | re.M)
     return heading.group(1).strip() if heading else None
 
 
@@ -49,10 +49,10 @@ def _has_projected_checkpoint(
         return False
     blocks = re.split(r"(?m)(?=^## Checkpoint update )", text)
     event_pattern = re.compile(
-        r"(?m)^\\s*[-*]\\s*Supporting event:\\s*`" + re.escape(acknowledgement_id) + r"`\\s*$"
+        r"(?m)^\s*[-*]\s*Supporting event:\s*`" + re.escape(acknowledgement_id) + r"`\s*$"
     )
     checkpoint_pattern = re.compile(
-        r"(?m)^\\s*[-*]\\s*Parent checkpoint:\\s*`" + re.escape(parent_checkpoint_id) + r"`\\s*$"
+        r"(?m)^\s*[-*]\s*Parent checkpoint:\s*`" + re.escape(parent_checkpoint_id) + r"`\s*$"
     )
     return any(
         event_pattern.search(block) and checkpoint_pattern.search(block)
