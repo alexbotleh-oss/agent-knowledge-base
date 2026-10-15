@@ -57,6 +57,48 @@ def _has_timezone(value):
         return False
 
 
+RECORD_ARTIFACT_KINDS = {
+    "source_records", "memory_records", "event_records",
+    "lesson_records", "decision_records", "relation_records",
+}
+RECORD_REQUIRED_FIELDS = {
+    "source_records": ("source_record_id", "source_locator"),
+    "memory_records": ("memory_id", "record_type"),
+    "event_records": ("event_id", "project_id"),
+    "lesson_records": ("lesson_id", "scope", "title", "prevention_rule"),
+    # No canonical decision-record schema exists yet; validate JSONL shape/count only.
+    "decision_records": (),
+    "relation_records": ("source_id", "target_id", "type"),
+}
+
+
+def _validate_record_artifact(full_path, kind, declared_count, label, errors):
+    if full_path.suffix.lower() != ".jsonl":
+        errors.append(f"{label}: kind {kind} requires a JSONL artifact")
+        return
+    actual_count = 0
+    for number, line in enumerate(full_path.read_text(encoding="utf-8").splitlines(), 1):
+        if not line.strip():
+            continue
+        actual_count += 1
+        try:
+            record = json.loads(line)
+        except Exception as exc:
+            errors.append(f"{label}:{number}: invalid JSONL record: {exc}")
+            continue
+        if not isinstance(record, dict):
+            errors.append(f"{label}:{number}: record must be a JSON object")
+            continue
+        missing = [field for field in RECORD_REQUIRED_FIELDS[kind] if field not in record]
+        if missing:
+            errors.append(f"{label}:{number}: kind {kind} missing fields: {', '.join(missing)}")
+    if declared_count is None:
+        errors.append(f"{label}: record_count is required for kind {kind}")
+    elif isinstance(declared_count, int) and not isinstance(declared_count, bool) and declared_count >= 0:
+        if declared_count != actual_count:
+            errors.append(f"{label}: record_count {declared_count} does not match actual JSONL count {actual_count}")
+
+
 def validate_intake_manifest(manifest_path, repo_root=None):
     """Validate v1 intake metadata and referenced artifact bytes without executing them."""
     manifest_path = Path(manifest_path)
@@ -188,6 +230,8 @@ def validate_intake_manifest(manifest_path, repo_root=None):
         count = artifact.get("record_count")
         if count is not None and (not isinstance(count, int) or isinstance(count, bool) or count < 0):
             errors.append(f"{label}.record_count must be a non-negative integer")
+        if artifact.get("kind") in RECORD_ARTIFACT_KINDS:
+            _validate_record_artifact(full_path, artifact["kind"], count, label, errors)
     return errors
 
 
