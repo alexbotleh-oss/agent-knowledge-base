@@ -508,3 +508,15 @@ Tests added for first pass, completed replay, and a changed source under the sam
 - **Current limits:** PR #27 remains Draft and unmerged. Adapter concurrent same-batch publication is not serialized by a shared lock; source registry stale-lock recovery remains manual; semantic promotion/index refresh/next-session restore are not a fully verified end-to-end chain. No main changes.
 - **Next action:** refresh live PR HEAD after this checkpoint write, verify checkpoint read-back, then check exact-head CI for the checkpoint commit. Continue only from that live state; no merge without explicit approval.
 - **Status:** ACTIVE / PARTIAL. Manual checkpoint, not automatic background save.
+
+
+## Active continuation checkpoint — 2026-10-15, PR #27 integration
+
+- **Live repository:** `alexbotleh-oss/agent-knowledge-base`, branch `integration/memory-core-clean-20261015`, code HEAD `06ae31ed9aba9d6ce54b2ebfbf28adbb91958a6f`; PR #27 OPEN/DRAFT/UNMERGED. `main` untouched.
+- **Exact-head CI:** run [#38747989802](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38747989802) succeeded on `06ae31ed9aba9d6ce54b2ebfbf28adbb91958a6f`: 188 tests, one skipped; write-contract audit reported 67 mutation sites, 0 unclassified.
+- **Concurrency finding and fix:** the new two-process test exposed a real race in staging→intake publication: the losing directory rename raised `OSError(39, 'Directory not empty')`, while code only caught `FileExistsError`. Updated `adapt_archive_staging_to_intake.py` to treat an `OSError` as a publication race only if the destination directory now exists; it then validates the winning batch and returns idempotent replay, otherwise re-raises. Test passed on the exact code HEAD.
+- **Completed:** project-scope guard changes ported from PR #26; write paths classified; concurrency regression test added; adapter race fixed; current end-to-end implementation audit added to `core/unified_memory_control_loop.md`.
+- **Verified boundary:** staging → sanitized intake → metadata-only source registry exists. Semantic promotion, canonical index refresh, and automatic state update + next-session restore are not connected as a single executable chain. `archive_temporal_index.py` is a read-only archive search/index, not a canonical memory index rebuild.
+- **Next step:** design the smallest resumable orchestration ledger around the existing staging, intake adapter and source registry; it must stop at a clearly named registered-source status until a real semantic promotion/index/restore executor exists. First specify per-stage states, idempotent reconciliation after uncertain outcomes, and crash-injection acceptance tests; do not invent a successful downstream stage.
+- **Constraints:** no merge, no `main` changes, no source-history deletion/rewrite, no project mixing. Manual checkpoints are not automatic background persistence.
+- **Status:** ACTIVE / PARTIAL.

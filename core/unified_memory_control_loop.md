@@ -263,3 +263,23 @@ Limitations:
 - Retrieval is lexical, not embedding/semantic retrieval, and it searches supplied event logs only; it is not yet a complete query over every canonical MemoryRecord, lesson, decision and relation.
 - It does not classify dialogue turns, preserve parent goals across side branches, publish child results automatically, or run at new-chat startup.
 - The prototype does not complete UMC-01, UMC-02 or UMC-03. The acceptance matrix above remains unchanged until end-to-end behavior is demonstrated.
+
+
+## Implementation audit — 2026-10-15 (PR #27)
+
+This status table is based on direct inspection of the implementation and tests at code HEAD `06ae31ed9aba9d6ce54b2ebfbf28adbb91958a6f`, plus exact-head CI run `38747989802` (success: 188 tests, one skipped; write audit: 67 mutation sites, zero unclassified). It distinguishes existing components from an integrated end-to-end workflow.
+
+| Stage | Existing implementation / evidence | Status and boundary |
+|---|---|---|
+| Immutable raw export → staging records + snapshot manifest | `tools/archive_registry_staging.py`; crash/recovery tests in `tests/test_archive_registry_staging.py` | Implemented and tested for the covered cases. Coverage remains explicitly partial/unknown when attachments or source completeness are not verified. |
+| Staging snapshot → sanitized intake batch | `tools/adapt_archive_staging_to_intake.py`; metadata-only, tamper, replay and concurrent-publisher tests in `tests/test_source_ingestion_write_contracts.py` | Implemented. Competing publishers must converge on one immutable batch; a losing publisher re-reads and verifies the winner. This does not make the whole pipeline transactional. |
+| Intake manifest → route proposal | `tools/plan_memory_intake.py` | Read-only planner. `IMPORT_READY` and a route plan are not authorization and do not write canonical memory. |
+| Candidate source records → canonical source registry | `tools/source_evidence_registry.py` | Implemented as metadata-only append with dry-run, revalidation, locking, idempotent replay and conflict rejection. It deliberately does not assign project scope or promote semantic knowledge. Stale-lock recovery is manual. |
+| Semantic candidate review / promotion into canonical event, lesson, decision or memory records | The planner can describe logical views, but no matching promotion executor was found in the inspected `tools/*.py` implementation set. | **Not implemented as a connected executable stage.** Do not mark intake complete or accepted memory merely because source metadata was registered. |
+| Rebuild/refresh a derived index from canonical memory records | `tools/archive_temporal_index.py` reads and searches an export; it is not a writer that rebuilds a canonical-memory index from promoted records. No connected canonical index-refresh executor was found in the inspected tool set. | **Not connected / not verified.** |
+| Restore next session from the updated authoritative state | `tools/restore_session_packet.py` reads same-project `TASK_STATE.md`, `HANDOFF.md` and `events.jsonl`; it validates scope and source hashes. | Restore component exists, but source-registry ingestion does not automatically update these authoritative project-state files or prove that a new session can restore the just-ingested batch end-to-end. |
+| Orchestrate stages and resume after an interruption | Components are separate commands; no single run ledger currently coordinates staging, registry append, semantic promotion, index refresh, result publication and restore verification. | **End-to-end orchestration remains open.** A future runner must persist per-stage intent/result, reconcile uncertain outcomes against authoritative outputs, and resume idempotently. |
+
+### Acceptance boundary
+
+The currently verified chain ends at **metadata-only source registration**. It does not end at accepted semantic memory, refreshed derived indexes, or a verified next-session restore. Keep these stages separate until an executable orchestration and crash-injection tests demonstrate the full chain. Preserve raw source provenance and existing project boundaries throughout.

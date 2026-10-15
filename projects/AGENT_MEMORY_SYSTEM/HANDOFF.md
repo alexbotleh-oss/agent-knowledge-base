@@ -482,3 +482,13 @@ ACTIVE / PARTIAL. Recovery checkpoint persisted in HANDOFF; not an automatic bac
 - **Scope guard:** the six missing PR #26 changes have been ported with the cross-project boundary test; the code commit's CI passed separately before the write-contract tests were added.
 - **Open residuals:** PR #27 stays OPEN/DRAFT/UNMERGED; no main change. Adapter concurrent same-batch calls lack a whole-operation lock; registry stale-lock recovery is manual; semantic promotion, derived indexes and complete next-session restore remain unconnected/unverified.
 - **Next single action:** re-fetch PR #27 and read back TASK_STATE/HANDOFF after this checkpoint commit, then verify CI on the resulting exact HEAD. If green, continue with adapter concurrency and end-to-end pipeline gaps; do not merge.
+
+
+## Active handoff — 2026-10-15, after concurrent-writer verification
+
+- PR #27 branch `integration/memory-core-clean-20261015`, code HEAD `06ae31ed9aba9d6ce54b2ebfbf28adbb91958a6f`, OPEN/DRAFT/UNMERGED; no main changes.
+- Exact-head CI [#38747989802](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38747989802) PASS: 188 tests, one skipped; write audit 67 sites / 0 unclassified.
+- Concurrent intake publication was tested with two independent processes. The first run failed and exposed an actual Linux race: the losing `Path.rename` raised `OSError(39, 'Directory not empty')`. The code now catches the publication collision only when the destination directory exists, verifies the winning batch through `_existing_batch_status`, and otherwise re-raises. The two-process test passed after the fix.
+- Current connected path: archive staging → sanitized intake → metadata-only source registry. Planner is read-only. No semantic promotion executor or canonical index-refresh executor was found in the inspected `tools/*.py`; restore reads project TASK_STATE/HANDOFF/events and is not automatically triggered by source registration. This gap is now documented in `core/unified_memory_control_loop.md`.
+- Next single action: specify a resumable orchestration ledger for the existing first three stages only, with persistent per-stage status and idempotent reconciliation. It must explicitly stop at `SOURCE_REGISTERED` / downstream-not-implemented rather than claim full ingestion. Define crash-injection tests before implementation.
+- No merge, no main changes, no source-history rewrite/deletion. Status PARTIAL.
