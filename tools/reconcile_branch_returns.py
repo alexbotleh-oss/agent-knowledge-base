@@ -76,10 +76,19 @@ def build_report(event_log: Path, task_states: list[Path]) -> dict[str, Any]:
         and isinstance(event.get("acknowledgement"), dict)
     ]
     ack_by_result: dict[str, list[dict[str, Any]]] = {}
+    issues = []
     for ack in acknowledgements:
         result_id = ack["acknowledgement"].get("result_event_id")
-        if result_id:
-            ack_by_result.setdefault(result_id, []).append(ack)
+        if not isinstance(result_id, str) or result_id not in results:
+            issues.append({
+                "issue_id": "DANGLING_ACK_TARGET:" + str(ack["event_id"]),
+                "kind": "dangling_acknowledgement_target",
+                "ack_event_id": ack["event_id"],
+                "result_event_id": result_id,
+                "recommended_action": "Reconcile the acknowledgement target; do not infer or create a missing result event.",
+            })
+            continue
+        ack_by_result.setdefault(result_id, []).append(ack)
 
     state_texts = {}
     for path in task_states:
@@ -90,7 +99,6 @@ def build_report(event_log: Path, task_states: list[Path]) -> dict[str, Any]:
             "sha256": sha256_file(path),
         }
 
-    issues = []
     for result_id, result in results.items():
         acks = ack_by_result.get(result_id, [])
         if not acks:
@@ -107,9 +115,15 @@ def build_report(event_log: Path, task_states: list[Path]) -> dict[str, Any]:
         ack_data = latest_ack["acknowledgement"]
         if ack_data.get("decision") == "accepted":
             ack_id = latest_ack["event_id"]
+            parent_checkpoint_id = ack_data.get("parent_checkpoint_id")
+            parent_task_id = (result.get("branch_return") or {}).get("parent_task_id")
             linked_states = [
                 path for path, state in state_texts.items()
-                if ack_id in state["text"]
+                if isinstance(parent_checkpoint_id, str)
+                and isinstance(parent_task_id, str)
+                and _has_projected_checkpoint(
+                    state["text"], ack_id, parent_checkpoint_id, parent_task_id
+                )
             ]
             if not linked_states:
                 issues.append({
