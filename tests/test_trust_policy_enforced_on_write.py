@@ -161,7 +161,7 @@ class TrustPolicyEnforcedOnWriteTests(unittest.TestCase):
         _, _, verdict = self._restore_and_decide()
         expected_hash = hashlib.sha256(self.task_state.read_bytes()).hexdigest()
         go_file = self.root / "GO"
-        worker = r\''' 
+        worker = r'''
 import json, sys, time
 from pathlib import Path
 sys.path.insert(0, sys.argv[1])
