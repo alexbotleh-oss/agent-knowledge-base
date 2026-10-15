@@ -70,9 +70,18 @@ def _event_search_text(event: dict[str, Any]) -> str:
 
 
 def retrieve_experience_candidates(
-    query: str, log_paths: list[Path], *, limit: int = 10
+    query: str,
+    log_paths: list[Path],
+    *,
+    limit: int = 10,
+    current_project_id: str | None = None,
 ) -> dict[str, Any]:
-    """Return lexical candidates with source provenance; never judge applicability."""
+    """Return lexical candidates with provenance and a conservative project-scope gate.
+
+    A matching project is only a necessary scope condition, never proof that a
+    candidate is applicable. Branch/task matching is not attempted because the
+    current event schema does not guarantee a canonical task_branch field.
+    """
     query_tokens = _tokens(query)
     if not query_tokens:
         return {
@@ -134,6 +143,15 @@ def retrieve_experience_candidates(
             summary = event.get("summary", "")
             if isinstance(summary, str) and summary and summary.casefold() in query.casefold():
                 score += 0.25
+            candidate_project_id = event.get("project_id")
+            if not isinstance(candidate_project_id, str) or not candidate_project_id.strip():
+                candidate_project_id = None
+            if not current_project_id or not current_project_id.strip() or not candidate_project_id:
+                scope_match = "UNKNOWN"
+            elif candidate_project_id == current_project_id:
+                scope_match = "MATCH"
+            else:
+                scope_match = "MISMATCH"
             indexed.append({
                 "event_id": event["event_id"],
                 "score": round(min(score, 1.25), 4),
@@ -143,7 +161,15 @@ def retrieve_experience_candidates(
                 "evidence_status": event.get("status", "UNKNOWN"),
                 "lifecycle_status": event.get("lifecycle_status", "UNKNOWN"),
                 "decision_status": event.get("decision_status", "UNKNOWN"),
-                "project_id": event.get("project_id", "UNKNOWN"),
+                "project_id": candidate_project_id or "UNKNOWN",
+                "project_scope_match": scope_match,
+                "applicability_gate": (
+                    "SCOPE_MATCHED_REQUIRES_REVIEW"
+                    if scope_match == "MATCH"
+                    else "OUT_OF_PROJECT_SCOPE"
+                    if scope_match == "MISMATCH"
+                    else "PROJECT_SCOPE_UNKNOWN"
+                ),
                 "event_time": event.get("event_time", "UNKNOWN"),
                 "source_time": event.get("source_time", "UNKNOWN"),
                 "recorded_at": event.get("recorded_at", "UNKNOWN"),
@@ -178,6 +204,12 @@ def retrieve_experience_candidates(
         "candidate_count_before_limit": len(indexed),
         "source_hashes": source_hashes,
         "ranking": "lexical_overlap_only_not_confidence_or_applicability",
+        "applicability_policy": {
+            "current_project_id": current_project_id or "UNKNOWN",
+            "project_match_is_necessary_not_sufficient": True,
+            "task_branch_match": "NOT_EVALUATED_SCHEMA_FIELD_NOT_GUARANTEED",
+            "same_project_does_not_promote_candidate": True,
+        },
         "warnings": [
             "Candidates are evidence pointers, not accepted lessons or instructions.",
             "Conflicting and disputed records are retained; this pass does not resolve them.",
@@ -196,6 +228,7 @@ def run_minimal_agent_loop(
     experience_logs: list[Path] | None = None,
     *,
     limit: int = 10,
+    current_project_id: str | None = None,
 ) -> dict[str, Any]:
     """Restore first, then search explicitly supplied event logs for candidates."""
     packet = build_session_packet(task_state, handoff, event_log)
@@ -210,7 +243,9 @@ def run_minimal_agent_loop(
     logs = [Path(item) for item in (experience_logs or [])]
     if not logs:
         logs = [Path(event_log)]
-    retrieval = retrieve_experience_candidates(query, logs, limit=limit)
+    retrieval = retrieve_experience_candidates(
+        query, logs, limit=limit, current_project_id=current_project_id
+    )
 
     candidates_reviewable = (
         context.get("semantic_context_usable")
@@ -261,10 +296,17 @@ def main(argv: list[str] | None = None) -> int:
         help="additional canonical JSONL event log to search; may be repeated",
     )
     parser.add_argument("--limit", type=int, default=10)
+    parser.add_argument(
+        "--project-id",
+        default=None,
+        help="explicit canonical project_id for conservative experience scope matching",
+    )
     args = parser.parse_args(argv)
     result = run_minimal_agent_loop(
         args.task_state, args.handoff, args.event_log, args.request,
-        [Path(item) for item in args.experience_log], limit=args.limit,
+        [Path(item) for item in args.experience_log],
+        limit=args.limit,
+        current_project_id=args.project_id,
     )
     print(json.dumps(result, ensure_ascii=False, indent=2))
     return 0 if result["status"] == "READY_FOR_REVIEW" else 2
