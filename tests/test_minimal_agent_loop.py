@@ -296,7 +296,7 @@ class MinimalAgentLoopTests(unittest.TestCase):
     def test_empty_local_evidence_file_blocks_verified_candidate(self):
         evidence_root = self.root / "evidence-root"
         evidence_root.mkdir()
-        (evidence_root / "empty.txt").write_bytes(b"")
+        (evidence_root / "empty.txt").write_bytes(b"\x00\x01\xff")
 
         self._write_events(self.experience, [{
             "event_id": "EVT-EMPTY-EVIDENCE",
