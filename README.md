@@ -82,3 +82,16 @@ tools/generate_report.sh /path/to/project
 
 - [Единый реестр памяти и многомерный поиск](core/memory_registry_and_multidimensional_index.md) — связанная модель, устойчивые адреса, сортировки и безопасное пополнение.
 - [Инструкция агенту чата по сбору памяти](core/chat_memory_collection_task.md) — рабочий протокол восстановления, извлечения, сверки и дополнения опыта.
+
+
+## Приём источников: текущая исполняемая часть
+
+Для локального тестового/рабочего снимка доступны следующие отдельные шаги:
+
+- `tools/archive_registry_staging.py` — структурный staging исходного экспорта.
+- `tools/adapt_archive_staging_to_intake.py` — создание отдельного intake batch с metadata-only `source_records`.
+- `tools/plan_memory_intake.py` — read-only проверка и предложение маршрута.
+- `tools/source_evidence_registry.py <manifest> --apply` — явная запись SourceRecord metadata в `registry/source_records.jsonl`. Без `--apply` команда ничего не записывает.
+- `schemas/source_record.schema.json` — контракт SourceRecord; исходный текст и `project_id` не разрешены в записи.
+
+Эта цепочка покрыта round-trip тестом. Она ещё не означает, что семантические кандидаты автоматически превращаются в принятую память: promotion, индексирование и полный restore pipeline остаются отдельными незавершёнными этапами.

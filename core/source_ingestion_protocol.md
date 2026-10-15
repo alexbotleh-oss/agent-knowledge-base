@@ -240,3 +240,18 @@ PASS присваивается только если тест намеренн�
 - `archive_registry_staging.py` создаёт производные структурные записи сообщений/узлов и snapshot staging-генерации; это не канонические события или уроки.
 - `archive_temporal_index.py` — read-only инструмент поиска и просмотра хронологии в исходном экспорте.
 - Передача данных между этими слоями, смысловая классификация, продвижение в каноническую память и публикация результата должны проверяться отдельными контрактами. Успешная работа одного инструмента не доказывает, что остальные получили тот же источник или что весь конвейер работает end-to-end.
+
+
+## Реализованный участок конвейера — 2026-10-15
+
+На clean integration branch проверен следующий ограниченный маршрут:
+
+1. `archive_registry_staging.py` создаёт локальный staging-снимок и message-level source records.
+2. `adapt_archive_staging_to_intake.py` проверяет хеш и число staging-записей, сверяет `text_sha256`, переименовывает исходную метку времени в `source_time` и формирует intake manifest с `project_id=unknown`.
+3. Адаптер сохраняет в intake-артефакте только метаданные, source locator и хеши. Текст сообщения, заголовок разговора и имя автора не переносятся.
+4. `plan_memory_intake.py` валидирует manifest и предлагает маршрут `source_records → source_evidence_registry.append_source_records`.
+5. `source_evidence_registry.py` по умолчанию работает read-only; только явный `--apply` дописывает метаданные в `registry/source_records.jsonl`. Повтор того же source-record/snapshot/parser ключа идемпотентен; другой snapshot или parser version сохраняется как новая ревизия.
+
+Код этого участка прошёл CI на commit `fb7747c48de4eec774da2702e0db2b2201f34025` ([run #38742274796](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38742274796)).
+
+**Граница реализации:** это не полный end-to-end pipeline. Операции `register_source_reference` и `register_inventory` остаются плановыми маршрутами без writer-реализации. Смысловая классификация, promotion в canonical memory, обновление производных индексов и полный сценарий восстановления из нового чата ещё не соединены. Raw archive остаётся внешним источником; registry хранит ссылки и хеши, а не исходный текст.

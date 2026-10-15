@@ -31,12 +31,12 @@ This branch is created from the verified `main` HEAD and selectively ports core 
 
 ## Confirmed remaining integration gaps
 
-- `tools/plan_memory_intake.py` routes `source_records` to the logical operation `source_evidence_registry.append_source_records`, but `tools/source_evidence_registry.py` does not exist.
-- `archive_registry_staging.py` writes `archive_snapshot.json` and message-level source records; this is not the `manifest.json` contract consumed by the intake validator. No adapter connects them.
-- The raw SQLite importer, message-level staging, temporal index, intake planner, canonical promotion, derived index refresh, branch-result publication and next-session restore are not yet connected as one tested end-to-end path.
+- `tools/source_evidence_registry.py` now implements only `source_records → append_source_records`, with read-only default, explicit `--apply`, path restrictions, locking, idempotency and source/parser revision preservation. `register_source_reference` and `register_inventory` remain plan-only routes.
+- `tools/adapt_archive_staging_to_intake.py` now connects the local staging snapshot to the intake manifest for metadata-only `source_records`. It checks source-record hashes/counts, strips message text/title/author name, keeps project attribution `unknown`, and maps the export timestamp to `source_time`.
+- The first staging → sanitized intake → source-registry append path is tested end to end. The raw SQLite importer is still a separate raw-preservation stage; semantic classification/promotion, derived index refresh, source inventory/reference operations, branch-result publication and next-session restore are not yet connected as one full end-to-end path.
 - The write-contract audit is a partial static inventory and CI currently runs it without `--strict`.
 - Six raw conversation JSON payloads (about 4.7 MB total) are accessible from the public PR #22 branch. This integration branch excludes them. No deletion or history rewrite has been attempted; a commit deleting files would not by itself remove older reachable blobs from public history. Repository visibility/history cleanup needs a separate deliberate decision if those payloads were not intended to be public.
 
 ## Verification status
 
-CI has not yet run on this new clean integration HEAD. Do not treat the source PRs' green CI as proof that this curated tree passes. The next step is exact-HEAD CI, followed by focused end-to-end intake integration and regression tests.
+The core integration passed CI at commit `57a1a8bf74f3800bbaca2727e6c5ed5cd11a8b37` ([run #38741302018](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38741302018)). The first source-registry vertical slice passed CI at commit `fb7747c48de4eec774da2702e0db2b2201f34025` ([run #38742274796](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38742274796)). This documentation update is a newer commit and requires its own exact-HEAD CI before it is considered verified.
