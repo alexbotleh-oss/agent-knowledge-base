@@ -48,12 +48,12 @@ class ArchiveRegistryStagingTests(unittest.TestCase):
             tmp = Path(tmp)
             source = tmp / "conversations.json"
             out = tmp / "staging"
-            source.write_text(json.dumps([{"id":"c1","mapping":{"node":{"parent":null,"children":[],"message":{"id":"message-c1","create_time":1790000000,"author":{"role":"user"},"content":{"content_type":"text","parts":["old generation"]},"metadata":{}}}}}]), encoding="utf-8")
+            source.write_text(json.dumps([{"id":"c1","mapping":{"node":{"parent":None,"children":[],"message":{"id":"message-c1","create_time":1790000000,"author":{"role":"user"},"content":{"content_type":"text","parts":["old generation"]},"metadata":{}}}}}]), encoding="utf-8")
             first = build(source, out, "ARCHIVE-ATOMIC")
             old_manifest_bytes = (out / "archive_snapshot.json").read_bytes()
             old_records = (out / first["records_file"]).read_bytes()
 
-            source.write_text(json.dumps([{"id":"c2","mapping":{"node":{"parent":null,"children":[],"message":{"id":"message-c2","create_time":1790000000,"author":{"role":"user"},"content":{"content_type":"text","parts":["new generation"]},"metadata":{}}}}}]), encoding="utf-8")
+            source.write_text(json.dumps([{"id":"c2","mapping":{"node":{"parent":None,"children":[],"message":{"id":"message-c2","create_time":1790000000,"author":{"role":"user"},"content":{"content_type":"text","parts":["new generation"]},"metadata":{}}}}}]), encoding="utf-8")
             original_replace = Path.replace
             def fail_manifest_replace(path, target):
                 if path.name == "archive_snapshot.json.tmp":
@@ -94,14 +94,14 @@ class ArchiveRegistryStagingTests(unittest.TestCase):
             root = Path(tmp)
             source = root / "conversations.json"
             out = root / "staging"
-            source.write_text(json.dumps([{"id":"c1","mapping":{"node":{"parent":null,"children":[],"message":{"id":"message-c1","create_time":1790000000,"author":{"role":"user"},"content":{"content_type":"text","parts":["old generation"]},"metadata":{}}}}}]), encoding="utf-8")
+            source.write_text(json.dumps([{"id":"c1","mapping":{"node":{"parent":None,"children":[],"message":{"id":"message-c1","create_time":1790000000,"author":{"role":"user"},"content":{"content_type":"text","parts":["old generation"]},"metadata":{}}}}}]), encoding="utf-8")
             first = build(source, out, "ARCHIVE-CRASH-ATOMIC")
             manifest_path = out / "archive_snapshot.json"
             old_manifest = manifest_path.read_bytes()
             old_records_path = out / first["records_file"]
             old_records = old_records_path.read_bytes()
 
-            source.write_text(json.dumps([{"id":"c2","mapping":{"node":{"parent":null,"children":[],"message":{"id":"message-c2","create_time":1790000000,"author":{"role":"user"},"content":{"content_type":"text","parts":["new generation"]},"metadata":{}}}}}]), encoding="utf-8")
+            source.write_text(json.dumps([{"id":"c2","mapping":{"node":{"parent":None,"children":[],"message":{"id":"message-c2","create_time":1790000000,"author":{"role":"user"},"content":{"content_type":"text","parts":["new generation"]},"metadata":{}}}}}]), encoding="utf-8")
             crash_script = r'''
 import os
 import sys
