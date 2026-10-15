@@ -44,6 +44,9 @@ def _load_event_records(event_log: Path) -> dict[str, dict[str, Any]]:
 
 def _task_id_from_state(task_state: Path) -> str | None:
     text = task_state.read_text(encoding="utf-8")
+    explicit = re.search(r"^\s*parent_task_id\s*:\s*(\S+)", text, re.I | re.M)
+    if explicit:
+        return explicit.group(1).strip()
     match = re.search(r"^#\s*(?:TASK_STATE|Task state)\s*[—-]\s*(\S+)", text, re.I | re.M)
     return match.group(1).strip() if match else None
 
