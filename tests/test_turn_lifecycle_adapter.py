@@ -78,6 +78,17 @@ class TurnLifecycleAdapterTests(unittest.TestCase):
         self.assertEqual(status, 200)
         self.assertEqual(result["status"], "ALREADY_REGISTERED")
 
+    def test_same_turn_id_with_changed_checkpoint_is_conflict(self):
+        self.receive()
+        status, _, body = self.request("POST", "/v1/turns", {
+            "turn_id": "turn-1",
+            "task_id": "TASK-AGMS-1",
+            "user_text": "продолжай дальше",
+            "previous_checkpoint": "CKPT-STALE",
+        })
+        self.assertEqual(status, 400)
+        self.assertIn("collision", body["error"])
+
     def test_progress_and_prepared_report_remain_incomplete_until_ack(self):
         self.receive()
         status, _, _ = self.request("POST", "/v1/turns/turn-1/events", {"event_type": "WORK_STARTED"})
