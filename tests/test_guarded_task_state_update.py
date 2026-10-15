@@ -18,7 +18,7 @@ class GuardedTaskStateUpdateTests(unittest.TestCase):
         self.project.mkdir(parents=True)
         self.task_state = self.project / "TASK_STATE.md"
         self.task_state.write_text(
-            "# Task state\n"
+            "# Task state — TASK-TEST\n"
             "- **Активная задача в текущей сессии:** проверка записи контрольной точки\n"
             "- **Следующий шаг:** применить подтверждённую контрольную точку\n"
             "- **Последнее событие:** EVT-TEST-001\n"
@@ -32,7 +32,37 @@ class GuardedTaskStateUpdateTests(unittest.TestCase):
         event_dir = self.root / "projects" / "AGENT_MEMORY_SYSTEM"
         event_dir.mkdir(parents=True)
         self.event_log = event_dir / "events.jsonl"
-        self.event_log.write_text(json.dumps({"event_id": "EVT-TEST-001", "type": "cross_branch_result"}) + "\n", encoding="utf-8")
+        result_event = {
+            "event_id": "EVT-TEST-RESULT",
+            "project_id": "AGENT_MEMORY_SYSTEM",
+            "type": "cross_branch_result",
+            "branch_return": {
+                "parent_checkpoint_id": "CKPT-TEST-001",
+                "parent_task_id": "TASK-TEST",
+                "owner_acknowledgement": "PENDING",
+            },
+        }
+        acknowledgement_event = {
+            "event_id": "EVT-TEST-001",
+            "project_id": "AGENT_MEMORY_SYSTEM",
+            "type": "cross_branch_result_acknowledged",
+            "outcome": "accepted",
+            "related_event_ids": ["EVT-TEST-RESULT"],
+            "acknowledgement": {
+                "result_event_id": "EVT-TEST-RESULT",
+                "decision": "accepted",
+                "parent_checkpoint_id": "CKPT-TEST-001",
+            },
+            "relations": [
+                {"type": "acknowledges_result", "event_id": "EVT-TEST-RESULT"},
+                {"type": "reports_to_checkpoint", "checkpoint_id": "CKPT-TEST-001"},
+                {"type": "belongs_to_task", "task_id": "TASK-TEST"},
+            ],
+        }
+        self.event_log.write_text(
+            json.dumps(result_event) + "\\n" + json.dumps(acknowledgement_event) + "\\n",
+            encoding="utf-8",
+        )
         self.proposal = {
             "update_id": "UPDATE-TEST-001",
             "expected_sha256": sha256_bytes(self.task_state.read_bytes()),
