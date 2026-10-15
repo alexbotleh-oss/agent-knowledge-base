@@ -92,3 +92,15 @@ Next integration checks:
 4. Verify result/ack appenders reject malformed journals and survive interrupted writes without losing prior events.
 5. Kill/restart the resumable importer at batch boundaries and compare imported identities/counts with a clean import.
 6. Re-run this inventory after any persistence API or write target changes.
+
+## Crash-injection evidence (HEAD `85f6867668c1884ed8a43f6a6d379a77200e720b`)
+
+GitHub Actions validation run [#528](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38679138314) completed successfully on this exact HEAD. The crash-injection tests in `tests/test_checkpoint_crash_injection.py` exercise two controlled termination points:
+
+- **Killed before `os.replace`:** the prior `TASK_STATE.md` bytes remain unchanged; the temporary file and both lock files may remain because the killed process cannot execute cleanup. The test confirms those markers, then removes locks only after verifying the worker has exited and retries the operation.
+- **Killed after `os.replace`:** the complete new checkpoint is present; lock files remain; replay returns `ALREADY_APPLIED` before attempting lock acquisition. The test removes the locks only after confirming the worker is dead.
+
+These are verified test outcomes for the tested Linux CI environment and the injected boundaries, not a universal durability guarantee. They do not prove behavior under power loss, filesystem/controller failure, kernel panic, storage hardware faults, or every possible instruction-level interruption. Atomic replacement protects readers from a partially replaced target under the tested filesystem semantics; it does not by itself prove the directory entry is durable across sudden power loss.
+
+Stale-lock cleanup is intentionally not automatic. A lock may represent a live or stalled writer, and guessing that it is stale can reintroduce concurrent mutation. Recovery remains an explicit operator action after checking that the owning process is no longer active. The tests' manual cleanup is test-fixture recovery, not production lock-reaping behavior.
+
