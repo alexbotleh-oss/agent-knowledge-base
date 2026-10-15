@@ -190,6 +190,18 @@ A follow-up scan reviewed every tracked file in `tools/*.py` and `tools/*.sh`, b
 **Disposition:** executable-source review is broader and found no additional report/installer callers in the inspected paths. The full tracked-content search, dynamic/indirect caller review, and external/manual invocation inventory remain open; do not mark the writer audit complete yet.
 
 
+
+### Evolution of static audit metrics (code HEAD `0b35c21153a35c52f72412320dfa61f994e29a2e`; documentation HEAD `c45ae0d18cce092bae9ca207a9d7cb8f43c237d2`)
+
+| Metric | Before refinement | After refinement | Interpretation |
+|---|---:|---:|---|
+| AST mutation candidates | 64 | 55 | Nine candidates were removed after distinguishing common string/date `.replace()` calls from filesystem replacement operations. |
+| Unclassified findings emitted by the AST inventory | 1 | 0 | The known pure-string `.replace()` finding no longer appears as an unclassified mutation. Zero unclassified findings does **not** prove every real mutation was discovered. |
+| Dedicated classifier regression tests | 0 | 4 | Tests cover string `.replace()`, inferred `Path.replace()`, `os.replace()`, and a receiver whose type cannot be inferred. |
+
+**Status:** classification accuracy improved and the new cases are regression-tested; completeness is not guaranteed. Conservative path inference may miss filesystem operations when the receiver cannot be identified, and dynamic or indirect writes may be outside the AST inventory. CI evidence: [#572](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38697538884) and [#573](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38697632307).
+
+
 ### Disclaimer: static write-audit limitations
 
 `tools/audit_write_contracts.py` is a heuristic review aid, not a proof of write safety or an exact inventory of every mutation site.
