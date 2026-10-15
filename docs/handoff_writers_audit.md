@@ -61,11 +61,12 @@ These are test-backed constraints, not a claim that every failure mode is covere
 
 ## Recovery dependencies (verified invariants)
 
-Every interruption/restart test must verify recovery **and** preservation of the two stable import contracts above. Reaching `RAW_COMPLETE` is not sufficient if previously committed records, event timestamps, checksums, source identity, or checkpoint state were changed.
+Every interruption/restart test must verify recovery **and** preservation of all three stable import contracts above. Reaching `RAW_COMPLETE` is not sufficient if previously committed records, event timestamps, checksums, source identity, or checkpoint state were changed.
 
 - **PRINCIPLE 1 — idempotency:** previously committed rows and their payload checksums/import timestamps remain unchanged; previously committed event rows and timestamps remain unchanged; a failed uncommitted batch does not advance the durable cursor or duplicate records when retried.
 - **PRINCIPLE 2 — logical-source separation:** different `archive_id` values must retain independent event histories, records, and checkpoints even when source bytes/digests match and one process is interrupted.
-- **Critical-defect rule:** any recovery path that violates either invariant is a critical defect, even if the importer eventually reports `RAW_COMPLETE`.
+- **PRINCIPLE 3 — crash recovery:** an uncommitted batch rolls back after abrupt process exit; retry resumes from the last durable checkpoint without changing the committed prefix or duplicating records.
+- **Critical-defect rule:** any recovery path that violates any of these three invariants is a critical defect, even if the importer eventually reports `RAW_COMPLETE`.
 
 ### Scenario 1 — abrupt process exit inside a batch transaction
 
@@ -74,10 +75,16 @@ Every interruption/restart test must verify recovery **and** preservation of the
 - **CI:** [run #556](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38692448056) passed on the exact test commit.
 - **Boundary:** verified in the Ubuntu 24.04 GitHub Actions environment for this injected process-exit point and SQLite transaction path. It is not proof of power-loss durability, arbitrary filesystem/kernel failures, hardware faults, or every platform's SQLite/locking behavior.
 
-### Remaining recovery scenarios
+### Scenario 2 — concurrent same-source launch with lock-holder crash
 
-1. **Concurrent same-source launch with one process terminated:** verify the OS lock serializes cooperating importer processes, the surviving/restarted process finishes correctly, and all committed rows/events/checkpoints remain invariant. Existing serialization coverage does not by itself prove this crash interleaving.
-2. **Restart at a committed batch boundary:** start a fresh process from a persisted checkpoint and verify it resumes from the durable byte offset/ordinal without rewriting the committed prefix. Existing pause/resume coverage is not the same as an independent service restart.
+- **Behavioral evidence:** `test_concurrent_same_source_recovers_after_lock_holder_crashes`. Archive A first commits a prefix. A child process resumes and pauses after an insert inside an uncommitted batch while holding the output-directory lock; a second cooperating process attempts the same source. The first process exits abruptly, the waiting process completes the import, and the test checks the unchanged committed prefix/event history, unique ordinals, final checkpoint, and independent progress for identical bytes under a second `archive_id`.
+- **Test commit:** `6df75bc59409c22d6dd924c6466d10184f1236d5`.
+- **CI:** [run #559](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38692838537) passed on the exact test commit.
+- **Boundary:** verifies cooperating processes using the importer entry point and its output-directory OS advisory lock in Ubuntu 24.04 GitHub Actions. The test's short wait confirms the second process has not exited while the first holds the lock; it does not establish behavior for non-cooperating writers, every OS/filesystem, or machine/power failure.
+
+### Remaining recovery scenario
+
+1. **Independent-process restart at a committed batch boundary:** start a fresh process from a persisted checkpoint and verify it resumes from the durable byte offset/ordinal without rewriting the committed prefix. Existing pause/resume coverage is not the same as an independent service restart.
 
 ## Import idempotency coverage (branch review)
 
