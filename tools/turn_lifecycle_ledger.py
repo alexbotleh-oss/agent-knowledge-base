@@ -154,7 +154,11 @@ def append_event(path: Path, event: dict[str, Any]) -> dict[str, Any]:
             if event["event_type"] == "TURN_RECEIVED":
                 if tid in current:
                     old = current[tid]
-                    if old["user_text_sha256"] == event["user_text_sha256"] and old.get("task_id") == event.get("task_id"):
+                    if (
+                        old["user_text_sha256"] == event["user_text_sha256"]
+                        and old.get("task_id") == event.get("task_id")
+                        and old.get("previous_checkpoint") == event.get("previous_checkpoint")
+                    ):
                         return {"status": "ALREADY_REGISTERED", "turn": old}
                     raise ValueError(f"turn_id collision with different input: {tid}")
             elif tid not in current:
