@@ -32,7 +32,7 @@ def load_export(source: Path) -> tuple[bytes, list[dict]]:
     raw = source.read_bytes()
     if source.suffix.lower() == ".zip":
         with zipfile.ZipFile(source) as archive:
-            names = [name for name in archive.namelist() if name.endswith("conversations.json")]
+            names = [name for name in archive.namelist() if Path(name).name == "conversations.json"]
             if len(names) != 1:
                 raise ValueError(f"Expected exactly one conversations.json in ZIP; found {len(names)}")
             payload = json.loads(archive.read(names[0]).decode("utf-8"))
