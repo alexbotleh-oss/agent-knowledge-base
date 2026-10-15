@@ -136,6 +136,25 @@ This does not cover manual edits, arbitrary external scripts, editor/IDE writes,
 This caller inventory is deliberately scoped: it records only source files actually read and does not claim repository-wide exhaustive search. Before declaring the invocation audit complete, run a branch-local search across tracked files for both script names, shell wrappers, and indirect `bash`/`sh` invocations; record exact line numbers and every explicit output target. CI run #540 passed on reviewed HEAD `165c39a69549af3c1f04ece75e7d930a8ee40f60`. The later documentation HEAD `f6ec021e7d99f49ac6b9e75e692fe2eb0cf58f22` passed validation in CI run [#566](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38695331178). This validates the repository's configured checks at that exact HEAD; it does not make the caller inventory exhaustive.
 
 
+## Scope of guarantees for `tools/resumable_chat_import.py`
+
+The importer provides the following **verified, scenario-scoped guarantees** through its own entry point:
+
+1. **Idempotency:** replaying a completed import with the same `archive_id` and identical source bytes does not rewrite the tested committed records, payload checksums, import timestamps, event history/timestamps, or persisted checkpoint.
+2. **Logical-source separation:** identical source bytes under different `archive_id` values retain independent records, event histories, and progress in the tested importer scenarios.
+3. **Recovery integrity:** an injected process exit before a batch transaction commits rolls back that uncommitted batch; a cooperating retry or fresh-process CLI invocation resumes from the persisted checkpoint without duplicating records or changing the tested committed prefix/history.
+
+These guarantees are supported by the named behavioral tests and CI runs in the sections above. They apply to the tested importer paths, SQLite transaction behavior, and cooperating processes using the importer's lock protocol. They are **not** a universal durability guarantee.
+
+**Out of scope / not established by this importer contract:**
+
+- Direct SQLite writes, manual database edits, or non-cooperating writers that bypass the importer and its lock protocol.
+- Power loss, disk failure, WAL/database corruption, and arbitrary operating-system, filesystem, or kernel faults.
+- Cross-platform locking/recovery behavior beyond the CI environment explicitly named by each test.
+- Coordination across distinct canonical state files, including the known `HANDOFF.md` versus `TASK_STATE.md` race. That belongs to a separate shared-writer protocol; importer guarantees do not resolve it.
+
+A successful `RAW_COMPLETE` status is necessary but not sufficient evidence of correctness: the scenario's persisted-state invariants must also hold. Do not extend these claims beyond the tests and boundaries cited here.
+
 ## Remaining-risk audit at HEAD `f6ec021e7d99f49ac6b9e75e692fe2eb0cf58f22`
 
 This is a scoped audit of evidence available in the current branch, not a claim of complete system reliability.
