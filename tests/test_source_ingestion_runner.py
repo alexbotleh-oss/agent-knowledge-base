@@ -111,6 +111,26 @@ runner.run_ingestion(Path(sys.argv[2]), Path(sys.argv[3]), intake_root=Path(sys.
             self.assertEqual(events[-1]["status"], "SOURCE_REGISTERED_DOWNSTREAM_PENDING")
             self.assertTrue(Path(resumed["run_state_path"]).is_file())
 
+    def test_missing_state_projection_is_rebuilt_from_event_ledger(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            snapshot = self._snapshot(root)
+            registry = root / "registry" / "source_records.jsonl"
+            kwargs = dict(run_root=root / "runs", intake_root=root / "intake",
+                          registry_path=registry, apply=False)
+            first = run_ingestion(snapshot, **kwargs)
+            state_path = Path(first["run_state_path"])
+            state_path.unlink()
+
+            resumed = run_ingestion(snapshot, **kwargs)
+            self.assertEqual(resumed["status"], "READY_FOR_SOURCE_REGISTRATION")
+            self.assertTrue(state_path.is_file())
+            events = _load_events(Path(resumed["event_ledger_path"]))
+            state = json.loads(state_path.read_text(encoding="utf-8"))
+            self.assertEqual(state["latest_event_sha256"], events[-1]["event_sha256"])
+            self.assertEqual(state["latest_sequence"], events[-1]["sequence"])
+            self.assertFalse(registry.exists())
+
     def test_tampered_run_ledger_blocks_before_registry_write(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
