@@ -64,10 +64,30 @@ def _event_search_text(event: dict[str, Any]) -> str:
         if field in event:
             pieces.extend(_strings(event[field]))
     # Include explicit source references and typed relations for traceability.
-    for field in ("evidence", "source_refs", "relations"):
+    for field in ("evidence", "evidence_refs", "source_refs", "relations"):
         if field in event:
             pieces.extend(_strings(event[field]))
     return " ".join(pieces)
+
+
+def _combined_evidence_refs(event: dict[str, Any]) -> list[Any]:
+    """Preserve evidence pointers from both legacy and current field names."""
+    refs: list[Any] = []
+    for field in ("evidence", "evidence_refs"):
+        value = event.get(field)
+        if isinstance(value, list):
+            refs.extend(value)
+        elif isinstance(value, dict):
+            refs.append(value)
+    return refs
+
+
+def _infer_project_id_from_task_state(task_state: Path) -> str | None:
+    """Infer scope only from the canonical projects/<project>/TASK_STATE.md layout."""
+    path = Path(task_state).resolve()
+    if path.name == "TASK_STATE.md" and path.parent.parent.name == "projects":
+        return path.parent.name
+    return None
 
 
 def _evidence_quality(event: dict[str, Any]) -> dict[str, Any]:
@@ -349,6 +369,18 @@ def retrieve_experience_candidates(
             evidence_source_validation = _validate_evidence_sources(
                 event, evidence_root
             )
+            raw_event_time = event.get("event_time")
+            if isinstance(raw_event_time, str) and raw_event_time.strip():
+                normalized_event_time = raw_event_time
+                event_time_source_field = "event_time"
+            else:
+                legacy_timestamp = event.get("timestamp")
+                if isinstance(legacy_timestamp, str) and legacy_timestamp.strip():
+                    normalized_event_time = legacy_timestamp
+                    event_time_source_field = "timestamp_legacy"
+                else:
+                    normalized_event_time = "UNKNOWN"
+                    event_time_source_field = "UNKNOWN"
             indexed.append({
                 "event_id": event["event_id"],
                 "score": round(min(score, 1.25), 4),
@@ -374,10 +406,11 @@ def retrieve_experience_candidates(
                     evidence_quality["state"],
                     evidence_source_validation["status"],
                 ),
-                "event_time": event.get("event_time", "UNKNOWN"),
+                "event_time": normalized_event_time,
+                "event_time_source_field": event_time_source_field,
                 "source_time": event.get("source_time", "UNKNOWN"),
                 "recorded_at": event.get("recorded_at", "UNKNOWN"),
-                "evidence_refs": event.get("evidence", []),
+                "evidence_refs": _combined_evidence_refs(event),
                 "relations": event.get("relations", []),
                 "source": {
                     "path": str(path),
@@ -456,8 +489,21 @@ def run_minimal_agent_loop(
     logs = [Path(item) for item in (experience_logs or [])]
     if not logs:
         logs = [Path(event_log)]
+    inferred_project_id = _infer_project_id_from_task_state(task_state)
+    effective_project_id = (
+        current_project_id.strip()
+        if isinstance(current_project_id, str) and current_project_id.strip()
+        else inferred_project_id
+    )
+    project_id_source = (
+        "explicit_argument"
+        if isinstance(current_project_id, str) and current_project_id.strip()
+        else "task_state_path"
+        if inferred_project_id
+        else "unknown"
+    )
     retrieval = retrieve_experience_candidates(
-        query, logs, limit=limit, current_project_id=current_project_id,
+        query, logs, limit=limit, current_project_id=effective_project_id,
         evidence_root=evidence_root,
     )
 
@@ -483,6 +529,8 @@ def run_minimal_agent_loop(
         "trust_gate": trust,
         "checkpoint_currentness_gate": currentness_gate,
         "retrieval": retrieval,
+        "current_project_id": effective_project_id or "UNKNOWN",
+        "current_project_id_source": project_id_source,
         "next_action_policy": (
             "REVIEW_CANDIDATES_ONLY_NO_PLANNING"
             if candidates_reviewable
