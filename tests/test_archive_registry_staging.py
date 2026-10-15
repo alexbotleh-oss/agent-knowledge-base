@@ -29,6 +29,24 @@ class ArchiveRegistryStagingTests(unittest.TestCase):
             self.assertFalse(rows[1]["attachment_payloads_inspected"])
             self.assertEqual(manifest["raw_sha256"], hashlib.sha256(source.read_bytes()).hexdigest())
 
+    def test_zip_source_selection_uses_exact_basename_and_rejects_ambiguity(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            source = tmp / "sample.zip"
+            payload = [{"id":"expected","mapping":{}}]
+            with zipfile.ZipFile(source, "w") as z:
+                z.writestr("backup_conversations.json", json.dumps([{"id":"wrong","mapping":{}}]))
+                z.writestr("nested/conversations.json", json.dumps(payload))
+            manifest = build(source, tmp / "out", "ARCHIVE-EXACT-NAME")
+            self.assertEqual(manifest["coverage"]["conversation_count"], 1)
+
+            ambiguous = tmp / "ambiguous.zip"
+            with zipfile.ZipFile(ambiguous, "w") as z:
+                z.writestr("one/conversations.json", json.dumps(payload))
+                z.writestr("two/conversations.json", json.dumps(payload))
+            with self.assertRaisesRegex(ValueError, "found 2"):
+                build(ambiguous, tmp / "ambiguous-out", "ARCHIVE-AMBIGUOUS")
+
     def test_repeat_build_records_are_deterministic(self):
         with tempfile.TemporaryDirectory() as tmp:
             tmp = Path(tmp)
