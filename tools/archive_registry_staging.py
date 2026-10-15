@@ -96,7 +96,8 @@ def _build_unlocked(source: Path, output: Path, archive_id: str) -> dict:
     output.mkdir(parents=True, exist_ok=True)
     # Versioned immutable generations prevent a crash between record and manifest
     # publication from making the old manifest point at newly replaced records.
-    record_path = output / f"source_records.{digest}.source-registry-staging-v1.jsonl"
+    archive_key = sha256(archive_id.encode("utf-8"))[:12]
+    record_path = output / f"source_records.{archive_key}.{digest}.source-registry-staging-v1.jsonl"
     tmp_path = output / (record_path.name + ".tmp")
     with tmp_path.open("w", encoding="utf-8", newline="\n") as stream:
         for record in records:
