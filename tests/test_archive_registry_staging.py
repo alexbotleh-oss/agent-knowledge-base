@@ -21,7 +21,7 @@ class ArchiveRegistryStagingTests(unittest.TestCase):
                 z.writestr("conversations.json", json.dumps(payload))
             out = tmp / "staging"
             manifest = build(source, out, "ARCHIVE-TEST-001")
-            rows = [json.loads(line) for line in (out / "source_records.jsonl").read_text().splitlines()]
+            rows = [json.loads(line) for line in (out / manifest["records_file"]).read_text().splitlines()]
             self.assertEqual(manifest["coverage"]["conversation_count"], 1)
             self.assertEqual(manifest["coverage"]["source_record_count"], 2)
             self.assertEqual(len({r["source_locator"] for r in rows}), 2)
@@ -39,7 +39,36 @@ class ArchiveRegistryStagingTests(unittest.TestCase):
             one, two = tmp / "one", tmp / "two"
             build(source, one, "ARCHIVE-TEST-002")
             build(source, two, "ARCHIVE-TEST-002")
-            self.assertEqual((one / "source_records.jsonl").read_bytes(), (two / "source_records.jsonl").read_bytes())
+            self.assertEqual((one / json.loads((one / "archive_snapshot.json").read_text())["records_file"]).read_bytes(), (two / json.loads((two / "archive_snapshot.json").read_text())["records_file"]).read_bytes())
+
+
+    def test_failed_manifest_publish_preserves_previous_generation(self):
+        from unittest.mock import patch
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            source = tmp / "conversations.json"
+            out = tmp / "staging"
+            source.write_text(json.dumps([{"id":"c1","mapping":{}}]), encoding="utf-8")
+            first = build(source, out, "ARCHIVE-ATOMIC")
+            old_manifest_bytes = (out / "archive_snapshot.json").read_bytes()
+            old_records = (out / first["records_file"]).read_bytes()
+
+            source.write_text(json.dumps([{"id":"c2","mapping":{}}]), encoding="utf-8")
+            original_replace = Path.replace
+            def fail_manifest_replace(path, target):
+                if path.name == "archive_snapshot.json.tmp":
+                    raise OSError("injected failure before manifest publication")
+                return original_replace(path, target)
+            with patch.object(Path, "replace", fail_manifest_replace):
+                with self.assertRaises(OSError):
+                    build(source, out, "ARCHIVE-ATOMIC")
+
+            self.assertEqual((out / "archive_snapshot.json").read_bytes(), old_manifest_bytes)
+            self.assertEqual((out / first["records_file"]).read_bytes(), old_records)
+            current = json.loads((out / "archive_snapshot.json").read_text())
+            self.assertEqual(current["raw_sha256"], first["raw_sha256"])
+            self.assertTrue((out / current["records_file"]).exists())
+
 
 if __name__ == "__main__":
     unittest.main()
