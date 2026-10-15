@@ -226,7 +226,8 @@ Safety and interpretation:
 - Disputed and apparently conflicting records remain separate candidates. The retriever does not decide which is true.
 - Every candidate starts with `transfer_decision: UNASSESSED`. Tool/language tags are descriptive only; applicability to the current project requires a separate evidence-backed assessment.
 - Missing or malformed requested logs fail closed; partial results are not presented as a complete search.
-- If the trust gate refuses planning, candidate review may still be offered, but the returned policy explicitly says `REVIEW_CANDIDATES_ONLY_NO_PLANNING`.
+- Even if the lower-level context trust gate returns `AUTHORIZED_FOR_PLANNING`, this coordinator blocks planning by default with `BLOCKED_CURRENTNESS_UNVERIFIED`. Source hashes prove byte freshness relative to packet creation; they do not prove that the checkpoint still matches the live user goal or current repository/PR state.
+- Candidate review may still be offered, but the returned policy explicitly says `REVIEW_CANDIDATES_ONLY_NO_PLANNING`. A future currentness gate must compare a stable task/checkpoint identity and relevant live state against authoritative evidence before it can lift this block.
 
 Limitations:
 - Retrieval is lexical, not embedding/semantic retrieval, and it searches supplied event logs only; it is not yet a complete query over every canonical MemoryRecord, lesson, decision and relation.
