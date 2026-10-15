@@ -62,6 +62,13 @@ class ContinuityCheckpointBundleTests(unittest.TestCase):
         self.assertIn("recoverable checkpoint", (self.project / "HANDOFF.md").read_text(encoding="utf-8"))
         self.assertEqual(bundle.verify(self.project)["status"], "CURRENT")
 
+    def test_exact_checkpoint_replay_is_idempotent(self):
+        first = self._capture("CKPT-TEST-006")
+        self.assertEqual(first["status"], "CAPTURED")
+        replay = self._capture("CKPT-TEST-006")
+        self.assertEqual(replay["status"], "ALREADY_CAPTURED")
+        self.assertFalse(replay["writes_performed"])
+
     def test_second_checkpoint_links_to_first_without_rewriting_it(self):
         first = self._capture("CKPT-TEST-003")
         self.assertEqual(first["status"], "CAPTURED")
