@@ -67,6 +67,24 @@ class TemporalMemoryModelTests(unittest.TestCase):
         self.assertEqual(result["status"], "not_comparable")
         self.assertIn("counting_unit", result["mismatched_dimensions"])
 
+    def test_missing_captured_at_is_invalid_without_key_error(self):
+        row = snapshot("missing-time", "2026-10-07T15:00:00Z", 37)
+        del row["captured_at"]
+        self.assertIn("missing:captured_at", validate_snapshot(row))
+        result = compare_snapshots(row, snapshot("later", "2026-10-13T12:00:00Z", 74))
+        self.assertEqual(result["status"], "invalid_snapshot")
+        self.assertIn("missing:captured_at", result["errors"])
+
+    def test_empty_snapshot_timestamp_is_invalid_but_null_is_allowed(self):
+        empty = snapshot("empty-time", "", 37)
+        self.assertTrue(any("captured_at must be a non-empty" in e for e in validate_snapshot(empty)))
+        unknown = snapshot("unknown-time", None, 37)
+        self.assertNotIn("missing:captured_at", validate_snapshot(unknown))
+
+    def test_empty_assertion_recorded_at_is_invalid(self):
+        row = assertion("A-empty-time", "claim", "")
+        self.assertTrue(any("recorded_at must be a non-empty" in e for e in validate_assertion(row)))
+
     def test_missing_snapshot_scope_is_invalid_not_guessed(self):
         row = snapshot("a", "2026-10-07T15:00:00Z", 37)
         del row["scope_id"]
