@@ -238,13 +238,6 @@ Important limitations:
 - A file passing the availability/format screen is only a suitable carrier for textual evidence; it is not proof that the file supports the claim or that the lesson transfers to the current task.
 - Semantic validation of evidence content remains unimplemented.
 - Every candidate remains `transfer_decision: UNASSESSED`; no gate authorizes use, promotion, writes or execution.
-The loop applies independent, non-authorizing review dimensions:
-- **Scope filter:** explicit `--project-id` matching routes same-project candidates to review; mismatches remain `OUT_OF_PROJECT_SCOPE`; missing identity remains `PROJECT_SCOPE_UNKNOWN`.
-- **Evidence-quality filter:** classifies the record's status metadata and whether recognized evidence pointers exist. A `verified` label is not proof of claim validity.
-- **Local source-availability check:** when the caller explicitly supplies `--evidence-root`, each `evidence`/`evidence_refs` item with `kind: file` and a repository-relative `ref` is checked under that root for existence, regular-file type, non-empty content and a text-like UTF-8 sample (up to 8192 bytes). Empty files are classified `EMPTY_FILE`; samples containing a NUL byte or invalid UTF-8 are classified `BINARY_FILE`. Path traversal and absolute paths are not followed outside the root. URLs, commit IDs, test names and other non-file references are not fetched or validated.
-- If a local file reference is missing, unreadable, not a regular file, empty or classified as binary, `candidate_review_gate` becomes `SCOPE_MATCHED_EVIDENCE_SOURCE_UNAVAILABLE_BLOCKED`. Aggregate statuses include `EMPTY_SOURCE` and `BINARY_SOURCE` when any referenced local file has the corresponding condition. If no evidence root is supplied, the check is explicitly `NOT_CHECKED_NO_EVIDENCE_ROOT`; it must not be interpreted as a pass.
-- Passing this local check only establishes that the referenced file is available and has non-empty text-like content under the bounded sample heuristic. It does not prove that the file supports the event claim or that the lesson transfers to the current task. Candidates remain `transfer_decision: UNASSESSED`; no review gate authorizes use, promotion, writes or execution.
-
 The command explicitly connects existing components in this order:
 1. Build the source-backed restore packet from the supplied `TASK_STATE.md`, `HANDOFF.md` and canonical event log.
 2. Extract semantic fields with source-hash freshness checks and preserve `UNKNOWN` / stale states.
