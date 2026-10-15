@@ -3,6 +3,7 @@
   const ACTIVE_KEY = "chat-turn-continuity-active-turn";
   let pending = false;
   let allowNextSend = false;
+  let allowNextSubmit = false;
   let activeTurnId = sessionStorage.getItem(ACTIVE_KEY);
   let responseTimer = null;
   let responseRecording = false;
@@ -39,9 +40,12 @@
     return (typeof node.value === "string" ? node.value : (node.innerText || node.textContent || "")).trim();
   }
   function sendButton() {
-    return document.querySelector('button[data-testid="send-button"]') ||
+    const known = document.querySelector('button[data-testid="send-button"]') ||
       document.querySelector('button[aria-label="Send prompt"]') ||
       document.querySelector('button[aria-label="Send message"]');
+    if (known) return known;
+    const input = composer();
+    return input?.closest("form")?.querySelector('button[type="submit"]') || null;
   }
   function generating() {
     return Boolean(document.querySelector('button[data-testid="stop-button"], button[aria-label*="Stop generating"], button[aria-label*="Stop streaming"]'));
@@ -121,14 +125,20 @@
       activeTurnId = turnId;
       sessionStorage.setItem(ACTIVE_KEY, turnId);
       lastObservedCount = before.length;
-      allowNextSend = true;
       const freshButton = sendButton() || button;
-      if (!freshButton || !freshButton.isConnected || freshButton.disabled) {
+      if (freshButton && freshButton.isConnected && !freshButton.disabled) {
+        allowNextSend = true;
+        freshButton.click();
+      } else {
         allowNextSend = false;
-        toast("Сообщение сохранено, но кнопка отправки недоступна. Ход остался незавершённым.");
-        return;
+        const form = input?.closest("form");
+        if (!form || typeof form.requestSubmit !== "function") {
+          toast("Сообщение сохранено, но отправку нельзя безопасно продолжить. Ход остался незавершённым.");
+          return;
+        }
+        allowNextSubmit = true;
+        form.requestSubmit();
       }
-      freshButton.click();
       scheduleResponseCheck();
     } catch (error) {
       toast("Сообщение НЕ отправлено: не удалось надёжно записать его в журнал. " + String(error.message || error));
@@ -139,16 +149,33 @@
 
   document.addEventListener("click", event => {
     const target = event.target instanceof Element ? event.target : null;
-    const button = target?.closest('button[data-testid="send-button"], button[aria-label="Send prompt"], button[aria-label="Send message"]');
-    if (!button) return;
+    const button = target?.closest("button");
+    const input = composer();
+    const form = input?.closest("form");
+    const knownSend = button && button.matches('button[data-testid="send-button"], button[aria-label="Send prompt"], button[aria-label="Send message"]');
+    const genericSubmit = button && form && form.contains(button) && button.type === "submit";
+    if (!button || (!knownSend && !genericSubmit)) return;
     if (allowNextSend) {
       allowNextSend = false;
       return;
     }
-    const text = composerText();
+    const text = composerText(input);
     if (!text) return;
     cancelEvent(event);
     void gatedSend(button);
+  }, true);
+
+  document.addEventListener("submit", event => {
+    const form = event.target instanceof HTMLFormElement ? event.target : null;
+    const input = composer();
+    if (!form || !input || !form.contains(input)) return;
+    if (allowNextSubmit) {
+      allowNextSubmit = false;
+      return;
+    }
+    if (!composerText(input)) return;
+    cancelEvent(event);
+    void gatedSend(sendButton());
   }, true);
 
   document.addEventListener("keydown", event => {
