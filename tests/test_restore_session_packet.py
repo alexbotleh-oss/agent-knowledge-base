@@ -54,7 +54,7 @@ class RestoreSessionPacketTests(unittest.TestCase):
         other_project.mkdir(parents=True)
         other_handoff = other_project / "HANDOFF.md"
         other_handoff.write_text(
-            "# HANDOFF\\n- **Следующий шаг:** unrelated project step\\n",
+            "# HANDOFF\n- **Следующий шаг:** unrelated project step\n",
             encoding="utf-8",
         )
         packet = build_session_packet(self.task, other_handoff, self.events)
@@ -64,8 +64,8 @@ class RestoreSessionPacketTests(unittest.TestCase):
 
     def test_duplicate_event_ids_block_ambiguous_source_linkage(self):
         self.events.write_text(
-            json.dumps({"event_id": "EVT-TEST-001", "summary": "first"}) + "\\n"
-            + json.dumps({"event_id": "EVT-TEST-001", "summary": "different second record"}) + "\\n",
+            json.dumps({"event_id": "EVT-TEST-001", "summary": "first"}) + "\n"
+            + json.dumps({"event_id": "EVT-TEST-001", "summary": "different second record"}) + "\n",
             encoding="utf-8",
         )
         packet = build_session_packet(self.task, self.handoff, self.events)
