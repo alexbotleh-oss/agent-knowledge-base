@@ -155,7 +155,7 @@ These guarantees are supported by the named behavioral tests and CI runs in the 
 
 A successful `RAW_COMPLETE` status is necessary but not sufficient evidence of correctness: the scenario's persisted-state invariants must also hold. Do not extend these claims beyond the tests and boundaries cited here.
 
-## Remaining-risk audit at HEAD `f6ec021e7d99f49ac6b9e75e692fe2eb0cf58f22`
+## Remaining-risk audit at HEAD `9a45f89b675dc8a7bba6079bcea9975265e2aa46`
 
 This is a scoped audit of evidence available in the current branch, not a claim of complete system reliability.
 
@@ -172,8 +172,23 @@ This is a scoped audit of evidence available in the current branch, not a claim 
 | Power loss, disk failure, database/WAL corruption, arbitrary OS/filesystem/kernel faults | **Intentionally not covered** | Current tests inject process termination at controlled points; they do not simulate hardware or storage failure. Add such testing only if these failure modes become explicit product requirements and can be tested meaningfully. |
 | Windows/macOS and other filesystem locking semantics | **Not established by current CI evidence** | The documented crash/concurrency evidence is from Ubuntu 24.04. If cross-platform support is a release requirement, add a platform matrix and targeted lock/recovery checks; otherwise retain this as a stated boundary. |
 | `HANDOFF.md` changing between trust re-check and `TASK_STATE.md` replacement | **Known open race; requires design decision** | The current lock protocol does not lock or version `HANDOFF.md`. A test can demonstrate the race, but a durable fix likely needs a shared mutation protocol or immutable/versioned source reference. Do not claim atomicity across these files. |
+| Static AST mutation inventory | **Advisory; false positives observed** | CI run #568 on HEAD `9a45f89b675dc8a7bba6079bcea9975265e2aa46` reports 64 candidate sites and one unclassified `replace`. Inspection confirms `tools/temporal_memory_model.py:25` is a pure string normalization (`str.replace`), not a write; other date/string `.replace()` calls are also reported as candidates. The audit tool's `replace` heuristic needs refinement before its count can be interpreted as actual mutation-site count. |
 | Complete inventory of report/installer callers and indirect invocation paths | **Audit still required** | The current caller inventory is explicitly partial. Run a branch-local search over tracked files and record all call sites/targets before declaring the writer audit complete. |
 
 ### Audit conclusion
 
 The current importer recovery evidence is sufficient to document the five named recovery/idempotency/source-identity scenarios within their boundaries. **No additional importer crash scenario is justified solely to increase the test count.** The next meaningful action is to close the branch-local caller inventory and decide whether the known `HANDOFF.md`/ `TASK_STATE.md` race is in scope for this PR. Hardware/storage failures and direct database mutation remain explicit exclusions unless the requirements change.
+
+
+### Branch-local follow-up scan (HEAD `9a45f89b675dc8a7bba6079bcea9975265e2aa46`)
+
+The following branch files were inspected for explicit report/installer calls, shell delegation, canonical-state paths, and write operations: `README.md`, `.github/workflows/validate.yml`, `core/validation_router.sh`, `core/validation_rules.sh`, `tools/validate_project.sh`, all `tools/*.py` and `tools/*.sh` files in the tree, and the relevant report/checkpoint regression tests. The inspection found:
+
+- `README.md` documents `tools/generate_report.sh /path/to/project`; it omits the second argument, so the documented target is the derived `validation-report.md` default.
+- `.github/workflows/validate.yml` invokes `tools/validate_project.sh`; it does not directly invoke `generate_report.sh` or `install_into_repo.sh`.
+- `core/validation_router.sh` and `tools/validate_project.sh` delegate to stack validation adapters; no report-generator or installer call was identified in those inspected wrappers.
+- No in-repository invocation of `install_into_repo.sh` was identified in the inspected files. It remains a manually invokable broad copy path.
+- `tools/generate_report.sh` accepts a caller-provided output path but refuses the enumerated canonical-memory basenames. That is a basename guard, not a proof against every alias, indirect path, or external writer.
+- The CI AST inventory is not a complete or exact writer count: pure string/date `.replace()` calls are currently classified as mutation candidates, including the unclassified line noted in the risk table.
+
+**Disposition:** this is stronger evidence for the inspected branch paths, but it is still not an exhaustive scan of every tracked document, external caller, dynamically constructed shell command, or editor/manual write. Keep the caller-inventory item open until a complete checked-out-branch search is recorded; do not infer that no other writer exists from the absence of a call in the files listed above.
