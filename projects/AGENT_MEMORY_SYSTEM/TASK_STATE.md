@@ -601,3 +601,13 @@ Tests added for first pass, completed replay, and a changed source under the sam
 - **Still open:** semantic promotion contract/executor, canonical memory index refresh, proof that ingestion state reaches the normal session-restore path, and real-device acceptance of the browser extension. CI does not prove live Android compatibility.
 - **Next action:** pause code changes while the user gathers independent AI-agent analyses. When supplied, compare their claims and recommendations against this verified state; classify facts, hypotheses and unknowns before deciding whether to create the clean successor repository.
 - **Safety:** PR #27 remains Draft/open/unmerged; `main` unchanged. This checkpoint documents code HEAD `e30450a5ed516ab1f76f65c3c7874cdd2b951c40`; subsequent metadata-only changes must not be confused with code changes.
+
+
+## P1 metadata semantics — 2026-10-15
+
+- **Historical source-code checkpoint:** `source_code_checkpoint.head = 49b11d8ba6cb52fa9cef1159dd3e0d4132cae529`, with its original CI evidence retained above. This is a historical milestone, not the current code revision.
+- **Latest verified code HEAD before this metadata-only P1 update:** `86c18cfd6266517c2a3488bddf21b7f65ea339fa`; exact-head CI [38804578271](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38804578271) passed: 232 Python tests (1 skipped), 4 Node tests, strict write audit 92 mutation sites / 0 unclassified, extension JavaScript syntax checks and project validation passed.
+- **Metadata revision:** the Git commit containing this file is the source of truth for its revision. Avoid embedding a self-referential commit SHA inside the same metadata file; after read-back, record the resulting metadata commit in HANDOFF and the PR description.
+- **Chronology rule:** code HEAD + exact-head CI and metadata commit are separate facts. A metadata-only commit does not imply code changed or that CI ran on that metadata commit. Earlier checkpoints remain historical evidence and are not overwritten.
+- **P1 status:** checkpoint JSON now preserves the prior repository state as `historical_repository_state` and records the latest verified code/CI state separately. PR #27 remains Draft/open/unmerged; `main` unchanged.
+- **Next:** finish HANDOFF/PR alignment, read back all changed metadata, and confirm exact resulting metadata HEAD. Do not merge.
