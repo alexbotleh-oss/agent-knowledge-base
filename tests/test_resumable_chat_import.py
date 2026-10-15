@@ -345,20 +345,69 @@ class ResumableChatImportTests(unittest.TestCase):
             root = Path(tmp)
             source = self.make_source(root, 3)
             out = root / "state"
-            first = import_export(source, out, "INCIDENT-COMPLETE-001", batch_size=1)
-            second = import_export(source, out, "INCIDENT-COMPLETE-001", batch_size=1)
+            archive_id = "INCIDENT-COMPLETE-001"
+            first = import_export(source, out, archive_id, batch_size=1)
             self.assertEqual(first["run_mode"], "FIRST_PASS")
-            self.assertEqual(second["run_mode"], "ALREADY_COMPLETE")
-            self.assertEqual(second["status"], "RAW_COMPLETE")
+
             conn = sqlite3.connect(out / "import.sqlite3")
             try:
-                events = [
-                    row[0] for row in conn.execute(
-                        "SELECT event_type FROM import_events ORDER BY event_id"
-                    )
-                ]
-                self.assertEqual(events.count("FIRST_PASS_STARTED"), 1)
-                self.assertEqual(events.count("RAW_COMPLETE"), 1)
+                records_before = conn.execute(
+                    """SELECT source_locator,source_conversation_id,payload_sha256,
+                              imported_at,source_end_byte_offset
+                       FROM raw_conversations
+                       WHERE archive_id=? AND source_sha256=?
+                       ORDER BY source_ordinal""",
+                    (archive_id, first["source_sha256"]),
+                ).fetchall()
+                events_before = conn.execute(
+                    """SELECT event_id,event_type,ordinal,details_json,occurred_at
+                       FROM import_events WHERE archive_id=? AND source_sha256=?
+                       ORDER BY event_id""",
+                    (archive_id, first["source_sha256"]),
+                ).fetchall()
+                state_before = conn.execute(
+                    """SELECT status,next_ordinal,next_byte_offset,last_source_locator,
+                              committed_conversations,updated_at,last_error
+                       FROM imports WHERE archive_id=? AND source_sha256=?""",
+                    (archive_id, first["source_sha256"]),
+                ).fetchone()
+            finally:
+                conn.close()
+
+            second = import_export(source, out, archive_id, batch_size=1)
+            self.assertEqual(second["run_mode"], "ALREADY_COMPLETE")
+            self.assertEqual(second["status"], "RAW_COMPLETE")
+            self.assertEqual(second["source_sha256"], first["source_sha256"])
+
+            conn = sqlite3.connect(out / "import.sqlite3")
+            try:
+                records_after = conn.execute(
+                    """SELECT source_locator,source_conversation_id,payload_sha256,
+                              imported_at,source_end_byte_offset
+                       FROM raw_conversations
+                       WHERE archive_id=? AND source_sha256=?
+                       ORDER BY source_ordinal""",
+                    (archive_id, first["source_sha256"]),
+                ).fetchall()
+                events_after = conn.execute(
+                    """SELECT event_id,event_type,ordinal,details_json,occurred_at
+                       FROM import_events WHERE archive_id=? AND source_sha256=?
+                       ORDER BY event_id""",
+                    (archive_id, first["source_sha256"]),
+                ).fetchall()
+                state_after = conn.execute(
+                    """SELECT status,next_ordinal,next_byte_offset,last_source_locator,
+                              committed_conversations,updated_at,last_error
+                       FROM imports WHERE archive_id=? AND source_sha256=?""",
+                    (archive_id, first["source_sha256"]),
+                ).fetchone()
+                self.assertEqual(records_after, records_before)
+                self.assertEqual(events_after, events_before)
+                self.assertEqual(state_after, state_before)
+                self.assertEqual(len(records_after), 3)
+                self.assertEqual(len({row[0] for row in records_after}), 3)
+                self.assertEqual([row[1] for row in events_after].count("FIRST_PASS_STARTED"), 1)
+                self.assertEqual([row[1] for row in events_after].count("RAW_COMPLETE"), 1)
             finally:
                 conn.close()
 
