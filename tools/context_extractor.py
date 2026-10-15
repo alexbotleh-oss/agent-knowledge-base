@@ -12,7 +12,7 @@ UNKNOWN = "UNKNOWN"
 # Match explicit labels used in the current Markdown memory format. Do not infer
 # a next step from a plan or an "Осталось" list.
 LABELS = {
-    "active_goal": re.compile(r"^\s*[-*]?\s*\*\*Активная задача в текущей сессии:\*\*\s*(.+?)\s*$", re.I),
+    "active_goal": re.compile(r"^\\s*[-*]?\\s*\\*\\*(?:Активная задача в текущей сессии|Current task|Задача этого PR|Текущая задача):\\*\\*\\s*(.+?)\\s*$", re.I),
     "historical_goal": re.compile(r"^\s*[-*]?\s*\*\*Историческая задача[^:]*:\*\*\s*(.+?)\s*$", re.I),
     "next_step": re.compile(r"^\s*[-*]?\s*\*\*(?:Следующий шаг|Текущий следующий шаг):\*\*\s*(.+?)\s*$", re.I),
     "blockers": re.compile(r"^\s*[-*]?\s*\*\*Блокеры / решение пользователя:\*\*\s*(.+?)\s*$", re.I),
