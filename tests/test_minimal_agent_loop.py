@@ -376,7 +376,7 @@ class MinimalAgentLoopTests(unittest.TestCase):
         )
         self.assertEqual(candidate["transfer_decision"], "UNASSESSED")
 
-    def test_evidence_path_traversal_is_blocked(self):
+    def test_evidence_path_traversal_is_not_followed_outside_root(self):
         evidence_root = self.root / "evidence-root"
         evidence_root.mkdir()
         (self.root / "outside.txt").write_text("outside evidence", encoding="utf-8")
