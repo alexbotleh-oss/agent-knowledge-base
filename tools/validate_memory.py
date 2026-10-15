@@ -125,7 +125,7 @@ def validate_intake_manifest(manifest_path, repo_root=None):
         errors.append(f"{manifest_path}: invalid payload_classification")
 
     source = value.get("source")
-    source_fields = {"source_type", "source_id", "project_id", "conversation_ids", "source_locator", "captured_at", "scope_status"}
+    source_fields = {"source_type", "source_id", "project_id", "conversation_ids", "source_locator", "captured_at", "scope_status", "parser_version"}
     if not isinstance(source, dict):
         errors.append(f"{manifest_path}: source must be an object")
     else:
@@ -139,6 +139,8 @@ def validate_intake_manifest(manifest_path, repo_root=None):
                 errors.append(f"{manifest_path}: source.{key} must be a non-empty string; use unknown rather than guessing")
         if source.get("scope_status") not in {"COMPLETE", "PARTIAL", "UNKNOWN"}:
             errors.append(f"{manifest_path}: invalid source.scope_status")
+        if source.get("source_type") == "structured_export" and (not isinstance(source.get("parser_version"), str) or not source["parser_version"].strip()):
+            errors.append(f"{manifest_path}: structured_export requires source.parser_version")
         captured = source.get("captured_at")
         if captured is not None and captured != "unknown" and not _has_timezone(captured):
             errors.append(f"{manifest_path}: source.captured_at must be timezone-aware ISO-8601 or unknown")
