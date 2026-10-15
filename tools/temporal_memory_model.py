@@ -42,7 +42,9 @@ def validate_snapshot(snapshot: dict[str, Any]) -> list[str]:
     for field in required:
         if not snapshot.get(field):
             errors.append(f"missing:{field}")
-    if snapshot.get("captured_at"):
+    if "captured_at" not in snapshot:
+        errors.append("missing:captured_at")
+    elif snapshot["captured_at"] is not None:
         try:
             _parse_time(snapshot["captured_at"], "captured_at")
         except ValueError as exc:
@@ -104,7 +106,7 @@ def validate_assertion(assertion: dict[str, Any]) -> list[str]:
         errors.append("invalid:evidence_status")
     if assertion.get("lifecycle_status") not in VALID_LIFECYCLE:
         errors.append("invalid:lifecycle_status")
-    if assertion.get("recorded_at"):
+    if "recorded_at" in assertion and assertion["recorded_at"] is not None:
         try:
             _parse_time(assertion["recorded_at"], "recorded_at")
         except ValueError as exc:
