@@ -82,9 +82,12 @@ Every interruption/restart test must verify recovery **and** preservation of all
 - **CI:** [run #559](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38692838537) passed on the exact test commit.
 - **Boundary:** verifies cooperating processes using the importer entry point and its output-directory OS advisory lock in Ubuntu 24.04 GitHub Actions. The test's short wait confirms the second process has not exited while the first holds the lock; it does not establish behavior for non-cooperating writers, every OS/filesystem, or machine/power failure.
 
-### Remaining recovery scenario
+### Scenario 3 — independent-process restart at a committed batch boundary
 
-1. **Independent-process restart at a committed batch boundary:** start a fresh process from a persisted checkpoint and verify it resumes from the durable byte offset/ordinal without rewriting the committed prefix. Existing pause/resume coverage is not the same as an independent service restart.
+- **Behavioral evidence:** `test_fresh_process_restarts_from_committed_checkpoint_without_rewriting_prefix`. The first importer invocation commits a two-record prefix and returns `PAUSED`. The test snapshots every persisted field of the committed rows, the event history, and the checkpoint. It then invokes the actual importer CLI using `subprocess.run` in a new Python interpreter, passing only the source path, output directory, and `archive_id`—not an in-memory cursor. The new process must report `RESUME`, finish at `RAW_COMPLETE`, preserve the committed prefix byte-for-byte at the selected field level and preserve all pre-existing event rows, and finish with six unique ordered records and a checkpoint at ordinal 6.
+- **Test commit:** `b7d61d5f59cb0622e6d317e2f1303429128ff9c4` (contains the final test-file repairs as well as the test).
+- **CI:** [run #565](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38694472142) passed on that exact HEAD; both validation steps succeeded.
+- **Boundary:** verifies restart in a fresh Python process on the GitHub Actions runner using the importer's CLI and persisted SQLite checkpoint. It does not establish recovery from machine/power loss, disk corruption, arbitrary filesystem/kernel faults, or behavior on every OS/filesystem. The test checks the selected persisted row fields and all prior event fields; it is not a proof against direct external database mutation.
 
 ## Import idempotency coverage (branch review)
 
