@@ -532,3 +532,19 @@ Tests added for first pass, completed replay, and a changed source under the sam
 - **Next action:** inspect whether a canonical semantic-promotion executor and index-refresh contract can be safely connected to this ledger. First enumerate actual writers and their acceptance/lifecycle rules; do not invent or silently implement promotion semantics. If no executor exists, define its interface and acceptance tests, and keep the runner's explicit downstream-pending boundary.
 - **Constraints:** PR #27 remains Draft/open/unmerged; `main` unchanged; no source-history deletion or rewrite. Checkpoint is manual, not automatic background persistence.
 - **Status:** ACTIVE / PARTIAL.
+
+
+## Current continuation checkpoint — 2026-10-15, recoverable paired checkpoint mechanism
+
+**This section supersedes older operational status snapshots above. Historical entries are preserved for chronology; always refresh live PR HEAD and CI before acting.**
+
+- **Active goal:** complete a tested, interruption-safe memory pipeline so network/session interruptions do not force already-verified steps to be repeated. Preserve source provenance, event chronology, uncertainty, project boundaries, and the distinction between source registration and accepted semantic memory.
+- **Live project:** `alexbotleh-oss/agent-knowledge-base`; branch `integration/memory-core-clean-20261015`; PR #27 must remain OPEN/DRAFT/UNMERGED. No merge or `main` change is authorized.
+- **Verified code checkpoint:** `30be5e944d6dd2d8a60395626b52ef07ff898640`; exact-head CI run [#38750630421](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38750630421) passed: 201 tests, 1 skipped; write audit 85 mutation sites / 0 unclassified. Later commits in this continuation update checkpoint/event records and do not alter the tested code; exact final branch-head CI must still be checked after those record updates.
+- **New implementation:** `tools/continuity_checkpoint_bundle.py` writes immutable checkpoint generations containing both `TASK_STATE.md` and `HANDOFF.md`, source hashes, metadata and a parent link. `CURRENT_CHECKPOINT.json` is the single commit point. If interruption occurs after pointer publication, `recover` validates the generation/parent chain and rebuilds both Markdown projections. The mechanism has six behavioral tests and a strict write-contract entry.
+- **Important boundary:** this is a repository checkpoint primitive. It does not capture ChatGPT response text automatically and cannot restore a report that was never committed. Future work must persist a checkpoint before relying on a long response being delivered.
+- **Existing ingestion runner:** `tools/source_ingestion_runner.py` is verified only through archive staging → sanitized intake → metadata-only source registry. Its explicit terminal status remains `SOURCE_REGISTERED_DOWNSTREAM_PENDING`.
+- **Still open:** (1) define and test approved semantic promotion; (2) define and connect canonical index refresh; (3) connect result/state update and next-session restore; (4) exercise a full crash/recovery round-trip; (5) final exact-HEAD CI and read-back.
+- **Next action:** inspect current memory record schemas, registry structures, approval/lifecycle fields and existing mutation gates; specify semantic-promotion contract and acceptance tests before implementing any writer. Do not treat `IMPORT_READY` or metadata registration as user approval.
+- **Checkpoint record:** `projects/AGENT_MEMORY_SYSTEM/CONTINUITY_CHECKPOINT.json`; implementation event `EVT-AGMS-20261015-001` in `events.jsonl`.
+- **Status:** ACTIVE / PARTIAL. No source-history deletion/rewrite, no project-history mixing, no merge.
