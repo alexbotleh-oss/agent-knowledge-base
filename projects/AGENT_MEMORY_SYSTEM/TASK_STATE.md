@@ -560,3 +560,10 @@ Tests added for first pass, completed replay, and a changed source under the sam
 - **Next action:** inspect exact-head CI; if failed, repair only the failing behavior and rerun. If passed, read back the new tool/tests/docs and record exact SHA/run. Then design the client integration boundary; do not claim automatic ChatGPT capture until an actual integration invokes the ledger.
 - **PR #27 remains Draft/open/unmerged; `main` unchanged.**
 
+## Verified continuation checkpoint — 2026-10-15, turn lifecycle primitive
+
+- **Code HEAD verified:** `49b11d8ba6cb52fa9cef1159dd3e0d4132cae529`.
+- **Exact code-head CI:** [run 38753181276](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38753181276) PASS; 212 tests, 1 skipped; strict write audit 90 mutation sites / 0 unclassified.
+- **Failure found and corrected:** first lifecycle CI exposed an idempotent replay status mismatch (`ALREADY_RECORDED` vs expected `ALREADY_REGISTERED` for duplicate turn receipt). The receipt-specific status was corrected; the exact code-head run above passed afterward.
+- **Current implementation boundary:** local callable ledger and artifact scanner are implemented/tested. Automatic ChatGPT message capture, disconnect detection and delivery acknowledgement remain NOT IMPLEMENTED without a client/platform hook.
+- **Next action:** refresh live PR #27 HEAD/CI after this checkpoint-only metadata update, then design the client adapter; do not claim end-to-end automation until integration tests prove it.

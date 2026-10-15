@@ -561,3 +561,10 @@ This is a callable tool, not yet a ChatGPT/browser integration. It cannot observ
 4. Work in 10–12 minute bounded slices, checkpointing each material result.
 5. Keep PR #27 Draft/open/unmerged; do not change `main`.
 
+## Verified active handoff — 2026-10-15, turn lifecycle primitive
+
+- Code HEAD `49b11d8ba6cb52fa9cef1159dd3e0d4132cae529` passed exact-head CI [38753181276](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38753181276): 212 tests, one skipped; 90 mutation sites, zero unclassified.
+- A first run caught an idempotent duplicate-receipt status mismatch. The tool was corrected and the subsequent exact code-head run passed.
+- Lifecycle tool, tests, artifact scan and protocol documentation are present and read back from GitHub. Event chronology correction is appended as EVT-AGMS-20261015-003; original records remain intact.
+- Resume: refresh live PR head/CI after the checkpoint metadata consolidation; then design the client adapter that calls `receive` before work and records lifecycle events. The local tool does not itself observe ChatGPT messages, network disconnects or delivery receipts.
+- Keep PR #27 Draft/open/unmerged; `main` unchanged. Work in 10–12 minute slices; do not delete suspected partial artifacts without correlation and authorization.

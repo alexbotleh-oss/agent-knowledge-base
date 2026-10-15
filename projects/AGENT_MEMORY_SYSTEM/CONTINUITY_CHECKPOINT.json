@@ -18,13 +18,13 @@
     "base": "main"
   },
   "source_code_checkpoint": {
-    "head": "30be5e944d6dd2d8a60395626b52ef07ff898640",
-    "ci_run_id": 38750630421,
-    "ci_url": "https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38750630421",
+    "head": "49b11d8ba6cb52fa9cef1159dd3e0d4132cae529",
+    "ci_run_id": 38753181276,
+    "ci_url": "https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38753181276",
     "ci_conclusion": "success",
-    "tests": 201,
+    "tests": 212,
     "skipped": 1,
-    "write_audit_mutation_sites": 85,
+    "write_audit_mutation_sites": 90,
     "write_audit_unclassified": 0
   },
   "confirmed_completed": [
@@ -38,7 +38,11 @@
     "Added strict write-contract classification for the checkpoint bundle and documented capture/verify/recover usage in core/agent_runtime_protocol.md.",
     "Exact-head CI for 30be5e944d6dd2d8a60395626b52ef07ff898640 passed: 201 tests, one skipped; 85 mutation sites, zero unclassified.",
     "Updated TASK_STATE.md and HANDOFF.md with a current continuation checkpoint and the next single action; preserved prior checkpoint history rather than replacing it.",
-    "Appended implementation event EVT-AGMS-20261015-001 to the AGENT_MEMORY_SYSTEM event journal."
+    "Appended implementation event EVT-AGMS-20261015-001 to the AGENT_MEMORY_SYSTEM event journal.",
+    "Added tools/turn_lifecycle_ledger.py and tests/test_turn_lifecycle_ledger.py: exact user instruction/checkpoint capture when invoked by a client, append-only turn lifecycle, progress/artifact/report/submission/delivery states, idempotent replay, corrupt-journal fail-closed behavior, and empty/partial artifact scan.",
+    "Added core/turn_lifecycle_and_interruption_recovery.md and linked it from core/agent_runtime_protocol.md; documented 10–12 minute work slices, uncertainty semantics, artifact correlation, and the hard boundary that automatic ChatGPT capture requires a client integration.",
+    "Exact code HEAD 49b11d8ba6cb52fa9cef1159dd3e0d4132cae529 passed GitHub Actions run 38753181276: 212 tests, 1 skipped; write audit 90 mutation sites / 0 unclassified.",
+    "Preserved append-only chronology correction EVT-AGMS-20261015-003 for the temporal edge in EVT-AGMS-20261015-002."
   ],
   "confirmed_open": [
     {
@@ -60,9 +64,13 @@
     {
       "id": "OPEN-REPORT-PERSISTENCE",
       "description": "A report that was never durably written to the repository cannot be reconstructed verbatim after a network interruption. Future work must persist concise checkpoints after each material verified milestone and distinguish persisted records from undelivered response text."
+    },
+    {
+      "id": "OPEN-CHAT-CLIENT-INTEGRATION",
+      "description": "The local turn ledger does not receive ChatGPT messages or host delivery acknowledgements on its own. A trusted app/client/wrapper integration must persist exact input before processing and emit lifecycle events; delivery remains unconfirmed if the host has no receipt."
     }
   ],
-  "next_action": "On resume, re-fetch the live PR #27 HEAD and exact-head CI first. Then inspect semantic record schemas, templates, existing canonical registries and approval gates; design a no-guessing promotion contract and acceptance tests. Keep the end-to-end status PARTIAL until approved promotion, canonical index refresh and restore are connected and tested.",
+  "next_action": "After verifying the exact final PR head/CI following this checkpoint metadata commit, design and test a real client adapter for pre-work message registration and host lifecycle signals. Until then, describe turn lifecycle capture as a callable primitive, not automatic ChatGPT autosave.",
   "constraints": [
     "Do not merge PR #27 or modify main without explicit user approval.",
     "Do not delete or rewrite source-history exports without a separate explicit decision.",
@@ -74,14 +82,14 @@
   "status": "ACTIVE_PARTIAL",
   "checkpoint_semantics": "This is a durable task checkpoint committed to the integration branch. It is not an automatic ChatGPT autosave or proof that an undelivered response was saved.",
   "repository_state": {
-    "last_verified_branch_head": "b26e8ea0c4520772da19c2c7c136fbd1bbb2f50d",
-    "exact_head_ci_run_id": 38750795948,
-    "exact_head_ci_url": "https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38750795948",
+    "last_verified_branch_head": "49b11d8ba6cb52fa9cef1159dd3e0d4132cae529",
+    "exact_head_ci_run_id": 38753181276,
+    "exact_head_ci_url": "https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38753181276",
     "exact_head_ci_conclusion": "success",
-    "tests": 201,
+    "tests": 212,
     "skipped": 1,
-    "write_audit_mutation_sites": 85,
+    "write_audit_mutation_sites": 90,
     "write_audit_unclassified": 0,
-    "note": "This is the last verified branch head before this checkpoint-only update. Always re-fetch live PR HEAD and CI on resume."
+    "note": "CI run verifies the code head above. This metadata consolidation is a checkpoint-only commit; refresh the live PR HEAD and CI before the next operation."
   }
 }
