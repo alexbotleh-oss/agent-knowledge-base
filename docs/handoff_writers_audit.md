@@ -172,8 +172,19 @@ This is a scoped audit of evidence available in the current branch, not a claim 
 | Power loss, disk failure, database/WAL corruption, arbitrary OS/filesystem/kernel faults | **Intentionally not covered** | Current tests inject process termination at controlled points; they do not simulate hardware or storage failure. Add such testing only if these failure modes become explicit product requirements and can be tested meaningfully. |
 | Windows/macOS and other filesystem locking semantics | **Not established by current CI evidence** | The documented crash/concurrency evidence is from Ubuntu 24.04. If cross-platform support is a release requirement, add a platform matrix and targeted lock/recovery checks; otherwise retain this as a stated boundary. |
 | `HANDOFF.md` changing between trust re-check and `TASK_STATE.md` replacement | **Known open race; requires design decision** | The current lock protocol does not lock or version `HANDOFF.md`. A test can demonstrate the race, but a durable fix likely needs a shared mutation protocol or immutable/versioned source reference. Do not claim atomicity across these files. |
-| Static AST mutation inventory | **Advisory; false positives observed** | CI run #568 on HEAD `9a45f89b675dc8a7bba6079bcea9975265e2aa46` reports 64 candidate sites and one unclassified `replace`. Inspection confirms `tools/temporal_memory_model.py:25` is a pure string normalization (`str.replace`), not a write; other date/string `.replace()` calls are also reported as candidates. The audit tool's `replace` heuristic needs refinement before its count can be interpreted as actual mutation-site count. |
+| Static AST mutation inventory | **Advisory; classifier refined, still heuristic** | CI run #572 on code HEAD `0b35c21153a35c52f72412320dfa61f994e29a2e` reports 55 candidates and zero unclassified findings. The classifier now distinguishes common inferred `pathlib` receivers and `os.replace` from pure string/date `.replace()` calls. Four regression tests passed in CI #573 on test HEAD `df54bc6d048102e8145df1f715a32ae6686a0c6e`. This reduces known noise but does not prove the candidate count equals all real file/database mutations. |
 | Complete inventory of report/installer callers and indirect invocation paths | **Audit still required** | The current caller inventory is explicitly partial. Run a branch-local search over tracked files and record all call sites/targets before declaring the writer audit complete. |
+
+
+### Disclaimer: static write-audit limitations
+
+`tools/audit_write_contracts.py` is a heuristic review aid, not a proof of write safety or an exact inventory of every mutation site.
+
+- **Observed improvement:** the inventory changed from 64 candidates / 1 unclassified `.replace` at CI #568 to 55 candidates / 0 unclassified at CI #572. The pure string normalization at `tools/temporal_memory_model.py:25` is no longer counted as a filesystem mutation.
+- **Regression coverage:** CI #573 passed four dedicated tests covering string replacement exclusion, `Path.replace` recognition from common path annotations/assignments/derivations, `os.replace` recognition, and the conservative handling of an untyped receiver.
+- **Remaining limitation:** path inference is intentionally conservative. A real filesystem `.replace` whose receiver cannot be inferred may be missed; other dynamic or indirect write mechanisms may also escape the AST inventory. The number 55 is a candidate count, not a guarantee of the exact number of real writes.
+- **Next step — `TODO-audit-refine`:** continue the tracked-branch caller and target inventory, reviewing inferred and missed path operations alongside shell redirections, subprocess calls, dynamic paths, and documented/manual entry points. Do not declare the writer audit complete from the AST count alone.
+
 
 ### Audit conclusion
 
