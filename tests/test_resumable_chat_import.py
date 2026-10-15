@@ -85,6 +85,137 @@ class ResumableChatImportTests(unittest.TestCase):
             self.assertEqual([p["id"] for p in payloads], [f"conversation-{i}" for i in range(5)])
             self.assertEqual(state, ("RAW_COMPLETE", 5, 5))
 
+
+    def test_process_crash_mid_batch_rolls_back_uncommitted_rows_and_resumes(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            source = self.make_source(root, 5)
+            out = root / "state"
+            archive_id = "ARCHIVE-MID-BATCH-CRASH"
+            paused = import_export(source, out, archive_id, batch_size=2, stop_after_batches=1)
+            self.assertEqual(paused["status"], "PAUSED")
+            self.assertEqual(paused["next_ordinal"], 2)
+
+            database = out / "import.sqlite3"
+            conn = sqlite3.connect(database)
+            try:
+                committed_before = conn.execute(
+                    """SELECT source_locator,source_conversation_id,source_ordinal,
+                              payload_json,payload_sha256,imported_at,source_end_byte_offset
+                       FROM raw_conversations WHERE archive_id=? AND source_sha256=?
+                       ORDER BY source_ordinal""",
+                    (archive_id, paused["source_sha256"]),
+                ).fetchall()
+                events_before = conn.execute(
+                    """SELECT event_id,event_type,ordinal,details_json,occurred_at
+                       FROM import_events WHERE archive_id=? AND source_sha256=?
+                       ORDER BY event_id""",
+                    (archive_id, paused["source_sha256"]),
+                ).fetchall()
+            finally:
+                conn.close()
+            self.assertEqual(len(committed_before), 2)
+
+            # The child exits abruptly after SQLite has executed the first
+            # raw_conversations INSERT of the next batch, before that batch's
+            # transaction can commit its rows and checkpoint.
+            crash_script = r'''
+import os
+import sqlite3
+import sys
+from pathlib import Path
+
+sys.path.insert(0, sys.argv[1])
+import resumable_chat_import as importer
+
+real_connect = sqlite3.connect
+
+class CrashAfterFirstRawInsert(sqlite3.Connection):
+    def execute(self, sql, parameters=()):
+        cursor = super().execute(sql, parameters)
+        if sql.lstrip().upper().startswith("INSERT INTO RAW_CONVERSATIONS"):
+            os._exit(73)
+        return cursor
+
+def crash_connect(database, *args, **kwargs):
+    kwargs["factory"] = CrashAfterFirstRawInsert
+    return real_connect(database, *args, **kwargs)
+
+sqlite3.connect = crash_connect
+importer.import_export(Path(sys.argv[2]), Path(sys.argv[3]), sys.argv[4], batch_size=2)
+'''
+            crashed = subprocess.run(
+                [sys.executable, "-c", crash_script, str(ROOT / "tools"),
+                 str(source), str(out), archive_id],
+                capture_output=True, text=True, timeout=30,
+            )
+            self.assertEqual(crashed.returncode, 73, crashed.stderr)
+
+            conn = sqlite3.connect(database)
+            try:
+                after_crash = conn.execute(
+                    """SELECT source_locator,source_conversation_id,source_ordinal,
+                              payload_json,payload_sha256,imported_at,source_end_byte_offset
+                       FROM raw_conversations WHERE archive_id=? AND source_sha256=?
+                       ORDER BY source_ordinal""",
+                    (archive_id, paused["source_sha256"]),
+                ).fetchall()
+                events_after_crash = conn.execute(
+                    """SELECT event_id,event_type,ordinal,details_json,occurred_at
+                       FROM import_events WHERE archive_id=? AND source_sha256=?
+                       ORDER BY event_id""",
+                    (archive_id, paused["source_sha256"]),
+                ).fetchall()
+                checkpoint_after_crash = conn.execute(
+                    """SELECT status,next_ordinal,next_byte_offset,last_source_locator,
+                              committed_conversations
+                       FROM imports WHERE archive_id=? AND source_sha256=?""",
+                    (archive_id, paused["source_sha256"]),
+                ).fetchone()
+            finally:
+                conn.close()
+
+            # The already committed prefix and its event history remain exact.
+            self.assertEqual(after_crash[:2], committed_before)
+            self.assertEqual(events_after_crash[:len(events_before)], events_before)
+            # The partial second batch was rolled back; cursor did not advance.
+            self.assertEqual(len(after_crash), 2)
+            self.assertEqual(checkpoint_after_crash[1], 2)
+            self.assertEqual(checkpoint_after_crash[4], 2)
+
+            done = import_export(source, out, archive_id, batch_size=2)
+            self.assertEqual(done["status"], "RAW_COMPLETE")
+            self.assertEqual(done["committed_conversations"], 5)
+
+            conn = sqlite3.connect(database)
+            try:
+                final_records = conn.execute(
+                    """SELECT source_ordinal,payload_sha256,imported_at
+                       FROM raw_conversations WHERE archive_id=? AND source_sha256=?
+                       ORDER BY source_ordinal""",
+                    (archive_id, paused["source_sha256"]),
+                ).fetchall()
+                final_events = conn.execute(
+                    """SELECT event_type FROM import_events
+                       WHERE archive_id=? AND source_sha256=? ORDER BY event_id""",
+                    (archive_id, paused["source_sha256"]),
+                ).fetchall()
+                final_state = conn.execute(
+                    """SELECT status,next_ordinal,committed_conversations
+                       FROM imports WHERE archive_id=? AND source_sha256=?""",
+                    (archive_id, paused["source_sha256"]),
+                ).fetchone()
+            finally:
+                conn.close()
+
+            self.assertEqual([row[0] for row in final_records], list(range(5)))
+            self.assertEqual(len({row[0] for row in final_records}), 5)
+            self.assertEqual(final_records[:2], [
+                (row[2], row[4], row[5]) for row in committed_before
+            ])
+            self.assertEqual(final_state, ("RAW_COMPLETE", 5, 5))
+            self.assertEqual([row[0] for row in final_events].count("RAW_COMPLETE"), 1)
+
     def test_rerun_is_idempotent_and_preserves_original_snapshot(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
