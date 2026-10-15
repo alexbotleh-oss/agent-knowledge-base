@@ -136,6 +136,9 @@ def make_handler(ledger_path: Path, token: str, allowed_origins: set[str]):
                 obj = self._read_json()
                 parsed = urlparse(self.path)
                 if parsed.path == "/v1/turns":
+                    extra = set(obj) - {"turn_id", "task_id", "user_text", "previous_checkpoint"}
+                    if extra:
+                        raise ValueError("unsupported fields: " + ", ".join(sorted(extra)))
                     turn_id = validate_string(obj.get("turn_id"), "turn_id")
                     task_id = validate_string(obj.get("task_id"), "task_id")
                     user_text = validate_string(obj.get("user_text"), "user_text", max_len=MAX_TEXT_CHARS)
