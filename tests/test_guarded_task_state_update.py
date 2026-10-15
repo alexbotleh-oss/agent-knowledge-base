@@ -99,7 +99,9 @@ class GuardedTaskStateUpdateTests(unittest.TestCase):
     def test_appends_linked_checkpoint_without_removing_history(self):
         result = apply_checkpoint(self.task_state, self.event_log, self.proposal, trust_verdict={"status": "AUTHORIZED_FOR_PLANNING"})
         text = self.task_state.read_text(encoding="utf-8")
-        self.assertEqual(result["status"], "APPLIED")
+        self.assertEqual(result["status"], "APPLIED_CHECKPOINT_PENDING")
+        self.assertFalse(result["paired_checkpoint_confirmed"])
+        self.assertEqual(result["checkpoint"]["reason"], "TARGET_PROJECT_EVENT_LOG_MISSING")
         self.assertIn("Original checkpoint.", text)
         self.assertIn("UPDATE-TEST-001", text)
         self.assertIn("EVT-TEST-001", text)
@@ -109,7 +111,7 @@ class GuardedTaskStateUpdateTests(unittest.TestCase):
         first = apply_checkpoint(self.task_state, self.event_log, self.proposal, trust_verdict={"status": "AUTHORIZED_FOR_PLANNING"})
         before = self.task_state.read_bytes()
         second = apply_checkpoint(self.task_state, self.event_log, self.proposal, trust_verdict={"status": "AUTHORIZED_FOR_PLANNING"})
-        self.assertEqual(first["status"], "APPLIED")
+        self.assertEqual(first["status"], "APPLIED_CHECKPOINT_PENDING")
         self.assertEqual(second["status"], "ALREADY_APPLIED")
         self.assertEqual(before, self.task_state.read_bytes())
 
