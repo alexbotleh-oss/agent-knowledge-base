@@ -38,6 +38,26 @@ Identical source bytes with different `archive_id` values represent different lo
 - **CI:** [run #551](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38691451002) passed on the exact test commit; [run #552](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38691490708) passed on the subsequent documentation commit.
 - **Boundary:** applies to the tested importer entry point and scenario. It does not establish safety for direct database mutations or untested failure modes.
 
+## Recovery dependencies (verified invariants)
+
+Every interruption/restart test must verify recovery **and** preservation of the two stable import contracts above. Reaching `RAW_COMPLETE` is not sufficient if previously committed records, event timestamps, checksums, source identity, or checkpoint state were changed.
+
+- **PRINCIPLE 1 — idempotency:** previously committed rows and their payload checksums/import timestamps remain unchanged; previously committed event rows and timestamps remain unchanged; a failed uncommitted batch does not advance the durable cursor or duplicate records when retried.
+- **PRINCIPLE 2 — logical-source separation:** different `archive_id` values must retain independent event histories, records, and checkpoints even when source bytes/digests match and one process is interrupted.
+- **Critical-defect rule:** any recovery path that violates either invariant is a critical defect, even if the importer eventually reports `RAW_COMPLETE`.
+
+### Scenario 1 — abrupt process exit inside a batch transaction
+
+- **Behavioral evidence:** `test_process_crash_mid_batch_rolls_back_uncommitted_rows_and_resumes`. The test first commits a prefix, then a child process exits abruptly after SQLite executes the first raw-row insert of the next batch but before that batch can commit. It checks that the committed prefix and prior event history remain exact, the partial batch is rolled back, the durable cursor stays at the prior checkpoint, and a subsequent run completes without duplicate ordinals.
+- **Test commit:** `52fd5f693f8649504f167c959b9cb71e0f5b1a2c`.
+- **CI:** [run #556](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38692448056) passed on the exact test commit.
+- **Boundary:** verified in the Ubuntu 24.04 GitHub Actions environment for this injected process-exit point and SQLite transaction path. It is not proof of power-loss durability, arbitrary filesystem/kernel failures, hardware faults, or every platform's SQLite/locking behavior.
+
+### Remaining recovery scenarios
+
+1. **Concurrent same-source launch with one process terminated:** verify the OS lock serializes cooperating importer processes, the surviving/restarted process finishes correctly, and all committed rows/events/checkpoints remain invariant. Existing serialization coverage does not by itself prove this crash interleaving.
+2. **Restart at a committed batch boundary:** start a fresh process from a persisted checkpoint and verify it resumes from the durable byte offset/ordinal without rewriting the committed prefix. Existing pause/resume coverage is not the same as an independent service restart.
+
 ## Import idempotency coverage (branch review)
 
 Coverage was inspected in `tests/test_resumable_chat_import.py` and `tests/test_archive_registry_staging.py` before changing tests.
