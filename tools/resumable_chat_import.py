@@ -420,8 +420,14 @@ def _commit_batch(conn: sqlite3.Connection, archive_id: str, digest: str, batch:
         next_ordinal = last + 1
         count = conn.execute("SELECT COUNT(*) FROM raw_conversations WHERE archive_id=? AND source_sha256=?",
                              (archive_id, digest)).fetchone()[0]
-        conn.execute("UPDATE imports SET next_ordinal=?,next_byte_offset=?,last_source_locator=?,committed_conversations=?,updated_at=? WHERE archive_id=? AND source_sha256=?",
-                     (next_ordinal, last_record[9], last_record[2], count, utc_now(), archive_id, digest))
+        # A replayed/stale batch may be idempotent for rows, but must never
+        # move the durable checkpoint backwards.
+        conn.execute("""UPDATE imports
+                        SET next_ordinal=?,next_byte_offset=?,last_source_locator=?,
+                            committed_conversations=?,updated_at=?
+                        WHERE archive_id=? AND source_sha256=? AND next_ordinal<=?""",
+                     (next_ordinal, last_record[9], last_record[2], count, utc_now(),
+                      archive_id, digest, next_ordinal))
         add_event(conn, archive_id, digest, "BATCH_COMMITTED", last,
                   {"first_ordinal": first, "last_ordinal": last, "batch_size": len(batch), "staged_total": count, "next_byte_offset": last_record[9], "last_source_locator": last_record[2]})
     return len(batch)
