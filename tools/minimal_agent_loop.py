@@ -135,17 +135,101 @@ def _evidence_quality(event: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def _candidate_review_gate(scope_match: str, evidence_state: str) -> str:
+def _validate_evidence_sources(
+    event: dict[str, Any], evidence_root: Path | None
+) -> dict[str, Any]:
+    """Check explicit repository-relative file evidence pointers without network access."""
+    refs: list[dict[str, Any]] = []
+    evidence_items: list[Any] = []
+    for field in ("evidence", "evidence_refs"):
+        value = event.get(field)
+        if isinstance(value, list):
+            evidence_items.extend(value)
+        elif isinstance(value, dict):
+            evidence_items.append(value)
+
+    root = evidence_root.resolve() if evidence_root is not None else None
+    for item in evidence_items:
+        if not isinstance(item, dict):
+            continue
+        kind = item.get("kind")
+        ref = item.get("ref")
+        if kind != "file" or not isinstance(ref, str) or not ref.strip():
+            continue
+        raw_ref = ref.strip()
+        # Event annotations sometimes append an event/line locator after the path.
+        candidate = raw_ref.split(": ", 1)[0]
+        path = Path(candidate)
+        result: dict[str, Any] = {"ref": raw_ref, "kind": "file"}
+        if root is None:
+            result["status"] = "NOT_CHECKED_NO_EVIDENCE_ROOT"
+        elif path.is_absolute() or path.drive:
+            result["status"] = "OUTSIDE_EVIDENCE_ROOT"
+        else:
+            resolved = (root / path).resolve()
+            try:
+                resolved.relative_to(root)
+            except ValueError:
+                result["status"] = "OUTSIDE_EVIDENCE_ROOT"
+            else:
+                if not resolved.exists():
+                    result["status"] = "MISSING"
+                elif not resolved.is_file():
+                    result["status"] = "NOT_A_FILE"
+                else:
+                    try:
+                        with resolved.open("rb") as handle:
+                            handle.read(1)
+                    except OSError:
+                        result["status"] = "UNREADABLE"
+                    else:
+                        result["status"] = "EXISTS_READABLE"
+        refs.append(result)
+
+    statuses = [item["status"] for item in refs]
+    if not refs:
+        status = "NO_LOCAL_FILE_REFS"
+    elif "MISSING" in statuses:
+        status = "MISSING_SOURCE"
+    elif "UNREADABLE" in statuses:
+        status = "UNREADABLE_SOURCE"
+    elif "NOT_A_FILE" in statuses:
+        status = "INVALID_SOURCE_TYPE"
+    elif "OUTSIDE_EVIDENCE_ROOT" in statuses:
+        status = "OUTSIDE_EVIDENCE_ROOT"
+    elif "NOT_CHECKED_NO_EVIDENCE_ROOT" in statuses:
+        status = "NOT_CHECKED_NO_EVIDENCE_ROOT"
+    elif all(value == "EXISTS_READABLE" for value in statuses):
+        status = "ALL_LOCAL_FILES_READABLE"
+    else:
+        status = "UNKNOWN"
+    return {
+        "status": status,
+        "checked_root": str(root) if root is not None else "UNKNOWN",
+        "references": refs,
+        "claim_validated": False,
+    }
+
+
+def _candidate_review_gate(\n    scope_match: str, evidence_state: str, source_status: str\n) -> str:
     """Combine explicit project scope with metadata quality without granting applicability."""
     if scope_match == "MISMATCH":
         return "OUT_OF_PROJECT_SCOPE"
     if scope_match != "MATCH":
         return "PROJECT_SCOPE_UNKNOWN"
+    if source_status in {"MISSING_SOURCE", "UNREADABLE_SOURCE", "INVALID_SOURCE_TYPE"}:
+        return "SCOPE_MATCHED_EVIDENCE_SOURCE_UNAVAILABLE_BLOCKED"
     if evidence_state == "DISPUTED_OR_CONFLICTED":
         return "SCOPE_MATCHED_DISPUTED_REQUIRES_CONFLICT_REVIEW"
     if evidence_state in {"REJECTED", "QUARANTINED_OR_BLOCKED"}:
         return "SCOPE_MATCHED_EVIDENCE_STATE_BLOCKED"
     if evidence_state == "VERIFIED_LABEL_WITH_EVIDENCE_POINTERS":
+        if source_status == "ALL_LOCAL_FILES_READABLE":
+            return "SCOPE_MATCHED_VERIFIED_LABEL_WITH_READABLE_FILES_REVIEW_REQUIRED"
+        if source_status == "OUTSIDE_EVIDENCE_ROOT":
+            return "SCOPE_MATCHED_EVIDENCE_SOURCE_OUTSIDE_ROOT_REVIEW_REQUIRED"
+        if source_status == "NO_LOCAL_FILE_REFS":
+            return "SCOPE_MATCHED_NON_FILE_EVIDENCE_REVIEW_REQUIRED"
         return "SCOPE_MATCHED_VERIFIED_LABEL_WITH_REFS_REVIEW_REQUIRED"
     if evidence_state == "VERIFIED_LABEL_WITHOUT_EVIDENCE_POINTERS":
         return "SCOPE_MATCHED_VERIFIED_LABEL_NO_REFS_REVIEW_REQUIRED"
@@ -164,8 +248,9 @@ def retrieve_experience_candidates(
     *,
     limit: int = 10,
     current_project_id: str | None = None,
+    evidence_root: Path | None = None,
 ) -> dict[str, Any]:
-    """Return lexical candidates with provenance and a conservative project-scope gate.
+    """Return lexical candidates with provenance and conservative review gates.
 
     A matching project is only a necessary scope condition, never proof that a
     candidate is applicable. Branch/task matching is not attempted because the
@@ -242,6 +327,9 @@ def retrieve_experience_candidates(
             else:
                 scope_match = "MISMATCH"
             evidence_quality = _evidence_quality(event)
+            evidence_source_validation = _validate_evidence_sources(
+                event, evidence_root
+            )
             indexed.append({
                 "event_id": event["event_id"],
                 "score": round(min(score, 1.25), 4),
@@ -261,8 +349,11 @@ def retrieve_experience_candidates(
                     else "PROJECT_SCOPE_UNKNOWN"
                 ),
                 "evidence_quality": evidence_quality,
+                "evidence_source_validation": evidence_source_validation,
                 "candidate_review_gate": _candidate_review_gate(
-                    scope_match, evidence_quality["state"]
+                    scope_match,
+                    evidence_quality["state"],
+                    evidence_source_validation["status"],
                 ),
                 "event_time": event.get("event_time", "UNKNOWN"),
                 "source_time": event.get("source_time", "UNKNOWN"),
@@ -306,11 +397,14 @@ def retrieve_experience_candidates(
             "evidence_quality_is_metadata_not_claim_validation": True,
             "verified_label_alone_is_never_sufficient": True,
             "candidate_review_gate_is_explanatory_not_authorization": True,
+            "evidence_source_check_is_local_file_existence_and_readability_only": True,
+            "evidence_source_check_never_validates_claim_content": True,
         },
         "warnings": [
             "Candidates are evidence pointers, not accepted lessons or instructions.",
             "A verified status label and a non-empty evidence pointer do not prove that the cited source supports the claim.",
-            "Evidence quality and project scope only route candidates for review; transfer_decision remains UNASSESSED.",
+            "Evidence quality, local source availability and project scope only route candidates for review; transfer_decision remains UNASSESSED.",
+            "Local file evidence is checked only under an explicit --evidence-root; URLs and non-file references are not fetched or validated.",
             "Conflicting and disputed records are retained; this pass does not resolve them.",
             "Technology/tool/language tags are descriptors, not proof of transferability.",
             "No memory writes, promotion, task-state updates, or action execution occurred.",
@@ -328,6 +422,7 @@ def run_minimal_agent_loop(
     *,
     limit: int = 10,
     current_project_id: str | None = None,
+    evidence_root: Path | None = None,
 ) -> dict[str, Any]:
     """Restore first, then search explicitly supplied event logs for candidates."""
     packet = build_session_packet(task_state, handoff, event_log)
@@ -343,7 +438,8 @@ def run_minimal_agent_loop(
     if not logs:
         logs = [Path(event_log)]
     retrieval = retrieve_experience_candidates(
-        query, logs, limit=limit, current_project_id=current_project_id
+        query, logs, limit=limit, current_project_id=current_project_id,
+        evidence_root=evidence_root,
     )
 
     candidates_reviewable = (
@@ -400,12 +496,19 @@ def main(argv: list[str] | None = None) -> int:
         default=None,
         help="explicit canonical project_id for conservative experience scope matching",
     )
+    parser.add_argument(
+        "--evidence-root",
+        type=Path,
+        default=None,
+        help="root for checking repository-relative kind=file evidence references; no network access",
+    )
     args = parser.parse_args(argv)
     result = run_minimal_agent_loop(
         args.task_state, args.handoff, args.event_log, args.request,
         [Path(item) for item in args.experience_log],
         limit=args.limit,
         current_project_id=args.project_id,
+        evidence_root=args.evidence_root,
     )
     print(json.dumps(result, ensure_ascii=False, indent=2))
     return 0 if result["status"] == "READY_FOR_REVIEW" else 2
