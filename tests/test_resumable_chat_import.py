@@ -397,18 +397,26 @@ class ResumableChatImportTests(unittest.TestCase):
                 conn.close()
 
 
-    def test_two_concurrent_import_calls_are_serialized(self):
-        from concurrent.futures import ThreadPoolExecutor
+    def test_two_concurrent_import_processes_are_serialized(self):
+        import subprocess
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             source = self.make_source(root, 8)
             out = root / "state"
-            with ThreadPoolExecutor(max_workers=2) as pool:
-                futures = [
-                    pool.submit(import_export, source, out, "ARCHIVE-CONCURRENT", batch_size=2),
-                    pool.submit(import_export, source, out, "ARCHIVE-CONCURRENT", batch_size=2),
-                ]
-                results = [future.result(timeout=30) for future in futures]
+            command = [
+                sys.executable, str(ROOT / "tools" / "resumable_chat_import.py"),
+                str(source), "--out", str(out), "--archive-id", "ARCHIVE-CONCURRENT",
+                "--batch-size", "1",
+            ]
+            processes = [
+                subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+                for _ in range(2)
+            ]
+            results = []
+            for process in processes:
+                stdout, stderr = process.communicate(timeout=60)
+                self.assertEqual(process.returncode, 0, msg=f"stdout={stdout} stderr={stderr}")
+                results.append(json.loads(stdout))
             self.assertEqual({result["status"] for result in results}, {"RAW_COMPLETE"})
             conn = sqlite3.connect(out / "import.sqlite3")
             try:
