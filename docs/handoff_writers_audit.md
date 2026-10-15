@@ -28,3 +28,15 @@ This does not cover manual edits, arbitrary external scripts, editor/IDE writes,
 - `install_into_repo.sh` can populate a missing HANDOFF but is configured not to overwrite existing files.
 - The guarded checkpoint's trust check does not make HANDOFF mutation atomic with TASK_STATE mutation. Until HANDOFF has a shared mutation protocol or immutable/versioned source reference, this remains an explicit limitation.
 - Next audit step: review caller documentation and all invocation sites for `generate_report.sh` and `install_into_repo.sh`; retain the target-guard regression in CI; then test importer/archive restart and collision behavior. Do not claim complete writer coverage based on this partial static audit.
+
+
+## Caller / invocation audit (limited to files read at this revision)
+
+| Source and line | Invocation / target | Classification | Evidence and limits |
+| --- | --- | --- | --- |
+| `README.md:~60` | `tools/generate_report.sh /path/to/project` | Safe documented default invocation; no explicit `OUT` argument | The second positional argument is omitted, so the script uses `$PROJECT/validation-report.md`. The line number is approximate pending a line-numbered read; do not treat it as an exact locator. |
+| `.github/workflows/validate.yml` (validation steps) | No direct invocation of `generate_report.sh` or `install_into_repo.sh` in the workflow content inspected | No caller found in this workflow | The workflow invokes `validate_project.sh`, not the report generator or installer. This does not rule out indirect invocation by another script. |
+| Repository documentation/scripts searched in this pass | No `install_into_repo.sh` invocation identified in the inspected content | No caller found in inspected content; coverage incomplete | The installer is a manually invoked utility taking only a destination repository argument. Its `rsync --ignore-existing` option protects existing destination files, but creation of a missing canonical file is still possible. |
+| External/manual callers | Unknown | Outside repository-static scope | A local grep over the complete checked-out branch would be needed to establish a broader invocation inventory. GitHub code search used here indexes the default branch, so it is not sufficient evidence for all callers on this PR branch. |
+
+This caller inventory is deliberately scoped: it records only source files actually read and does not claim repository-wide exhaustive search. Before declaring the invocation audit complete, run a branch-local search across tracked files for both script names, shell wrappers, and indirect `bash`/ `sh` invocations; record exact line numbers and every explicit output target.
