@@ -69,6 +69,14 @@ class TurnLifecycleLedgerTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "collision"):
             self.receive(text="другая команда")
 
+    def test_lifecycle_event_replay_is_idempotent_after_lost_acknowledgement(self):
+        self.receive()
+        first = ledger.record(self.path, "WORK_STARTED", "T-001")
+        replay = ledger.record(self.path, "WORK_STARTED", "T-001")
+        self.assertEqual(first["status"], "APPENDED")
+        self.assertEqual(replay["status"], "ALREADY_RECORDED")
+        self.assertEqual(len(ledger.read_events(self.path)), 2)
+
     def test_event_for_unknown_turn_is_rejected(self):
         with self.assertRaisesRegex(ValueError, "unknown turn_id"):
             ledger.record(self.path, "WORK_STARTED", "missing")
