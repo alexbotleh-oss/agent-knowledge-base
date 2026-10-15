@@ -2,7 +2,10 @@
 """Apply an append-only task-state checkpoint guarded by expected file hash and event evidence.
 
 This tool appends a new checkpoint block; it never replaces prior task-state text.
-It is a local repository primitive, not an automatic chat synchronizer.
+After a same-project update it invokes the paired checkpoint bundle. Cross-project
+evidence or bundle failures are returned explicitly as APPLIED_CHECKPOINT_PENDING;
+the TASK_STATE write has already occurred in that case. This is not an automatic
+chat synchronizer.
 """
 from __future__ import annotations
 
@@ -115,6 +118,52 @@ def _validate_supporting_event(
     if isinstance(recorded_project, str) and recorded_project.strip() and recorded_project != task_project:
         return "event project_id does not match target project directory"
     return None
+
+
+def _capture_paired_checkpoint(task_state: Path, event_log: Path, update_id: str) -> dict[str, Any]:
+    """Capture TASK_STATE/HANDOFF through the bundle after a guarded write.
+
+    The bundle's canonical event journal belongs to the target project. If the
+    supporting event log is in another project, do not copy it or pretend that
+    the target's paired checkpoint includes it: report the boundary explicitly.
+    """
+    project_dir = task_state.parent
+    local_event_log = project_dir / "events.jsonl"
+    if not local_event_log.is_file():
+        return {
+            "status": "BLOCKED",
+            "reason": "TARGET_PROJECT_EVENT_LOG_MISSING",
+            "detail": "Paired checkpoint requires the target project's canonical events.jsonl.",
+            "writes_performed": False,
+        }
+    if event_log.resolve() != local_event_log.resolve():
+        return {
+            "status": "BLOCKED",
+            "reason": "CROSS_PROJECT_EVENT_LOG",
+            "detail": "Supporting evidence is in another project's event log; paired checkpoint was not captured.",
+            "writes_performed": False,
+        }
+
+    from continuity_checkpoint_bundle import capture, recover, verify
+
+    checkpoint_id = "CKPT-UPD-" + hashlib.sha256(update_id.encode("utf-8")).hexdigest()[:24]
+    current = verify(project_dir)
+    if current.get("status") == "PROJECTION_OR_SOURCE_DRIFT" and current.get("checkpoint_id") == checkpoint_id:
+        recovered = recover(project_dir)
+        if recovered.get("status") != "RECOVERED":
+            return recovered
+        return recovered
+    if current.get("status") == "CURRENT" and current.get("checkpoint_id") == checkpoint_id:
+        return {
+            "status": "ALREADY_CAPTURED",
+            "checkpoint_id": checkpoint_id,
+            "writes_performed": False,
+        }
+    return capture(
+        project_dir,
+        checkpoint_id=checkpoint_id,
+        summary=f"Guarded task-state update {update_id}",
+    )
 
 
 def apply_checkpoint(
@@ -281,9 +330,17 @@ def apply_checkpoint(
             os.replace(temp_name, task_state)
         finally:
             Path(temp_name).unlink(missing_ok=True)
-        return {"status": "APPLIED", "update_id": proposal["update_id"],
-                "event_id": proposal["event_id"], "new_sha256": sha256_bytes(new_bytes),
-                "writes_performed": True}
+        checkpoint_result = _capture_paired_checkpoint(task_state, event_log, proposal["update_id"])
+        checkpoint_ok = checkpoint_result.get("status") in {"CAPTURED", "ALREADY_CAPTURED", "RECOVERED"}
+        return {
+            "status": "APPLIED" if checkpoint_ok else "APPLIED_CHECKPOINT_PENDING",
+            "update_id": proposal["update_id"],
+            "event_id": proposal["event_id"],
+            "new_sha256": sha256_bytes(new_bytes),
+            "paired_checkpoint_confirmed": checkpoint_ok,
+            "checkpoint": checkpoint_result,
+            "writes_performed": True,
+        }
     finally:
         # Release in reverse acquisition order. Never break a lock automatically:
         # a leftover lock requires operator inspection before recovery.
