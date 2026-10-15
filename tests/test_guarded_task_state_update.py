@@ -187,5 +187,38 @@ class GuardedTaskStateUpdateTests(unittest.TestCase):
         self.assertEqual(before, self.task_state.read_bytes())
 
 
+
+    def test_same_project_update_captures_paired_checkpoint_automatically(self):
+        local_event_log = self.project / "events.jsonl"
+        local_event = {
+            "event_id": "EVT-LOCAL-001",
+            "project_id": "TEST_PROJECT",
+            "type": "verification",
+            "summary": "Local evidence for paired checkpoint test",
+        }
+        local_event_log.write_text(json.dumps(local_event) + "\n", encoding="utf-8")
+        proposal = dict(self.proposal, event_id="EVT-LOCAL-001")
+        result = apply_checkpoint(
+            self.task_state, local_event_log, proposal,
+            trust_verdict={"status": "AUTHORIZED_FOR_PLANNING"},
+        )
+        self.assertEqual(result["status"], "APPLIED")
+        self.assertTrue(result["paired_checkpoint_confirmed"])
+        self.assertIn(result["checkpoint"]["status"], {"CAPTURED", "ALREADY_CAPTURED"})
+        from continuity_checkpoint_bundle import verify
+        verified = verify(self.project)
+        self.assertEqual(verified["status"], "CURRENT")
+        self.assertEqual(verified["checkpoint_id"], result["checkpoint"]["checkpoint_id"])
+
+    def test_cross_project_evidence_reports_checkpoint_boundary_explicitly(self):
+        result = apply_checkpoint(
+            self.task_state, self.event_log, self.proposal,
+            trust_verdict={"status": "AUTHORIZED_FOR_PLANNING"},
+        )
+        self.assertEqual(result["status"], "APPLIED_CHECKPOINT_PENDING")
+        self.assertFalse(result["paired_checkpoint_confirmed"])
+        self.assertEqual(result["checkpoint"]["reason"], "TARGET_PROJECT_EVENT_LOG_MISSING")
+        self.assertTrue(result["writes_performed"])
+
 if __name__ == "__main__":
     unittest.main()
