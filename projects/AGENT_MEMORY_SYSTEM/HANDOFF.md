@@ -598,3 +598,22 @@ This is a callable tool, not yet a ChatGPT/browser integration. It cannot observ
 - Source ingestion is already connected through `source_ingestion_runner.py`: archive staging → intake adapter → route plan validation → source registry. Existing tests cover replay and crash/recovery around registry commit. The runner expressly stops before semantic promotion, canonical index refresh and verified session restore.
 - Do not call these remaining downstream stages implemented. Do not claim live extension behavior on Android based on CI.
 - **Return point:** await the user's external-agent analyses. Once received, compile them against current evidence, separate verified facts from proposals/unknowns, and then decide the next repository/architecture step. No merge or changes to `main`; PR #27 stays Draft.
+
+
+## P1 handoff — separate code evidence from metadata revision (2026-10-15)
+
+### Three distinct revision facts
+
+1. **Historical source-code checkpoint:** `49b11d8ba6cb52fa9cef1159dd3e0d4132cae529` with exact-head CI run `38753181276`. Retained as historical evidence only.
+2. **Latest verified code HEAD before P1 metadata edits:** `86c18cfd6266517c2a3488bddf21b7f65ea339fa`; exact-head CI [38804578271](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38804578271) PASS — 232 Python tests (1 skipped), 4 Node tests, strict write audit 92/0, extension JS syntax checks and project validation PASS.
+3. **Metadata revision:** the resulting Git commit that contains these metadata updates, to be read back and recorded after the final metadata write. Do not treat this as a code HEAD or imply that code CI ran on a metadata-only commit. The metadata file deliberately does not embed its own commit SHA.
+
+### P1 changes
+
+- `CONTINUITY_CHECKPOINT.json` now retains the former `repository_state` under `historical_repository_state`, identifies the latest verified code/CI separately, and states the revision semantics explicitly.
+- `TASK_STATE.md` now records the same distinction append-only; prior checkpoint entries remain intact.
+- PR #27 remains Draft/open/unmerged; `main` unchanged. No project histories were moved or deleted.
+
+### Resume point
+
+Read back the checkpoint, task state and this handoff at the resulting branch HEAD; then update PR #27's description with the final metadata HEAD and keep the exact code CI reference attached only to code SHA `86c18cfd6266517c2a3488bddf21b7f65ea339fa`. Do not merge.
