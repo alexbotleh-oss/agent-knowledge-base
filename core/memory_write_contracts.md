@@ -125,3 +125,23 @@ Audit reference: `docs/handoff_writers_audit.md` (partial static audit; external
 - `tools/generate_report.sh` previously accepted any caller-supplied output path and could overwrite a canonical file such as `HANDOFF.md`. The current branch adds a fail-closed basename guard for `HANDOFF.md`, `TASK_STATE.md`, `PROJECT_STATE.md`, `DECISIONS.md`, `LESSONS.md`, `EVENT_LOG.md`, `events.jsonl`, and `lessons.jsonl`, plus a regression test that checks refusal and byte preservation. GitHub Actions run [#537](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38680620394) passed on exact HEAD `a01c6523cf2ba10eda7b1787e3d4b516cf3c8a77`, including the regression test. The direct report-generator mitigation is therefore verified for the tested CI environment and enumerated basenames. The guard covers this report generator and these names, not every writer or indirect path.
 - `tools/install_into_repo.sh` uses `rsync --ignore-existing`: it may populate a missing file, but is not intended to overwrite an existing `HANDOFF.md`.
 - `HANDOFF.md` remains outside the `apply_checkpoint` lock protocol. Therefore trust-check plus `TASK_STATE.md` replacement is not an atomic transaction over all input sources. The target guard above does not close that separate race.
+
+
+## Canonical-file protection status (reviewed HEAD `165c39a69549af3c1f04ece75e7d930a8ee40f60`)
+
+GitHub Actions run [#540](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38681349393) completed successfully on exact HEAD `165c39a69549af3c1f04ece75e7d930a8ee40f60`. The workflow includes memory validation, the write-contract audit, the unit-test suite, and project validation. This confirms the repository checks for that revision; individual guarantees below retain their own test scope.
+
+### Verified within the named mechanisms
+
+- **`TASK_STATE.md` checkpoint writes:** `apply_checkpoint` uses the documented journal-then-task lock order and atomic replacement. CI run [#530](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38679829211) passed the multiprocess stress test on exact test HEAD `98138f32f0495570917acd4846fc5c4b7416c6d4`: one `APPLIED`, all competing writers `LOCKED` or `STALE_REVISION`, one checkpoint marker/write, and no leftover locks after normal completion. This evidence applies to concurrent writers using that protocol in the tested Linux CI environment.
+- **`tools/generate_report.sh`:** the script rejects the enumerated canonical basenames (`HANDOFF.md`, `TASK_STATE.md`, `PROJECT_STATE.md`, `DECISIONS.md`, `LESSONS.md`, `EVENT_LOG.md`, `events.jsonl`, `lessons.jsonl`) before creating the output directory or writing. CI run [#537](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38680620394) passed on exact test HEAD `a01c6523cf2ba10eda7b1787e3d4b516cf3c8a77`; its regression test confirms refusal preserves the target file bytes and a normal derived report is still created.
+- **`tools/install_into_repo.sh`:** the inspected implementation invokes `rsync -av --ignore-existing`, so it is configured not to replace files already present at the destination. It can still create a missing file, including a missing `HANDOFF.md`; this behavior is an implementation-level finding, not a separately reported integration test.
+
+### Not established
+
+- Exhaustive coverage of all callers and indirect invocations of `generate_report.sh` and `install_into_repo.sh`. The current caller audit is explicitly partial; a complete branch-local search over tracked files and indirect shell wrappers remains outstanding.
+- Absence of external, manual, editor-driven, or dynamically constructed writes to `HANDOFF.md`.
+- Atomicity of the sequence `read HANDOFF.md → recompute trust → replace TASK_STATE.md`. `HANDOFF.md` is not protected by the checkpoint's lock protocol, so it may change after the final read and before task-state replacement.
+- Protection against all aliases, symlinks, path tricks, or indirect writes merely because `generate_report.sh` checks the output basename. The guard is a targeted mitigation for that script and the listed names, not a repository-wide access-control boundary.
+
+**Boundary:** these guarantees apply only to the named mechanisms, exact tested revisions, and stated CI environment. They do not establish that all canonical-file writers have been found or that `HANDOFF.md` and `TASK_STATE.md` participate in one atomic transaction. Keep the HANDOFF race open until writer discovery and a synchronization/source-version contract are decided and tested.
