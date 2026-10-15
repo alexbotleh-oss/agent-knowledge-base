@@ -7,6 +7,7 @@ writes memory, promotes candidates, resolves conflicts, or executes next_step.
 from __future__ import annotations
 
 import argparse
+import codecs
 import hashlib
 import json
 import re
@@ -189,7 +190,11 @@ def _validate_evidence_sources(
                             result["status"] = "BINARY_FILE"
                         else:
                             try:
-                                sample.decode("utf-8")
+                                # The bounded sample can end mid-codepoint; defer
+                                # validation of an incomplete trailing sequence.
+                                codecs.getincrementaldecoder("utf-8")().decode(
+                                    sample, final=False
+                                )
                             except UnicodeDecodeError:
                                 result["status"] = "BINARY_FILE"
                             else:
