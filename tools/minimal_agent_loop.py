@@ -489,6 +489,25 @@ def _lesson_review_gate(scope_match: str, source_status: str) -> str:
     return "SCOPE_MATCHED_LESSON_REQUIRES_REVIEW"
 
 
+def extract_explicit_experience_markers(task_state: Path) -> tuple[dict[str, Any] | None, str]:
+    """Read only a declared experience-markers JSON block; never infer markers."""
+    try:
+        text = Path(task_state).read_text(encoding="utf-8")
+    except (OSError, UnicodeError):
+        return None, "TASK_STATE_UNREADABLE"
+    fence = chr(96) * 3
+    match = re.search(re.escape(fence + "experience-markers") + r"\s*(.*?)" + re.escape(fence), text, flags=re.IGNORECASE | re.DOTALL)
+    if not match:
+        return None, "NOT_DECLARED"
+    try:
+        value = json.loads(match.group(1).strip())
+    except json.JSONDecodeError:
+        return None, "INVALID_TASK_STATE_MARKERS_BLOCK"
+    if not isinstance(value, dict):
+        return None, "INVALID_TASK_STATE_MARKERS_BLOCK"
+    return value, "TASK_STATE_EXPLICIT_BLOCK"
+
+
 def _normalized_markers(value: Any) -> set[str]:
     """Normalize explicit marker values only; never derive markers from prose."""
     if isinstance(value, str):
@@ -829,6 +848,10 @@ def run_minimal_agent_loop(
         evidence_root=evidence_root,
     )
 
+    current_markers_source = "EXPLICIT_ARGUMENT" if current_markers is not None else "NOT_DECLARED"
+    if current_markers is None:
+        current_markers, current_markers_source = extract_explicit_experience_markers(task_state)
+
     lesson_search_stages: list[dict[str, Any]] = []
     lesson_candidates: list[dict[str, Any]] = []
     if lesson_logs:
@@ -881,9 +904,11 @@ def run_minimal_agent_loop(
                     if candidate.get("lesson_id") not in seen_lesson_ids:
                         lesson_candidates.append(candidate)
                         seen_lesson_ids.add(candidate.get("lesson_id"))
+                candidate_count_before_limit = len(lesson_candidates)
+                lesson_candidates = lesson_candidates[:max(0, limit)]
                 lesson_retrieval = dict(s2)
                 lesson_retrieval["candidates"] = lesson_candidates
-                lesson_retrieval["candidate_count_before_limit"] = len(lesson_candidates)
+                lesson_retrieval["candidate_count_before_limit"] = candidate_count_before_limit
                 lesson_retrieval["source_hashes"] = {
                     **s1.get("source_hashes", {}), **s2.get("source_hashes", {})
                 }
@@ -932,6 +957,7 @@ def run_minimal_agent_loop(
         "retrieval": retrieval,
         "lesson_retrieval": lesson_retrieval,
         "lesson_search_stages": lesson_search_stages,
+        "current_markers_source": current_markers_source,
         "applicability": applicability,
         "current_project_id": effective_project_id or "UNKNOWN",
         "current_project_id_source": project_id_source,

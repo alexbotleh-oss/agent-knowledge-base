@@ -17,7 +17,7 @@ if str(TOOLS) not in sys.path:
     sys.path.insert(0, str(TOOLS))
 
 from applicability_evaluator import evaluate_applicability
-from minimal_agent_loop import retrieve_lesson_candidates, retrieve_lesson_candidates_structured, run_minimal_agent_loop
+from minimal_agent_loop import extract_explicit_experience_markers, retrieve_lesson_candidates, retrieve_lesson_candidates_structured, run_minimal_agent_loop
 
 PROJECT = "TEST"
 FULL = ("problem_similarity", "trigger", "applicability", "evidence_support", "circumstances_unchanged")
@@ -384,6 +384,34 @@ class LoopIntegrationTests(unittest.TestCase):
         self.assertTrue(result["lesson_search_stages"][0]["verified_applicable_found"])
         self.assertEqual(result["lesson_search_stages"][1]["status"], "SKIPPED_SUFFICIENT_S1")
         self._assert_planning_still_blocked(result)
+
+    def test_task_state_markers_are_read_only_from_explicit_json_block(self):
+        fence = chr(96) * 3
+        self.task.write_text(
+            "# TASK_STATE\n- active goal: restore snapshot\n"
+            + fence + "experience-markers\n"
+            + '{"problem_types":["snapshot_restore"],"tools":["Python"]}\n'
+            + fence + "\n",
+            encoding="utf-8",
+        )
+        markers, source = extract_explicit_experience_markers(self.task)
+        self.assertEqual(source, "TASK_STATE_EXPLICIT_BLOCK")
+        self.assertEqual(markers["problem_types"], ["snapshot_restore"])
+        self.assertEqual(markers["tools"], ["Python"])
+
+    def test_task_state_marker_reader_does_not_infer_from_prose_or_accept_malformed_json(self):
+        self.task.write_text("# TASK_STATE\n- Python snapshot restore\n", encoding="utf-8")
+        markers, source = extract_explicit_experience_markers(self.task)
+        self.assertIsNone(markers)
+        self.assertEqual(source, "NOT_DECLARED")
+        fence = chr(96) * 3
+        self.task.write_text(
+            "# TASK_STATE\n" + fence + "experience-markers\nnot-json\n" + fence + "\n",
+            encoding="utf-8",
+        )
+        markers, source = extract_explicit_experience_markers(self.task)
+        self.assertIsNone(markers)
+        self.assertEqual(source, "INVALID_TASK_STATE_MARKERS_BLOCK")
 
     def test_s1_structured_markers_are_exact_and_project_scoped(self):
         self._write_lessons([
