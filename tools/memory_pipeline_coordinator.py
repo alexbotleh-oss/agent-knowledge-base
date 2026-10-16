@@ -220,15 +220,19 @@ def run_memory_pipeline(
     if apply:
         missing_restore_files=[str(p) for p in (Path(task_state),Path(handoff),Path(event_log)) if not Path(p).is_file()]
         correction_approval_missing=False
+        correction_input_invalid=False
         if correction_input is not None:
             try:
                 correction_data=json.loads(Path(correction_input).read_text(encoding="utf-8"))
                 correction_approval_missing=correction_data.get("status")=="accepted" and correction_approval_receipt is None
             except Exception:
-                correction_data={}
+                correction_data={}; correction_input_invalid=True
         preflight_ok=True
         if missing_restore_files:
             _append_event(run_dir,run_id,"STAGE_RESULT","preflight","BLOCKED",{"missing_restore_files":missing_restore_files})
+            preflight_ok=False
+        elif correction_input_invalid:
+            _append_event(run_dir,run_id,"STAGE_RESULT","preflight","BLOCKED",{"reason":"correction input is not valid JSON"})
             preflight_ok=False
         elif correction_approval_missing:
             _append_event(run_dir,run_id,"STAGE_RESULT","preflight","BLOCKED",{"reason":"accepted correction requires --correction-approval-receipt"})
