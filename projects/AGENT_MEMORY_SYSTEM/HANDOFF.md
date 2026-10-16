@@ -617,3 +617,14 @@ This is a callable tool, not yet a ChatGPT/browser integration. It cannot observ
 ### Resume point
 
 Read back the checkpoint, task state and this handoff at the resulting branch HEAD; then update PR #27's description with the final metadata HEAD and keep the exact code CI reference attached only to code SHA `86c18cfd6266517c2a3488bddf21b7f65ea339fa`. Do not merge.
+
+
+## P1 implementation handoff — revision evidence during restore (2026-10-16)
+
+- **Gap:** the session restore packet did not expose a structured comparison between the stored checkpoint code SHA/CI run and caller-observed values.
+- **Code change:** `tools/restore_session_packet.py` now adds `repository_revision_evidence` using `CONTINUITY_CHECKPOINT.json`. The stored current code/CI pair remains distinct from `historical_repository_state`.
+- **Status semantics:** `RECORDED_EVIDENCE_ONLY` is the default. Optional caller-provided observed SHA/run ID yield explicit match/mismatch statuses. Missing checkpoint metadata is `UNAVAILABLE`; malformed metadata is `INVALID`. Revision uncertainty is visible but does not block restoration of otherwise valid task/event state.
+- **Hard boundary:** the tool does not fetch GitHub and cannot establish that the caller's observations are fresh or genuine. The caller must independently inspect the current repository HEAD and CI result before supplying those values.
+- **Tests and protocol:** added tests for historical/current separation, observed match/mismatch, missing checkpoint, and inclusion in the restore packet; documented the contract in `core/agent_runtime_protocol.md`.
+- **Exact code SHA:** `ca9fabe998f9203bb8fe78f1b51515d54f5f4f09`; exact-head [CI 38848337390](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38848337390) PASS.
+- **Next:** refresh PR description with this verified code SHA/run, then read back PR metadata and changed files. Keep PR #27 Draft/open/unmerged; no main changes.
