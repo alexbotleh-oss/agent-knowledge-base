@@ -169,3 +169,18 @@ The immutable generation under `projects/<project>/checkpoints/<checkpoint_id>.j
 - The pointer/generation are canonical for this tool. Git history remains the repository-level audit trail; immutable checkpoint generations preserve the previous paired state independently of projection rewrites.
 - This mechanism is not ChatGPT autosave and cannot recover response text that was never committed to the repository. It protects checkpoints after they are captured.
 - Acceptance tests: capture + verify; interruption after pointer commit; recovery of both projections; idempotent replay; immutable parent chain; tamper fail-closed; missing pointer fail-closed.
+
+
+## Approval-bound semantic memory promotion — initial guarded executor
+
+`tools/semantic_memory_registry.py` is a separate persistence stage. It accepts exactly one `memory_records` artifact only when the manifest marks it `accepted` + `user_approved` and the artifact's `approval_evidence` equals a supplied decision receipt ID. The receipt binds the exact manifest and artifact SHA-256 values, batch/artifact IDs, decision, actor type, timestamp, decision source reference and rationale.
+
+The receipt is an integrity binding, **not a cryptographic signature** and not independent proof that a user authored it. The trusted caller must create it only after an explicit approval; do not fabricate approval evidence or infer consent from `IMPORT_READY`.
+
+- Default is dry-run; `--apply` is required to write.
+- In-repository writes are restricted to `registry/memory_records.jsonl`; external paths are permitted for isolated tests.
+- Candidate record bytes are retained inside an append-only registry envelope with source provenance, record hash, approval decision/receipt hashes, batch/artifact identity and promotion time. The envelope lifecycle is `accepted`; the embedded submitted record remains unchanged for traceability.
+- Exact replay is a no-op. Same `(memory_id, revision_id)` with different content or approval conflicts. New revisions must reference the current revision ID; old revisions are never overwritten.
+- A lock covers input revalidation, existing-registry validation and atomic same-directory replacement. The registry is fsynced before replace; directory fsync is attempted where supported. An OS advisory lock is released on process exit; arbitrary writers that ignore the lock remain outside the contract.
+- Rejected, stale, malformed or conflicted input writes nothing. This stage does not refresh indexes, assign new project applicability, or modify source registry records.
+- Unit tests exercise dry-run, promotion, replay, approval/hash mismatch, missing provenance, rejected decision, revision chain, and corrupt-registry failure. CI results must be checked at the exact code HEAD before claiming this stage verified.
