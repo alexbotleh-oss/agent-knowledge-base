@@ -196,7 +196,7 @@ class SourceIngestionRoundtripTests(unittest.TestCase):
 
         # JSON whitespace changes the immutable source hash but not any source record.
         payload = json.loads(self.source.read_text(encoding="utf-8"))
-        self.source.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\\n", encoding="utf-8")
+        self.source.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         second_stage = build(self.source, self.staging, archive_id="ARCHIVE-TEST-001")
         self.assertNotEqual(first_stage["raw_sha256"], second_stage["raw_sha256"])
         adapted = adapt_archive_staging_to_intake(self.staging / "archive_snapshot.json", self.intake_root)
