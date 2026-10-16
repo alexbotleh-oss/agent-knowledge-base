@@ -205,11 +205,20 @@ def check_index_freshness(registry_path: Path=DEFAULT_REGISTRY,index_root: Path=
     try:
         pointer=_read_pointer(index_root)
         if pointer is None: return {"status":"UNAVAILABLE","reason":"CURRENT index pointer is missing"}
-        generation_path=index_root/pointer.get("generation_file","")
+        if pointer.get("schema_version") != "canonical-memory-index-pointer-v1":
+            return {"status":"INVALID","reason":"unsupported CURRENT pointer schema"}
+        rel = pointer.get("generation_file")
+        if not isinstance(rel, str) or not rel or Path(rel).is_absolute() or ".." in Path(rel).parts:
+            return {"status":"INVALID","reason":"unsafe generation_file in CURRENT pointer"}
+        generation_path=(index_root/rel).resolve()
+        if index_root.resolve() not in generation_path.parents:
+            return {"status":"INVALID","reason":"generation path escapes index root"}
         if not generation_path.is_file(): return {"status":"INVALID","reason":"referenced index generation is missing"}
         payload=generation_path.read_bytes()
         if _sha(payload)!=pointer.get("index_sha256"): return {"status":"INVALID","reason":"index generation hash mismatch"}
         generation=json.loads(payload.decode("utf-8"))
+        if generation.get("generation_id") != pointer.get("generation_id"):
+            return {"status":"INVALID","reason":"CURRENT pointer generation ID mismatch"}
         live_sha=_sha(registry_path.read_bytes())
         if generation.get("source_registry",{}).get("sha256")!=live_sha or pointer.get("source_registry_sha256")!=live_sha:
             return {"status":"STALE","reason":"canonical memory registry changed after index generation","live_registry_sha256":live_sha,"indexed_registry_sha256":generation.get("source_registry",{}).get("sha256")}
@@ -229,16 +238,18 @@ def refresh_canonical_index(registry_path: Path=DEFAULT_REGISTRY,index_root: Pat
         return {"status":"DRY_RUN_READY","generation_id":payload["generation_id"],"records_indexed":payload["coverage"]["records_indexed"],
                 "coverage_status":payload["coverage"]["status"],"correction_overlay_status":payload["coverage"]["correction_overlay_status"],
                 "writes_performed":False}
-    index_root.mkdir(parents=True,exist_ok=True)
     with _lock(registry_path.with_name(registry_path.name+".lock")):
       with _lock(index_root/".index.lock"):
         try:
             source_bytes=registry_path.read_bytes()
             payload=build_index_payload(source_bytes)
-            encoded=_canonical(payload)+b"\n"
-            generation_id=payload["generation_id"]
-            generation_rel=f"generations/{generation_id}.json"
-            generation_path=index_root/generation_rel
+        except Exception as exc:
+            return {"status":"BLOCKED","reason":str(exc),"writes_performed":False}
+        encoded=_canonical(payload)+b"\n"
+        generation_id=payload["generation_id"]
+        generation_rel=f"generations/{generation_id}.json"
+        generation_path=index_root/generation_rel
+        try:
             generation_path.parent.mkdir(parents=True,exist_ok=True)
             if generation_path.exists():
                 if generation_path.read_bytes()!=encoded: return {"status":"CONFLICT","reason":"existing generation ID has different bytes","writes_performed":False}
