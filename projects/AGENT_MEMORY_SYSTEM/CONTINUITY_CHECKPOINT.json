@@ -70,7 +70,8 @@
     "Added tools/memory_pipeline_coordinator.py to compose source ingestion, approval preflight, canonical SourceRecord provenance resolution, semantic promotion, optional correction registration, canonical index refresh, and verified session restore.",
     "Added deterministic input-bound run IDs, hash-chained append-only stage ledger, rebuildable state projection, and separate source-stage/canonical/ledger write accounting.",
     "Added coordinator tests for provenance resolution/ambiguity, preflight blocking, ledger tamper/projection recovery, deterministic dry-run replay, mocked stage composition, and real semantic-promotion/correction/index/restore executors over synthetic data.",
-    "Exact-head CI at feeb14446c8b039271b753a8ecd0b2661318b818 passed: 294 Python tests (1 skipped), 4 Node tests, write audit 127 mutation sites / 0 unclassified."
+    "Exact-head CI at feeb14446c8b039271b753a8ecd0b2661318b818 passed: 294 Python tests (1 skipped), 4 Node tests, write audit 127 mutation sites / 0 unclassified.",
+    "Confirmed exact-head CI run 38853687319 is for feeb14446c8b039271b753a8ecd0b2661318b818, which includes the real-stage crash/replay test added immediately before the run."
   ],
   "confirmed_open": [
     {
@@ -107,7 +108,7 @@
       "description": "The ChatGPT web extension is a prototype verified by static CI only. Must be installed and tested in the user's actual Yandex Browser Android version. Verify send gate (no send before durable receipt), exact text and prior assistant message capture, interrupted connection recovery, response DOM detection, multiple incomplete turns, extension restart, and UI-selector drift. Until these pass, do not claim end-to-end capture is operational."
     }
   ],
-  "next_action": "Confirm exact-head CI for crash/replay integration test; fix any failures; then verify clean PR metadata and branch/main status before proceeding to controlled real source-ingestion acceptance.",
+  "next_action": "Run a controlled synthetic end-to-end test with the real source-ingestion runner, then separately plan production archive acceptance and coverage audit.",
   "constraints": [
     "Do not merge PR #27 or modify main without explicit user approval.",
     "Do not delete or rewrite source-history exports without a separate explicit decision.",
