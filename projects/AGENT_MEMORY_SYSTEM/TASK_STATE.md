@@ -759,3 +759,11 @@ P2 is not yet declared ready: this test mocks the final verified restore packet,
 - Return replay with the same turn ID produces ALREADY_RETURNED without a second event. A fresh process can inspect and reconstruct the persisted nested return stack.
 - Exact code/test HEAD `1fa6079379feb19afb4d39b7d77e39f0a4ac2d79` passed CI [38901785446](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38901785446): 362 Python tests (1 skipped), 4 Node tests, write audit 134/0, memory/project validation PASS.
 - **Next:** test cross-project exclusion, conflicts and unknown criteria through the complete task-start wrapper; test no-repeat across the complete workflow; keep production verifier/trust-root design separate. Do not merge PR #28 or #30 without explicit approval.
+
+
+## Task-start scope/conflict integration checkpoint — 2026-10-16
+
+- The combined task-start wrapper now tests cross-project and global lesson exclusion, plus incompatible lesson judgments surfacing as CONFLICT and recommending RECONCILE_CONFLICT.
+- Insufficiently evidenced same-project lesson candidates remain HOLD; these tests do not treat retrieval or user-provided labels as proof of applicability.
+- Exact code/test HEAD `0cc63385747561eea01cdc52d65cae6bbe291cc4` passed CI [38902032991](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38902032991): 364 Python tests (1 skipped), 4 Node tests, write audit 134/0, memory/project validation PASS.
+- **Next:** test no-repeat across the complete task-start/branch-result/parent-return flow; then design production trusted verification separately. No production verifier, automatic ChatGPT capture/startup or complete archive acceptance is claimed.

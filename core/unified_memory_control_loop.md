@@ -407,3 +407,12 @@ The connected task-start path now has additional regression coverage for two fai
 Exact code/test HEAD 1fa6079379feb19afb4d39b7d77e39f0a4ac2d79 passed GitHub Actions run 38901785446: 362 Python tests (1 skipped), 4 Node tests, strict write audit 134 mutation sites / 0 unclassified; memory and project validation passed.
 
 Remaining acceptance work: run cross-project exclusion, conflict and unknown-criteria cases through the full task-start wrapper (not only the underlying evaluator/frontier unit tests); test no-repeat across the complete workflow; validate the production trust boundary; and accept the real archive/client path. These results do not establish automatic ChatGPT capture or production applicability verification.
+
+
+## 17. Full task-start scope/conflict checks — partial
+
+The task-start wrapper now has end-to-end synthetic tests for same-project lesson candidates remaining HOLD when evidence is insufficient, cross-project/global lessons remaining OUT_OF_SCOPE, and incompatible lesson judgments surfacing as CONFLICT with a RECONCILE_CONFLICT next check. These checks run through the combined restore → event/lesson retrieval → applicability evaluator → decision frontier path, rather than testing the evaluator alone.
+
+Exact code/test HEAD 0cc63385747561eea01cdc52d65cae6bbe291cc4 passed CI run 38902032991: 364 Python tests (1 skipped), 4 Node tests, write audit 134 mutation sites / 0 unclassified, memory/project validation PASS.
+
+Remaining next gate: test no-repeat across the complete task-start/branch-result/parent-return workflow, including unchanged evidence and already completed checks; then design the production trusted verifier/trust root. This is still a synthetic repository acceptance path, not automatic ChatGPT runtime integration.

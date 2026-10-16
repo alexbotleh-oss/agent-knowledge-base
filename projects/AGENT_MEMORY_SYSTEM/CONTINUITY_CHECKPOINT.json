@@ -1,13 +1,13 @@
 {
   "schema_version": "1.0",
-  "checkpoint_id": "CKPT-AGMS-20261016-REPLAY-PROVENANCE-HARDENING-01",
+  "checkpoint_id": "CKPT-AGMS-20261016-TASK-START-SCOPE-CONFLICT-01",
   "project_id": "AGENT_MEMORY_SYSTEM",
   "task_id": "TASK-AGMS-UMC02-TASK-START",
-  "recorded_at": "2026-10-16T12:38:06.001Z",
+  "recorded_at": "2026-10-16T12:40:15.302Z",
   "recorded_time_precision": "day",
   "source_chat": "Настройка Агента",
   "source_message": "User authorized completing continuity synchronization after exact-head CI verified the combined real-ingestion and real-memory-restore test.",
-  "goal": "Connect memory tools into one working mechanism: persistent attention/return, source-backed restore, staged same-project retrieval, applicability review, decision frontier and replay/provenance safeguards.",
+  "goal": "Connect memory tools into one working mechanism: persistent attention/return, source-backed restore, staged same-project retrieval, applicability review, decision frontier, and replay/provenance safeguards.",
   "branch": "umc02/attention-return-controller-20261016",
   "pr": {
     "number": 30,
@@ -18,16 +18,16 @@
     "base": "audit/agent-memory-e2e-20261016"
   },
   "source_code_checkpoint": {
-    "head": "1fa6079379feb19afb4d39b7d77e39f0a4ac2d79",
-    "ci_run_id": 38901785446,
-    "ci_url": "https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38901785446",
+    "head": "0cc63385747561eea01cdc52d65cae6bbe291cc4",
+    "ci_run_id": 38902032991,
+    "ci_url": "https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38902032991",
     "ci_conclusion": "success",
-    "python_tests": 362,
+    "python_tests": 364,
     "python_skipped": 1,
     "node_tests": 4,
     "write_audit_mutation_sites": 134,
     "write_audit_unclassified": 0,
-    "evidence_scope": "Exact code/test HEAD includes UMC-02 attention/return, task-start composition, UMC-03 S1/S2 retrieval, evaluator/frontier, duplicate-ID HOLD with provenance preservation, source-mutation blocking, fresh-process stack restore and idempotent return replay. Synthetic tests pass; production trusted verifier, automatic ChatGPT capture and real archive acceptance remain open."
+    "evidence_scope": "Exact code/test HEAD includes UMC-02 attention/return, task-start composition, UMC-03 S1/S2 retrieval, applicability evaluator/frontier, duplicate-ID/source-mutation guards, fresh-process stack reconstruction, idempotent return replay, and task-start wrapper tests for cross-project/global exclusion and conflicting lesson recommendations. Synthetic tests pass; production trust and automatic client runtime remain open."
   },
   "confirmed_completed": [
     "Resumable source-ingestion runner exists and has CI tests for dry-run, apply/replay, uncertain registry acknowledgement after crash, tampered ledger, and missing state projection reconstruction.",
@@ -94,7 +94,9 @@
     "Added a task-start regression that mutates an experience source after retrieval but before candidate expansion; the candidate is marked SOURCE_CHANGED_AFTER_RETRIEVAL and source-derived details are withheld.",
     "Added a fresh-process test proving the attention stack is reconstructed from the canonical event log after process restart.",
     "Made parent-return replay idempotent: repeating the same return turn ID yields ALREADY_RETURNED, does not append a second event and does not pop another frame.",
-    "Exact code/test HEAD 1fa6079379feb19afb4d39b7d77e39f0a4ac2d79 passed CI run 38901785446: 362 Python tests (1 skipped), 4 Node tests, strict write audit 134 mutation sites / 0 unclassified; memory and project validation passed."
+    "Exact code/test HEAD 1fa6079379feb19afb4d39b7d77e39f0a4ac2d79 passed CI run 38901785446: 362 Python tests (1 skipped), 4 Node tests, strict write audit 134 mutation sites / 0 unclassified; memory and project validation passed.",
+    "Added full task-start wrapper tests showing cross-project/global lessons remain OUT_OF_SCOPE, same-project candidates with insufficient evidence remain HOLD, and incompatible lesson judgments surface as CONFLICT with RECONCILE_CONFLICT as the next check.",
+    "Exact code/test HEAD 0cc63385747561eea01cdc52d65cae6bbe291cc4 passed CI run 38902032991: 364 Python tests (1 skipped), 4 Node tests, strict write audit 134 mutation sites / 0 unclassified; memory and project validation passed."
   ],
   "confirmed_open": [
     {
@@ -134,7 +136,7 @@
       "id": "OPEN-ATTENTION-RETURN-CONTROLLER",
       "description": "Implement runtime classification and persistent causal return stack for continuation, side branch, deferred idea, new task, priority change and return.",
       "status": "PARTIAL",
-      "evidence": "tools/dialogue_attention_controller.py; tests/test_dialogue_attention_controller.py; exact-head CI 38901785446.",
+      "evidence": "tools/dialogue_attention_controller.py; tests/test_dialogue_attention_controller.py; exact-head CI 38902032991.",
       "updated_at": "2026-10-16",
       "resolution": "Local explicit-call controller is connected to task-start restore and staged retrieval; fresh-process stack reconstruction and return replay are tested. Automatic ChatGPT capture/startup and automatic TASK_STATE/HANDOFF reconciliation remain open."
     },
@@ -142,9 +144,9 @@
       "id": "OPEN-TASK-TIME-EXPERIENCE-RETRIEVAL",
       "description": "Connect task start to staged, provenance-preserving retrieval of current-project events, decisions, lessons, failed attempts and linked causal paths, then cautiously inspect shared experience.",
       "status": "PARTIAL",
-      "evidence": "tools/minimal_agent_loop.py; tools/applicability_evaluator.py; tools/decision_frontier.py; tools/task_start_experience_map.py; CI 38901785446.",
+      "evidence": "tools/minimal_agent_loop.py; tools/applicability_evaluator.py; tools/decision_frontier.py; tools/task_start_experience_map.py; CI 38902032991.",
       "updated_at": "2026-10-16",
-      "resolution": "S1/S2 lesson retrieval, applicability evaluator and decision frontier are connected to task-start composition. Duplicate IDs and source mutation fail closed; production verifier/trust root, complete graph retrieval and full-wrapper cross-project/conflict/unknown tests remain open."
+      "resolution": "S1/S2 lesson retrieval, applicability evaluator and decision frontier are connected to task-start composition. Duplicate IDs/source mutation fail closed; cross-project/global exclusion and conflicts are tested through the wrapper. Production trust root, complete graph retrieval and full-workflow no-repeat remain open."
     },
     {
       "id": "OPEN-PRODUCTION-ARCHIVE-ACCEPTANCE",
@@ -166,7 +168,7 @@
       "evidence": "tests/test_applicability_evaluator.py positive path uses an injected test double; no production verifier configuration or bounded planning consumer is present."
     }
   ],
-  "next_action": "Test cross-project exclusions, conflicts and unknown criteria through the complete task-start wrapper, then exercise no-repeat across the whole task-start/branch-return workflow. Keep production verifier/trust-root design separate and fail-closed. Keep PR #30 draft/unmerged; do not change main.",
+  "next_action": "Test no-repeat across the complete task-start/branch-result/parent-return workflow, including unchanged evidence and already completed checks. Then design the production trusted verifier/trust root as a separate guarded step. Keep PR #30 draft/unmerged; do not change main.",
   "constraints": [
     "Do not merge PR #27, #28, #29 or #30 or modify main without explicit user approval.",
     "Do not delete or rewrite source-history exports without a separate explicit decision.",
@@ -179,18 +181,18 @@
   "status": "UMC02_UMC03_STAGED_TASK_START_CONNECTED_PARTIAL_EXACT_HEAD_CI_PASS_PRODUCTION_TRUST_AND_RUNTIME_GAPS_OPEN",
   "checkpoint_semantics": "This is a durable task checkpoint committed to the integration branch. It is not an automatic ChatGPT autosave or proof that an undelivered response was saved.",
   "repository_state": {
-    "last_verified_code_head": "1fa6079379feb19afb4d39b7d77e39f0a4ac2d79",
-    "exact_head_ci_run_id": 38901785446,
-    "exact_head_ci_url": "https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38901785446",
+    "last_verified_code_head": "0cc63385747561eea01cdc52d65cae6bbe291cc4",
+    "exact_head_ci_run_id": 38902032991,
+    "exact_head_ci_url": "https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38902032991",
     "exact_head_ci_conclusion": "success",
-    "python_tests": 362,
+    "python_tests": 364,
     "python_skipped": 1,
     "node_tests": 4,
     "write_audit_mutation_sites": 134,
     "write_audit_unclassified": 0,
     "memory_validation": "PASS",
     "project_validation": "PASS",
-    "note": "Code/test evidence is tied to exact HEAD 1fa6079379feb19afb4d39b7d77e39f0a4ac2d79 and CI run 38901785446. This following commit updates only docs, traceability and checkpoint state; verify its resulting SHA separately before claiming exact-head CI. PR #30 remains draft/unmerged; PR #29 and PR #28 remain separate draft/unmerged; main unchanged."
+    "note": "Code/test evidence is tied to exact HEAD 0cc63385747561eea01cdc52d65cae6bbe291cc4 and CI run 38902032991. This following commit updates only docs, traceability and checkpoint state; verify its resulting SHA separately before claiming exact-head CI. PR #30 remains draft/unmerged; PR #29 and PR #28 remain separate draft/unmerged; main unchanged."
   },
   "historical_repository_state": {
     "last_verified_code_head": "e30450a5ed516ab1f76f65c3c7874cdd2b951c40",
@@ -234,9 +236,8 @@
     }
   ],
   "open_items": [
-    "Run cross-project exclusion, conflicts and unknown-criteria cases through the complete task-start wrapper, preserving candidate/source identity and no silent applicability.",
-    "Exercise no-repeat policy across the complete task-start, branch-result and parent-return workflow; ensure previously completed checks are not rerun when inputs and evidence are unchanged.",
-    "Production trusted applicability verifier/trust root and a bounded consumer for usable_as_rationale remain unimplemented; test verifier callbacks are not production trust.",
+    "Exercise no-repeat across the complete task-start, branch-result and parent-return workflow; verify completed checks are not repeated when inputs/evidence are unchanged and rerun only when a relevant source revision changes.",
+    "Production trusted applicability verifier/trust root and a bounded consumer for usable_as_rationale remain unimplemented; injected test verifier callbacks are not production trust.",
     "Automatic ChatGPT message capture, new-chat restore and delivery acknowledgement remain unverified in the user's actual Yandex Browser Android environment.",
     "Production archive acceptance and full chat/attachment coverage remain PARTIAL/UNKNOWN; no complete production source/memory/correction registry is proven.",
     "Full canonical-memory graph retrieval, executable skill dispatcher, runtime environment monitor, VLM/Android acceptance and reversible memory quarantine/deletion lifecycle remain open.",

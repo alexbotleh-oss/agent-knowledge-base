@@ -798,3 +798,10 @@ The integrated path now has targeted fail-closed regression tests for source mut
 **What this proves:** these synthetic test paths behave as specified at that revision. It does not prove real archive completeness, automatic client capture/startup, production trusted applicability verification, or full canonical graph search. Positive applicability remains gated by an injected verifier callback and no production trust root is configured.
 
 **Next action:** add integrated task-start tests for cross-project exclusions, conflicts and unknown criteria; exercise the no-repeat policy through the whole task-start/branch-return flow; then design the production verifier trust boundary separately. PR #28 and PR #30 both remain draft/unmerged and contain overlapping UMC-03 source history that must be consolidated before merge.
+
+
+## Updated handoff — task-start scope/conflict checks (2026-10-16)
+
+The integrated task-start wrapper now exercises cross-project/global exclusion and conflicting lesson recommendations. Same-project lessons with insufficient evidence remain HOLD; conflicts surface as CONFLICT and the next check is RECONCILE_CONFLICT. Exact code/test HEAD `0cc63385747561eea01cdc52d65cae6bbe291cc4` passed CI [38902032991](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38902032991): 364 Python tests (1 skipped), 4 Node tests, write audit 134/0, memory/project validation PASS.
+
+**Next action:** test no-repeat across the complete task-start, branch-result and parent-return workflow, including unchanged evidence and previously completed checks. Then design the production trusted verifier/trust root. Keep PR #30 draft/unmerged and do not change `main`.
