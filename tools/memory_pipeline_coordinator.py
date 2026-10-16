@@ -267,7 +267,11 @@ def run_memory_pipeline(
     else:
         provenance=validate_provenance_links(semantic_manifest,source_registry_path)
         results["provenance_validation"]=provenance
-        _append_event(run_dir,run_id,"STAGE_RESULT","provenance_validation",provenance.get("status","UNKNOWN"),{"result":_summary(provenance,("status","resolved_refs","missing_refs","ambiguous_refs","errors","source_registry_sha256","memory_artifact_sha256"))})
+        provenance_summary={"status":provenance.get("status"),"resolved_refs":provenance.get("resolved_refs",0),
+            "missing_count":len(provenance.get("missing_refs",[])),"ambiguous_count":len(provenance.get("ambiguous_refs",[])),
+            "error_count":len(provenance.get("errors",[])),"source_registry_sha256":provenance.get("source_registry_sha256"),
+            "memory_artifact_sha256":provenance.get("memory_artifact_sha256")}
+        _append_event(run_dir,run_id,"STAGE_RESULT","provenance_validation",provenance.get("status","UNKNOWN"),{"result":provenance_summary})
         if provenance.get("status")!="RESOLVED":
             final={"status":"BLOCKED_AT_PROVENANCE_VALIDATION","provenance_validation":provenance}
         else:
