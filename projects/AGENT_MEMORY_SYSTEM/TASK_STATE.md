@@ -696,3 +696,10 @@ Added `tools/memory_pipeline_coordinator.py` to compose ingestion → approval/p
 Exact code HEAD `feeb14446c8b039271b753a8ecd0b2661318b818`, CI [38853687319](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38853687319) PASS: 294 Python tests (1 skipped), 4 Node tests, write audit 127 mutation sites / 0 unclassified. This run is before the latest crash/replay integration-test addition; that new test's exact-head CI result is not yet verified.
 
 Next: confirm CI for the new real-stage interruption/replay test, then test the real source-ingestion runner in a synthetic end-to-end fixture. Do not claim production archive coverage. PR #27 stays Draft/open/unmerged; `main` unchanged.
+
+
+## Real source-ingestion integration — PASS, 2026-10-16
+
+Exact-head CI [38856130862](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38856130862) passed for code SHA `fadc95c083a6a6ffafbe7042e78a70f1a0d2c31f`: 295 Python tests (1 skipped), 4 Node tests, write audit 127 mutation sites / 0 unclassified. New test `tests/test_memory_pipeline_real_ingestion.py` uses the real `source_ingestion_runner.py` on a synthetic archive and verifies real source registration, provenance resolution and semantic promotion through the coordinator.
+
+P2 is not yet declared ready: this test mocks the final verified restore packet, while the separate real-restore integration test mocks source ingestion. Next gate is one combined synthetic end-to-end test using the real ingestion runner, real promotion/index and real verified restore. Production archive completeness remains a separate acceptance task.
