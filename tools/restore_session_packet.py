@@ -42,8 +42,56 @@ def _tail_with_checkpoints(text: str, max_chars: int) -> str:
     return text[-max_chars:]
 
 
+def load_revision_evidence(project_dir: Path, *, observed_code_head: str | None = None,
+                         observed_ci_run_id: str | None = None) -> dict[str, Any]:
+    """Expose stored code/CI evidence without treating it as live GitHub state.
+
+    Observed values are supplied by the caller; this function does not fetch remote state.
+    """
+    path = Path(project_dir) / "CONTINUITY_CHECKPOINT.json"
+    if not path.is_file():
+        return {"status": "UNAVAILABLE", "reason": "CONTINUITY_CHECKPOINT.json is missing", "writes_performed": False}
+    try:
+        record = json.loads(path.read_text(encoding="utf-8"))
+    except Exception as exc:
+        return {"status": "INVALID", "reason": f"checkpoint JSON is invalid: {exc}", "writes_performed": False}
+    if not isinstance(record, dict) or not isinstance(record.get("repository_state"), dict):
+        return {"status": "INVALID", "reason": "repository_state is missing or invalid", "writes_performed": False}
+    current = record["repository_state"]
+    code_head = current.get("last_verified_code_head")
+    ci_run_id = current.get("exact_head_ci_run_id")
+    ci_conclusion = current.get("exact_head_ci_conclusion")
+    if not isinstance(code_head, str) or not re.fullmatch(r"[0-9a-fA-F]{40}", code_head):
+        return {"status": "INVALID", "reason": "last_verified_code_head must be a 40-character SHA", "writes_performed": False}
+    if not isinstance(ci_run_id, (str, int)) or isinstance(ci_run_id, bool):
+        return {"status": "INVALID", "reason": "exact_head_ci_run_id is missing or invalid", "writes_performed": False}
+    status = "RECORDED_EVIDENCE_ONLY"
+    if observed_code_head is not None:
+        status = "OBSERVED_CODE_HEAD_MATCH" if observed_code_head.lower() == code_head.lower() else "OBSERVED_CODE_HEAD_MISMATCH"
+    ci_matches = None
+    if observed_ci_run_id is not None:
+        ci_matches = str(observed_ci_run_id) == str(ci_run_id)
+        if observed_code_head is not None and observed_code_head.lower() == code_head.lower() and ci_matches and ci_conclusion == "success":
+            status = "OBSERVED_CODE_AND_CI_MATCH"
+        elif status == "OBSERVED_CODE_HEAD_MATCH":
+            status = "OBSERVED_CI_RUN_MISMATCH"
+    return {
+        "status": status,
+        "recorded_code_head": code_head,
+        "recorded_ci_run_id": str(ci_run_id),
+        "recorded_ci_conclusion": ci_conclusion,
+        "observed_code_head": observed_code_head,
+        "observed_ci_run_id": observed_ci_run_id,
+        "observed_ci_run_matches": ci_matches,
+        "historical_repository_state": record.get("historical_repository_state") if isinstance(record.get("historical_repository_state"), dict) else None,
+        "revision_semantics": record.get("revision_semantics") if isinstance(record.get("revision_semantics"), dict) else {},
+        "note": "Stored metadata is not live repository/CI proof; observed values are caller-supplied and not independently verified here.",
+        "writes_performed": False,
+    }
+
 def build_session_packet(task_state: Path, handoff: Path, event_log: Path,
-                         *, max_chars: int = 12000) -> dict[str, Any]:
+                         *, max_chars: int = 12000, observed_code_head: str | None = None,
+                         observed_ci_run_id: str | None = None) -> dict[str, Any]:
     task_state, handoff, event_log = Path(task_state), Path(handoff), Path(event_log)
     missing = [str(path) for path in (task_state, handoff, event_log) if not path.is_file()]
     if missing:
@@ -150,6 +198,10 @@ def build_session_packet(task_state: Path, handoff: Path, event_log: Path,
             "handoff_sha256": sha256_file(handoff),
             "event_log_sha256": sha256_file(event_log),
         },
+        "repository_revision_evidence": load_revision_evidence(
+            task_state.parent, observed_code_head=observed_code_head,
+            observed_ci_run_id=observed_ci_run_id,
+        ),
         "task_state_header": "\n".join(task_text.splitlines()[:18]),
         "latest_task_state_excerpt": latest_task_checkpoint,
         "latest_handoff_excerpt": latest_handoff_checkpoint,
@@ -172,8 +224,12 @@ def main(argv=None) -> int:
     parser.add_argument("handoff", type=Path)
     parser.add_argument("event_log", type=Path)
     parser.add_argument("--max-chars", type=int, default=12000)
+    parser.add_argument("--observed-code-head", help="Code HEAD independently observed by the caller")
+    parser.add_argument("--observed-ci-run-id", help="CI run ID independently observed by the caller")
     args = parser.parse_args(argv)
-    packet = build_session_packet(args.task_state, args.handoff, args.event_log, max_chars=args.max_chars)
+    packet = build_session_packet(args.task_state, args.handoff, args.event_log, max_chars=args.max_chars,
+                                  observed_code_head=args.observed_code_head,
+                                  observed_ci_run_id=args.observed_ci_run_id)
     print(json.dumps(packet, ensure_ascii=False, indent=2))
     return 0 if packet["status"] == "RESTORED_PACKET" else 2
 
