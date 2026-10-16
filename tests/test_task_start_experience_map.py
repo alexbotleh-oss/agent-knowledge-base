@@ -272,7 +272,7 @@ class TaskStartExperienceMapTests(unittest.TestCase):
         self.assertEqual(set(conflicts), {"LESSON-A", "LESSON-B"})
         self.assertFalse(result["decision_policy"]["planning_authorized"])
 
-    def test_task_start_reuses_prior_pass_only_when_inputs_match(self):
+    def test_task_start_surfaces_untrusted_prior_pass_without_skipping_check(self):
         result = build_task_start_experience_map(
             self.task, self.handoff, self.events, "cache recovery index pointer",
             experience_logs=[self.experience], attention_log=self.attention,
@@ -366,7 +366,7 @@ class TaskStartExperienceMapTests(unittest.TestCase):
         self.assertEqual(result["status"], "PARTIAL_SOURCE_PROVENANCE_STALE")
         self.assertFalse(result["decision_policy"]["planning_authorized"])
 
-    def test_no_repeat_survives_child_result_ack_parent_reconciliation_and_return(self):
+    def test_untrusted_pass_does_not_suppress_check_after_child_result_ack_and_return(self):
         opened = process_turn(
             self.attention, turn_id="T-INTEGRATED-SIDE", text="Кстати, проверь отдельный вопрос",
             active_task_id="TASK-PARENT", active_checkpoint_id="CKPT-PARENT",
@@ -432,9 +432,9 @@ class TaskStartExperienceMapTests(unittest.TestCase):
             active_checkpoint_id="CKPT-PARENT", current_project_id="TEST",
         )
         reuse = after_return["experience_map"]["check_reuse_policy"]
-        self.assertEqual(reuse["status"], "REUSE_RECORDED_PASS")
-        self.assertEqual(reuse["action"], "DO_NOT_REPEAT_CHECK")
-        self.assertFalse(after_return["decision_policy"]["repeat_check"])
+        self.assertEqual(reuse["status"], "REUSE_RECORDED_PASS_UNTRUSTED")
+        self.assertEqual(reuse["action"], "REVIEW_PRIOR_RESULT")
+        self.assertTrue(after_return["decision_policy"]["repeat_check"])
         self.assertFalse(after_return["decision_policy"]["planning_authorized"])
         self.assertEqual(len([
             event for event in json.loads("[" + ",".join(

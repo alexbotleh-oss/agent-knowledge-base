@@ -825,9 +825,9 @@ def run_minimal_agent_loop(
     trust = authorize_next_step(context)
     query_parts = [user_request.strip(), context.get("active_goal", "UNKNOWN")]
     blockers = context.get("blockers", [])
-    if isinstance(blockers, list):
     if judgment_verifier is None:
         judgment_verifier = make_applicability_verifier_from_env(Path(__file__).resolve().parents[1])
+    if isinstance(blockers, list):
         query_parts.extend(item for item in blockers if isinstance(item, str))
     query = " ".join(part for part in query_parts if part and part != "UNKNOWN")
 

@@ -1,7 +1,12 @@
+import base64
+import hashlib
 import json
+import os
+import subprocess
 import sys
 import tempfile
 import unittest
+from datetime import datetime, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -11,11 +16,39 @@ from agent_memory_cycle import run_cycle
 from branch_result_registry import publish_result, acknowledge_result
 from dialogue_attention_controller import process_turn
 from check_reuse_policy import record_check_result
+from trusted_receipt_verifier import canonical_receipt_payload
 
 
 class AgentMemoryCycleTests(unittest.TestCase):
     def setUp(self):
+        self._old_env = {
+            key: os.environ.get(key)
+            for key in ("AGMS_TRUSTED_KEYRING_PATH", "AGMS_TRUSTED_KEYRING_SHA256", "AGMS_SIGNED_RECEIPTS_PATH")
+        }
         self.tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self.tmp.name)
+        self.private_key = self.root / "test-private.pem"
+        self.public_key = self.root / "test-public.pem"
+        subprocess.run(["openssl", "genpkey", "-algorithm", "ED25519", "-out", str(self.private_key)],
+                       check=True, capture_output=True)
+        subprocess.run(["openssl", "pkey", "-in", str(self.private_key), "-pubout", "-out", str(self.public_key)],
+                       check=True, capture_output=True)
+        self.keyring = self.root / "trusted-keyring.json"
+        self.keyring.write_text(json.dumps({
+            "schema_version": "1.0",
+            "keys": [{
+                "key_id": "test-key-1", "issuer_id": "test-signer",
+                "algorithm": "Ed25519", "status": "ACTIVE",
+                "allowed_receipt_types": ["applicability_judgment", "check_result"],
+                "public_key_pem": self.public_key.read_text(encoding="utf-8"),
+            }],
+        }, sort_keys=True), encoding="utf-8")
+        self.keyring_sha = hashlib.sha256(self.keyring.read_bytes()).hexdigest()
+        self.signed_receipts = self.root / "signed-receipts.jsonl"
+        self.signed_receipts.write_text("", encoding="utf-8")
+        os.environ["AGMS_TRUSTED_KEYRING_PATH"] = str(self.keyring)
+        os.environ["AGMS_TRUSTED_KEYRING_SHA256"] = self.keyring_sha
+        os.environ["AGMS_SIGNED_RECEIPTS_PATH"] = str(self.signed_receipts)
         self.root = Path(self.tmp.name)
         self.project = self.root / "projects" / "TEST"
         self.project.mkdir(parents=True)
@@ -48,12 +81,46 @@ class AgentMemoryCycleTests(unittest.TestCase):
         }])
 
     def tearDown(self):
+        for key, value in self._old_env.items():
+            if value is None:
+                os.environ.pop(key, None)
+            else:
+                os.environ[key] = value
         self.tmp.cleanup()
 
     @staticmethod
     def _write(path, events):
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text("".join(json.dumps(item, ensure_ascii=False) + "\n" for item in events), encoding="utf-8")
+
+    def _signed_check_receipt(self, policy, evidence_refs):
+        claim = {
+            "check_key": policy["check_key"],
+            "input_fingerprint": policy["input_fingerprint"],
+            "result_status": "PASS",
+            "evidence_refs": evidence_refs,
+            "source_hashes": policy["source_hashes"],
+            "candidate_fingerprints": policy["candidate_fingerprints"],
+        }
+        receipt = {
+            "schema_version": "1.0", "receipt_id": "RECEIPT-CYCLE-1",
+            "receipt_type": "check_result", "issuer_id": "test-signer",
+            "key_id": "test-key-1",
+            "issued_at": datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z"),
+            "claim": claim,
+        }
+        payload_path = self.root / "receipt-payload.json"
+        signature_path = self.root / "receipt-signature.bin"
+        payload_path.write_bytes(canonical_receipt_payload(receipt))
+        subprocess.run([
+            "openssl", "pkeyutl", "-sign", "-inkey", str(self.private_key),
+            "-rawin", "-in", str(payload_path), "-out", str(signature_path),
+        ], check=True, capture_output=True)
+        receipt["signature"] = {
+            "algorithm": "Ed25519",
+            "value": base64.b64encode(signature_path.read_bytes()).decode("ascii"),
+        }
+        return receipt
 
     def test_single_entrypoint_reconciles_child_result_returns_and_reuses_check(self):
         opened = process_turn(
@@ -92,12 +159,14 @@ class AgentMemoryCycleTests(unittest.TestCase):
         )
         policy = before["check_reuse"]
         self.assertEqual(policy["status"], "RUN_CHECK")
+        evidence_refs = ["tests/test_cache.py#case-1"]
+        signed_receipt = self._signed_check_receipt(policy, evidence_refs)
         recorded = record_check_result(
             self.attention, policy["check_spec"], policy["source_hashes"],
             policy["candidate_fingerprints"], result_status="PASS",
-            evidence_refs=["tests/test_cache.py#case-1"],
+            evidence_refs=evidence_refs,
             summary="Discriminating check passed after reviewing the branch result.",
-            recorded_by="synthetic-agent-memory-cycle-test",
+            recorded_by="synthetic-agent-memory-cycle-test", signed_receipt=signed_receipt,
         )
         self.assertEqual(recorded["status"], "RECORDED")
 
@@ -112,7 +181,7 @@ class AgentMemoryCycleTests(unittest.TestCase):
         self.assertEqual(after["branch_reconciliation"]["status"], "CONSISTENT")
         self.assertEqual(after["parent_return"]["status"], "RETURNED")
         self.assertEqual(after["attention"]["active"]["task_id"], "TASK-PARENT")
-        self.assertEqual(after["check_reuse"]["status"], "REUSE_RECORDED_PASS")
+        self.assertEqual(after["check_reuse"]["status"], "REUSE_VERIFIED_PASS")
         self.assertEqual(after["check_reuse"]["action"], "DO_NOT_REPEAT_CHECK")
         self.assertFalse(after["task_start"]["decision_policy"]["repeat_check"])
         self.assertFalse(after["task_start"]["decision_policy"]["planning_authorized"])
