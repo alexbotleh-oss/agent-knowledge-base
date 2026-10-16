@@ -135,7 +135,7 @@ class SourceIngestionRoundtripTests(unittest.TestCase):
         self.assertEqual(len(original_rows), 2)
         retained = original_rows[0]
         self.registry.write_text(
-            json.dumps(retained, ensure_ascii=False, sort_keys=True) + "\\n",
+            json.dumps(retained, ensure_ascii=False, sort_keys=True) + "\n",
             encoding="utf-8",
         )
         before = self.registry.read_bytes()
