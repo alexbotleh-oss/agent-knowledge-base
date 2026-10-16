@@ -841,3 +841,17 @@ The user assigned the continuous agent the name **РИМА — Развиваю�
 - Current-state projection: `PROJECT_STATE.md`; task continuity checkpoint: `TASK_STATE.md`.
 - On future restore, retrieve the accepted identity and its originating event from persistent memory. Do not infer cross-chat/runtime availability from the fact that it is recorded here.
 - **Verification boundary:** read-back confirms the event record; exact-head CI and automatic startup/context injection must be checked separately. PR #30 remains Draft/open/unmerged; do not merge without explicit user approval.
+
+## Handoff — archive idempotency side branch (2026-10-16)
+
+The user requested a practical check that archive export skips existing records and writes missing ones. The writer was adjusted and regression tests now cover:
+
+1. Partial registry: one existing record is skipped and one missing record is appended.
+2. Changed source snapshot with one changed message and one unchanged message: only the changed logical record is appended as a new revision; the unchanged one is skipped.
+3. Different raw snapshot hash caused only by JSON formatting: all logical records are skipped and registry bytes remain unchanged.
+
+Exact code/test HEAD 4a257c059c1b716145e0f6311f9f7a6b8095db9f passed CI 38907787412: 388 Python tests (1 skipped), write audit 143/0, memory/project validation PASS.
+
+**Important limitation:** this is synthetic CI validation, not a real import of the user's full ChatGPT export. Do not report the personal archive as exported or complete. The current chat has not supplied a complete raw export payload to this runner. When a real source file is available, capture its SHA-256 and counts, run the importer, then compare before/after counts and confirm only missing logical records were appended.
+
+**Parent task return point:** close the production trust boundary for signed applicability/check receipts, route parent return through the guarded cycle, and preserve PR #30 as Draft/open/unmerged. main remains unchanged.

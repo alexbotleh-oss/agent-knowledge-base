@@ -801,3 +801,14 @@ The no-repeat check fingerprint now binds the current request and relevant seman
 - **Требование:** последующее восстановление задачи должно поднимать имя РИМА и связанное событие из постоянной памяти, а не выводить их только из локального контекста текущего чата.
 - **Проверенная часть:** событие записано в `events.jsonl` и прочитано обратно; синхронизация остальных проекций и exact-head CI относятся к текущему этапу.
 - **Не подтверждено:** автоматическая передача этой идентичности каждому новому чату/клиенту.
+
+## Side-branch checkpoint — archive idempotency test (2026-10-16)
+
+**Why this branch:** user explicitly asked to test the archive export rule: existing records are skipped; missing records are written. This is a temporary side branch from the continuous-memory task, not a replacement of the parent goal.
+
+- Updated tools/source_evidence_registry.py: unchanged logical records are skipped across different raw snapshot hashes; changed content is retained as a new revision; missing records are appended.
+- Added regression tests for partial registry recovery (one existing row, one missing), cross-snapshot unchanged/changed records, and whitespace-only source changes.
+- Exact code/test HEAD 4a257c059c1b716145e0f6311f9f7a6b8095db9f passed CI 38907787412: 388 Python tests (1 skipped), write audit 143 mutation sites / 0 unclassified, memory/project validation PASS.
+- A first test attempt failed because the test fixture wrote a literal backslash+n instead of a newline. The fixture was corrected; the exact later HEAD above passed. The production writer was not the cause of that failure.
+- **Not yet done:** no real user ChatGPT archive bytes were imported in this step. This proves synthetic behavior only; source/attachment completeness remains PARTIAL/UNKNOWN.
+- **Return point:** after verifying actual archive input and before claiming export complete, return to the parent task: close the production trust boundary for applicability/check receipts and prevent bypass of the guarded parent-return path. Keep PR #30 Draft/open/unmerged; do not change main.

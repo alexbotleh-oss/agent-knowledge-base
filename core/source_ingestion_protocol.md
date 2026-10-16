@@ -275,3 +275,15 @@ PASS присваивается только если тест намеренн�
 **Граница:** это доказательство связности на синтетических данных, не production acceptance. На этой ветке не обнаружены tracked-файлы `registry/source_records.jsonl`, `registry/memory_records.jsonl`, `registry/edge_corrections.jsonl`; полный пользовательский архив и вложения не прошли end-to-end acceptance. `IMPORT_READY` не означает одобрение; успешный coordinator не означает COMPLETE archive coverage. См. `projects/AGENT_MEMORY_SYSTEM/END_TO_END_MEMORY_AGENT_AUDIT_2026-10-16.md`.
 
 Отдельно: UMC-03 evaluator и decision frontier находятся в draft PR #28, а не в интеграционном HEAD PR #27. Не считать этот слой уже интегрированным в ветку PR #27.
+
+## Актуализация — идемпотентность между снимками (2026-10-16)
+
+Текущая реализация tools/source_evidence_registry.py уточняет прежнее правило из исторического раздела выше:
+
+- Точное повторение того же source-record/snapshot/parser ключа — no-op.
+- Если SHA-256 снимка изменился, но устойчивое содержимое конкретной source record осталось тем же, запись считается уже существующей и повторно не записывается.
+- Если содержимое той же логической записи изменилось, новая ревизия добавляется append-only; предыдущая не перезаписывается.
+- Если логической записи ещё нет, она добавляется. Смешанный batch может одновременно пропустить существующие записи и добавить недостающие.
+- Сравнение игнорирует только source_snapshot_sha256 и поля регистрации (batch_id, registered_at, schema_version); остальные поля, включая текстовый хеш, временные поля, связи узлов и маркеры вложений, участвуют в сравнении.
+
+Подтверждение: exact code/test HEAD 4a257c059c1b716145e0f6311f9f7a6b8095db9f, CI 38907787412, 388 Python-тестов (1 skipped), write audit 143/0, memory/project validation PASS. Это synthetic CI, не импорт реального пользовательского архива.
