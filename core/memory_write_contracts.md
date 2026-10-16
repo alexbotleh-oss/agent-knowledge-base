@@ -227,3 +227,15 @@ The stage writers are independently idempotent. If the process stops after a sta
 The coordinator records hashes, stage status and counts in its ledger rather than storing full restored memory payloads or raw provenance locators there. Provenance validation results returned to the caller may include diagnostic references; keep the run directory private.
 
 `--apply` is required for canonical source/memory/correction/index writes. The existing source-ingestion runner may still create staging artifacts and its own run ledger during dry-run, so the coordinator reports source-stage, canonical and ledger writes separately. The coordinator is not yet production-accepted as a single end-to-end run; tests use synthetic source records and mocked stage/API results.
+
+
+## Current coordinator acceptance status — 2026-10-16
+
+The earlier statement above that coordinator tests use only synthetic records and mocked stage/API results is incomplete as a summary of the current branch. Those mocks remain in focused unit/integration tests, but a later combined synthetic end-to-end test exists:
+
+- `tests/test_memory_pipeline_real_ingestion.py` uses the real `source_ingestion_runner.py`, the coordinator's real provenance validation/promotion/index path, and the real memory-aware restore. It asserts retrieval of `MEM-REAL-INGEST-1` / `REV-REAL-1` with non-empty provenance under an explicit project/task/context scope.
+- `tests/test_memory_pipeline_real_stages.py` exercises real promotion/correction/index/restore stages over synthetic data and injects interruption around index publication/replay.
+- Exact code HEAD `0f2c76f1b79d1c73aa89eed0f3e98830658c338d` passed [CI run 38862706088](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38862706088): 295 Python tests (1 skipped), 4 Node tests.
+- The current metadata HEAD of the integration branch is `d3f9c610b7865793960dc652c2ccccc88afef732`; its CI run [38864512026](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38864512026) also passed: 295 Python tests (1 skipped), 4 Node tests, memory validation PASS.
+
+This supersedes only the statement that no real-stage synthetic E2E test exists. It does **not** mean production acceptance is complete. No real user archive was run through the full pipeline; the canonical registry files are absent from the tracked integration branch; archive/attachment completeness remains unverified; correction overlay coverage is PARTIAL; and stage writers are idempotent separate operations rather than one cross-registry atomic transaction. Keep production acceptance and crash-boundary coverage as open gates.
