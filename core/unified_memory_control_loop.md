@@ -353,7 +353,7 @@ Basis revision of the specification: `d3f9c610b7865793960dc652c2ccccc88afef732` 
 2. `run_minimal_agent_loop` does not plan. It returns `next_action_policy: REVIEW_CANDIDATES_ONLY_NO_PLANNING` and always sets `checkpoint_currentness_gate: BLOCKED_CURRENTNESS_UNVERIFIED`. So "influence on the decision" cannot mean "influences the plan"; it must mean the fields defined in 13.4.
 3. Every candidate currently carries `transfer_decision: UNASSESSED`. The evaluator is the only component that may replace it, and only in its own output, never in the source record.
 
-### 13.2 Evaluator contract (as implemented in the first patch)
+### 13.2 Evaluator contract (as implemented in the current patch)
 
 `evaluate_applicability(candidates, judgments=None) -> dict` in `tools/applicability_evaluator.py`.
 
@@ -419,7 +419,7 @@ New output fields of `run_minimal_agent_loop` (all additive):
 
 This generalizes the "temporary experience" idea: a wrong or incomplete claim made on the way to an answer is useful evidence, as long as it cannot silently become knowledge.
 
-**13.5.1 Progressive search (target design; not implemented in this patch).** The intended loop will search in stages and stop at the first stage that yields a sufficient result (at least one verified `APPLICABLE` candidate, or a documented exhaustion of all stages). The current implementation performs one lexical-overlap pass and cannot establish permissive applicability.
+**13.5.1 Progressive search (S1/S2 implemented; S3 deferred).** The loop first searches the same project by explicit structured markers (S1: problem type, tools, languages, environment). If no verified `APPLICABLE` lesson is found, it falls back to same-project lexical expansion (S2). S1/S2 only retrieve and rank candidates; markers and lexical overlap do not prove applicability. A verified `APPLICABLE` result stops expansion. If explicit markers are absent, S1 reports `NO_MARKERS` and S2 runs. S3 (other projects) remains deferred and is never entered implicitly.
 - S1: same project, structured match on tool/language/problem fields.
 - S2: same project, lexical expansion (current behavior), then evaluated by 13.3.
 - S3 (other projects, `scope: global` lessons): **deferred; not part of the first implementation.** No `allow_cross_project` flag is implemented. Such candidates are reported as `NOT_EVALUATED_OUT_OF_SCOPE` (R0) and retained unchanged. A later, separate decision must define a mechanism for global applicability.
@@ -436,7 +436,7 @@ Each stage records its query, source hashes and result counts. Widening beyond t
 
 A correct final claim does **not** confirm the intermediate claims that led to it. If the final claim is a generalization of what was observed, the proposal states the observed scope separately and marks the extra reach `inferred`.
 
-### 13.6 Acceptance scenarios and what the first patch tests
+### 13.6 Acceptance scenarios and what the current patch tests
 
 Implemented in `tests/test_applicability_evaluator.py`; integration scenarios run through `run_minimal_agent_loop`.
 
@@ -467,4 +467,4 @@ The lesson records in these tests are fixtures. They demonstrate the mechanism; 
 
 ### 13.10 Not implemented by the first patch
 
-The provisional-experience ledger (13.5.2) and its scenario T5; distinct structured S1 and fallback S2 retrieval stages; S3 / `allow_cross_project`; a production trusted verifier implementation and its trust configuration; writing any ledger to disk; automatic promotion of lessons; automatic extraction of conditions from free text; any change to record schemas, status vocabularies or registry contracts. If a record's status or scope cannot be determined from existing contracts, the evaluator reports the uncertainty (R13) rather than supplying a meaning.
+The provisional-experience ledger (13.5.2) and its scenario T5; S3 / `allow_cross_project`; a production trusted verifier implementation and its trust configuration; writing any ledger to disk; automatic promotion of lessons; automatic extraction of conditions from free text; any change to record schemas, status vocabularies or registry contracts. If a record's status or scope cannot be determined from existing contracts, the evaluator reports the uncertainty (R13) rather than supplying a meaning.

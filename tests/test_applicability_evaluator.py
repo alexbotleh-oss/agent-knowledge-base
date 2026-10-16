@@ -302,6 +302,12 @@ class LoopIntegrationTests(unittest.TestCase):
             "prevention_rule": "compare restored data with the snapshot", "applicability": ["staging snapshot restore"],
             "exceptions": ["snapshot is empty by design"], "evidence_refs": ["projects/TEST/events.jsonl:EVT-CURRENT-1"],
             "supersedes": [],
+            "markers": {
+                "problem_types": ["snapshot_restore"],
+                "tools": ["Python", "SQLite"],
+                "languages": ["Python"],
+                "environments": ["GitHub Actions"],
+            },
         }
         record.update(overrides)
         return record
@@ -367,12 +373,51 @@ class LoopIntegrationTests(unittest.TestCase):
             }
         result = self._run(
             full_judgments("L-VERIFIED", judged_by="agent"),
-            current_project_id=PROJECT, judgment_verifier=verifier,
+            current_project_id=PROJECT,
+            current_markers={"problem_types": ["snapshot_restore"], "tools": ["Python"]},
+            judgment_verifier=verifier,
         )
         self.assertEqual(outcome_of(result["applicability"], "L-VERIFIED"), "APPLICABLE")
         self.assertEqual(result["applicability"]["usable_as_rationale"][0]["candidate_id"], "L-VERIFIED")
         self.assertEqual(result["next_action_policy"], "REVIEW_CANDIDATES_ONLY_NO_PLANNING")
+        self.assertEqual(result["lesson_search_stages"][0]["stage"], "S1_STRUCTURED")
+        self.assertTrue(result["lesson_search_stages"][0]["verified_applicable_found"])
+        self.assertEqual(result["lesson_search_stages"][1]["status"], "SKIPPED_SUFFICIENT_S1")
         self._assert_planning_still_blocked(result)
+
+    def test_s1_structured_markers_are_exact_and_project_scoped(self):
+        self._write_lessons([
+            self._lesson("L-S1"),
+            self._lesson("L-OTHER", project_id="OTHER"),
+            self._lesson("L-NO-MATCH", markers={"tools": ["Rust"], "languages": ["Rust"], "problem_types": ["compiler"]}),
+            self._lesson("L-GLOBAL", scope="global", project_id="global"),
+        ])
+        result = retrieve_lesson_candidates_structured(
+            {"problem_types": ["snapshot_restore"], "tools": ["Python"]},
+            [self.lessons], current_project_id=PROJECT,
+        )
+        self.assertEqual(result["status"], "CANDIDATES_FOUND")
+        self.assertEqual([c["lesson_id"] for c in result["candidates"]], ["L-S1"])
+        self.assertIn("problem_types", result["candidates"][0]["matching_marker_dimensions"])
+        self.assertEqual(result["candidates"][0]["project_scope_match"], "MATCH")
+        self.assertGreaterEqual(result["out_of_scope_count"], 2)
+
+    def test_s2_lexical_fallback_runs_when_s1_has_no_verified_applicable_lesson(self):
+        self._write_lessons([self._lesson("L-1")])
+        result = self._run(None, current_project_id=PROJECT,
+                           current_markers={"problem_types": ["different_problem"]})
+        self.assertEqual(result["lesson_search_stages"][0]["status"], "NO_MATCHES")
+        self.assertEqual(result["lesson_search_stages"][1]["stage"], "S2_LEXICAL")
+        self.assertEqual(result["lesson_search_stages"][1]["status"], "CANDIDATES_FOUND")
+        self.assertEqual([c["lesson_id"] for c in result["lesson_retrieval"]["candidates"]], ["L-1"])
+        self.assertEqual(outcome_of(result["applicability"], "L-1"), "INSUFFICIENT_DATA")
+
+    def test_s1_without_markers_falls_back_to_s2(self):
+        self._write_lessons([self._lesson("L-1")])
+        result = self._run(None, current_project_id=PROJECT)
+        self.assertEqual(result["lesson_search_stages"][0]["status"], "NO_MARKERS")
+        self.assertEqual(result["lesson_search_stages"][1]["status"], "CANDIDATES_FOUND")
+        self.assertEqual(result["lesson_retrieval"]["candidates"][0]["retrieval_stage"], "S2_LEXICAL")
 
     def test_t1b_global_lesson_is_reported_not_evaluated_and_left_unchanged(self):
         self._write_lessons([self._lesson("G-1", scope="global", project_id="global")])
