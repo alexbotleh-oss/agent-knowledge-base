@@ -16,6 +16,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from trusted_receipt_verifier import verify_signed_receipt
+
 REQUIRED = (
     "child_branch_id",
     "parent_checkpoint_id",
@@ -174,8 +176,9 @@ def _acknowledge_result_unlocked(
     owner_ref: str,
     acknowledged_at: str,
     notes: str = "",
+    signed_receipt: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """Append explicit owner acknowledgement; never edits the child result or parent task."""
+    """Append an owner decision; only a verified signed receipt can authorize return."""
     allowed = {"accepted", "needs_review", "rejected"}
     if decision not in allowed:
         return {"status": "REJECTED", "writes_performed": False, "errors": ["invalid:decision"]}
@@ -191,6 +194,26 @@ def _acknowledge_result_unlocked(
         return {"status": "REJECTED", "writes_performed": False,
                 "errors": ["target must be an existing cross_branch_result event"]}
     branch = target.get("branch_return") or {}
+    expected_claim = {
+        "result_event_id": result_event_id,
+        "child_branch_id": branch.get("child_branch_id"),
+        "parent_task_id": branch.get("parent_task_id"),
+        "parent_checkpoint_id": branch.get("parent_checkpoint_id"),
+        "decision": decision,
+        "owner_ref": owner_ref,
+    }
+    verification = None
+    if signed_receipt is not None:
+        keyring_path = os.environ.get("AGMS_TRUSTED_KEYRING_PATH")
+        keyring_sha = os.environ.get("AGMS_TRUSTED_KEYRING_SHA256")
+        verification = verify_signed_receipt(
+            signed_receipt, expected_claim,
+            keyring_path=Path(keyring_path) if keyring_path else None,
+            expected_keyring_sha256=keyring_sha,
+        )
+        if not verification.get("verified") or signed_receipt.get("receipt_type") != "owner_acknowledgement":
+            return {"status": "REJECTED_OWNER_RECEIPT", "writes_performed": False,
+                    "verification": verification or {"status": "INVALID_RECEIPT"}}
     identity = "\\0".join((result_event_id, owner_ref))
     ack_id = "EVT-AGMS-XACK-" + hashlib.sha256(identity.encode("utf-8")).hexdigest()[:20].upper()
     ack_event = {
@@ -202,7 +225,7 @@ def _acknowledge_result_unlocked(
         "time_precision": "timestamp",
         "temporal_basis": "explicit_owner_acknowledgement",
         "type": "cross_branch_result_acknowledged",
-        "status": "verified",
+        "status": "verified" if verification and verification.get("verified") else "reported",
         "summary": f"Parent owner acknowledgement for child result {result_event_id}: {decision}.",
         "facts": [],
         "hypotheses": [],
@@ -227,6 +250,8 @@ def _acknowledge_result_unlocked(
             "decision": decision,
             "owner_ref": owner_ref,
             "parent_checkpoint_id": branch.get("parent_checkpoint_id"),
+            "signed_receipt": signed_receipt,
+            "verification_status": "VERIFIED" if verification and verification.get("verified") else "UNVERIFIED",
         },
     }
     for prior in existing:
@@ -256,6 +281,8 @@ def _acknowledge_result_unlocked(
         "decision": decision,
         "writes_performed": True,
         "parent_task_updated": False,
+        "verification_status": "VERIFIED" if verification and verification.get("verified") else "UNVERIFIED",
+        "authorization_effect": "OWNER_RETURN_MAY_BE_AUTHORIZED" if verification and verification.get("verified") else "NONE",
     }
 
 
@@ -312,13 +339,14 @@ def acknowledge_result(
     owner_ref: str,
     acknowledged_at: str,
     notes: str = "",
+    signed_receipt: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     path_error = _target_path_error(event_log)
     if path_error:
         return {"status": "REJECTED", "errors": [path_error], "writes_performed": False}
     return _run_exclusive(
         event_log, _acknowledge_result_unlocked,
-        result_event_id, decision, owner_ref, acknowledged_at, notes,
+        result_event_id, decision, owner_ref, acknowledged_at, notes, signed_receipt,
     )
 
 
@@ -336,6 +364,7 @@ def main(argv=None) -> int:
     ack_parser.add_argument("--owner-ref", required=True, help="reference proving/locating the owner's explicit decision")
     ack_parser.add_argument("--at", required=True, help="ISO-8601 timestamp with timezone")
     ack_parser.add_argument("--notes", default="")
+    ack_parser.add_argument("--signed-receipt-json", type=Path, help="signed owner_acknowledgement receipt JSON")
 
     args = parser.parse_args(argv)
     if args.command == "publish":
@@ -345,6 +374,7 @@ def main(argv=None) -> int:
         response = acknowledge_result(
             args.event_log, args.result_event_id, args.decision,
             args.owner_ref, args.at, args.notes,
+            json.loads(args.signed_receipt_json.read_text(encoding="utf-8")) if args.signed_receipt_json else None,
         )
     print(json.dumps(response, ensure_ascii=False, indent=2))
     return 0 if response["status"] in {"RESULT_REPORTED", "ALREADY_PUBLISHED", "ACKNOWLEDGED", "ALREADY_ACKNOWLEDGED"} else 2

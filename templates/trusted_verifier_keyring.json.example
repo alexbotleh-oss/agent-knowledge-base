@@ -8,7 +8,8 @@
       "status": "REVOKED",
       "allowed_receipt_types": [
         "applicability_judgment",
-        "check_result"
+        "check_result",
+        "owner_acknowledgement"
       ],
       "public_key_pem": "REPLACE_WITH_PUBLIC_KEY_PEM"
     }

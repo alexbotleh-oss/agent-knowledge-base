@@ -36,7 +36,7 @@ class TrustedReceiptVerifierTests(unittest.TestCase):
             "keys": [{
                 "key_id": "test-key-1", "issuer_id": "test-signer",
                 "algorithm": "Ed25519", "status": "ACTIVE",
-                "allowed_receipt_types": ["applicability_judgment", "check_result"],
+                "allowed_receipt_types": ["applicability_judgment", "check_result", "owner_acknowledgement"],
                 "public_key_pem": self.public.read_text(encoding="utf-8"),
             }],
         }, sort_keys=True), encoding="utf-8")

@@ -1,9 +1,14 @@
+import base64
+import hashlib
 import json
+import os
+import subprocess
 import sys
 import tempfile
 import unittest
 from unittest.mock import patch
 from pathlib import Path
+from datetime import datetime, timezone
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
@@ -13,6 +18,7 @@ from agent_memory_cycle import run_cycle
 from branch_result_registry import publish_result, acknowledge_result
 from reconcile_branch_returns import build_report as build_branch_return_report
 from check_reuse_policy import record_check_result
+from trusted_receipt_verifier import canonical_receipt_payload
 import task_start_experience_map as task_start_module
 from task_start_experience_map import build_task_start_experience_map
 
@@ -21,6 +27,19 @@ class TaskStartExperienceMapTests(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         self.root = Path(self.tmp.name)
+        self._old_env = {key: os.environ.get(key) for key in ("AGMS_TRUSTED_KEYRING_PATH", "AGMS_TRUSTED_KEYRING_SHA256")}
+        self.private_key = self.root / "test-private.pem"
+        self.public_key = self.root / "test-public.pem"
+        subprocess.run(["openssl", "genpkey", "-algorithm", "ED25519", "-out", str(self.private_key)], check=True, capture_output=True)
+        subprocess.run(["openssl", "pkey", "-in", str(self.private_key), "-pubout", "-out", str(self.public_key)], check=True, capture_output=True)
+        self.keyring = self.root / "trusted-keyring.json"
+        self.keyring.write_text(json.dumps({"schema_version": "1.0", "keys": [{
+            "key_id": "test-key-1", "issuer_id": "test-signer", "algorithm": "Ed25519", "status": "ACTIVE",
+            "allowed_receipt_types": ["applicability_judgment", "check_result", "owner_acknowledgement"],
+            "public_key_pem": self.public_key.read_text(encoding="utf-8"),
+        }]}, sort_keys=True), encoding="utf-8")
+        os.environ["AGMS_TRUSTED_KEYRING_PATH"] = str(self.keyring)
+        os.environ["AGMS_TRUSTED_KEYRING_SHA256"] = hashlib.sha256(self.keyring.read_bytes()).hexdigest()
         self.project = self.root / "projects" / "TEST"
         self.project.mkdir(parents=True)
         self.task = self.project / "TASK_STATE.md"
@@ -56,12 +75,37 @@ class TaskStartExperienceMapTests(unittest.TestCase):
         }])
 
     def tearDown(self):
+        for key, value in self._old_env.items():
+            if value is None:
+                os.environ.pop(key, None)
+            else:
+                os.environ[key] = value
         self.tmp.cleanup()
 
     @staticmethod
     def _write(path, events):
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text("".join(json.dumps(e, ensure_ascii=False) + "\n" for e in events), encoding="utf-8")
+
+    def _signed_owner_receipt(self, result_event_id, decision, owner_ref):
+        events = [json.loads(line) for line in self.attention.read_text(encoding="utf-8").splitlines() if line.strip()]
+        target = next(event for event in events if event.get("event_id") == result_event_id)
+        branch = target["branch_return"]
+        receipt = {
+            "schema_version": "1.0", "receipt_id": "RECEIPT-OWNER-INTEGRATED",
+            "receipt_type": "owner_acknowledgement", "issuer_id": "test-signer", "key_id": "test-key-1",
+            "issued_at": datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z"),
+            "claim": {"result_event_id": result_event_id, "child_branch_id": branch["child_branch_id"],
+                      "parent_task_id": branch["parent_task_id"], "parent_checkpoint_id": branch["parent_checkpoint_id"],
+                      "decision": decision, "owner_ref": owner_ref},
+        }
+        payload_path = self.root / "owner-payload.json"
+        signature_path = self.root / "owner-signature.bin"
+        payload_path.write_bytes(canonical_receipt_payload(receipt))
+        subprocess.run(["openssl", "pkeyutl", "-sign", "-inkey", str(self.private_key), "-rawin",
+                        "-in", str(payload_path), "-out", str(signature_path)], check=True, capture_output=True)
+        receipt["signature"] = {"algorithm": "Ed25519", "value": base64.b64encode(signature_path.read_bytes()).decode("ascii")}
+        return receipt
 
     def test_composes_restore_attention_and_experience_with_provenance(self):
         branch = process_turn(
@@ -390,6 +434,8 @@ class TaskStartExperienceMapTests(unittest.TestCase):
         acknowledged = acknowledge_result(
             self.attention, published["event_id"], "accepted",
             "owner-confirmation://integrated-test", "2026-10-16T12:01:00Z",
+            signed_receipt=self._signed_owner_receipt(
+                published["event_id"], "accepted", "owner-confirmation://integrated-test"),
         )
         self.assertEqual(acknowledged["status"], "ACKNOWLEDGED")
 

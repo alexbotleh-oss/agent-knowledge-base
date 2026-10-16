@@ -14,7 +14,7 @@ A signed receipt has these top-level fields:
 
 - `schema_version`: `1.0`
 - `receipt_id`: globally unique identifier
-- `receipt_type`: `applicability_judgment` or `check_result`
+- `receipt_type`: `applicability_judgment`, `check_result`, or `owner_acknowledgement`
 - `issuer_id` and `key_id`: trusted signer identity and key identifier
 - `issued_at`: timezone-aware UTC timestamp; no more than five minutes in the future
 - `claim`: exact source-bound claim
@@ -25,6 +25,8 @@ The signature covers canonical UTF-8 JSON of every top-level field except `signa
 For an applicability judgment, the claim binds candidate type/id, criterion, result, basis reference, SHA-256 of the exact candidate source line, and SHA-256 of the local evidence file. External URLs are not resolved by this verifier; they require a separate trusted evidence resolver.
 
 For a check result, the claim binds check key, exact input fingerprint, result status, evidence references, relevant source hashes and candidate fingerprints. A receipt for a different input fingerprint cannot suppress a rerun.
+
+For an owner acknowledgement, the claim binds `result_event_id`, `child_branch_id`, `parent_task_id`, `parent_checkpoint_id`, `decision`, and `owner_ref`. An acknowledgement journal entry without a valid signed `owner_acknowledgement` receipt is audit-only and cannot authorize returning to the parent task. The return controller re-verifies the embedded receipt against the externally pinned keyring at the moment of return; caller-written status fields are not trusted.
 
 ## External trust-root configuration
 
@@ -42,4 +44,4 @@ The receipt store is untrusted storage. Every receipt is verified independently;
 
 ## Current limitation and rollout
 
-The repository has no production key, pinned keyring digest, signed receipt store or trusted signer configured. Therefore `make_applicability_verifier_from_env()` returns `None` unless an operator configures them, and permissive judgments remain UNKNOWN. This implementation proves the verification mechanism with temporary test keys only; it does not claim production identity, evidence authenticity or safe automatic execution.
+The repository has no production key, pinned keyring digest, signed receipt store or trusted signer configured. Therefore `make_applicability_verifier_from_env()` returns `None` unless an operator configures them, and permissive judgments remain UNKNOWN, and owner returns remain blocked until a trusted owner-acknowledgement signer and pinned keyring are configured. This implementation proves the verification mechanism with temporary test keys only; it does not claim production identity, evidence authenticity or safe automatic execution.

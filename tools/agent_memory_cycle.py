@@ -12,10 +12,12 @@ import argparse
 import json
 from pathlib import Path
 from typing import Any
+import os
 
 from dialogue_attention_controller import inspect as inspect_attention, _return_to_parent_unchecked
 from reconcile_branch_returns import build_report as build_branch_return_report
 from task_start_experience_map import build_task_start_experience_map
+from trusted_receipt_verifier import verify_signed_receipt
 
 
 def _current_branch_result_ready(
@@ -58,12 +60,41 @@ def _current_branch_result_ready(
     if not acknowledgements:
         return {"status": "BLOCKED_OWNER_ACK_MISSING", "result_event_ids": sorted(result_ids)}
     latest = acknowledgements[-1]
-    decision = latest["acknowledgement"].get("decision")
+    ack = latest["acknowledgement"]
+    decision = ack.get("decision")
     if decision != "accepted":
         return {
             "status": "BLOCKED_OWNER_DID_NOT_ACCEPT",
             "decision": decision,
             "ack_event_id": latest.get("event_id"),
+            "result_event_ids": sorted(result_ids),
+        }
+    matching_results = [event for event in results if event.get("event_id") == ack.get("result_event_id")]
+    if not matching_results:
+        return {"status": "BLOCKED_OWNER_ACK_CLAIM_MISMATCH", "ack_event_id": latest.get("event_id")}
+    result = matching_results[0]
+    branch = result.get("branch_return") or {}
+    receipt = ack.get("signed_receipt")
+    expected_claim = {
+        "result_event_id": result.get("event_id"),
+        "child_branch_id": branch.get("child_branch_id"),
+        "parent_task_id": branch.get("parent_task_id"),
+        "parent_checkpoint_id": branch.get("parent_checkpoint_id"),
+        "decision": decision,
+        "owner_ref": ack.get("owner_ref"),
+    }
+    keyring_path = os.environ.get("AGMS_TRUSTED_KEYRING_PATH")
+    keyring_sha = os.environ.get("AGMS_TRUSTED_KEYRING_SHA256")
+    verification = verify_signed_receipt(
+        receipt, expected_claim,
+        keyring_path=Path(keyring_path) if keyring_path else None,
+        expected_keyring_sha256=keyring_sha,
+    )
+    if not verification.get("verified") or not isinstance(receipt, dict) or receipt.get("receipt_type") != "owner_acknowledgement":
+        return {
+            "status": "BLOCKED_OWNER_ACK_UNVERIFIED",
+            "ack_event_id": latest.get("event_id"),
+            "verification": verification,
             "result_event_ids": sorted(result_ids),
         }
     return {
@@ -72,6 +103,7 @@ def _current_branch_result_ready(
         "result_event_ids": sorted(result_ids),
         "ack_event_id": latest.get("event_id"),
         "decision": decision,
+        "owner_ack_verification": verification,
     }
 
 

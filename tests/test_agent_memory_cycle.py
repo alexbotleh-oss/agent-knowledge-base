@@ -39,7 +39,7 @@ class AgentMemoryCycleTests(unittest.TestCase):
             "keys": [{
                 "key_id": "test-key-1", "issuer_id": "test-signer",
                 "algorithm": "Ed25519", "status": "ACTIVE",
-                "allowed_receipt_types": ["applicability_judgment", "check_result"],
+                "allowed_receipt_types": ["applicability_judgment", "check_result", "owner_acknowledgement"],
                 "public_key_pem": self.public_key.read_text(encoding="utf-8"),
             }],
         }, sort_keys=True), encoding="utf-8")
@@ -122,6 +122,33 @@ class AgentMemoryCycleTests(unittest.TestCase):
         }
         return receipt
 
+    def _signed_owner_receipt(self, result_event_id, decision, owner_ref, receipt_id):
+        events = [json.loads(line) for line in self.attention.read_text(encoding="utf-8").splitlines() if line.strip()]
+        target = next(event for event in events if event.get("event_id") == result_event_id)
+        branch = target["branch_return"]
+        receipt = {
+            "schema_version": "1.0", "receipt_id": receipt_id,
+            "receipt_type": "owner_acknowledgement", "issuer_id": "test-signer",
+            "key_id": "test-key-1",
+            "issued_at": datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z"),
+            "claim": {
+                "result_event_id": result_event_id,
+                "child_branch_id": branch["child_branch_id"],
+                "parent_task_id": branch["parent_task_id"],
+                "parent_checkpoint_id": branch["parent_checkpoint_id"],
+                "decision": decision, "owner_ref": owner_ref,
+            },
+        }
+        payload_path = self.root / f"{receipt_id}-payload.json"
+        signature_path = self.root / f"{receipt_id}-signature.bin"
+        payload_path.write_bytes(canonical_receipt_payload(receipt))
+        subprocess.run(["openssl", "pkeyutl", "-sign", "-inkey", str(self.private_key),
+                        "-rawin", "-in", str(payload_path), "-out", str(signature_path)],
+                       check=True, capture_output=True)
+        receipt["signature"] = {"algorithm": "Ed25519",
+                                "value": base64.b64encode(signature_path.read_bytes()).decode("ascii")}
+        return receipt
+
     def test_single_entrypoint_reconciles_child_result_returns_and_reuses_check(self):
         opened = process_turn(
             self.attention, turn_id="T-CYCLE-SIDE", text="Кстати, проверь отдельный вопрос",
@@ -141,6 +168,8 @@ class AgentMemoryCycleTests(unittest.TestCase):
         ack = acknowledge_result(
             self.attention, published["event_id"], "accepted",
             "owner-confirmation://cycle-test", "2026-10-16T12:01:00Z",
+            signed_receipt=self._signed_owner_receipt(
+                published["event_id"], "accepted", "owner-confirmation://cycle-test", "RECEIPT-OWNER-CYCLE"),
         )
         self.assertEqual(ack["status"], "ACKNOWLEDGED")
         with self.task.open("a", encoding="utf-8") as stream:
@@ -203,6 +232,8 @@ class AgentMemoryCycleTests(unittest.TestCase):
         ack = acknowledge_result(
             self.attention, published["event_id"], "accepted",
             "owner-confirmation://replay-test", "2026-10-16T12:01:00Z",
+            signed_receipt=self._signed_owner_receipt(
+                published["event_id"], "accepted", "owner-confirmation://replay-test", "RECEIPT-OWNER-REPLAY"),
         )
         with self.task.open("a", encoding="utf-8") as stream:
             stream.write(
@@ -229,6 +260,72 @@ class AgentMemoryCycleTests(unittest.TestCase):
         self.assertEqual(second["status"], "READY")
         self.assertEqual(second["parent_return"]["status"], "ALREADY_RETURNED")
         self.assertFalse(second["parent_return"]["writes_performed"])
+        self.assertEqual(self.attention.read_bytes(), before)
+
+    def test_unsigned_accepted_acknowledgement_cannot_authorize_parent_return(self):
+        opened = process_turn(
+            self.attention, turn_id="T-UNSIGNED-OWNER-SIDE", text="Отдельный вопрос",
+            active_task_id="TASK-PARENT", active_checkpoint_id="CKPT-PARENT",
+            child_task_id="TASK-SIDE", child_checkpoint_id="CKPT-SIDE",
+        )
+        published = publish_result(self.attention, {
+            "child_branch_id": opened["branch_id"], "parent_checkpoint_id": "CKPT-PARENT",
+            "parent_task_id": "TASK-PARENT", "result_key": "unsigned-owner-v1",
+            "result_status": "RESULT_REPORTED", "summary": "Unsigned acknowledgement regression.",
+            "source_refs": ["tests/test_owner_ack.py#unsigned"],
+            "reported_at": "2026-10-16T12:00:00Z", "evidence_status": "verified",
+        })
+        ack = acknowledge_result(
+            self.attention, published["event_id"], "accepted", "owner-confirmation://unsigned",
+            "2026-10-16T12:01:00Z",
+        )
+        self.assertEqual(ack["verification_status"], "UNVERIFIED")
+        with self.task.open("a", encoding="utf-8") as stream:
+            stream.write("\n## Checkpoint update UPDATE-UNSIGNED-OWNER\n- Parent checkpoint: `CKPT-PARENT`\n"
+                         f"- Supporting event: `{ack['event_id']}`\n")
+        before = self.attention.read_bytes()
+        result = run_cycle(
+            self.task, self.handoff, self.project_events, self.attention, "cache recovery index pointer",
+            experience_logs=[self.experience], active_task_id="TASK-SIDE", active_checkpoint_id="CKPT-SIDE",
+            current_project_id="TEST", return_turn_id="T-UNSIGNED-RETURN", parent_task_id="TASK-PARENT",
+        )
+        self.assertEqual(result["parent_return"]["status"], "BLOCKED_OWNER_ACK_UNVERIFIED")
+        self.assertFalse(result["writes_performed"])
+        self.assertEqual(self.attention.read_bytes(), before)
+
+    def test_tampered_owner_receipt_cannot_authorize_parent_return(self):
+        opened = process_turn(
+            self.attention, turn_id="T-TAMPERED-OWNER-SIDE", text="Отдельный вопрос",
+            active_task_id="TASK-PARENT", active_checkpoint_id="CKPT-PARENT",
+            child_task_id="TASK-SIDE", child_checkpoint_id="CKPT-SIDE",
+        )
+        published = publish_result(self.attention, {
+            "child_branch_id": opened["branch_id"], "parent_checkpoint_id": "CKPT-PARENT",
+            "parent_task_id": "TASK-PARENT", "result_key": "tampered-owner-v1",
+            "result_status": "RESULT_REPORTED", "summary": "Tampered receipt regression.",
+            "source_refs": ["tests/test_owner_ack.py#tampered"],
+            "reported_at": "2026-10-16T12:00:00Z", "evidence_status": "verified",
+        })
+        owner_ref = "owner-confirmation://tampered"
+        receipt = self._signed_owner_receipt(published["event_id"], "accepted", owner_ref, "RECEIPT-OWNER-TAMPERED")
+        ack = acknowledge_result(self.attention, published["event_id"], "accepted", owner_ref,
+                                 "2026-10-16T12:01:00Z", signed_receipt=receipt)
+        self.assertEqual(ack["verification_status"], "VERIFIED")
+        rows = [json.loads(line) for line in self.attention.read_text(encoding="utf-8").splitlines() if line.strip()]
+        event = next(item for item in rows if item.get("event_id") == ack["event_id"])
+        event["acknowledgement"]["signed_receipt"]["signature"]["value"] = base64.b64encode(b"invalid").decode("ascii")
+        self._write(self.attention, rows)
+        with self.task.open("a", encoding="utf-8") as stream:
+            stream.write("\n## Checkpoint update UPDATE-TAMPERED-OWNER\n- Parent checkpoint: `CKPT-PARENT`\n"
+                         f"- Supporting event: `{ack['event_id']}`\n")
+        before = self.attention.read_bytes()
+        result = run_cycle(
+            self.task, self.handoff, self.project_events, self.attention, "cache recovery index pointer",
+            experience_logs=[self.experience], active_task_id="TASK-SIDE", active_checkpoint_id="CKPT-SIDE",
+            current_project_id="TEST", return_turn_id="T-TAMPERED-RETURN", parent_task_id="TASK-PARENT",
+        )
+        self.assertEqual(result["parent_return"]["status"], "BLOCKED_OWNER_ACK_UNVERIFIED")
+        self.assertFalse(result["writes_performed"])
         self.assertEqual(self.attention.read_bytes(), before)
 
     def test_return_is_blocked_when_child_result_is_not_acknowledged(self):

@@ -21,7 +21,7 @@ from pathlib import Path
 from typing import Any
 
 HASH_RE = re.compile(r"^[0-9a-f]{64}$")
-RECEIPT_TYPES = {"applicability_judgment", "check_result"}
+RECEIPT_TYPES = {"applicability_judgment", "check_result", "owner_acknowledgement"}
 
 
 def canonical_json(value: Any) -> str:
