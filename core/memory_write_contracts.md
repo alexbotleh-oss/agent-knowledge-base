@@ -198,3 +198,15 @@ The receipt is an integrity binding, **not a cryptographic signature** and not i
 - **Correction-overlay boundary:** no canonical edge-correction overlay file/contract was found at this revision. The generated index explicitly reports `NOT_AVAILABLE_NO_CANONICAL_OVERLAY_SOURCE` and `coverage.status=PARTIAL`; it must not be presented as fully reconciled.
 - Default is dry-run; `--apply` is required to publish. Repository paths are restricted to `registry/memory_records.jsonl` and `registry/memory_index/`; external paths are available only for isolated tests.
 - Tests cover deterministic output, multiple dimensions without duplicate records, historical/current revisions, freshness, replay, corrupt registry/revision chain, and failed-pointer publication preserving the previous pointer.
+
+
+## Append-only edge-correction registry
+
+`tools/edge_correction_registry.py` records relation corrections without mutating the source MemoryRecord. A correction binds to `source_memory_id + source_revision_id + source_record_sha256`; retract/replace targets use a hash of the canonical relation object, never an array position. An ambiguous duplicate relation fingerprint is rejected.
+
+- Accepted corrections require a separate user-approval receipt bound to the exact correction input bytes, with matching decision ID and source reference. Receipt hashes provide integrity linkage, not cryptographic authentication of the author.
+- Candidate/disputed/rejected/superseded corrections may be retained as history but are not applied to index views. Exact replay is idempotent; same correction ID with different content conflicts.
+- The writer locks the source registry and correction registry in a fixed order, revalidates source identity under lock, and appends through fsync + atomic replacement.
+- The indexer validates the correction registry and applies accepted add/retract/replace operations only to derived relation views. Canonical MemoryRecord bytes remain unchanged. The correction registry hash is part of generation identity and freshness; changing either registry makes the index stale.
+- Coverage remains PARTIAL even when overlays apply because complete source/archive coverage has not been proven. If no correction registry exists, the index reports `NOT_AVAILABLE_NO_CANONICAL_OVERLAY_SOURCE`.
+
