@@ -118,6 +118,50 @@ class AgentMemoryCycleTests(unittest.TestCase):
         self.assertFalse(after["task_start"]["decision_policy"]["planning_authorized"])
         self.assertTrue(after["writes_performed"])
 
+    def test_cycle_replay_of_same_return_turn_is_idempotent(self):
+        opened = process_turn(
+            self.attention, turn_id="T-CYCLE-REPLAY-SIDE", text="Кстати, отдельный вопрос",
+            active_task_id="TASK-PARENT", active_checkpoint_id="CKPT-PARENT",
+            child_task_id="TASK-SIDE", child_checkpoint_id="CKPT-SIDE",
+        )
+        published = publish_result(self.attention, {
+            "child_branch_id": opened["branch_id"],
+            "parent_checkpoint_id": "CKPT-PARENT", "parent_task_id": "TASK-PARENT",
+            "result_key": "replay-check-v1", "result_status": "RESULT_REPORTED",
+            "summary": "Replay test result.", "source_refs": ["tests/test_replay.py#case"],
+            "reported_at": "2026-10-16T12:00:00Z", "evidence_status": "verified",
+        })
+        ack = acknowledge_result(
+            self.attention, published["event_id"], "accepted",
+            "owner-confirmation://replay-test", "2026-10-16T12:01:00Z",
+        )
+        with self.task.open("a", encoding="utf-8") as stream:
+            stream.write(
+                "\n## Checkpoint update UPDATE-REPLAY-1\n"
+                "- Parent checkpoint: `CKPT-PARENT`\n"
+                f"- Supporting event: `{ack['event_id']}`\n"
+            )
+        first = run_cycle(
+            self.task, self.handoff, self.project_events, self.attention,
+            "cache recovery index pointer", experience_logs=[self.experience],
+            active_task_id="TASK-SIDE", active_checkpoint_id="CKPT-SIDE",
+            current_project_id="TEST", return_turn_id="T-CYCLE-RETURN-REPLAY",
+            parent_task_id="TASK-PARENT",
+        )
+        self.assertEqual(first["parent_return"]["status"], "RETURNED")
+        before = self.attention.read_bytes()
+        second = run_cycle(
+            self.task, self.handoff, self.project_events, self.attention,
+            "cache recovery index pointer", experience_logs=[self.experience],
+            active_task_id="TASK-PARENT", active_checkpoint_id="CKPT-PARENT",
+            current_project_id="TEST", return_turn_id="T-CYCLE-RETURN-REPLAY",
+            parent_task_id="TASK-PARENT",
+        )
+        self.assertEqual(second["status"], "READY")
+        self.assertEqual(second["parent_return"]["status"], "ALREADY_RETURNED")
+        self.assertFalse(second["parent_return"]["writes_performed"])
+        self.assertEqual(self.attention.read_bytes(), before)
+
     def test_return_is_blocked_when_child_result_is_not_acknowledged(self):
         opened = process_turn(
             self.attention, turn_id="T-CYCLE-SIDE-2", text="Кстати, отдельный вопрос",
