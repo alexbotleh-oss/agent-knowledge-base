@@ -12,7 +12,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
 
-from agent_memory_cycle import run_cycle
+from agent_memory_cycle import run_cycle, _current_branch_result_ready
 from branch_result_registry import publish_result, acknowledge_result
 from dialogue_attention_controller import process_turn
 from check_reuse_policy import record_check_result
@@ -403,6 +403,76 @@ class AgentMemoryCycleTests(unittest.TestCase):
         self.assertFalse(result["writes_performed"])
         self.assertEqual(result["attention"]["active"]["task_id"], "TASK-SIDE")
         self.assertEqual(result["attention"]["open_branch_count"], 1)
+
+    def test_older_signed_ack_cannot_authorize_newer_branch_result(self):
+        opened = process_turn(
+            self.attention,
+            turn_id="T-STALE-ACK-SIDE",
+            text="Кстати, отдельный вопрос",
+            active_task_id="TASK-PARENT",
+            active_checkpoint_id="CKPT-PARENT",
+            child_task_id="TASK-SIDE",
+            child_checkpoint_id="CKPT-SIDE",
+        )
+        self.assertEqual(opened["status"], "BRANCH_OPENED")
+
+        first = publish_result(self.attention, {
+            "child_branch_id": opened["branch_id"],
+            "parent_checkpoint_id": "CKPT-PARENT",
+            "parent_task_id": "TASK-PARENT",
+            "result_key": "result-v1",
+            "result_status": "RESULT_REPORTED",
+            "summary": "First result, explicitly accepted.",
+            "source_refs": ["tests/test_owner_ack.py#result-v1"],
+            "reported_at": "2026-10-16T12:00:00Z",
+            "evidence_status": "verified",
+        })
+        self.assertEqual(first["status"], "RESULT_REPORTED")
+
+        owner_ref = "owner-confirmation://first-result"
+        ack = acknowledge_result(
+            self.attention,
+            first["event_id"],
+            "accepted",
+            owner_ref,
+            "2026-10-16T12:01:00Z",
+            signed_receipt=self._signed_owner_receipt(
+                first["event_id"],
+                "accepted",
+                owner_ref,
+                "RECEIPT-OWNER-STALE-ACK",
+            ),
+        )
+        self.assertEqual(ack["status"], "ACKNOWLEDGED")
+
+        second = publish_result(self.attention, {
+            "child_branch_id": opened["branch_id"],
+            "parent_checkpoint_id": "CKPT-PARENT",
+            "parent_task_id": "TASK-PARENT",
+            "result_key": "result-v2",
+            "result_status": "RESULT_REPORTED",
+            "summary": "New result, not yet accepted.",
+            "source_refs": ["tests/test_owner_ack.py#result-v2"],
+            "reported_at": "2026-10-16T12:02:00Z",
+            "evidence_status": "verified",
+        })
+        self.assertEqual(second["status"], "RESULT_REPORTED")
+
+        readiness = _current_branch_result_ready(
+            self.attention,
+            opened["branch_id"],
+            "TASK-PARENT",
+            "CKPT-PARENT",
+        )
+
+        self.assertEqual(
+            readiness["status"],
+            "BLOCKED_OWNER_ACK_MISSING",
+        )
+        self.assertEqual(
+            readiness["result_event_ids"],
+            [second["event_id"]],
+        )
 
 if __name__ == "__main__":
     unittest.main()
