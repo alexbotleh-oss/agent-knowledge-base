@@ -123,7 +123,10 @@ def build_memory_aware_packet(task_state:Path,handoff:Path,event_log:Path,reposi
         memory=retrieve_approved_memory(projects[0],task_id=task_id,context_id=context_id,query=query,limit=limit,
                                         registry_path=registry_path,index_root=index_root)
     packet["semantic_memory"]=memory
-    if packet.get("status")=="PARTIAL": packet["status"]="PARTIAL_WITH_SEMANTIC_MEMORY"
+    if packet.get("status")=="PARTIAL":
+        if memory.get("status") in {"AVAILABLE","PARTIAL"}: packet["status"]="PARTIAL_WITH_SEMANTIC_MEMORY"
+        elif memory.get("status")=="PARTIAL_NO_MATCH": packet["status"]="PARTIAL_WITH_SEMANTIC_MEMORY_NO_MATCH"
+        else: packet["status"]="PARTIAL_WITH_MEMORY_UNAVAILABLE"
     elif memory.get("status")=="AVAILABLE": packet["status"]="RESTORED_PACKET_WITH_SEMANTIC_MEMORY"
     elif memory.get("status")=="PARTIAL": packet["status"]="RESTORED_PACKET_WITH_PARTIAL_MEMORY"
     elif memory.get("status")=="PARTIAL_NO_MATCH": packet["status"]="RESTORED_PACKET_WITH_PARTIAL_MEMORY_NO_MATCH"
@@ -145,6 +148,6 @@ def main(argv=None):
       task_id=args.task_id,context_id=args.context_id,query=args.query,limit=args.limit,
       registry_path=args.registry_path,index_root=args.index_root)
     print(json.dumps(packet,ensure_ascii=False,indent=2))
-    return 0 if packet.get("status") in {"RESTORED_PACKET_WITH_SEMANTIC_MEMORY","RESTORED_PACKET_WITH_PARTIAL_MEMORY","RESTORED_PACKET_WITH_PARTIAL_MEMORY_NO_MATCH","PARTIAL_WITH_SEMANTIC_MEMORY"} else 2
+    return 0 if packet.get("status") in {"RESTORED_PACKET_WITH_SEMANTIC_MEMORY","RESTORED_PACKET_WITH_PARTIAL_MEMORY","RESTORED_PACKET_WITH_PARTIAL_MEMORY_NO_MATCH","PARTIAL_WITH_SEMANTIC_MEMORY","PARTIAL_WITH_SEMANTIC_MEMORY_NO_MATCH"} else 2
 
 if __name__=="__main__": raise SystemExit(main())
