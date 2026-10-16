@@ -7,7 +7,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -108,6 +108,20 @@ class TrustedReceiptVerifierTests(unittest.TestCase):
         self.assertEqual(blocked["status"], "BLOCKED_TRUST_ROOT_UNCONFIGURED")
         wrong = verify_signed_receipt(receipt, claim, keyring_path=self.keyring, expected_keyring_sha256="0" * 64, now=self.now)
         self.assertEqual(wrong["status"], "BLOCKED_TRUST_ROOT_MISMATCH")
+
+    def test_expiry_must_follow_issue_time_even_with_clock_skew(self):
+        claim = {"check_key": "CHECK-1", "input_fingerprint": "a" * 64, "result_status": "PASS"}
+        receipt = self._receipt(claim, "check_result")
+        receipt["issued_at"] = (self.now + timedelta(minutes=2)).isoformat().replace("+00:00", "Z")
+        receipt["expires_at"] = (self.now + timedelta(minutes=1)).isoformat().replace("+00:00", "Z")
+        receipt = self._sign(receipt)
+
+        result = verify_signed_receipt(
+            receipt, claim, keyring_path=self.keyring,
+            expected_keyring_sha256=self.keyring_sha, now=self.now,
+        )
+        self.assertEqual(result["status"], "RECEIPT_EXPIRED_OR_INVALID")
+        self.assertFalse(result["verified"])
 
     def test_revoked_key_and_wrong_receipt_type_are_rejected(self):
         claim = {"check_key": "CHECK-1", "input_fingerprint": "a" * 64, "result_status": "PASS"}
