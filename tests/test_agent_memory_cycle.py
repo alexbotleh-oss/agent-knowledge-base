@@ -177,7 +177,7 @@ class AgentMemoryCycleTests(unittest.TestCase):
             parent_task_id="TASK-PARENT",
         )
         self.assertEqual(result["status"], "BLOCKED")
-        self.assertEqual(result["parent_return"]["status"], "BLOCKED_RECONCILIATION")
+        self.assertEqual(result["parent_return"]["status"], "BLOCKED_CHILD_RESULT_MISSING")
         self.assertFalse(result["writes_performed"])
         self.assertEqual(result["attention"]["active"]["task_id"], "TASK-SIDE")
 
