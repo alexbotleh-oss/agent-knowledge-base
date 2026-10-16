@@ -93,6 +93,10 @@ def build_task_start_experience_map(
     limit: int = 10,
     current_project_id: str | None = None,
     evidence_root: Path | None = None,
+    lesson_logs: list[Path] | None = None,
+    current_markers: dict[str, Any] | None = None,
+    judgments: list[dict[str, Any]] | None = None,
+    judgment_verifier=None,
 ) -> dict[str, Any]:
     """Restore the task, inspect the return stack, and retrieve bounded experience candidates."""
     task_state, handoff, event_log = Path(task_state), Path(handoff), Path(event_log)
@@ -100,6 +104,9 @@ def build_task_start_experience_map(
         task_state, handoff, event_log, user_request,
         [Path(p) for p in (experience_logs or [])],
         limit=limit, current_project_id=current_project_id, evidence_root=evidence_root,
+        lesson_logs=[Path(p) for p in (lesson_logs or [])],
+        current_markers=current_markers, judgments=judgments,
+        judgment_verifier=judgment_verifier,
     )
     attention_path = Path(attention_log) if attention_log else (
         Path(__file__).resolve().parents[1] / "projects" / "AGENT_MEMORY_SYSTEM" / "events.jsonl"
@@ -139,6 +146,14 @@ def build_task_start_experience_map(
             else "ATTENTION_TASK_DIFFERS_FROM_TASK_STATE"
         )
 
+    lesson_retrieval = loop.get("lesson_retrieval", {"status": "NOT_REQUESTED", "candidates": []})
+    lesson_candidates = lesson_retrieval.get("candidates", []) if isinstance(lesson_retrieval, dict) else []
+    frontier = loop.get("decision_frontier", {})
+    directions = frontier.get("directions", []) if isinstance(frontier, dict) else []
+    frontier_groups = {
+        classification: [row for row in directions if isinstance(row, dict) and row.get("classification") == classification]
+        for classification in ("CONFLICT", "HOLD", "KEEP_FOR_RATIONALE_REVIEW", "EXCLUDE", "OUT_OF_SCOPE")
+    }
     grouped = {
         "current_project_scope": [c for c in expanded if c.get("project_scope_match") == "MATCH"],
         "cross_project_excluded": [c for c in expanded if c.get("project_scope_match") == "MISMATCH"],
@@ -169,7 +184,15 @@ def build_task_start_experience_map(
             "method": "bounded lexical overlap over explicitly supplied event logs; no semantic/graph ranking",
             "source_hashes": raw_retrieval.get("source_hashes", {}) if isinstance(raw_retrieval, dict) else {},
             "groups": grouped,
-            "candidate_count": len(expanded),
+            "candidate_count": len(expanded) + len(lesson_candidates),
+            "event_candidates": expanded,
+            "lesson_retrieval": lesson_retrieval,
+            "lesson_search_stages": loop.get("lesson_search_stages", []),
+            "current_markers_source": loop.get("current_markers_source", "UNKNOWN"),
+            "applicability": loop.get("applicability", {}),
+            "decision_frontier": frontier,
+            "review_directions_by_classification": frontier_groups,
+            "next_discriminating_check": frontier.get("next_discriminating_check") if isinstance(frontier, dict) else None,
             "candidate_review_only": True,
         },
         "decision_policy": {
@@ -205,13 +228,23 @@ def main(argv=None) -> int:
     parser.add_argument("--limit", type=int, default=10)
     parser.add_argument("--project-id")
     parser.add_argument("--evidence-root", type=Path)
+    parser.add_argument("--lesson-log", action="append", default=[], type=Path)
+    parser.add_argument("--judgments", type=Path)
     args = parser.parse_args(argv)
+    judgments = None
+    if args.judgments is not None:
+        try:
+            judgments = json.loads(args.judgments.read_text(encoding="utf-8"))
+        except Exception as exc:
+            print(json.dumps({"status": "BLOCKED", "error": f"INVALID_JUDGMENTS_FILE: {exc}"}, ensure_ascii=False))
+            return 2
     result = build_task_start_experience_map(
         args.task_state, args.handoff, args.event_log, args.request,
         experience_logs=[Path(p) for p in args.experience_log],
         attention_log=args.attention_log, active_task_id=args.task_id,
         active_checkpoint_id=args.checkpoint_id, limit=args.limit,
         current_project_id=args.project_id, evidence_root=args.evidence_root,
+        lesson_logs=args.lesson_log, judgments=judgments,
     )
     print(json.dumps(result, ensure_ascii=False, indent=2))
     return 0 if result["status"] == "READY_FOR_REVIEW" else 2
