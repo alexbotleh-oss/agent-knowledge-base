@@ -140,7 +140,10 @@ def project_state(events: list[dict[str, Any]]) -> dict[str, Any]:
             if not isinstance(turn_id, str):
                 raise ValueError(f"attention event {event['event_id']} missing turn_id")
             turn_records[turn_id] = data
-            if active is None:
+            # Outside a suspended branch, the latest caller-observed task is the
+            # current projection. While a branch is open, its child remains active
+            # until an explicit LIFO return event restores the parent.
+            if not stack:
                 active = {
                     "task_id": data.get("active_task_id"),
                     "checkpoint_id": data.get("active_checkpoint_id"),
