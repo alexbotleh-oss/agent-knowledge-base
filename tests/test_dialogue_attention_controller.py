@@ -62,6 +62,21 @@ class DialogueAttentionControllerTests(unittest.TestCase):
         self.assertEqual(second["active"]["task_id"], "TASK-PARENT")
         self.assertEqual(controller.inspect(self.log)["open_branch_count"], 0)
 
+    def test_repeated_turn_is_idempotent(self):
+        first = self.turn("T-REPLAY-1", "Продолжай работу")
+        second = self.turn("T-REPLAY-1", "Продолжай работу")
+        self.assertEqual(first["event_id"], second["event_id"])
+        self.assertEqual(len(controller.read_events(self.log)), 1)
+
+    def test_return_language_triggers_parent_restore(self):
+        self.turn("T-SIDE-1", "Кстати, проверь отдельный вопрос",
+                  child_task_id="TASK-SIDE", child_checkpoint_id="CKPT-SIDE")
+        result = self.turn("T-RETURN-1", "Вернись к основной задаче",
+                           active_task_id="TASK-SIDE", active_checkpoint_id="CKPT-SIDE")
+        self.assertEqual(result["status"], "RETURNED")
+        self.assertEqual(result["return"]["active"]["task_id"], "TASK-PARENT")
+        self.assertEqual(controller.inspect(self.log)["open_branch_count"], 0)
+
     def test_deferred_idea_is_recorded_without_switching_or_stack_push(self):
         result = self.turn("T-IDEA-1", "Запомни эту идею")
         self.assertEqual(result["classification"], "DEFERRED_IDEA")
