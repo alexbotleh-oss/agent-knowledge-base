@@ -207,4 +207,4 @@ PR #22 с cross-chat memory export остаётся отдельным draft и 
 - Подтверждено: кодовая цепочка импорт → source registry → approval-bound promotion → corrections → canonical index → memory-aware restore → coordinator существует; синтетический end-to-end тест пройден; PR #27 и #28 остаются draft/unmerged.
 - Не подтверждено: полнота реального архива; заполненность production canonical registries; automatic ChatGPT startup/message capture; runtime attention/return controller; production applicability verifier; полноценный retrieval по всему графу памяти; runtime skill executor/environment discovery/VLM acceptance.
 - Обнаружено: статусы в нескольких документах отстают от реализации; нужен единый traceability ledger и явные superseding updates.
-- Следующий шаг: синхронизировать статусную документацию и создать единую матрицу трассировки, не меняя `main` и не сливая PR без отдельного разрешения.
+- Единая матрица трассировки создана: `projects/AGENT_MEMORY_SYSTEM/CAPABILITY_TRACEABILITY_MATRIX_2026-10-16.md`. Следующий шаг — реализовать CAP-02/UMC-02: runtime-контроллер внимания и причинный стек возврата; затем подключить task-time experience map.
