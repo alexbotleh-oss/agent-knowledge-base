@@ -1,12 +1,12 @@
 {
   "schema_version": "1.0",
-  "checkpoint_id": "CKPT-AGMS-20261016-CORRECTION-OVERLAYS-05",
+  "checkpoint_id": "CKPT-AGMS-20261016-PIPELINE-COORDINATOR-06",
   "project_id": "AGENT_MEMORY_SYSTEM",
   "task_id": "AGMS-2026-10-15-MEMORY-PIPELINE-CONTINUITY",
   "recorded_at": "2026-10-16",
   "recorded_time_precision": "day",
   "source_chat": "Настройка Агента",
-  "source_message": "User asked to complete all remaining P1 activities and then continue to the next task.",
+  "source_message": "User resumed further operations; implemented and CI-verified durable memory pipeline coordinator.",
   "goal": "Make work recoverable after connection/session interruption without repeating already verified steps; connect source ingestion, approved semantic-memory processing, index refresh, and next-session restore, while preserving provenance and project boundaries.",
   "branch": "integration/memory-core-clean-20261015",
   "pr": {
@@ -18,13 +18,14 @@
     "base": "main"
   },
   "source_code_checkpoint": {
-    "head": "49b11d8ba6cb52fa9cef1159dd3e0d4132cae529",
-    "ci_run_id": 38753181276,
-    "ci_url": "https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38753181276",
+    "head": "feeb14446c8b039271b753a8ecd0b2661318b818",
+    "ci_run_id": 38853687319,
+    "ci_url": "https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38853687319",
     "ci_conclusion": "success",
-    "tests": 212,
+    "tests": 294,
     "skipped": 1,
-    "write_audit_mutation_sites": 90,
+    "node_tests": 4,
+    "write_audit_mutation_sites": 127,
     "write_audit_unclassified": 0
   },
   "confirmed_completed": [
@@ -65,7 +66,11 @@
     "Implemented tools/memory_aware_session_restore.py to compose verified task/event restore with freshness-checked current semantic memory, exact project/task/context filtering, provenance/evidence/conflict output, and explicit partial/stale/unavailable status.",
     "Exact code/test HEAD bec868ce9e7491802c5239068b4581eff002a809 passed CI #38851785241: 272 Python tests (1 skipped), 4 Node tests, write audit 108 mutation sites / 0 unclassified, memory validation PASS.",
     "After integrating the memory-aware restore protocol and implementation-status documentation, exact HEAD 15df917acfa27001b80f7a7049e5c082b7b646e5 passed CI #38851849713: 272 Python tests (1 skipped), 4 Node tests, write audit 108/0, memory validation PASS. Subsequent checkpoint/handoff/event commits are metadata-only.",
-    "Defined an append-only, source-revision/hash-bound edge-correction contract and guarded writer; accepted corrections require a separate receipt bound to exact correction input bytes. Canonical index applies accepted add/retract/replace only to derived relation views and tracks correction-registry freshness. Exact code+protocol HEAD 1fd9c91ae8bb8662a3cb1a1cea3d63452064fc40 passed CI #38852493391: 282 Python tests (1 skipped), 4 Node tests, write audit 116/0, memory validation PASS."
+    "Defined an append-only, source-revision/hash-bound edge-correction contract and guarded writer; accepted corrections require a separate receipt bound to exact correction input bytes. Canonical index applies accepted add/retract/replace only to derived relation views and tracks correction-registry freshness. Exact code+protocol HEAD 1fd9c91ae8bb8662a3cb1a1cea3d63452064fc40 passed CI #38852493391: 282 Python tests (1 skipped), 4 Node tests, write audit 116/0, memory validation PASS.",
+    "Added tools/memory_pipeline_coordinator.py to compose source ingestion, approval preflight, canonical SourceRecord provenance resolution, semantic promotion, optional correction registration, canonical index refresh, and verified session restore.",
+    "Added deterministic input-bound run IDs, hash-chained append-only stage ledger, rebuildable state projection, and separate source-stage/canonical/ledger write accounting.",
+    "Added coordinator tests for provenance resolution/ambiguity, preflight blocking, ledger tamper/projection recovery, deterministic dry-run replay, mocked stage composition, and real semantic-promotion/correction/index/restore executors over synthetic data.",
+    "Exact-head CI at feeb14446c8b039271b753a8ecd0b2661318b818 passed: 294 Python tests (1 skipped), 4 Node tests, write audit 127 mutation sites / 0 unclassified."
   ],
   "confirmed_open": [
     {
@@ -102,7 +107,7 @@
       "description": "The ChatGPT web extension is a prototype verified by static CI only. Must be installed and tested in the user's actual Yandex Browser Android version. Verify send gate (no send before durable receipt), exact text and prior assistant message capture, interrupted connection recovery, response DOM detection, multiple incomplete turns, extension restart, and UI-selector drift. Until these pass, do not claim end-to-end capture is operational."
     }
   ],
-  "next_action": "Implement a durable pipeline coordinator with hash-chained stage ledger and replay/crash recovery across source ingestion, explicit approval, semantic promotion, correction registration, index publication and fresh-session restore. Validate provenance links between promoted records and the source registry; no production archive should be promoted until that contract is verified.",
+  "next_action": "Confirm exact-head CI for crash/replay integration test; fix any failures; then verify clean PR metadata and branch/main status before proceeding to controlled real source-ingestion acceptance.",
   "constraints": [
     "Do not merge PR #27 or modify main without explicit user approval.",
     "Do not delete or rewrite source-history exports without a separate explicit decision.",
@@ -111,7 +116,7 @@
     "No semantic record is accepted merely because source metadata was registered.",
     "Never report CI success for a SHA other than the exact checked SHA."
   ],
-  "status": "P1_COMPLETE_WITH_DOWNSTREAM_ITEMS_OPEN",
+  "status": "COORDINATOR_IMPLEMENTED_SYNTHETIC_E2E_VALIDATION_IN_PROGRESS",
   "checkpoint_semantics": "This is a durable task checkpoint committed to the integration branch. It is not an automatic ChatGPT autosave or proof that an undelivered response was saved.",
   "repository_state": {
     "last_verified_code_head": "1fd9c91ae8bb8662a3cb1a1cea3d63452064fc40",
@@ -176,6 +181,9 @@
     "Durable end-to-end pipeline coordinator with hash-chained stage ledger and crash/replay reconciliation",
     "Verify promoted semantic-record provenance resolves to source registry records and archive coverage",
     "Production archive acceptance and completeness audit",
-    "Live Android browser-extension acceptance"
+    "Live Android browser-extension acceptance",
+    "Validate coordinator crash/replay after index pointer publication using real stage executors; test currently added but its exact-head CI result must be confirmed before claiming it passes.",
+    "Run a controlled synthetic end-to-end test with real ingestion runner, then separately plan production archive acceptance and coverage audit.",
+    "Do not merge PR #27 or change main; PR remains Draft/open/unmerged."
   ]
 }
