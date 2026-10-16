@@ -168,11 +168,8 @@ def evaluate_check_reuse(
         if isinstance(event.get("check_result"), dict)
         and event["check_result"].get("input_fingerprint") == fingerprint["input_fingerprint"]
     ]
-    # Journal contents are external input: malformed result values must not
-    # crash evaluation (e.g. lists/dicts are unhashable). Canonicalize values
-    # for conflict detection, then only the explicit PASS string can be reused.
     exact_results = {
-        _canonical(event["check_result"].get("result_status"))
+        event["check_result"].get("result_status")
         for event in exact if isinstance(event.get("check_result"), dict)
     }
     if len(exact_results) > 1:
