@@ -15,7 +15,7 @@ from memory_aware_session_restore import build_memory_aware_packet
 from validate_memory import validate_intake_manifest
 
 ROOT=Path(__file__).resolve().parents[1]
-DEFAULT_RUN_ROOT=ROOT/"state"/"memory_pipeline_runs"
+DEFAULT_RUN_ROOT=ROOT/".runtime"/"memory_pipeline_runs"
 
 def _canonical(value:Any)->bytes:
     return json.dumps(value,ensure_ascii=False,sort_keys=True,separators=(",",":")).encode("utf-8")
@@ -162,6 +162,8 @@ def run_memory_pipeline(
     correction_registry_path=Path(correction_registry_path) if correction_registry_path else Path(memory_registry_path).with_name("edge_corrections.jsonl")
     required=[snapshot_path,semantic_manifest,semantic_approval_receipt]
     if any(not p.is_file() for p in required): return {"status":"BLOCKED","reason":"snapshot, semantic manifest and approval receipt are required","writes_performed":False}
+    if correction_input is not None and not Path(correction_input).is_file(): return {"status":"BLOCKED","reason":"correction input was supplied but is missing","writes_performed":False}
+    if correction_approval_receipt is not None and not Path(correction_approval_receipt).is_file(): return {"status":"BLOCKED","reason":"correction approval receipt was supplied but is missing","writes_performed":False}
     try:
         fingerprint={
             "snapshot_sha256":_sha(snapshot_path.read_bytes()),
@@ -199,19 +201,19 @@ def run_memory_pipeline(
         intake_root=intake_root,registry_path=source_registry_path,apply=apply),
         {"SOURCE_REGISTERED_DOWNSTREAM_PENDING"} if apply else {"READY_FOR_SOURCE_REGISTRATION"},
         ("status","batch_id","registration_status","latest_event_sha256","writes_performed","error"))
-    staging_writes=bool(results["source_ingestion"].get("writes_performed"))
+    source_stage_writes=bool(results["source_ingestion"].get("writes_performed"))
     if not source_ok:
         final={"status":"BLOCKED_AT_SOURCE_INGESTION"}
     elif not apply:
-        promotion=promote_memory_records(semantic_manifest,semantic_approval_receipt,memory_registry_path,apply=False)
-        results["semantic_promotion"]=promotion
-        _append_event(run_dir,run_id,"STAGE_RESULT","semantic_promotion",promotion.get("status","UNKNOWN"),{"result":_summary(promotion,("status","candidate_count","error","writes_performed"))})
+        promotion_ok=execute("semantic_promotion",lambda:promote_memory_records(semantic_manifest,semantic_approval_receipt,memory_registry_path,apply=False),
+            {"DRY_RUN_READY"},("status","candidate_count","error","writes_performed"))
+        promotion=results["semantic_promotion"]
         if correction_input:
-            corr=register_edge_correction(correction_input,memory_registry_path,correction_registry_path,
-                approval_receipt_path=correction_approval_receipt,apply=False)
-            results["edge_correction"]=corr
-            _append_event(run_dir,run_id,"STAGE_RESULT","edge_correction",corr.get("status","UNKNOWN"),{"result":_summary(corr,("status","correction_id","reason","writes_performed"))})
-        final={"status":"DRY_RUN_READY" if promotion.get("status")=="DRY_RUN_READY" else "BLOCKED_AT_SEMANTIC_PREFLIGHT"}
+            execute("edge_correction",lambda:register_edge_correction(correction_input,memory_registry_path,correction_registry_path,
+                approval_receipt_path=correction_approval_receipt,apply=False),
+                {"DRY_RUN_READY"},("status","correction_id","reason","writes_performed"))
+        correction_ok=not correction_input or results["edge_correction"].get("status")=="DRY_RUN_READY"
+        final={"status":"DRY_RUN_READY" if promotion_ok and correction_ok else "BLOCKED_AT_SEMANTIC_PREFLIGHT"}
         final["index_status"]="NOT_RUN_IN_DRY_RUN"
     else:
         provenance=validate_provenance_links(semantic_manifest,source_registry_path)
@@ -256,24 +258,24 @@ def run_memory_pipeline(
                             "index_generation_id":mem.get("index_generation_id"),"returned_count":mem.get("returned_count"),
                             "repository_revision_evidence":packet.get("repository_revision_evidence")}
                         _append_event(run_dir,run_id,"STAGE_RESULT","session_restore",packet.get("status","UNKNOWN"),{"result":restore_summary})
-                        if packet.get("status") in {"RESTORED_PACKET_WITH_PARTIAL_MEMORY","RESTORED_PACKET_WITH_PARTIAL_MEMORY_NO_MATCH","RESTORED_PACKET_WITH_SEMANTIC_MEMORY"}:
+                        if packet.get("status") in {"RESTORED_PACKET_WITH_PARTIAL_MEMORY","RESTORED_PACKET_WITH_PARTIAL_MEMORY_NO_MATCH","RESTORED_PACKET_WITH_SEMANTIC_MEMORY","PARTIAL_WITH_SEMANTIC_MEMORY","PARTIAL_WITH_SEMANTIC_MEMORY_NO_MATCH"}:
                             final={"status":"PIPELINE_COMPLETE_WITH_PARTIAL_MEMORY","restore":restore_summary}
                         elif packet.get("status")=="RESTORED_PACKET_WITH_MEMORY_UNAVAILABLE":
                             final={"status":"PIPELINE_RESTORE_MEMORY_UNAVAILABLE","restore":restore_summary}
                         else:
                             final={"status":"PIPELINE_RESTORE_NOT_VERIFIED","restore":restore_summary}
     final.update({"run_id":run_id,"run_dir":str(run_dir),"ledger_path":str(ledger_path),
-                  "staging_writes_performed":staging_writes,"canonical_writes_performed":canonical_writes,
-                  "ledger_writes_performed":True,"writes_performed":staging_writes or canonical_writes})
+                  "source_stage_writes_performed":source_stage_writes,"canonical_writes_performed":canonical_writes,
+                  "ledger_writes_performed":True,"writes_performed":source_stage_writes or canonical_writes})
     _append_event(run_dir,run_id,"PIPELINE_RESULT","pipeline",final["status"],
         {"stages":{name:result.get("status","UNKNOWN") for name,result in results.items()},
-         "staging_writes_performed":staging_writes,"canonical_writes_performed":canonical_writes})
+         "source_stage_writes_performed":source_stage_writes,"canonical_writes_performed":canonical_writes})
     final["stages"]={name:result.get("status","UNKNOWN") for name,result in results.items()}
     return final
 
 def main(argv=None):
     parser=argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("snapshot",type=Path); parser.add_argument("--run-root",type=Path,default=DEFAULT_RUN_ROOT)
+    parser.add_argument("snapshot",type=Path); parser.add_argument("--run-root",type=Path,required=True)
     parser.add_argument("--semantic-manifest",type=Path,required=True); parser.add_argument("--semantic-approval-receipt",type=Path,required=True)
     parser.add_argument("--repository",required=True); parser.add_argument("--task-state",type=Path,required=True)
     parser.add_argument("--handoff",type=Path,required=True); parser.add_argument("--event-log",type=Path,required=True)
