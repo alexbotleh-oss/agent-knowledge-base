@@ -286,8 +286,7 @@ class AgentMemoryCycleTests(unittest.TestCase):
             event for event in json.loads("[" + ",".join(self.attention.read_text(encoding="utf-8").splitlines()) + "]")
             if event.get("type") == "attention_returned"
         ]), 0)
-        self.assertNotEqual(self.attention.read_bytes(), b"")  # branch/result/ack are recorded, but no return is committed
-        self.assertGreaterEqual(len(self.attention.read_bytes()), len(before))
+        self.assertEqual(self.attention.read_bytes(), before)  # no return event or other write on blocked path
 
     def test_return_is_blocked_when_requested_parent_does_not_match_stack(self):
         process_turn(
