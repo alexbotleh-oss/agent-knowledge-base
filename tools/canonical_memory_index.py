@@ -94,6 +94,16 @@ def _validate_registry(rows: list[dict]) -> list[dict]:
     return validated
 
 
+def _validate_relation(relation: Any, label: str):
+    if not isinstance(relation,dict): raise ValueError(f"{label} must be an object")
+    for field in ("type","target_id","basis"):
+        if not isinstance(relation.get(field),str) or not relation[field].strip(): raise ValueError(f"{label} missing {field}")
+    if relation.get("confidence") not in {"low","medium","high","unknown"}: raise ValueError(f"{label} has invalid confidence")
+    if relation.get("status") not in {"candidate","accepted","disputed","rejected","superseded"}: raise ValueError(f"{label} has invalid status")
+    refs=relation.get("source_refs")
+    if not isinstance(refs,list) or not refs or any(not isinstance(v,str) or not v.strip() for v in refs):
+        raise ValueError(f"{label} needs non-empty source_refs")
+
 def _load_corrections(correction_bytes: bytes | None, rows: list[dict]):
     if correction_bytes is None:
         base_relations={ (row["memory_id"],row["revision_id"]):list(row["record"].get("relations",[])) for row in rows }
@@ -117,16 +127,31 @@ def _load_corrections(correction_bytes: bytes | None, rows: list[dict]):
         if correction.get("schema_version")!="edge-correction-v1": raise ValueError(f"unsupported correction schema at line {n}")
         if correction.get("status") not in {"candidate","accepted","disputed","rejected","superseded"}:
             raise ValueError(f"invalid correction status at line {n}")
+        action=correction.get("action")
+        if action not in {"add","retract","replace"}: raise ValueError(f"invalid correction action at line {n}")
+        if not isinstance(correction.get("recorded_at"),str) or "T" not in correction["recorded_at"]:
+            raise ValueError(f"invalid correction recorded_at at line {n}")
+        refs=correction.get("source_refs")
+        if not isinstance(refs,list) or not refs or any(not isinstance(v,str) or not v.strip() for v in refs):
+            raise ValueError(f"invalid correction source_refs at line {n}")
         key=(correction.get("source_memory_id"),correction.get("source_revision_id"))
         source_row=source.get(key)
         if source_row is None or source_row.get("record_sha256")!=correction.get("source_record_sha256"):
             raise ValueError(f"edge correction source reference is missing or stale at line {n}")
+        target=correction.get("target_relation_sha256")
+        if action=="add":
+            if target is not None: raise ValueError(f"add correction has a target fingerprint at line {n}")
+            _validate_relation(correction.get("relation"),f"correction relation at line {n}")
+        else:
+            if not isinstance(target,str) or len(target)!=64 or any(ch not in "0123456789abcdef" for ch in target):
+                raise ValueError(f"invalid target relation fingerprint at line {n}")
+            if action=="replace": _validate_relation(correction.get("replacement_relation"),f"replacement relation at line {n}")
         if correction["status"]!="accepted": continue
-        if not isinstance(envelope.get("approval_receipt_sha256"),str) or len(envelope["approval_receipt_sha256"])!=64:
+        receipt_hash=envelope.get("approval_receipt_sha256")
+        if not isinstance(receipt_hash,str) or len(receipt_hash)!=64 or any(ch not in "0123456789abcdef" for ch in receipt_hash):
             raise ValueError(f"accepted correction lacks approval receipt hash at line {n}")
         if not isinstance(correction.get("decision_id"),str) or not correction["decision_id"].strip() or not isinstance(correction.get("decision_source_ref"),str) or not correction["decision_source_ref"].strip():
             raise ValueError(f"accepted correction lacks decision provenance at line {n}")
-        action=correction.get("action")
         relations=active_relations[key]
         if action=="add":
             relation=correction.get("relation")
