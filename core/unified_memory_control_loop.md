@@ -183,16 +183,16 @@ Status meanings: **PARTIAL** means a component/test covers a narrow subcase but 
 
 | ID | Current status | Evidence / remaining gap |
 |---|---|---|
-| UMC-01 | PARTIAL | `tools/restore_session_packet.py` and `tests/test_restore_session_packet.py` build a source-backed packet from TASK_STATE/HANDOFF/events with hashes and linked events; automatic startup in a new ChatGPT chat and semantic goal verification remain unimplemented. |
+| UMC-01 | PARTIAL | `restore_session_packet.py`, `verified_session_restore.py` and `memory_aware_session_restore.py` restore task/event context, live code/CI evidence and eligible semantic-memory candidates with provenance/freshness states. Automatic invocation at every new ChatGPT chat and independent semantic goal verification remain unimplemented. |
 | UMC-02 | BLOCKED | Return rules are documented; no runtime dialogue controller classifying side branches and preserving/returning active goals. |
-| UMC-03 | BLOCKED | Intake planner carries observed tool/language/task tags; no runtime applicability evaluator that gates use of shared lessons. |
-| UMC-04 | PARTIAL | `tests/test_resumable_chat_import.py` covers replay/resume for immutable source snapshots; promotion and index refresh are not in that pipeline. |
-| UMC-05 | PARTIAL | Manifest hash/path validation and importer incomplete-source tests exist; full staging-to-quarantine-to-promotion recovery is not end-to-end. |
+| UMC-03 | BLOCKED on this branch | The integration branch contains candidate retrieval but not the evaluator/decision-frontier code. Separate draft PR #28 (`umc03/verifier-positive-path-20261016`) makes this PARTIAL: S1/S2 retrieval and evaluator are tested, but the positive path uses a test verifier, production trust root is absent, real marker coverage is unproven, and no planner consumes the result. |
+| UMC-04 | PARTIAL | Resumable import and the source-registration runner have replay/crash tests. `memory_pipeline_coordinator.py` now connects ingestion → approval/provenance → promotion → optional correction → index → restore; `test_memory_pipeline_real_ingestion.py` proves this on a synthetic archive. Production archive completeness and full production acceptance remain unverified. |
+| UMC-05 | PARTIAL | Source/manifest validation, explicit approval-bound promotion, correction registry and coordinator recovery exist. The synthetic end-to-end route is tested, but full production-source completeness, all quarantine/recovery cases and real archive acceptance remain unproven. |
 | UMC-06 | PARTIAL | Disputed lifecycle and routing exist; end-to-end conflicting-source preservation and dependent-state impact review need stronger tests. |
 | UMC-07 | PARTIAL | Unknown execution state is specified and idempotent child-result replay is tested; generic external side-effect reconciliation is not integrated. |
 | UMC-08 | PARTIAL | `tests/test_child_result_return_roundtrip.py` covers local result → acknowledgement → guarded checkpoint; automatic chat delivery and pending-return reconciliation are absent. |
-| UMC-09 | PARTIAL | Importer resume tests and stale TASK_STATE rejection exist separately; no single injected crash across canonical event commit, projection update and index refresh. |
-| UMC-10 | PARTIAL | Temporal lineage/impact primitives exist; automated downstream impact review across every canonical record type is not proven. |
+| UMC-09 | PARTIAL | The coordinator has a hash-chained stage ledger, replayable idempotent stages and a synthetic real ingestion-to-restore test; interruption/replay is tested around index publication. A complete crash matrix across source registration, promotion, correction append, pointer publication and restore is still required. |
+| UMC-10 | PARTIAL | Temporal lineage and append-only edge corrections exist; the canonical index consumes accepted corrections in derived relation views. A populated production correction registry and automated downstream impact review across every canonical record type remain unproven. |
 | UMC-11 | PARTIAL | Guarded updater path scope and exclusive locks are tested; actual GitHub permissions, branch protections and per-agent credentials are not verified. |
 | UMC-12 | BLOCKED | Protocol says to report BLOCKED when access is unavailable; no executable session restore gate enforces this across environments. |
 
@@ -337,3 +337,12 @@ This section supersedes the earlier statement that ingestion, approval, promotio
 - A partial-memory result remains partial. No source archive completeness is inferred from a successful stage chain or CI pass.
 
 Next: verify the full coordinator against a controlled end-to-end synthetic fixture with the real stage executors, including crash points after source registration, promotion, correction append, index pointer publication and restore. Then perform a separately authorized archive acceptance/coverage audit.
+
+
+### Status precedence and revision-scoped claims — 2026-10-16
+
+The acceptance matrix above is scoped to this integration branch's HEAD. Do not copy PR #28's UMC-03 PARTIAL status onto this branch until that PR's code is merged or otherwise integrated. PR #28 is a separate Draft and does not authorize promotion or planning.
+
+Older sections labelled as audits of earlier commits are historical snapshots. Their statements that promotion, canonical index or semantic restore did not exist were true at those audited revisions and are superseded for current code status by the implementation updates below and by `projects/AGENT_MEMORY_SYSTEM/END_TO_END_MEMORY_AGENT_AUDIT_2026-10-16.md`. Keep the old audit chronology; do not silently rewrite it.
+
+For the current integration branch, the synthetic ingestion → promotion/index → memory-aware restore path is covered by `tests/test_memory_pipeline_real_ingestion.py`. Exact code HEAD `0f2c76f1b79d1c73aa89eed0f3e98830658c338d` passed CI run [38862706088](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38862706088); metadata HEAD `d3f9c610b7865793960dc652c2ccccc88afef732` passed run [38864512026](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38864512026). Neither result proves production archive completeness or automatic ChatGPT startup.

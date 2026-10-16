@@ -731,3 +731,24 @@ Important remaining gap: real ingestion + promotion is tested, but the same test
 - Earlier handoff entries saying the combined test mocked restore or remained to be created are historical records superseded by this section; they are not current status.
 - **Still not proven:** completeness of any production archive or full chat history; the fixture is synthetic and coverage remains partial. Production acceptance is a separate gate.
 - **Next:** verify the final metadata-only branch HEAD and its CI; preserve PR #27 as Draft/open/unmerged and do not change `main`.
+
+
+## Current handoff — end-to-end memory agent audit (2026-10-16)
+
+**Active task:** reconcile the entire memory-agent implementation chain against source code, tests, and exact-revision CI, then continue from the gaps without restarting completed investigations.
+
+**Audit report:** `projects/AGENT_MEMORY_SYSTEM/END_TO_END_MEMORY_AGENT_AUDIT_2026-10-16.md`
+
+**Branch / PR:** `audit/agent-memory-e2e-20261016`, draft PR #29 — https://github.com/alexbotleh-oss/agent-knowledge-base/pull/29. Base is `integration/memory-core-clean-20261015`. No changes to `main`; do not merge PR #27, #28, or #29 without explicit user approval.
+
+**Verified starting point:**
+- Integration HEAD `d3f9c610b7865793960dc652c2ccccc88afef732`; CI [38864512026](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38864512026) PASS — 295 Python tests (1 skipped), 4 Node tests, memory validation PASS.
+- Separate PR #28 HEAD `b6d32a3c36aa5df8079f63aad20fd41a8f56c512`; tested code/test commit `40d41701a9c58d498ccb5d2e092089a61e56dd12`, CI [38897781306](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38897781306) PASS — 344 Python tests (1 skipped), 4 Node tests. PR #28's UMC-03 evaluator/frontier is not yet part of PR #27's integration branch.
+
+**Current truth:** the synthetic source-ingestion → approval-bound promotion → canonical index → memory-aware restore path exists and is tested. This is not production archive acceptance. The tracked integration branch has no `registry/source_records.jsonl`, `registry/memory_records.jsonl`, or `registry/edge_corrections.jsonl`. Full source/chat/attachment completeness is still PARTIAL/UNKNOWN.
+
+**Highest-impact gaps:** UMC-02 runtime attention/return controller remains BLOCKED; no verified automatic ChatGPT message capture/startup; no production applicability verifier/trust root; memory retrieval does not yet construct a complete cause-linked path across all canonical records; skill execution, runtime environment monitoring, and VLM/Android acceptance remain unverified. Multiple documents had stale implementation claims; this audit branch appends current status without deleting historical entries.
+
+**Traceability matrix:** `projects/AGENT_MEMORY_SYSTEM/CAPABILITY_TRACEABILITY_MATRIX_2026-10-16.md` is now created and maps each planned capability to specification, code, tests, revision-scoped CI, status, and residual gap.
+
+**Next action:** implement CAP-02/UMC-02 — a runtime attention controller and causal return stack — then connect it to task-time experience retrieval. Do not restart the archive audit or re-run completed CI unless inputs/revision change or a new contradiction appears.
