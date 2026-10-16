@@ -1,4 +1,5 @@
 import json
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -46,6 +47,38 @@ class DialogueAttentionControllerTests(unittest.TestCase):
         restored_again = controller.inspect(self.log)
         self.assertEqual(restored_again["active"]["task_id"], "TASK-PARENT")
         self.assertEqual(restored_again["open_branch_count"], 0)
+
+    def test_return_replay_is_idempotent_and_does_not_pop_another_frame(self):
+        self.turn("T-SIDE-1", "Кстати, проверь отдельный вопрос",
+                  child_task_id="TASK-SIDE", child_checkpoint_id="CKPT-SIDE")
+        first = controller.return_to_parent(
+            self.log, turn_id="T-RETURN-1", parent_task_id="TASK-PARENT"
+        )
+        second = controller.return_to_parent(
+            self.log, turn_id="T-RETURN-1", parent_task_id="TASK-PARENT"
+        )
+        self.assertEqual(first["status"], "RETURNED")
+        self.assertEqual(second["status"], "ALREADY_RETURNED")
+        self.assertFalse(second["writes_performed"])
+        self.assertEqual(second["active"]["task_id"], "TASK-PARENT")
+        self.assertEqual(len([
+            event for event in controller.read_events(self.log)
+            if event.get("type") == "attention_returned"
+        ]), 1)
+
+    def test_stack_is_reconstructed_in_a_fresh_process(self):
+        self.turn("T-SIDE-1", "Кстати, проверь отдельный вопрос",
+                  child_task_id="TASK-SIDE", child_checkpoint_id="CKPT-SIDE")
+        script = ROOT / "tools" / "dialogue_attention_controller.py"
+        completed = subprocess.run(
+            [sys.executable, str(script), str(self.log), "inspect"],
+            capture_output=True, text=True, check=False,
+        )
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        state = json.loads(completed.stdout)
+        self.assertEqual(state["active"]["task_id"], "TASK-SIDE")
+        self.assertEqual(state["return_stack"][0]["parent"]["task_id"], "TASK-PARENT")
+        self.assertEqual(state["open_branch_count"], 1)
 
     def test_nested_branches_return_lifo(self):
         self.turn("T-SIDE-1", "Кстати, проверь отдельный вопрос",
