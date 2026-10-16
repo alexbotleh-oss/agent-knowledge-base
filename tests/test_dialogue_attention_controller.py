@@ -140,6 +140,25 @@ class DialogueAttentionControllerTests(unittest.TestCase):
             controller.inspect(self.log)
         self.assertEqual(self.log.read_bytes(), before)
 
+    def test_public_return_fails_closed_without_unified_guard(self):
+        self.turn("T-SIDE-GUARD", "Кстати, проверь отдельный вопрос",
+                  child_task_id="TASK-SIDE", child_checkpoint_id="CKPT-SIDE")
+        before = self.log.read_bytes()
+        result = controller.return_to_parent(
+            self.log, turn_id="T-UNGUARDED", parent_task_id="TASK-PARENT"
+        )
+        self.assertEqual(result["status"], "BLOCKED_GUARD_REQUIRED")
+        self.assertFalse(result["writes_performed"])
+        self.assertEqual(self.log.read_bytes(), before)
+
+    def test_public_return_rejects_incomplete_guard(self):
+        result = controller.return_to_parent(
+            self.log, turn_id="T-BAD-GUARD", parent_task_id="TASK-PARENT",
+            authorization={"reconciliation_status": "CONSISTENT", "child_result_status": "MISSING"},
+        )
+        self.assertEqual(result["status"], "BLOCKED_CHILD_RESULT")
+        self.assertFalse(result["writes_performed"])
+
     def test_return_without_parent_does_not_write(self):
         result = controller._return_to_parent_unchecked(self.log, turn_id="T-RETURN", parent_task_id="TASK-PARENT")
         self.assertEqual(result["status"], "NO_PARENT")
