@@ -687,3 +687,12 @@ Tests added for first pass, completed replay, and a changed source under the sam
 - The correction contract is now implemented, but no real `registry/edge_corrections.jsonl` has been populated. Index coverage remains PARTIAL because archive/source completeness is still unproven.
 - Next: durable pipeline coordinator with hash-chained stage ledger and crash/replay reconciliation across source ingestion, explicit approval, semantic promotion, correction registration, index publication and fresh-session restore. Keep production archive acceptance and Android extension acceptance separate.
 - PR #27 remains Draft/open/unmerged; `main` unchanged.
+
+
+## Durable coordinator stage — 2026-10-16
+
+Added `tools/memory_pipeline_coordinator.py` to compose ingestion → approval/provenance gates → semantic promotion → optional edge correction → canonical index → verified session restore. It uses an input-bound deterministic run ID, hash-chained append-only event ledger, rebuildable projection, and separate write accounting. Provenance references are resolved against schema-valid SourceRecords; missing/ambiguous references block promotion. Stage writers remain separate idempotent operations, not one cross-registry transaction.
+
+Exact code HEAD `feeb14446c8b039271b753a8ecd0b2661318b818`, CI [38853687319](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38853687319) PASS: 294 Python tests (1 skipped), 4 Node tests, write audit 127 mutation sites / 0 unclassified. This run is before the latest crash/replay integration-test addition; that new test's exact-head CI result is not yet verified.
+
+Next: confirm CI for the new real-stage interruption/replay test, then test the real source-ingestion runner in a synthetic end-to-end fixture. Do not claim production archive coverage. PR #27 stays Draft/open/unmerged; `main` unchanged.
