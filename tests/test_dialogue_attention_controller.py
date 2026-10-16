@@ -42,7 +42,7 @@ class DialogueAttentionControllerTests(unittest.TestCase):
         self.assertEqual(restored["active"]["task_id"], "TASK-SIDE")
         self.assertEqual(restored["return_stack"][0]["parent"]["task_id"], "TASK-PARENT")
         self.assertEqual(restored["return_stack"][0]["parent"]["checkpoint_id"], "CKPT-PARENT")
-        returned = controller.return_to_parent(self.log, turn_id="T-RETURN-1", parent_task_id="TASK-PARENT")
+        returned = controller._return_to_parent_unchecked(self.log, turn_id="T-RETURN-1", parent_task_id="TASK-PARENT")
         self.assertEqual(returned["status"], "RETURNED")
         restored_again = controller.inspect(self.log)
         self.assertEqual(restored_again["active"]["task_id"], "TASK-PARENT")
@@ -51,10 +51,10 @@ class DialogueAttentionControllerTests(unittest.TestCase):
     def test_return_replay_is_idempotent_and_does_not_pop_another_frame(self):
         self.turn("T-SIDE-1", "Кстати, проверь отдельный вопрос",
                   child_task_id="TASK-SIDE", child_checkpoint_id="CKPT-SIDE")
-        first = controller.return_to_parent(
+        first = controller._return_to_parent_unchecked(
             self.log, turn_id="T-RETURN-1", parent_task_id="TASK-PARENT"
         )
-        second = controller.return_to_parent(
+        second = controller._return_to_parent_unchecked(
             self.log, turn_id="T-RETURN-1", parent_task_id="TASK-PARENT"
         )
         self.assertEqual(first["status"], "RETURNED")
@@ -87,11 +87,11 @@ class DialogueAttentionControllerTests(unittest.TestCase):
                            active_task_id="TASK-SIDE", active_checkpoint_id="CKPT-SIDE",
                            child_task_id="TASK-NESTED", child_checkpoint_id="CKPT-NESTED")
         self.assertEqual(nested["status"], "BRANCH_OPENED")
-        wrong = controller.return_to_parent(self.log, turn_id="T-WRONG-RETURN", parent_task_id="TASK-PARENT")
+        wrong = controller._return_to_parent_unchecked(self.log, turn_id="T-WRONG-RETURN", parent_task_id="TASK-PARENT")
         self.assertEqual(wrong["status"], "PARENT_MISMATCH")
-        first = controller.return_to_parent(self.log, turn_id="T-RETURN-NESTED", parent_task_id="TASK-SIDE")
+        first = controller._return_to_parent_unchecked(self.log, turn_id="T-RETURN-NESTED", parent_task_id="TASK-SIDE")
         self.assertEqual(first["active"]["task_id"], "TASK-SIDE")
-        second = controller.return_to_parent(self.log, turn_id="T-RETURN-PARENT", parent_task_id="TASK-PARENT")
+        second = controller._return_to_parent_unchecked(self.log, turn_id="T-RETURN-PARENT", parent_task_id="TASK-PARENT")
         self.assertEqual(second["active"]["task_id"], "TASK-PARENT")
         self.assertEqual(controller.inspect(self.log)["open_branch_count"], 0)
 
@@ -141,7 +141,7 @@ class DialogueAttentionControllerTests(unittest.TestCase):
         self.assertEqual(self.log.read_bytes(), before)
 
     def test_return_without_parent_does_not_write(self):
-        result = controller.return_to_parent(self.log, turn_id="T-RETURN", parent_task_id="TASK-PARENT")
+        result = controller._return_to_parent_unchecked(self.log, turn_id="T-RETURN", parent_task_id="TASK-PARENT")
         self.assertEqual(result["status"], "NO_PARENT")
         self.assertFalse(self.log.exists())
 
