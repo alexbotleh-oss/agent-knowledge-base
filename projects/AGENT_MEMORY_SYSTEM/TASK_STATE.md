@@ -674,3 +674,16 @@ Tests added for first pass, completed replay, and a changed source under the sam
 - The latest code + protocol/documentation revision before this metadata-only update is `15df917acfa27001b80f7a7049e5c082b7b646e5`.
 - Exact-head CI [38851849713](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38851849713) passed: 272 Python tests (1 skipped), 4 Node tests, write audit 108 mutation sites / 0 unclassified, memory validation PASS.
 - This verifies the integrated source revision after adding the semantic-memory-aware restore protocol. Subsequent updates to TASK_STATE, HANDOFF, CONTINUITY_CHECKPOINT and events are metadata-only and remain distinct from this code HEAD.
+
+
+## Canonical correction overlays — 2026-10-16
+
+- Defined `schemas/edge_correction.schema.json` and `schemas/edge_correction_approval.schema.json`.
+- Added `tools/edge_correction_registry.py`: append-only registration bound to source memory ID, revision ID and record hash; retract/replace targets use canonical relation fingerprints rather than array positions. Accepted corrections require a separate receipt bound to the exact correction input bytes. Candidate and non-accepted statuses are preserved but not applied.
+- Updated `tools/canonical_memory_index.py` to validate correction envelopes and source bindings, apply accepted add/retract/replace operations only to derived relation views, preserve canonical record bytes, and include correction-registry hash in generation identity/freshness. The semantic restore returns effective relations and applied correction IDs.
+- Added tests for accepted add and retract behavior, source/hash validation, approval receipt binding, idempotency/conflict, and stale correction-registry detection. No production correction registry was created or populated.
+- Exact code+protocol HEAD `1fd9c91ae8bb8662a3cb1a1cea3d63452064fc40`, exact-head CI [38852493391](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38852493391) PASS: 282 Python tests (1 skipped), 4 Node tests, write audit 116 mutation sites / 0 unclassified, memory validation PASS.
+- Failed attempts preserved: #38852081808, #38852111755, #38852131901 and #38852171078 failed strict write audit before the edge-correction writer was classified. #38852218167 and #38852255882 exposed the missing no-overlay base relation map (KeyError); fixed at `f66e2ff23d1fa8f3cd50662dca23e8617b9053ee`, with #38852276112 PASS. Later overlay integration and retraction tests passed at #38852455349 and the latest exact-head run #38852493391.
+- The correction contract is now implemented, but no real `registry/edge_corrections.jsonl` has been populated. Index coverage remains PARTIAL because archive/source completeness is still unproven.
+- Next: durable pipeline coordinator with hash-chained stage ledger and crash/replay reconciliation across source ingestion, explicit approval, semantic promotion, correction registration, index publication and fresh-session restore. Keep production archive acceptance and Android extension acceptance separate.
+- PR #27 remains Draft/open/unmerged; `main` unchanged.
