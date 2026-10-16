@@ -55,7 +55,7 @@ class PipelineRealStageIntegrationTests(unittest.TestCase):
                 "created_at":"2026-10-16T00:02:00Z","payload_classification":"sanitized",
                 "source":{"source_type":"structured_export","source_id":"ARCH-E2E","project_id":"AGENT_MEMORY_SYSTEM",
                     "conversation_ids":["CONV-E2E"],"source_locator":source["source_locator"],
-                    "captured_at":"unknown","scope_status":"PARTIAL"},
+                    "captured_at":"unknown","scope_status":"PARTIAL","parser_version":"synthetic-e2e"},
                 "artifacts":[{"artifact_id":"ART-E2E-001","kind":"memory_records","path":"records.jsonl",
                     "sha256":sha(artifact_bytes),"record_count":1,"lifecycle_status":"accepted",
                     "evidence_status":"observed","approval_status":"user_approved","approval_evidence":"DEC-E2E-001"}],
