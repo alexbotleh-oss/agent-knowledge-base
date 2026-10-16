@@ -346,3 +346,21 @@ The acceptance matrix above is scoped to this integration branch's HEAD. Do not 
 Older sections labelled as audits of earlier commits are historical snapshots. Their statements that promotion, canonical index or semantic restore did not exist were true at those audited revisions and are superseded for current code status by the implementation updates below and by `projects/AGENT_MEMORY_SYSTEM/END_TO_END_MEMORY_AGENT_AUDIT_2026-10-16.md`. Keep the old audit chronology; do not silently rewrite it.
 
 For the current integration branch, the synthetic ingestion → promotion/index → memory-aware restore path is covered by `tests/test_memory_pipeline_real_ingestion.py`. Exact code HEAD `0f2c76f1b79d1c73aa89eed0f3e98830658c338d` passed CI run [38862706088](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38862706088); metadata HEAD `d3f9c610b7865793960dc652c2ccccc88afef732` passed run [38864512026](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38864512026). Neither result proves production archive completeness or automatic ChatGPT startup.
+
+
+## 13. UMC-02 executable attention/return primitive — partial
+
+Implemented in tools/dialogue_attention_controller.py with tests in tests/test_dialogue_attention_controller.py. This section supersedes the earlier statement that no executable attention/return primitive existed, but it does not mark UMC-02 end-to-end complete.
+
+- The classifier proposes one of: CONTINUATION, CORRECTION, SIDE_BRANCH, DEFERRED_IDEA, NEW_TASK, PRIORITY_CHANGE, RETURN_TO_PARENT, or AMBIGUOUS. It uses deterministic lexical rules, not a semantic model. An ambiguous turn remains unknown and asks for confirmation; a lexical match is a suggestion, not independent proof of intent.
+- The controller appends attention events to the canonical projects/AGENT_MEMORY_SYSTEM/events.jsonl. The active attention state and causal return stack are projections rebuilt from the event log; there is no separate authoritative stack database.
+- A branch switch requires explicit child task/checkpoint IDs. It records the parent task/checkpoint, child task/checkpoint and return condition. Nested branches return in LIFO order; a mismatched parent is rejected. Deferred ideas are recorded but do not switch tasks or enter the return stack.
+- Stable event IDs make identical retries idempotent. A shared .lock file serializes this writer with the branch-result writer that uses the same canonical journal convention. A leftover lock is not removed automatically; verify no writer is active before manual recovery.
+- CLI examples:
+  - python3 tools/dialogue_attention_controller.py classify --turn-id T-001 --text "Кстати, проверь отдельный вопрос" --task-id TASK-PARENT --checkpoint-id CKPT-PARENT --child-task-id TASK-SIDE --child-checkpoint-id CKPT-SIDE
+  - python3 tools/dialogue_attention_controller.py inspect
+  - python3 tools/dialogue_attention_controller.py return --turn-id T-002 --parent-task-id TASK-PARENT
+
+Acceptance boundary: this is a local repository primitive invoked explicitly by a caller. It does not capture ChatGPT turns automatically, authenticate caller-supplied task IDs, update the project TASK_STATE/HANDOFF projection, or run on every new chat. Its lexical classifier needs broader adversarial/ambiguous-language testing. It is not yet wired into task-time staged experience retrieval or the PR #28 UMC-03 decision frontier. Therefore CAP-02/UMC-02 remains IMPLEMENTED_PARTIAL, not PASS.
+
+Next integration gate: add a task-start entry point that restores the current task/checkpoint, invokes staged experience retrieval, returns a compact evidence/provenance-bound experience map, and includes the attention stack's deferred/side-branch state without promoting uncertain lessons. Test the combined path after a process restart, including branch return and no-repeat checks. Keep automatic ChatGPT capture as a separate client acceptance gate.
