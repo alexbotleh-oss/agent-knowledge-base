@@ -1,3 +1,4 @@
+import hashlib
 import json
 import sys
 import tempfile
@@ -94,7 +95,7 @@ class VerifiedSessionRestoreTests(unittest.TestCase):
         self.responses[f"{self.base_url}/contents/projects/AGENT_MEMORY_SYSTEM/TASK_STATE.md?ref={BRANCH_API}"]["sha"] = git_blob_sha(
             (self.project / "TASK_STATE.md").read_bytes()
         )
-        (self.project / "TASK_STATE.md").write_text("# Stale local state\\n", encoding="utf-8")
+        (self.project / "TASK_STATE.md").write_text("# Stale local state\n", encoding="utf-8")
         evidence = verify_remote_revision(self.project, REPO, fetch_json=self.fake_fetch)
         self.assertEqual(evidence["status"], "LOCAL_SOURCE_DRIFT")
         self.assertEqual(
