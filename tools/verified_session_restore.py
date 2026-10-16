@@ -9,6 +9,7 @@ new code CI result.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import re
 import urllib.error
@@ -53,6 +54,12 @@ def _sha(value: Any, field: str) -> str:
     if not isinstance(value, str) or not SHA_RE.fullmatch(value):
         raise RemoteEvidenceError(f"API/checkpoint field {field} is not a full 40-character SHA")
     return value.lower()
+
+
+def _git_blob_sha(raw: bytes) -> str:
+    """Return Git's SHA-1 blob ID for exact local file bytes."""
+    header = b"blob " + str(len(raw)).encode("ascii") + bytes([0])
+    return hashlib.sha1(header + raw).hexdigest()
 
 
 def verify_remote_revision(
