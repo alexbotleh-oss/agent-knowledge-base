@@ -1,12 +1,12 @@
 {
   "schema_version": "1.0",
-  "checkpoint_id": "CKPT-AGMS-20261016-REAL-INGESTION-PASS-08",
+  "checkpoint_id": "CKPT-AGMS-20261016-REAL-E2E-RESTORE-PASS-09",
   "project_id": "AGENT_MEMORY_SYSTEM",
   "task_id": "AGMS-2026-10-15-MEMORY-PIPELINE-CONTINUITY",
   "recorded_at": "2026-10-16",
   "recorded_time_precision": "day",
   "source_chat": "Настройка Агента",
-  "source_message": "User resumed further operations; implemented and CI-verified durable memory pipeline coordinator.",
+  "source_message": "User authorized completing continuity synchronization after exact-head CI verified the combined real-ingestion and real-memory-restore test.",
   "goal": "Make work recoverable after connection/session interruption without repeating already verified steps; connect source ingestion, approved semantic-memory processing, index refresh, and next-session restore, while preserving provenance and project boundaries.",
   "branch": "integration/memory-core-clean-20261015",
   "pr": {
@@ -18,15 +18,11 @@
     "base": "main"
   },
   "source_code_checkpoint": {
-    "head": "fadc95c083a6a6ffafbe7042e78a70f1a0d2c31f",
-    "ci_run_id": 38856130862,
-    "ci_url": "https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38856130862",
+    "head": "0f2c76f1b79d1c73aa89eed0f3e98830658c338d",
+    "ci_run_id": 38862706088,
+    "ci_url": "https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38862706088",
     "ci_conclusion": "success",
-    "python_tests": 295,
-    "python_skipped": 1,
-    "node_tests": 4,
-    "write_audit_mutation_sites": 127,
-    "write_audit_unclassified": 0
+    "evidence_scope": "Exact-head GitHub Actions workflow completed successfully; memory-protocol/record validation and knowledge-base/stack validation steps passed. Test counts are not asserted because they were not exposed in the retrieved run metadata."
   },
   "confirmed_completed": [
     "Resumable source-ingestion runner exists and has CI tests for dry-run, apply/replay, uncertain registry acknowledgement after crash, tampered ledger, and missing state projection reconstruction.",
@@ -74,7 +70,9 @@
     "Confirmed exact-head CI run 38853687319 is for feeb14446c8b039271b753a8ecd0b2661318b818, which includes the real-stage crash/replay test added immediately before the run.",
     "Added tests/test_memory_pipeline_real_ingestion.py: synthetic archive is staged, the real source_ingestion_runner registers source records, and the coordinator then validates provenance and promotes an approved semantic record. Exact-head CI is not yet visible/confirmed.",
     "Exact-head CI 38856130862 passed for fadc95c083a6a6ffafbe7042e78a70f1a0d2c31f: 295 Python tests (1 skipped), 4 Node tests, write audit 127 mutation sites / 0 unclassified.",
-    "tests/test_memory_pipeline_real_ingestion.py passed: stages a synthetic archive, uses real source_ingestion_runner.py to register source records, then real provenance validation and semantic promotion successfully execute through the coordinator."
+    "tests/test_memory_pipeline_real_ingestion.py passed: stages a synthetic archive, uses real source_ingestion_runner.py to register source records, then real provenance validation and semantic promotion successfully execute through the coordinator.",
+    "Combined synthetic end-to-end regression uses the real source_ingestion_runner, real coordinator promotion and canonical index, and real memory-aware session restore. Exact code HEAD 0f2c76f1b79d1c73aa89eed0f3e98830658c338d passed exact-head CI run 38862706088.",
+    "The combined test asserts retrieval of MEM-REAL-INGEST-1 / REV-REAL-1 and non-empty provenance under project AGENT_MEMORY_SYSTEM, task TASK-REAL, and context CTX-REAL."
   ],
   "confirmed_open": [
     {
@@ -186,8 +184,8 @@
     "Verify promoted semantic-record provenance resolves to source registry records and archive coverage",
     "Production archive acceptance and completeness audit",
     "Live Android browser-extension acceptance",
-    "Run a controlled synthetic end-to-end test with real ingestion runner, then separately plan production archive acceptance and coverage audit.",
     "Do not merge PR #27 or change main; PR remains Draft/open/unmerged.",
-    "Full combined end-to-end test still mocks build_memory_aware_packet/verified restore in the real-ingestion test. Existing real-stage test exercises real restore but mocks source ingestion. Add a test combining real source ingestion + real promotion/index + real verified restore; ensure controlled fixtures do not rely on impossible or fabricated external revision state."
+    "Synchronize HANDOFF.md and append-only events.jsonl with exact-head CI result 38862706088; verify metadata-only descendant CI.",
+    "Production archive acceptance and completeness audit remain separate; full archive/chat coverage is not established."
   ]
 }
