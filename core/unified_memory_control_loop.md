@@ -337,3 +337,134 @@ This section supersedes the earlier statement that ingestion, approval, promotio
 - A partial-memory result remains partial. No source archive completeness is inferred from a successful stage chain or CI pass.
 
 Next: verify the full coordinator against a controlled end-to-end synthetic fixture with the real stage executors, including crash points after source registration, promotion, correction append, index pointer publication and restore. Then perform a separately authorized archive acceptance/coverage audit.
+
+## 13. UMC-03 applicability assessment — specification and first read-only implementation
+
+**Status: UMC-03 remains `BLOCKED` in the acceptance matrix (section 10).** This section specifies the applicability evaluator and records what the first patch implements: `tools/applicability_evaluator.py`, `retrieve_lesson_candidates` and the wiring in `tools/minimal_agent_loop.py`, with tests in `tests/test_applicability_evaluator.py`. The patch has not been merged; no CI run on a commit containing it exists yet. Items marked "not implemented" below are targets only.
+Basis revision of the specification: `d3f9c610b7865793960dc652c2ccccc88afef732` (branch `integration/memory-core-clean-20261015`). PR #27 remains Draft, unmerged.
+
+### 13.0 Terms
+
+`APPLICABLE`, `APPLICABLE_WITH_ADAPTATION`, `NOT_APPLICABLE`, `INSUFFICIENT_DATA`, `CONFLICT` are **designed evaluator outcomes**. They are not existing repository statuses and must not be written into `lifecycle_status`, `evidence_status` or `decision_status`.
+
+### 13.1 Facts about the current code that constrain the design
+
+1. `retrieve_experience_candidates` searches **event-log rows** (`event_id`, `type`, `status`, `evidence_refs`, `relations`) and does not read lesson records; lesson records are read by the separate `retrieve_lesson_candidates` added with this section. The fields `trigger`, `applicability`, `exceptions` exist in `templates/lesson_record.jsonl.example`, not in the event schema. The evaluator therefore cannot assume those fields for every candidate (see rule R7).
+2. `run_minimal_agent_loop` does not plan. It returns `next_action_policy: REVIEW_CANDIDATES_ONLY_NO_PLANNING` and always sets `checkpoint_currentness_gate: BLOCKED_CURRENTNESS_UNVERIFIED`. So "influence on the decision" cannot mean "influences the plan"; it must mean the fields defined in 13.4.
+3. Every candidate currently carries `transfer_decision: UNASSESSED`. The evaluator is the only component that may replace it, and only in its own output, never in the source record.
+
+### 13.2 Evaluator contract (as implemented in the first patch)
+
+`evaluate_applicability(candidates, judgments=None) -> dict` in `tools/applicability_evaluator.py`.
+
+- Pure and read-only: no file access, no writes, no execution; inputs are not mutated (`writes_performed: false`, `grants_planning_permission: false`).
+- Inputs: the candidate list from event retrieval (`candidate_type: "event"`) and lesson retrieval (`candidate_type: "lesson"`, `retrieve_lesson_candidates`), plus explicit judgments. Conditions are **not** an input and are never extracted from free text: every criterion result is a recorded judgment.
+- Judgment: `{candidate_id, candidate_type (default "lesson"), criterion, result, judged_by: rule|user|agent, basis_ref, adaptation_note?, with_candidate_id?}`. Criteria and allowed results: `problem_similarity`, `trigger`, `applicability`, `evidence_support`, `circumstances_unchanged` → `MATCH | MISMATCH | UNKNOWN`; `exceptions` → `NOT_TRIGGERED | TRIGGERED | UNKNOWN`; `compatibility` → `COMPATIBLE | CONFLICT | UNKNOWN` (`CONFLICT` requires `with_candidate_id`). Malformed judgments are listed in `judgment_issues` and never used.
+- Restrictive results (`MISMATCH`, `TRIGGERED`, `CONFLICT`) are always honoured, because they only narrow use. A non-empty `basis_ref` is only a locator, not proof. Without an explicitly injected trusted rule/source verifier, all permissive judgments remain `UNKNOWN`; their claims are retained for review. The verifier is a programmatic dependency, never a field in the judgments JSON, and must independently verify the claim and source.
+- Output: `assessments[]` (per candidate: `outcome`, `reason`, `criteria`, `evidence_assessment`, `needs`, `adaptation_notes`, `caps`), `usable_as_rationale[]`, `excluded[]`, `not_evaluated[]`, `needs[]`, `blocked_dependent_decisions[]`, `judgment_issues[]`, `restrictive_policy`.
+- The evaluator does not read evidence files. Local source availability is screened at retrieval time (`--evidence-root`); claim support is a judgment (`evidence_support`), never inferred from a label or a pointer.
+- CLI: `tools/minimal_agent_loop.py ... --lesson-log FILE (repeatable) --judgments FILE.json`.
+
+### 13.3 Decision rules (first match wins)
+
+In the first patch every criterion named below is a recorded judgment (13.2); a criterion without a judgment with basis is `UNKNOWN`. Rule numbers follow the order of the design discussion, not the evaluation order; the order of evaluation is R0, R1, R7, R10–R13, R2, R4, then criteria checks, R8/R12 caps.
+
+- R0 (pre-filter, not an outcome). Candidate gate `OUT_OF_PROJECT_SCOPE` → `NOT_EVALUATED_OUT_OF_SCOPE`. The candidate is listed in `not_evaluated[]` with its original `project_id`/`scope` and is **not** assigned any of the five outcomes. Out of the current search scope does not mean inapplicable in general. In particular the existing `scope: global` lessons are retained untouched and unjudged.
+- R1. `PROJECT_SCOPE_UNKNOWN` or any `*_BLOCKED` gate → `INSUFFICIENT_DATA`. The evaluator never loosens an existing gate.
+- R2. A listed exception holds in the current state → `NOT_APPLICABLE`.
+- R3. An exception refers to a condition whose current value is `UNKNOWN` → `INSUFFICIENT_DATA`.
+- R4. Two non-superseded candidates give incompatible recommendations for the same decision → `CONFLICT` for both; the conflict is reported, not resolved.
+- R5. All trigger/applicability criteria `MATCH`, no exception holds, evidence `SUPPORTS_CLAIM` → `APPLICABLE`.
+- R6. Principle matches but some stated conditions differ and the difference is explicit → `APPLICABLE_WITH_ADAPTATION`.
+- R7. The candidate is an event without `applicability`/`exceptions` fields, or the only conditions are free text nobody has judged → `INSUFFICIENT_DATA`. Free-text conditions are never matched by shared words.
+- R10. Lesson `status` (see 13.3.1): `superseded` or `deprecated` → excluded from active rationale, reason recorded, link to the replacement kept when `supersedes`/a replacement is known (otherwise `replacement: UNKNOWN`). They are not deleted and not scored.
+- R11. Lesson `disputed` → `INSUFFICIENT_DATA` with `needs: resolve dispute` (UMC-06: both claims survive, status needs review).
+- R12. Lesson `candidate` → never `APPLICABLE`; ceiling `APPLICABLE_WITH_ADAPTATION` (see 13.3.1 for what the contract does and does not say). Lesson `validated` → no ceiling from status alone; other rules still apply.
+- R13. A status value not listed in 13.3.1 → `INSUFFICIENT_DATA` with `needs: status semantics undefined`. The evaluator does not guess a meaning.
+- R8. A criterion judged by `agent` has evidence status `inferred`. An outcome that depends on an `agent`-judged criterion cannot be `APPLICABLE`; it is at most `APPLICABLE_WITH_ADAPTATION` until a `rule` or `user` judgment is recorded.
+- R8b. A `rule` or `user` judgment is accepted only with a `basis_ref` that names what exactly was confirmed (which criterion, against which current condition, which source). A judgment without `basis_ref`, or one that cites only the candidate itself, is treated as `UNKNOWN`. A `user` judgment is a statement by the user, not proof of the underlying fact; it is recorded as such.
+- R9. `evidence_refs` present, a `verified` label, or a readable file never alone yield `SUPPORTS_CLAIM`. Support requires that the recorded coverage of the source includes the claim; otherwise `UNASSESSED`, and R5 cannot fire.
+
+### 13.3.1 Status semantics — what the existing contracts define and what they do not
+
+Lesson records use `status` ∈ `candidate | validated | disputed | superseded | deprecated` (`templates/lesson_record.jsonl.example`). The repository's lifecycle vocabulary (`tools/validate_memory.py`) is `candidate | accepted | disputed | superseded | deprecated | not_applicable`. These are two different vocabularies and must not be silently equated (`validated` ≠ `accepted`).
+
+| Value | Defined by | What is defined | What is NOT defined |
+|---|---|---|---|
+| `superseded`, `deprecated` | `core/memory_model.md` | Outdated lessons are marked and linked to a replacement; never auto-deleted | How a consumer must treat them; spec rule R10 is the proposal |
+| `disputed` | UMC-06 matrix row | Both claims and provenance survive; needs review; no silent overwrite | Lesson-specific handling; R11 is the proposal |
+| `candidate` | `lessons/global/README.md`, UMC-03 row | Promote candidate lessons only after confirming evidence and limits; shared lessons are "used only as a candidate/limited method" | An explicit usage ceiling for a `candidate` lesson; R12 is a **new rule of this spec**, not an existing contract |
+| `validated` | enum in the lesson template only | Nothing beyond its existence | Its meaning and relation to `accepted` and to evidence checks; the evaluator grants no trust from the label |
+
+Existing-code gap to preserve in the implementation: `_evidence_quality` detects disputed/rejected/quarantined only in `decision_status` and `lifecycle_status`, not in `status`. Lesson records carry `status` only, so a `disputed` lesson would not be recognized as disputed by that classifier. The lesson path must read `status` explicitly and must not rely on the event classifier for it.
+
+Naming: outcome `NOT_APPLICABLE` (evaluator output) is distinct from the lifecycle value `not_applicable` (stored record status). The evaluator never writes the former into a record field.
+
+### 13.4 How the outcome affects the loop
+
+New output fields of `run_minimal_agent_loop` (all additive):
+
+- `assessments[]` — the results above.
+- `usable_as_rationale[]` — `APPLICABLE` and `APPLICABLE_WITH_ADAPTATION` only (the latter with its adaptation notes).
+- `excluded[]` — `NOT_APPLICABLE`, `superseded`, `deprecated`, with reason.
+- `not_evaluated[]` — candidates outside the current search scope (R0), with their own `project_id`/`scope`; no outcome assigned.
+- `needs[]` — from `INSUFFICIENT_DATA`; drives "search further or ask one question".
+- `blocked_dependent_decisions[]` — from `CONFLICT`.
+
+`next_action_policy` may gain only **more restrictive or more specific** values: `ASK_OR_SEARCH_MORE` (insufficient data), `STOP_RESOLVE_CONFLICT` (conflict). It never gains a value that permits planning.
+
+**Authority boundaries.** The evaluator can narrow what memory may justify; it can never grant permission. Planning requires, independently: `context_trust_gate` = `AUTHORIZED_FOR_PLANNING` **and** a currentness gate that is not `BLOCKED_CURRENTNESS_UNVERIFIED` **and** autonomy limits. An `APPLICABLE` result changes none of these.
+
+### 13.5 Progressive search and provisional experience
+
+This generalizes the "temporary experience" idea: a wrong or incomplete claim made on the way to an answer is useful evidence, as long as it cannot silently become knowledge.
+
+**13.5.1 Progressive search (target design; not implemented in this patch).** The intended loop will search in stages and stop at the first stage that yields a sufficient result (at least one verified `APPLICABLE` candidate, or a documented exhaustion of all stages). The current implementation performs one lexical-overlap pass and cannot establish permissive applicability.
+- S1: same project, structured match on tool/language/problem fields.
+- S2: same project, lexical expansion (current behavior), then evaluated by 13.3.
+- S3 (other projects, `scope: global` lessons): **deferred; not part of the first implementation.** No `allow_cross_project` flag is implemented. Such candidates are reported as `NOT_EVALUATED_OUT_OF_SCOPE` (R0) and retained unchanged. A later, separate decision must define a mechanism for global applicability.
+Each stage records its query, source hashes and result counts. Widening beyond the project boundary is never silent.
+
+**13.5.2 Provisional ledger.** While working, claims are recorded as provisional entries: `claim`, `origin` (step or candidate), `status: unconfirmed`, `confirmation_needed` (the concrete check that would settle it), `recorded_at`. Wrong or partial claims are recorded too, not only plausible ones.
+- Scope: this run only. It is returned in the loop output; it is **not** written to canonical records and is not retrievable as experience by other tasks (if exposed at all, it is labelled `provisional`).
+- First implementation is read-only. Persisting the ledger needs its own write contract and classification under `audit_write_contracts.py --strict`; this block does not authorize that.
+
+**13.5.3 Resolution.** Each entry is resolved by an independent check with evidence, not by the final answer being accepted:
+- `confirmed` → generates a **promotion proposal** (a candidate lesson record with `created_from_event_ids`, `evidence_refs`, `applicability`, `exceptions`). It enters the existing user-approval path (`semantic_memory_approval`, `decision: approve`, `actor_type: user`). No silent promotion.
+- `refuted` → kept as negative experience (`approach_that_failed` plus the refuting evidence). Never deleted.
+- `unresolved` → not promoted; listed in the handoff as `UNKNOWN` with its `confirmation_needed`.
+
+A correct final claim does **not** confirm the intermediate claims that led to it. If the final claim is a generalization of what was observed, the proposal states the observed scope separately and marks the extra reach `inferred`.
+
+### 13.6 Acceptance scenarios and what the first patch tests
+
+Implemented in `tests/test_applicability_evaluator.py`; integration scenarios run through `run_minimal_agent_loop`.
+
+- **T1 (revised)** (`test_t1_unverified_assertions_do_not_enter_rationale`): user/rule/agent labels plus non-empty basis references remain unverified and cannot enter `usable_as_rationale`; a restrictive mismatch can still exclude a candidate. Unverified positive assertions remain blocked; a separate integration test proves the positive path only with an injected verifier test double, not a production verifier.
+- **T1b**: a `scope: global` lesson is reported in `not_evaluated`, no outcome, source file hash unchanged.
+- **T1c**: `superseded`/`deprecated` excluded (replacement named when another candidate supersedes it, otherwise `UNKNOWN`); `disputed` → `INSUFFICIENT_DATA`; `candidate` capped at `APPLICABLE_WITH_ADAPTATION`; unknown status value → `INSUFFICIENT_DATA`.
+- **T2**: a triggered exception → `NOT_APPLICABLE`, excluded, even with a positive lexical score and otherwise complete judgments.
+- **T3a**: no judgments → `INSUFFICIENT_DATA` with named needs, `next_action_policy: ASK_OR_SEARCH_MORE`.
+- **T3b**: declared incompatibility → both `CONFLICT`, `blocked_dependent_decisions` non-empty, `next_action_policy: STOP_RESOLVE_CONFLICT`.
+- **T4 (revised)**: even when all supplied judgments are permissive, they remain unverified; no lesson enters `usable_as_rationale`, `checkpoint_currentness_gate` stays `BLOCKED_CURRENTNESS_UNVERIFIED`, and untrusted context stays refused. Blocked sources keep `STOP_AND_RECONCILE_SOURCES`.
+- Fail-closed retrieval: invalid lesson JSONL, a lesson without `lesson_id` and a missing lesson file block the pass; malformed `evidence_refs` are flagged, not reinterpreted.
+
+The lesson records in these tests are fixtures. They demonstrate the mechanism; they are not evidence that any real repository lesson, including the existing `scope: global` records, is applicable. **T5 (provisional ledger) is not implemented.**
+
+### 13.7 Unchanged
+
+`context_trust_gate` still decides only trust in restored context. Storage, promotion and index mechanisms, registry contracts and schemas are not extended. No new status values are added to existing records.
+
+### 13.8 Condition for leaving BLOCKED
+
+`UMC-03` changes from `BLOCKED` to `PARTIAL` only when: the evaluator is called from `run_minimal_agent_loop`; T1–T4 pass; and CI is green on the exact commit that contains them. It cannot be `PASS` while the loop has no consumer that actually plans or acts on `usable_as_rationale` and `blocked_dependent_decisions`; until then the matrix row must say so. T5 gates the provisional-ledger part separately and does not affect the T1–T4 condition.
+
+### 13.9 Decisions recorded (owner: user, 2026-10-16)
+
+1. Retrieval searches **both** event logs and lesson-record files, as **separate candidate types** (`candidate_type: event | lesson`); they are not merged. Events carry history (actions, results, errors); lesson records carry trigger/applicability/exceptions. An event without structured conditions stays `INSUFFICIENT_DATA` (R7) and is history, not a rule.
+2. S3 is deferred. The current retrieval function is one lexical-overlap pass, not a completed S1/S2 staged search. The five existing `scope: global` lessons stay as they are and are marked out of scope; this says nothing about their applicability in general.
+3. Tests for the evaluator use project-lesson **fixtures**. Their results are not evidence that any real global lesson is applicable.
+
+### 13.10 Not implemented by the first patch
+
+The provisional-experience ledger (13.5.2) and its scenario T5; distinct structured S1 and fallback S2 retrieval stages; S3 / `allow_cross_project`; a production trusted verifier implementation and its trust configuration; writing any ledger to disk; automatic promotion of lessons; automatic extraction of conditions from free text; any change to record schemas, status vocabularies or registry contracts. If a record's status or scope cannot be determined from existing contracts, the evaluator reports the uncertainty (R13) rather than supplying a meaning.
