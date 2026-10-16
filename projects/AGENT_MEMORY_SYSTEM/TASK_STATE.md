@@ -724,3 +724,12 @@ P2 is not yet declared ready: this test mocks the final verified restore packet,
 - **Найденная проблема процесса:** несколько документов сохраняют статусы до появления поздних инструментов. В этой ветке добавлены superseding status notes в `core/source_ingestion_protocol.md`, `core/memory_write_contracts.md` и обновлена матрица приёмки в `core/unified_memory_control_loop.md`. Исторические выводы не удалялись.
 - **Матрица трассировки создана:** `projects/AGENT_MEMORY_SYSTEM/CAPABILITY_TRACEABILITY_MATRIX_2026-10-16.md`; она связывает требование, спецификацию, код, тесты, CI и остаточный пробел.
 - **Следующий шаг:** реализовать CAP-02/UMC-02 — runtime-контроллер внимания и причинный стек возврата, затем связать его с task-time retrieval. Не менять `main` и не сливать PR без отдельного разрешения.
+
+
+## UMC-02 implementation checkpoint — 2026-10-16
+
+- **Active task:** connect the separate memory tools into a runtime dialogue-attention and causal-return mechanism, then connect it to task-time experience retrieval.
+- **Implementation branch:** `umc02/attention-return-controller-20261016`; draft PR #30: https://github.com/alexbotleh-oss/agent-knowledge-base/pull/30. PR #30 is based on audit branch `audit/agent-memory-e2e-20261016`; PR #29 remains a separate draft audit PR. No changes to `main`.
+- **Added:** `tools/dialogue_attention_controller.py` and `tests/test_dialogue_attention_controller.py`. The controller writes to the canonical AGENT_MEMORY_SYSTEM event log and reconstructs its attention state/return stack from append-only events. It supports lexical turn suggestions, explicit child task/checkpoint context, deferred ideas without task switching, nested LIFO return, replay-safe IDs, and fail-closed handling of corrupt logs/lock conflicts.
+- **Status correction:** UMC-02/CAP-02 is no longer purely BLOCKED; it is **IMPLEMENTED_PARTIAL**. Exact-head CI has not yet been confirmed. Lexical classification is not a trusted semantic classifier; ambiguous input remains unknown. No automatic ChatGPT capture, TASK_STATE/HANDOFF update, or task-time experience retrieval integration is claimed.
+- **Next:** inspect exact-head CI; fix all failures and read back code/tests. Then connect controller restore to staged experience retrieval and return an evidence/provenance-bound experience map. Keep PR #30 draft/unmerged and do not merge PR #29/#30 or change `main` without explicit approval.
