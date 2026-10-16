@@ -299,23 +299,24 @@
     "recorded_at": "2026-10-16",
     "purpose": "Reconcile live PR #30 state with capability matrix and preserve exact validation boundaries.",
     "branch": "umc02/attention-return-controller-20261016",
-    "observed_head": "a12d6f60dac306e58a912c2a25644873c53bb5e7",
-    "observed_head_url": "https://github.com/alexbotleh-oss/agent-knowledge-base/commit/a12d6f60dac306e58a912c2a25644873c53bb5e7",
+    "observed_head": "d16faebbe404e7af5418f239aa8482a2c2383002",
+    "observed_head_url": "https://github.com/alexbotleh-oss/agent-knowledge-base/commit/d16faebbe404e7af5418f239aa8482a2c2383002",
     "changes_after_previous_checkpoint": [
       "Owner acknowledgements now support signed owner_acknowledgement receipts bound to the child result, branch, parent task/checkpoint, decision, and owner reference.",
       "Parent return re-verifies the receipt against an externally pinned keyring; unsigned or tampered acknowledgements do not authorize return.",
       "Only the newest result for a branch can authorize return; a signed acknowledgement for an older result is insufficient.",
-      "The source comment indentation in tools/agent_memory_cycle.py was corrected in a follow-up commit."
+      "The source comment indentation in tools/agent_memory_cycle.py was corrected in a follow-up commit.",
+      "Verified session restore now compares local TASK_STATE.md, HANDOFF.md and events.jsonl Git blob IDs with the selected live GitHub branch before building a restore packet; local drift or unavailable remote source evidence blocks restoration."
     ],
     "validation": {
       "latest_pr_validation_run": {
-        "run_id": 38956581475,
-        "url": "https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38956581475",
+        "run_id": 38957595449,
+        "url": "https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38957595449",
         "conclusion": "success",
-        "tested_checkout": "25a2a5c6f3265b8d78b3641190d8e6eb385e38f4",
-        "tested_checkout_url": "https://github.com/alexbotleh-oss/agent-knowledge-base/commit/25a2a5c6f3265b8d78b3641190d8e6eb385e38f4",
-        "checkout_type": "GitHub pull_request merge ref; merges PR #30 head a12d6f60dac306e58a912c2a25644873c53bb5e7 into base 57aa847f0f0104625d6cb6104111c4ee66a9b0cd",
-        "python_tests": 396,
+        "branch_code_head": "d16faebbe404e7af5418f239aa8482a2c2383002",
+        "tested_checkout": "ed386dd",
+        "tested_checkout_type": "GitHub pull_request merge checkout; includes PR #30 branch code head d16faebbe404e7af5418f239aa8482a2c2383002 merged into base 57aa847f0f0104625d6cb6104111c4ee66a9b0cd",
+        "python_tests": 397,
         "python_skipped": 1,
         "node_tests": 4,
         "node_passed": 4,
@@ -324,19 +325,19 @@
         "memory_validation": "PASS",
         "knowledge_base_validation": "PASS",
         "project_stack_validation": "PARTIAL",
-        "project_stack_notes": "Python unittest discovery ran 396 tests (1 skipped); generic pytest-based stack tests were skipped because pytest is not installed. HTML/PWA/JS lint/test/build were skipped because package/test setup was absent. Validation checkout is the PR merge candidate, not a standalone branch-tip checkout."
+        "project_stack_notes": "Python unittest discovery ran 397 tests (1 skipped); 4 Node tests passed. Generic pytest-based stack tests were skipped because pytest is not installed; HTML/PWA/JS lint/test/build were skipped because package/test setup was absent."
       },
-      "interpretation": "The PR merge candidate including code head a12d6f60 passed the Python unittest suite, Node tests, write audit, memory and knowledge-base validation. Subsequent branch commits before this checkpoint update are documentation-only. Generic stack validation still skipped pytest and HTML/JS build/lint steps. Production trust-root configuration and real archive acceptance remain open."
+      "interpretation": "The tested PR merge checkout includes the source-binding change and both integration test fixtures. Run 38957595449 passed: 397 Python tests (1 skipped), 4 Node tests, write audit 143/0, memory and knowledge-base validation PASS. This is merge-candidate validation, not a standalone branch checkout. Production trust-root configuration and actual archive acceptance remain open."
     },
     "remaining": [
-      "Run/locate full validation on exact latest code/test revision.",
+      "Confirm the verifier's recorded repository_state against the current code head and the workflow run's actual head SHA before claiming live restore is unblocked.",
       "Configure a production trusted owner key and externally pinned keyring; temporary test keys do not prove production identity.",
       "Test the importer against the actual complete archive; synthetic idempotency tests are not real archive acceptance.",
       "Reconcile PR #28 and PR #30 duplicate UMC-03 implementation before any merge."
     ],
     "safety": "PR #30 remains Draft/open/unmerged. Do not merge or change main without explicit user approval.",
-    "last_code_change_head": "a12d6f60dac306e58a912c2a25644873c53bb5e7",
-    "last_code_change_url": "https://github.com/alexbotleh-oss/agent-knowledge-base/commit/a12d6f60dac306e58a912c2a25644873c53bb5e7",
+    "last_code_change_head": "d16faebbe404e7af5418f239aa8482a2c2383002",
+    "last_code_change_url": "https://github.com/alexbotleh-oss/agent-knowledge-base/commit/d16faebbe404e7af5418f239aa8482a2c2383002",
     "metadata_followups_before_this_checkpoint": [
       {
         "head": "d51de43279af989222e170e4dbeb7761c6aa4e27",
