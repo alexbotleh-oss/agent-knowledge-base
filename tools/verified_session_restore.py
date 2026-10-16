@@ -216,13 +216,28 @@ def verify_remote_revision(
             }
         revision_status = "REMOTE_VERIFIED_METADATA_ONLY_AHEAD"
 
+    source_evidence = _verify_local_sources(
+        Path(project_dir), repository, selected_ref, fetch_json=fetch_json
+    )
+    if source_evidence.get("status") != "LOCAL_SOURCES_MATCH_LIVE_BRANCH":
+        return {
+            "status": source_evidence.get("status", "REMOTE_SOURCE_UNAVAILABLE"),
+            "repository": repository, "ref": selected_ref,
+            "live_branch_head": live_sha, "recorded_code_head": recorded_sha,
+            "recorded_ci_run_id": str(run_id), "ci_head_sha": run_sha,
+            "ci_status": run_data.get("status"), "ci_conclusion": run_data.get("conclusion"),
+            "compare_status": compare_status, "changed_paths": changed_paths,
+            "source_evidence": source_evidence, "writes_performed": False,
+        }
+
     return {
         "status": revision_status, "repository": repository, "ref": selected_ref,
         "live_branch_head": live_sha, "recorded_code_head": recorded_sha,
         "recorded_ci_run_id": str(run_id), "ci_head_sha": run_sha,
         "ci_status": run_data.get("status"), "ci_conclusion": run_data.get("conclusion"),
         "compare_status": compare_status, "changed_paths": changed_paths,
-        "unexpected_changed_paths": [], "writes_performed": False,
+        "unexpected_changed_paths": [], "source_evidence": source_evidence,
+        "writes_performed": False,
     }
 
 
@@ -240,9 +255,10 @@ def build_verified_session_packet(
             },
             "writes_performed": False,
         }
-    if remote["status"] == "CODE_REVISION_DRIFT":
+    if remote["status"] not in {"REMOTE_VERIFIED_EXACT_CODE_HEAD", "REMOTE_VERIFIED_METADATA_ONLY_AHEAD"}:
         return {
-            "status": "REVISION_CHECK_BLOCKED", "reason": remote["reason"],
+            "status": "REVISION_CHECK_BLOCKED",
+            "reason": remote.get("reason", f"Remote revision/source verification blocked: {remote['status']}"),
             "repository_revision_evidence": remote, "writes_performed": False,
         }
 
