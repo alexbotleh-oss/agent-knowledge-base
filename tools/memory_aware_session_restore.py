@@ -85,9 +85,10 @@ def retrieve_approved_memory(project_id:str,*,task_id:str|None=None,context_id:s
             "lifecycle_status":row["lifecycle_status"],"record_lifecycle_status":rec.get("lifecycle_status","unknown"),
             "evidence_status":rec.get("evidence_status","unknown"),
             "confidence":rec.get("confidence",rec.get("classification",{}).get("confidence") if isinstance(rec.get("classification"),dict) else None),
-            "provenance":rec.get("provenance",[]),"relations":rec.get("relations",[]),"record":rec,
+            "provenance":rec.get("provenance",[]),"relations":ref.get("relations",rec.get("relations",[])),"applied_correction_ids":ref.get("applied_correction_ids",[]),"record":rec,
         })
-        for relation in rec.get("relations",[]) if isinstance(rec.get("relations"),list) else []:
+        effective_relations=ref.get("relations",rec.get("relations",[]))
+        for relation in effective_relations if isinstance(effective_relations,list) else []:
             if isinstance(relation,dict) and relation.get("type")=="contradicts":
                 contradictions.append({"memory_id":row["memory_id"],"revision_id":row["revision_id"],"relation":relation})
     correction=generation.get("coverage",{}).get("correction_overlay_status","unknown")
