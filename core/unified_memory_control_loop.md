@@ -283,3 +283,17 @@ This status table is based on direct inspection of the implementation and tests 
 ### Acceptance boundary
 
 The currently verified chain ends at **metadata-only source registration**. It does not end at accepted semantic memory, refreshed derived indexes, or a verified next-session restore. Keep these stages separate until an executable orchestration and crash-injection tests demonstrate the full chain. Preserve raw source provenance and existing project boundaries throughout.
+
+
+## Implementation status update — 2026-10-16
+
+This section supersedes the stage-status conclusions in the 2026-10-15 audit above; that earlier table remains as a historical snapshot.
+
+| Stage | Current evidence | Current status and boundary |
+|---|---|---|
+| Semantic candidate promotion | `tools/semantic_memory_registry.py`, `schemas/semantic_memory_approval.schema.json`, `tests/test_semantic_memory_registry.py`; exact-head CI [38851184392](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38851184392) passed. | Implemented as a separate approval-bound append-only writer. Receipt hashes bind the exact manifest/artifact, but do not authenticate the receipt author. No production batch was promoted during implementation. |
+| Canonical multidimensional index | `tools/canonical_memory_index.py`, `tests/test_canonical_memory_index.py`; exact-head CI [38851553475](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38851553475) passed for the index implementation before the additional lifecycle regression test. | Deterministic immutable generation plus atomic `CURRENT.json` pointer and freshness checker implemented. The index retains all revisions and derives views without duplicate canonical records. Coverage is deliberately `PARTIAL`: no canonical correction-overlay source/contract exists in this revision, and the index reports that explicitly. |
+| Normal session restore from semantic memory | `tools/restore_session_packet.py` and `tools/verified_session_restore.py` | Still open. Current restore composes task/handoff/events and code/CI revision evidence; it does not yet load accepted memory records or validate canonical memory-index coverage/freshness as part of the restore packet. |
+| End-to-end orchestration/recovery | Source ingestion, promotion, and index refresh remain separate commands. | Still open. Need a durable stage ledger that reconciles registry commit, index publication, and fresh-session restore after interruption. Do not claim the full pipeline is complete. |
+
+The canonical index uses the shared source-registry advisory lock while reading and publishing, and the index lock while publishing. A failed pointer replacement preserves the prior pointer; a newly written but unreferenced generation may remain safely orphaned. The next stage is restore integration with explicit `CURRENT_PARTIAL|STALE|INVALID|UNAVAILABLE` handling, not an assertion that a successful index build means full coverage.
