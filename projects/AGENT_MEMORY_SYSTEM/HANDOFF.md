@@ -888,3 +888,17 @@ A code-path audit found a continuity-integrity gap: `verified_session_restore.py
 The continuity checkpoint now records code head `27004c4ae60e7086dc07d851817284e41c980fec` and run 38957806991. Subsequent metadata-only descendants must still pass the live compare allowlist, and the local source files must match the live branch blobs before restore is accepted.
 
 **Remaining:** validate the live restore entry point against the updated branch; configure a production trust root; test the real complete archive; reconcile UMC-03 overlap between PR #28 and #30. PR #30 remains Draft/open/unmerged; `main` is unchanged.
+
+
+## UMC-03 overlap audit — preserve the newer safeguards (2026-10-16)
+
+A direct source comparison of PR #28 (`b6d32a3c36aa5df8079f63aad20fd41a8f56c512`) and PR #30 found:
+
+- `tools/applicability_evaluator.py` and `tests/test_applicability_evaluator.py` are byte-identical across both branches.
+- PR #30's `tools/minimal_agent_loop.py` adds environment-based verifier construction via `make_applicability_verifier_from_env`; the matching test checks that the configured factory is used. PR #28's copy does not include this integration.
+- PR #30's `tools/decision_frontier.py` and its tests add duplicate-candidate identity handling: preserve every source occurrence, classify ambiguous duplicate IDs as HOLD, and require explicit resolution before a direction can be used. PR #28's implementation collapses candidates through a dictionary comprehension, silently overwriting duplicate keys and losing source provenance.
+- PR #30's frontier/loop test files contain the corresponding extra regression coverage.
+
+**Consolidation guidance:** treat PR #30's duplicate-source safeguard and environment-verifier integration as necessary deltas to preserve. The identical evaluator files need one canonical implementation after branch history is reconciled; do not blindly cherry-pick the whole file set or delete PR #28 history. This is a source-level comparison, not a merge or an integration test of the combined branch.
+
+PR #28 and PR #30 remain Draft/open/unmerged. No merge or change to `main` is authorized.
