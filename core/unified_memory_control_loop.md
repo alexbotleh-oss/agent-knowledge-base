@@ -311,3 +311,16 @@ This status supersedes the earlier statement that no semantic-memory restore con
 | Live production acceptance / full pipeline crash recovery | Current tests use synthetic registry envelopes and mocked remote API for the base restore. No production registry/archive was run through ingestion → approval → promotion → index → restore as one transaction. | Still open. Do not claim end-to-end production acceptance or a complete index while correction overlays remain unavailable. |
 
 Restore statuses distinguish task/event recovery from semantic-memory coverage. A stale or missing index is not interpreted as an empty memory store; an empty search in the current partial index does not prove that no relevant memory exists. The wrapper does not auto-refresh an index or mutate canonical records.
+
+
+## Implementation status update — 2026-10-16, correction overlays
+
+This section supersedes the earlier statement that no correction-overlay contract existed.
+
+- Added `schemas/edge_correction.schema.json` and `schemas/edge_correction_approval.schema.json`, plus `tools/edge_correction_registry.py` for guarded append-only correction registration. Accepted corrections require a separate receipt bound to the exact correction input; candidate/rejected/disputed/superseded entries are preserved but not applied.
+- `tools/canonical_memory_index.py` now validates the correction registry and applies accepted `add|retract|replace` operations to derived relation views only. It does not mutate source MemoryRecords. Relation targets use canonical relation fingerprints, not list positions.
+- The correction-registry hash is part of generation identity and freshness. If either canonical records or corrections change, the index becomes stale until rebuilt.
+- The source tree has a correction contract/writer now, but no production `registry/edge_corrections.jsonl` has been populated. Until approved correction data exists and archive/source coverage is proven, the index remains PARTIAL. The receipt hash does not cryptographically authenticate its author.
+- Tests use synthetic source records and corrections. They do not establish that any real project memory is fully reconciled or that all source archives were imported.
+
+Next: validate the exact integrated code HEAD, then add a durable pipeline coordinator that reconciles ingestion, explicit approval, semantic promotion, correction registration, index publication and fresh-session restore after crashes/replays.
