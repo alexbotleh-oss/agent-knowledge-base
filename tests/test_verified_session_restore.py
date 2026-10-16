@@ -9,6 +9,11 @@ sys.path.insert(0, str(ROOT / "tools"))
 from verified_session_restore import RemoteEvidenceError, build_verified_session_packet, verify_remote_revision
 
 REPO = "example/memory"
+
+
+def git_blob_sha(raw: bytes) -> str:
+    header = b"blob " + str(len(raw)).encode("ascii") + bytes([0])
+    return hashlib.sha1(header + raw).hexdigest()
 RECORDED = "a" * 40
 LIVE = "b" * 40
 RUN_ID = 12345
@@ -41,7 +46,17 @@ class VerifiedSessionRestoreTests(unittest.TestCase):
             encoding="utf-8",
         )
         self.base_url = f"https://api.github.com/repos/{REPO}"
+        contents_prefix = f"{self.base_url}/contents"
         self.responses = {
+            f"{contents_prefix}/projects/AGENT_MEMORY_SYSTEM/TASK_STATE.md?ref={BRANCH_API}": {
+                "sha": git_blob_sha((self.project / "TASK_STATE.md").read_bytes())
+            },
+            f"{contents_prefix}/projects/AGENT_MEMORY_SYSTEM/HANDOFF.md?ref={BRANCH_API}": {
+                "sha": git_blob_sha((self.project / "HANDOFF.md").read_bytes())
+            },
+            f"{contents_prefix}/projects/AGENT_MEMORY_SYSTEM/events.jsonl?ref={BRANCH_API}": {
+                "sha": git_blob_sha((self.project / "events.jsonl").read_bytes())
+            },
             f"{self.base_url}/branches/{BRANCH_API}": {"commit": {"sha": LIVE}},
             f"{self.base_url}/actions/runs/{RUN_ID}": {
                 "head_sha": RECORDED, "status": "completed", "conclusion": "success"
@@ -73,6 +88,24 @@ class VerifiedSessionRestoreTests(unittest.TestCase):
         self.assertEqual(packet["repository_revision_evidence"]["status"], "OBSERVED_CODE_AND_CI_MATCH")
         self.assertEqual(packet["repository_revision_evidence"]["live_branch_head"], LIVE)
         self.assertEqual(packet["remote_repository_evidence"]["status"], "REMOTE_VERIFIED_METADATA_ONLY_AHEAD")
+        self.assertFalse(packet["writes_performed"])
+
+    def test_local_source_drift_blocks_restore(self):
+        self.responses[f"{self.base_url}/contents/projects/AGENT_MEMORY_SYSTEM/TASK_STATE.md?ref={BRANCH_API}"]["sha"] = git_blob_sha(
+            (self.project / "TASK_STATE.md").read_bytes()
+        )
+        (self.project / "TASK_STATE.md").write_text("# Stale local state\\n", encoding="utf-8")
+        evidence = verify_remote_revision(self.project, REPO, fetch_json=self.fake_fetch)
+        self.assertEqual(evidence["status"], "LOCAL_SOURCE_DRIFT")
+        self.assertEqual(
+            evidence["source_evidence"]["mismatches"][0]["path"],
+            "projects/AGENT_MEMORY_SYSTEM/TASK_STATE.md",
+        )
+        packet = build_verified_session_packet(
+            self.project / "TASK_STATE.md", self.project / "HANDOFF.md",
+            self.project / "events.jsonl", REPO, fetch_json=self.fake_fetch,
+        )
+        self.assertEqual(packet["status"], "REVISION_CHECK_BLOCKED")
         self.assertFalse(packet["writes_performed"])
 
     def test_exact_code_head_is_verified(self):
