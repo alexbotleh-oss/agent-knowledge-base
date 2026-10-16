@@ -294,5 +294,36 @@
       "unresolved": "Run against actual archive bytes and verify before/after counts, source hashes, and that no existing logical records were duplicated.",
       "condition_to_return": "After the real archive input has been tested, return to the guarded-return/trust-boundary task; keep PR #30 draft and main unchanged."
     }
-  ]
+  ],
+  "current_follow_up": {
+    "recorded_at": "2026-10-16",
+    "purpose": "Reconcile live PR #30 state with capability matrix and preserve exact validation boundaries.",
+    "branch": "umc02/attention-return-controller-20261016",
+    "observed_head": "c7b61b987501516c829473789c91156351645b2f",
+    "observed_head_url": "https://github.com/alexbotleh-oss/agent-knowledge-base/commit/c7b61b987501516c829473789c91156351645b2f",
+    "changes_after_previous_checkpoint": [
+      "Owner acknowledgements now support signed owner_acknowledgement receipts bound to the child result, branch, parent task/checkpoint, decision, and owner reference.",
+      "Parent return re-verifies the receipt against an externally pinned keyring; unsigned or tampered acknowledgements do not authorize return.",
+      "Only the newest result for a branch can authorize return; a signed acknowledgement for an older result is insufficient.",
+      "The source comment indentation in tools/agent_memory_cycle.py was corrected in a follow-up commit."
+    ],
+    "validation": {
+      "latest_full_ci_for_observed_head": "NOT_FOUND_IN_AVAILABLE_WORKFLOW_LOOKUP",
+      "last_recorded_exact_code_ci": {
+        "head": "4a257c059c1b716145e0f6311f9f7a6b8095db9f",
+        "run_id": 38907787412,
+        "conclusion": "success",
+        "python_tests": 388,
+        "python_skipped": 1
+      },
+      "interpretation": "The recorded CI validates its exact historical code head, not the observed latest branch head. Do not claim the newest code changes passed full CI until a run on the exact latest code/test revision is found or executed."
+    },
+    "remaining": [
+      "Run/locate full validation on exact latest code/test revision.",
+      "Configure a production trusted owner key and externally pinned keyring; temporary test keys do not prove production identity.",
+      "Test the importer against the actual complete archive; synthetic idempotency tests are not real archive acceptance.",
+      "Reconcile PR #28 and PR #30 duplicate UMC-03 implementation before any merge."
+    ],
+    "safety": "PR #30 remains Draft/open/unmerged. Do not merge or change main without explicit user approval."
+  }
 }
