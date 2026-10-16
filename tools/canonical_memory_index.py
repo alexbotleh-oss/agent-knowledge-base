@@ -17,6 +17,7 @@ DIMENSIONS = {
     "by_record_type": ("record_type",),
     "by_topic": ("tags",),
     "by_evidence_status": ("evidence_status",),
+    "by_record_lifecycle_status": ("lifecycle_status",),
     "by_sign": ("sign",),
     "by_decision_status": ("decision_status",),
     "by_incident": ("incident_ids", "incident_id"),
@@ -73,6 +74,7 @@ def _validate_registry(rows: list[dict]) -> list[dict]:
         if row.get("registry_schema_version") != "semantic-memory-registry-v1": raise ValueError(f"registry line {n} has unsupported schema")
         rec = row.get("record")
         if not isinstance(rec, dict) or _sha(_canonical(rec)) != row.get("record_sha256"): raise ValueError(f"registry line {n} record hash mismatch")
+        if not isinstance(rec.get("provenance"), list) or not rec["provenance"]: raise ValueError(f"registry line {n} lacks required provenance")
         mid, rid = row.get("memory_id"), row.get("revision_id")
         if not isinstance(mid, str) or not mid or not isinstance(rid, str) or not rid: raise ValueError(f"registry line {n} has invalid memory/revision identity")
         if rec.get("memory_id") != mid or not isinstance(rec.get("revision"), dict) or rec["revision"].get("revision_id") != rid:
@@ -109,6 +111,7 @@ def build_index_payload(registry_bytes: bytes) -> dict:
             "memory_id": row["memory_id"], "revision_id": row["revision_id"],
             "record_sha256": row["record_sha256"], "registry_position": position,
             "current_revision": current, "lifecycle_status": row["lifecycle_status"],
+            "record_lifecycle_status": rec.get("lifecycle_status", "unknown"),
             "evidence_status": rec.get("evidence_status", "unknown"),
             "project_ids": _values(rec, ("project_ids", "project_id")),
             "task_ids": _values(rec, ("task_ids", "task_id")),
@@ -160,6 +163,8 @@ def _target_error(registry_path: Path, index_root: Path):
             return f"repository paths are restricted to {allowed.relative_to(ROOT)}"
     if DEFAULT_REGISTRY.is_symlink() or DEFAULT_REGISTRY.parent.is_symlink() or DEFAULT_INDEX_ROOT.is_symlink():
         return "canonical registry/index path cannot be a symlink"
+    if DEFAULT_INDEX_ROOT.exists() and ((DEFAULT_INDEX_ROOT / "generations").is_symlink() or (DEFAULT_INDEX_ROOT / "CURRENT.json").is_symlink()):
+        return "canonical index generations/CURRENT pointer cannot be a symlink"
     return None
 
 @contextlib.contextmanager
