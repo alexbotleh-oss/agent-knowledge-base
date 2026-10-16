@@ -866,3 +866,12 @@ The source comment indentation in `tools/agent_memory_cycle.py` is now corrected
 **Validation boundary:** the last recorded full code CI remains historical: code HEAD `4a257c059c1b716145e0f6311f9f7a6b8095db9f`, run [38907787412](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38907787412), 388 Python tests (1 skipped), write audit 143/0, memory/project validation PASS. Available workflow lookup did not establish a full run on the latest code/test head after the signed-owner-ack and stale-ack changes. Do not represent that older CI as validation of the latest code.
 
 **Remaining:** obtain exact-head full CI; configure a production trusted owner key and pinned keyring; test idempotent import against the actual complete archive; reconcile duplicate UMC-03 source history between PR #28 and PR #30. PR #30 remains Draft/open/unmerged. Do not merge or change `main` without explicit user approval.
+
+
+## Validation update — PR #30 merge candidate (2026-10-16)
+
+A follow-up read of workflow job logs found that run [38956581475](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38956581475) completed successfully on pull-request merge checkout `25a2a5c6f3265b8d78b3641190d8e6eb385e38f4`, which merges PR #30 head `a12d6f60dac306e58a912c2a25644873c53bb5e7` into base `57aa847f0f0104625d6cb6104111c4ee66a9b0cd`. The job ran `python -m unittest discover`: **396 tests, 1 skipped**; Node SDK tests: **4 passed**; strict write audit: **143 mutation sites, 0 unclassified**; memory and knowledge-base validation passed.
+
+Scope qualification: this validates the PR merge candidate including the current branch head, not a standalone checkout of the branch tip. Generic stack validation still skipped pytest-based tests because pytest was not installed, and HTML/PWA/JS lint/test/build checks were skipped because the repository has no package/test setup for those stacks. Do not describe those skipped checks as passed.
+
+The continuity checkpoint has been updated with the exact merge checkout, run URL, counts and scope. Production trusted owner key/keyring and real complete archive import remain open; PR #30 remains Draft/open/unmerged.
