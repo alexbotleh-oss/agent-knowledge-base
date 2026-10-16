@@ -307,7 +307,8 @@
       "Parent return re-verifies the receipt against an externally pinned keyring; unsigned or tampered acknowledgements do not authorize return.",
       "Only the newest result for a branch can authorize return; a signed acknowledgement for an older result is insufficient.",
       "The source comment indentation in tools/agent_memory_cycle.py was corrected in a follow-up commit.",
-      "Verified session restore now compares local TASK_STATE.md, HANDOFF.md and events.jsonl Git blob IDs with the selected live GitHub branch before building a restore packet; local drift or unavailable remote source evidence blocks restoration."
+      "Verified session restore now compares local TASK_STATE.md, HANDOFF.md and events.jsonl Git blob IDs with the selected live GitHub branch before building a restore packet; local drift or unavailable remote source evidence blocks restoration.",
+      "Compared PR #28 and PR #30 UMC-03 sources: evaluator and evaluator tests are byte-identical; PR #30 adds environment verifier wiring and duplicate-candidate provenance preservation/HOLD behavior absent from PR #28."
     ],
     "validation": {
       "latest_pr_validation_run": {
@@ -331,10 +332,10 @@
       "interpretation": "The tested PR merge checkout includes the live-source-binding code, source-drift regression, pipeline fixture updates, and the traceability-matrix metadata allowlist. The verifier now has a recorded successful code/test revision. A later restore is accepted only when live branch changes are restricted to allowlisted non-code state and local TASK_STATE/HANDOFF/events.jsonl blob IDs match the selected live branch. Production trust-root configuration and real archive acceptance remain open."
     },
     "remaining": [
-      "Validate the live restore entry point against the current branch after the checkpoint and handoff metadata updates, ensuring the branch delta is accepted only as allowlisted metadata and local source blob IDs match.",
+      "Validate live restore against current branch metadata and real local source bytes; the regression tests pass, but no actual local restore invocation was run in this connector session.",
       "Configure a production trusted owner key and externally pinned keyring; temporary test keys do not prove production identity.",
       "Test the importer against the actual complete archive; synthetic idempotency tests are not real archive acceptance.",
-      "Reconcile PR #28 and PR #30 duplicate UMC-03 implementation before any merge."
+      "Reconcile duplicate UMC-03 implementation history, retaining PR #30 verifier wiring and duplicate-candidate safeguards, before any merge."
     ],
     "safety": "PR #30 remains Draft/open/unmerged. Do not merge or change main without explicit user approval.",
     "last_code_change_head": "27004c4ae60e7086dc07d851817284e41c980fec",
