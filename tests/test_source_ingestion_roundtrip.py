@@ -120,6 +120,41 @@ class SourceIngestionRoundtripTests(unittest.TestCase):
             self.assertEqual(row["batch_id"], first["batch_id"])
             self.assertTrue(row["registered_at"])
 
+    def test_partial_registry_replay_skips_existing_and_appends_only_missing_records(self):
+        manifest_path, _ = self._stage_and_adapt("synthetic source message")
+        first = append_source_records(manifest_path, self.registry, apply=True)
+        self.assertEqual(first["status"], "APPENDED")
+        self.assertEqual(first["added_count"], 2)
+
+        # Simulate a partial prior archive write: one valid record survived,
+        # while the second record from this same immutable source batch is absent.
+        original_rows = [
+            json.loads(line)
+            for line in self.registry.read_text(encoding="utf-8").splitlines()
+        ]
+        self.assertEqual(len(original_rows), 2)
+        retained = original_rows[0]
+        self.registry.write_text(
+            json.dumps(retained, ensure_ascii=False, sort_keys=True) + "\\n",
+            encoding="utf-8",
+        )
+        before = self.registry.read_bytes()
+
+        replay = append_source_records(manifest_path, self.registry, apply=True)
+
+        self.assertEqual(replay["status"], "APPENDED")
+        self.assertEqual(replay["already_present"], 1)
+        self.assertEqual(replay["added_count"], 1)
+        rows = [
+            json.loads(line)
+            for line in self.registry.read_text(encoding="utf-8").splitlines()
+        ]
+        self.assertEqual(len(rows), 2)
+        self.assertEqual(rows[0], retained)
+        self.assertEqual({row["source_record_id"] for row in rows},
+                         {row["source_record_id"] for row in original_rows})
+        self.assertNotEqual(self.registry.read_bytes(), before)
+
     def test_new_source_snapshot_is_appended_as_a_revision_not_an_overwrite(self):
         first_manifest, first_stage = self._stage_and_adapt("first version of the source message")
         first = append_source_records(first_manifest, self.registry, apply=True)
