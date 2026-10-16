@@ -13,6 +13,7 @@ RECORDED = "a" * 40
 LIVE = "b" * 40
 RUN_ID = 12345
 BRANCH = "integration/test"
+BRANCH_API = "integration%2Ftest"
 
 
 class VerifiedSessionRestoreTests(unittest.TestCase):
@@ -41,7 +42,7 @@ class VerifiedSessionRestoreTests(unittest.TestCase):
         )
         self.base_url = f"https://api.github.com/repos/{REPO}"
         self.responses = {
-            f"{self.base_url}/branches/{BRANCH}": {"commit": {"sha": LIVE}},
+            f"{self.base_url}/branches/{BRANCH_API}": {"commit": {"sha": LIVE}},
             f"{self.base_url}/actions/runs/{RUN_ID}": {
                 "head_sha": RECORDED, "status": "completed", "conclusion": "success"
             },
@@ -75,7 +76,7 @@ class VerifiedSessionRestoreTests(unittest.TestCase):
         self.assertFalse(packet["writes_performed"])
 
     def test_exact_code_head_is_verified(self):
-        self.responses[f"{self.base_url}/branches/{BRANCH}"] = {"commit": {"sha": RECORDED}}
+        self.responses[f"{self.base_url}/branches/{BRANCH_API}"] = {"commit": {"sha": RECORDED}}
         self.responses[f"{self.base_url}/compare/{RECORDED}...{RECORDED}"] = {
             "status": "identical", "merge_base_commit": {"sha": RECORDED}, "files": []
         }
