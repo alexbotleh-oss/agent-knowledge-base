@@ -73,7 +73,7 @@ class RealSourceIngestionIntegrationTests(unittest.TestCase):
                 "manifest_sha256":hashlib.sha256(manifest_bytes).hexdigest(),
                 "artifact_sha256":hashlib.sha256(record_bytes).hexdigest(),"decision_source_ref":"fixture:approval",
                 "rationale":"Synthetic integration test only"}))
-            project=root/"project"; project.mkdir()
+            project=root/"AGENT_MEMORY_SYSTEM"; project.mkdir()
             task=project/"TASK_STATE.md"; task.write_text("test",encoding="utf-8")
             handoff=project/"HANDOFF.md"; handoff.write_text("test",encoding="utf-8")
             events=project/"events.jsonl"; events.write_text("",encoding="utf-8")
@@ -94,10 +94,17 @@ class RealSourceIngestionIntegrationTests(unittest.TestCase):
             self.assertEqual(result["stages"]["provenance_validation"],"RESOLVED")
             self.assertEqual(result["stages"]["semantic_promotion"],"PROMOTED")
             self.assertEqual(result["stages"]["canonical_index"],"BUILT_PARTIAL")
-            self.assertEqual(result["stages"]["session_restore"],"RESTORED_PACKET_WITH_PARTIAL_MEMORY_NO_MATCH")
-            self.assertEqual(result["restore"]["semantic_memory_status"],"PARTIAL_NO_MATCH")
+            self.assertEqual(result["stages"]["session_restore"],"RESTORED_PACKET_WITH_PARTIAL_MEMORY")
+            self.assertEqual(result["restore"]["semantic_memory_status"],"PARTIAL")
             self.assertEqual(result["restore"]["repository_revision_evidence"]["status"],"OBSERVED_CODE_AND_CI_MATCH")
-            self.assertEqual(result["restore"]["returned_count"],0)
+            self.assertEqual(result["restore"]["returned_count"],1)
+            from memory_aware_session_restore import retrieve_approved_memory
+            retrieved=retrieve_approved_memory("AGENT_MEMORY_SYSTEM",task_id="TASK-REAL",context_id="CTX-REAL",
+                query="Record tied to the real source-ingestion runner",registry_path=memory_registry,index_root=index_root)
+            self.assertEqual(retrieved["returned_count"],1,retrieved)
+            self.assertEqual(retrieved["records"][0]["memory_id"],"MEM-REAL-INGEST-1")
+            self.assertEqual(retrieved["records"][0]["revision_id"],"REV-REAL-1")
+            self.assertTrue(retrieved["records"][0]["provenance"])
             rows=source_registry.read_text(encoding="utf-8").splitlines()
             self.assertEqual(len(rows),1)
             self.assertEqual(json.loads(rows[0])["source_record_id"],source["source_record_id"])
