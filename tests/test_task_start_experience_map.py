@@ -290,6 +290,18 @@ class TaskStartExperienceMapTests(unittest.TestCase):
             recorded_by="synthetic-test-run",
         )
         self.assertEqual(recorded["status"], "RECORDED")
+        # Irrelevant checkpoint metadata and unrelated events should not invalidate
+        # a check whose semantic context, candidate records and check spec are unchanged.
+        self.handoff.write_text(
+            self.handoff.read_text(encoding="utf-8") + "\nUnrelated checkpoint note changed.\n",
+            encoding="utf-8",
+        )
+        self._write(self.events, [
+            {"event_id": "EVT-CURRENT-1", "project_id": "TEST", "type": "checkpoint",
+             "summary": "Current task checkpoint for cache recovery", "status": "verified"},
+            {"event_id": "EVT-UNRELATED-1", "project_id": "TEST", "type": "note",
+             "summary": "Unrelated formatting check completed", "status": "observed"},
+        ])
         replay = build_task_start_experience_map(
             self.task, self.handoff, self.events, "cache recovery index pointer",
             experience_logs=[self.experience], attention_log=self.attention,
