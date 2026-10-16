@@ -194,17 +194,18 @@
   "status": "UMC02_UMC03_STAGED_TASK_START_CONNECTED_PARTIAL_EXACT_HEAD_CI_PASS_PRODUCTION_TRUST_AND_RUNTIME_GAPS_OPEN",
   "checkpoint_semantics": "This is a durable task checkpoint committed to the integration branch. It is not an automatic ChatGPT autosave or proof that an undelivered response was saved.",
   "repository_state": {
-    "last_verified_code_head": "4a257c059c1b716145e0f6311f9f7a6b8095db9f",
-    "exact_head_ci_run_id": 38907787412,
-    "exact_head_ci_url": "https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38907787412",
+    "last_verified_code_head": "27004c4ae60e7086dc07d851817284e41c980fec",
+    "exact_head_ci_run_id": 38957806991,
+    "exact_head_ci_url": "https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38957806991",
     "exact_head_ci_conclusion": "success",
-    "python_tests": 388,
+    "python_tests": 397,
     "python_skipped": 1,
+    "node_tests": 4,
     "write_audit_mutation_sites": 143,
     "write_audit_unclassified": 0,
     "memory_validation": "PASS",
-    "project_validation": "PASS",
-    "note": "Exact code/test evidence applies to 4a257c059c1b716145e0f6311f9f7a6b8095db9f. A following metadata/checkpoint commit changes docs and state only. PR #30 remains Draft/open/unmerged; PRs #28 and #29 remain separate draft/unmerged; main unchanged."
+    "project_validation": "PASS_WITH_STACK_CHECKS_SKIPPED",
+    "note": "Workflow run completed successfully for PR code head 27004c4ae60e7086dc07d851817284e41c980fec; GitHub Actions checked out merge candidate 46483fd, which includes that code head. Python unittest: 397 passed, 1 skipped; 4 Node tests passed; write audit 143/0; memory and knowledge-base validation PASS. Generic pytest and HTML/PWA/JS stack checks were skipped because pytest/package test setup was absent. This run is the recorded validation for the code revision; branch descendants are acceptable only if verified_session_restore confirms all changed paths are on the explicit metadata-only allowlist and local restore sources match live branch blob IDs."
   },
   "historical_repository_state": {
     "last_verified_code_head": "e30450a5ed516ab1f76f65c3c7874cdd2b951c40",
@@ -299,8 +300,8 @@
     "recorded_at": "2026-10-16",
     "purpose": "Reconcile live PR #30 state with capability matrix and preserve exact validation boundaries.",
     "branch": "umc02/attention-return-controller-20261016",
-    "observed_head": "d16faebbe404e7af5418f239aa8482a2c2383002",
-    "observed_head_url": "https://github.com/alexbotleh-oss/agent-knowledge-base/commit/d16faebbe404e7af5418f239aa8482a2c2383002",
+    "observed_head": "27004c4ae60e7086dc07d851817284e41c980fec",
+    "observed_head_url": "https://github.com/alexbotleh-oss/agent-knowledge-base/commit/27004c4ae60e7086dc07d851817284e41c980fec",
     "changes_after_previous_checkpoint": [
       "Owner acknowledgements now support signed owner_acknowledgement receipts bound to the child result, branch, parent task/checkpoint, decision, and owner reference.",
       "Parent return re-verifies the receipt against an externally pinned keyring; unsigned or tampered acknowledgements do not authorize return.",
@@ -310,12 +311,12 @@
     ],
     "validation": {
       "latest_pr_validation_run": {
-        "run_id": 38957595449,
-        "url": "https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38957595449",
+        "run_id": 38957806991,
+        "url": "https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38957806991",
         "conclusion": "success",
-        "branch_code_head": "d16faebbe404e7af5418f239aa8482a2c2383002",
-        "tested_checkout": "ed386dd",
-        "tested_checkout_type": "GitHub pull_request merge checkout; includes PR #30 branch code head d16faebbe404e7af5418f239aa8482a2c2383002 merged into base 57aa847f0f0104625d6cb6104111c4ee66a9b0cd",
+        "branch_code_head": "27004c4ae60e7086dc07d851817284e41c980fec",
+        "tested_checkout": "46483fd",
+        "tested_checkout_type": "GitHub pull_request merge checkout; includes PR #30 code head 27004c4ae60e7086dc07d851817284e41c980fec merged into base 57aa847f0f0104625d6cb6104111c4ee66a9b0cd",
         "python_tests": 397,
         "python_skipped": 1,
         "node_tests": 4,
@@ -327,17 +328,17 @@
         "project_stack_validation": "PARTIAL",
         "project_stack_notes": "Python unittest discovery ran 397 tests (1 skipped); 4 Node tests passed. Generic pytest-based stack tests were skipped because pytest is not installed; HTML/PWA/JS lint/test/build were skipped because package/test setup was absent."
       },
-      "interpretation": "The tested PR merge checkout includes the source-binding change and both integration test fixtures. Run 38957595449 passed: 397 Python tests (1 skipped), 4 Node tests, write audit 143/0, memory and knowledge-base validation PASS. This is merge-candidate validation, not a standalone branch checkout. Production trust-root configuration and actual archive acceptance remain open."
+      "interpretation": "The tested PR merge checkout includes the live-source-binding code, source-drift regression, pipeline fixture updates, and the traceability-matrix metadata allowlist. The verifier now has a recorded successful code/test revision. A later restore is accepted only when live branch changes are restricted to allowlisted non-code state and local TASK_STATE/HANDOFF/events.jsonl blob IDs match the selected live branch. Production trust-root configuration and real archive acceptance remain open."
     },
     "remaining": [
-      "Confirm the verifier's recorded repository_state against the current code head and the workflow run's actual head SHA before claiming live restore is unblocked.",
+      "Validate the live restore entry point against the current branch after the checkpoint and handoff metadata updates, ensuring the branch delta is accepted only as allowlisted metadata and local source blob IDs match.",
       "Configure a production trusted owner key and externally pinned keyring; temporary test keys do not prove production identity.",
       "Test the importer against the actual complete archive; synthetic idempotency tests are not real archive acceptance.",
       "Reconcile PR #28 and PR #30 duplicate UMC-03 implementation before any merge."
     ],
     "safety": "PR #30 remains Draft/open/unmerged. Do not merge or change main without explicit user approval.",
-    "last_code_change_head": "d16faebbe404e7af5418f239aa8482a2c2383002",
-    "last_code_change_url": "https://github.com/alexbotleh-oss/agent-knowledge-base/commit/d16faebbe404e7af5418f239aa8482a2c2383002",
+    "last_code_change_head": "27004c4ae60e7086dc07d851817284e41c980fec",
+    "last_code_change_url": "https://github.com/alexbotleh-oss/agent-knowledge-base/commit/27004c4ae60e7086dc07d851817284e41c980fec",
     "metadata_followups_before_this_checkpoint": [
       {
         "head": "d51de43279af989222e170e4dbeb7761c6aa4e27",
