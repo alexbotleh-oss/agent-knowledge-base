@@ -163,3 +163,16 @@ The entry point independently queries the GitHub branch, compares the live branc
 The existing `repository_revision_evidence` remains the code-SHA/CI pair comparison; `remote_repository_evidence` reports the independently observed branch tip and code-vs-metadata comparison. A metadata-only descendant is not mislabeled as the code SHA, and a successful old CI run is never attached to a newer code revision. The command is read-only and returns a non-zero exit code unless the source-backed restore packet and remote revision verification both succeed.
 
 This validates the repository branch and recorded code/CI pair at invocation time; it does not prove that every chat message was captured, that the branch is the user's intended project branch, or that downstream semantic-memory promotion/index refresh is implemented.
+
+
+## Semantic-memory-aware session restore — 2026-10-16
+
+Use `tools/memory_aware_session_restore.py` when a restore must include approved semantic memory as well as task state, handoff and linked events. It composes `tools/verified_session_restore.py`; it does not replace the live branch/CI revision gate.
+
+- The task, handoff and event-log paths must establish one matching project scope. Ambiguous scope blocks semantic retrieval rather than broadening the search across projects.
+- Retrieval reads only the canonical accepted registry and a freshness-checked `registry/memory_index/CURRENT.json` generation. It resolves index references back to canonical registry envelopes and verifies record hashes.
+- By default it returns current revisions only; historical revisions remain in the index and canonical registry. Optional task/context filters are exact identifiers. `--query` is a lexical substring filter, not embedding or semantic ranking.
+- The packet's `semantic_memory` section separately reports status, coverage, index generation, source-registry SHA, freshness, provenance, evidence status and unresolved `contradicts` relations. Read this independently of the base task/event restore status.
+- A stale, invalid or missing index returns an explicit unavailable/stale state with no memory records; it must not be interpreted as proof that no relevant memory exists. No matches in the current partial index likewise do not prove absence.
+- The current index reports `coverage_status=PARTIAL` because no canonical edge-correction overlay source/contract was found. Do not promote this result to complete coverage.
+- The tool is read-only. It does not refresh a stale index, approve candidates, or modify canonical state. Index refresh and session restore are separate operations.
