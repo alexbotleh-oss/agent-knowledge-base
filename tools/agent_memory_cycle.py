@@ -129,12 +129,27 @@ def run_cycle(
                 "issues": reconciliation.get("issues", []),
                 "writes_performed": False,
             }
-        elif attention.get("status") != "OK" or not attention.get("return_stack"):
+        elif attention.get("status") != "OK":
             return_result = {
-                "status": "BLOCKED_NO_OPEN_BRANCH",
+                "status": "BLOCKED_ATTENTION_STATE",
                 "attention_status": attention.get("status"),
                 "writes_performed": False,
             }
+        elif not attention.get("return_stack"):
+            # Preserve controller idempotency: a replay of the same return turn
+            # is a no-op success, not a new blocked operation.
+            return_result = return_to_parent(
+                attention_log, turn_id=return_turn_id, parent_task_id=parent_task_id
+            )
+            if return_result.get("status") == "ALREADY_RETURNED":
+                task_start = build_task_start_experience_map(
+                    task_state, handoff, project_event_log, user_request,
+                    experience_logs=experiences, lesson_logs=lessons,
+                    attention_log=attention_log, active_task_id=parent_task_id,
+                    active_checkpoint_id=active_checkpoint_id,
+                    current_project_id=current_project_id, limit=limit,
+                )
+                attention = inspect_attention(attention_log)
         else:
             top = attention["return_stack"][-1]
             parent = top.get("parent", {}) if isinstance(top, dict) else {}
