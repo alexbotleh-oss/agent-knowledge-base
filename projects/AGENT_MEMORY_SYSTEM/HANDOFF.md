@@ -689,3 +689,8 @@ Read `tools/canonical_memory_index.py`, `tests/test_canonical_memory_index.py`, 
 Next bounded task: specify a canonical, append-only correction-overlay contract with stable relation/decision/source IDs, explicit status and provenance; validate its semantics before making index consumers apply it. Then add a pipeline coordinator/crash-recovery test spanning ingestion, approval, promotion, index publication and fresh restore.
 
 PR #27 remains Draft/open/unmerged; `main` unchanged.
+
+
+## Final exact-head evidence — 2026-10-16
+
+Latest code + protocol/documentation revision: `15df917acfa27001b80f7a7049e5c082b7b646e5`; exact-head CI [38851849713](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38851849713) PASS (272 Python tests, 1 skipped; 4 Node tests; write audit 108/0; memory validation PASS). The later branch commits update only the four checkpoint/handoff/event metadata files; keep this code SHA/CI pair separate from the live branch tip.
