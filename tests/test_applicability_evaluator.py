@@ -443,6 +443,8 @@ class LoopIntegrationTests(unittest.TestCase):
         self.assertEqual(outcome_of(result["applicability"], "L-VERIFIED"), "APPLICABLE")
         self.assertEqual(result["applicability"]["usable_as_rationale"][0]["candidate_id"], "L-VERIFIED")
         self.assertEqual(result["next_action_policy"], "REVIEW_CANDIDATES_ONLY_NO_PLANNING")
+        self.assertEqual(result["decision_frontier"]["directions"][0]["classification"], "KEEP_FOR_RATIONALE_REVIEW")
+        self.assertFalse(result["decision_frontier"]["grants_planning_permission"])
         self.assertEqual(result["lesson_search_stages"][0]["stage"], "S1_STRUCTURED")
         self.assertTrue(result["lesson_search_stages"][0]["verified_applicable_found"])
         self.assertEqual(result["lesson_search_stages"][1]["status"], "SKIPPED_SUFFICIENT_S1")
@@ -665,6 +667,9 @@ class LoopIntegrationTests(unittest.TestCase):
         self.assertEqual(outcome_of(result["applicability"], "EVT-EXP-1"), "INSUFFICIENT_DATA")
         self.assertEqual(result["applicability"]["usable_as_rationale"], [])
         self.assertEqual(result["next_action_policy"], "REVIEW_CANDIDATES_ONLY_NO_PLANNING")
+        self.assertEqual(result["decision_frontier"]["directions"][0]["classification"], "HOLD")
+        self.assertEqual(result["decision_frontier"]["next_discriminating_check"]["type"], "RESOLVE_MISSING_EVIDENCE")
+        self.assertFalse(result["decision_frontier"]["grants_planning_permission"])
 
 
 if __name__ == "__main__":
