@@ -338,24 +338,16 @@ def return_to_parent(
     parent_task_id: str,
     authorization: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """Guard public return calls against bypassing the unified memory cycle.
+    """Reject public direct returns; the unified cycle owns guarded commits.
 
-    This is an operational guard, not a cryptographic security boundary. The
-    cycle validates reconciliation and the acknowledged child result first.
+    The authorization argument is retained for compatibility, but caller-supplied
+    dictionaries are not trusted evidence and can never authorize a return.
     """
-    if not isinstance(authorization, dict):
-        return {
-            "status": "BLOCKED_GUARD_REQUIRED",
-            "reason": "Use tools/agent_memory_cycle.py; direct parent return requires a validated guard report.",
-            "writes_performed": False,
-        }
-    if authorization.get("reconciliation_status") != "CONSISTENT":
-        return {"status": "BLOCKED_RECONCILIATION", "writes_performed": False}
-    if authorization.get("child_result_status") != "READY":
-        return {"status": "BLOCKED_CHILD_RESULT", "writes_performed": False}
-    return _return_to_parent_unchecked(
-        event_log, turn_id=turn_id, parent_task_id=parent_task_id
-    )
+    return {
+        "status": "BLOCKED_GUARD_REQUIRED",
+        "reason": "Only tools/agent_memory_cycle.py may commit a parent return after validating the current branch result and reconciliation.",
+        "writes_performed": False,
+    }
 
 
 def _return_to_parent_unchecked(
