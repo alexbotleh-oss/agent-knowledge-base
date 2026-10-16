@@ -105,25 +105,46 @@ class PipelineRealStageIntegrationTests(unittest.TestCase):
             correction_registry=registry_dir/"edge_corrections.jsonl"
             index_root=registry_dir/"memory_index"
             snapshot=root/"snapshot.json"; snapshot.write_bytes(canon({"archive_id":"ARCH-E2E","raw_sha256":"b"*64,"parser_version":"synthetic-e2e"}))
-            with mock.patch.object(pipeline,"run_ingestion",return_value={"status":"SOURCE_REGISTERED_DOWNSTREAM_PENDING","writes_performed":True}):
+            real_refresh=pipeline.refresh_canonical_index
+            refresh_calls={"count":0}
+            def interrupt_after_publish(*args,**kwargs):
+                built=real_refresh(*args,**kwargs)
+                if refresh_calls["count"]==0:
+                    refresh_calls["count"]+=1
+                    raise RuntimeError("simulated interruption after index pointer publication")
+                return built
+            with mock.patch.object(pipeline,"run_ingestion",return_value={"status":"SOURCE_REGISTERED_DOWNSTREAM_PENDING","writes_performed":True}), \
+                 mock.patch.object(pipeline,"refresh_canonical_index",side_effect=interrupt_after_publish):
+                interrupted=pipeline.run_memory_pipeline(snapshot,root/"runs",manifest,approval_path,
+                    repository="owner/repo",task_state=task,handoff=handoff,event_log=event_log,
+                    correction_input=correction_path,correction_approval_receipt=correction_receipt_path,
+                    source_registry_path=source_registry,memory_registry_path=memory_registry,
+                    correction_registry_path=correction_registry,index_root=index_root,apply=True,fetch_json=fake_fetch)
+                self.assertEqual(interrupted["status"],"BLOCKED_AT_CANONICAL_INDEX",interrupted)
+                first_pointer=json.loads((index_root/"CURRENT.json").read_text(encoding="utf-8"))
                 result=pipeline.run_memory_pipeline(snapshot,root/"runs",manifest,approval_path,
                     repository="owner/repo",task_state=task,handoff=handoff,event_log=event_log,
                     correction_input=correction_path,correction_approval_receipt=correction_receipt_path,
                     source_registry_path=source_registry,memory_registry_path=memory_registry,
                     correction_registry_path=correction_registry,index_root=index_root,apply=True,fetch_json=fake_fetch)
             self.assertEqual(result["status"],"PIPELINE_COMPLETE_WITH_PARTIAL_MEMORY",result)
+            self.assertEqual(result["run_id"],interrupted["run_id"])
             self.assertEqual(result["stages"]["provenance_validation"],"RESOLVED")
-            self.assertEqual(result["stages"]["semantic_promotion"],"PROMOTED")
-            self.assertEqual(result["stages"]["edge_correction"],"APPENDED")
+            self.assertEqual(result["stages"]["semantic_promotion"],"ALREADY_PROMOTED")
+            self.assertEqual(result["stages"]["edge_correction"],"ALREADY_REGISTERED")
             self.assertEqual(result["stages"]["canonical_index"],"BUILT_PARTIAL")
             self.assertEqual(result["stages"]["session_restore"],"RESTORED_PACKET_WITH_PARTIAL_MEMORY")
             restored=result["restore"]
             self.assertEqual(restored["semantic_memory_status"],"PARTIAL")
             index=json.loads((index_root/"CURRENT.json").read_text(encoding="utf-8"))
             generation=json.loads((index_root/index["generation_file"]).read_text(encoding="utf-8"))
+            self.assertEqual(first_pointer["generation_id"],index["generation_id"])
             self.assertEqual(generation["coverage"]["correction_overlay_status"],"APPLIED")
+            self.assertEqual(len(memory_registry.read_text(encoding="utf-8").splitlines()),1)
+            self.assertEqual(len(correction_registry.read_text(encoding="utf-8").splitlines()),1)
             packet_event=pipeline._load_ledger(Path(result["ledger_path"]),result["run_id"])
             self.assertEqual(packet_event[-1]["event_type"],"PIPELINE_RESULT")
+            self.assertEqual(sum(1 for event in packet_event if event["event_type"]=="PIPELINE_RESULT"),2)
             self.assertTrue(result["canonical_writes_performed"])
 
 
