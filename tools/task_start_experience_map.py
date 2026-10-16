@@ -70,6 +70,7 @@ def _expand_candidate(candidate: dict[str, Any]) -> dict[str, Any]:
         result["source_record_status"] = "SOURCE_LINE_ID_MISMATCH"
         return result
     result["source_record_status"] = "HASH_AND_EVENT_ID_MATCH"
+    result["source_record_sha256"] = hashlib.sha256(lines[line_number - 1].encode("utf-8")).hexdigest()
     # Preserve the actual attempt/result fields instead of presenting only a summary.
     result["experience_details"] = {
         key: event[key] for key in (
@@ -114,6 +115,7 @@ def _expand_lesson_candidate(candidate: dict[str, Any]) -> dict[str, Any]:
         result["source_record_status"] = "SOURCE_LINE_ID_MISMATCH"
         return result
     result["source_record_status"] = "HASH_AND_LESSON_ID_MATCH"
+    result["source_record_sha256"] = hashlib.sha256(lines[line_number - 1].encode("utf-8")).hexdigest()
     result["experience_details"] = {
         key: lesson[key] for key in (
             "title", "status", "scope", "project_id", "trigger", "observed_problem",
@@ -247,29 +249,50 @@ def build_task_start_experience_map(
         classification: [row for row in directions if isinstance(row, dict) and row.get("classification") == classification]
         for classification in ("CONFLICT", "HOLD", "KEEP_FOR_RATIONALE_REVIEW", "EXCLUDE", "OUT_OF_SCOPE")
     }
-    source_hashes_for_reuse = {}
-    restored_hashes = loop.get("context", {}).get("source_hashes", {})
-    if isinstance(restored_hashes, dict):
-        source_hashes_for_reuse.update({
-            f"restore:{key}": value for key, value in restored_hashes.items()
-            if isinstance(value, str) and re.fullmatch(r"[0-9a-f]{64}", value)
-        })
+    # Fingerprint semantic task context rather than whole TASK_STATE/HANDOFF files:
+    # unrelated checkpoint metadata must not force an identical check to rerun.
+    semantic_context = loop.get("context", {})
+    context_payload = {
+        "user_request": user_request,
+        "active_goal": semantic_context.get("active_goal", "UNKNOWN"),
+        "project_id": semantic_context.get("project_id", current_project_id or "UNKNOWN"),
+        "scope": semantic_context.get("scope", "UNKNOWN"),
+        "constraints": semantic_context.get("constraints", []),
+        "blockers": semantic_context.get("blockers", []),
+        "acceptance_criteria": semantic_context.get("acceptance_criteria", []),
+    }
+    source_hashes_for_reuse = {
+        "semantic_context": hashlib.sha256(
+            json.dumps(context_payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+        ).hexdigest()
+    }
+    # Candidate record hashes detect changes to the evidence actually reviewed.
+    # If a retrieval source was truncated by the candidate limit, retain the
+    # whole source hash as a conservative guard against unseen new candidates.
     retrieval_hashes = raw_retrieval.get("source_hashes", {}) if isinstance(raw_retrieval, dict) else {}
-    if isinstance(retrieval_hashes, dict):
+    retrieval_truncated = (
+        isinstance(raw_retrieval, dict)
+        and raw_retrieval.get("candidate_count_before_limit", len(candidates)) > len(candidates)
+    )
+    if retrieval_truncated and isinstance(retrieval_hashes, dict):
         source_hashes_for_reuse.update({
-            f"events:{key}": value for key, value in retrieval_hashes.items()
+            f"truncated_events:{key}": value for key, value in retrieval_hashes.items()
             if isinstance(value, str) and re.fullmatch(r"[0-9a-f]{64}", value)
         })
     lesson_hashes = lesson_retrieval.get("source_hashes", {}) if isinstance(lesson_retrieval, dict) else {}
-    if isinstance(lesson_hashes, dict):
+    lesson_truncated = (
+        isinstance(lesson_retrieval, dict)
+        and lesson_retrieval.get("candidate_count_before_limit", len(lesson_candidates)) > len(lesson_candidates)
+    )
+    if lesson_truncated and isinstance(lesson_hashes, dict):
         source_hashes_for_reuse.update({
-            f"lessons:{key}": value for key, value in lesson_hashes.items()
+            f"truncated_lessons:{key}": value for key, value in lesson_hashes.items()
             if isinstance(value, str) and re.fullmatch(r"[0-9a-f]{64}", value)
         })
     candidate_fingerprints = [
         {
             "candidate_type": "event", "candidate_id": str(item.get("event_id")),
-            "source_sha256": item.get("source", {}).get("sha256"),
+            "source_sha256": item.get("source_record_sha256", item.get("source", {}).get("sha256")),
             "source_path": item.get("source", {}).get("path", ""),
             "line": item.get("source", {}).get("line"),
         }
