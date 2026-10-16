@@ -13,7 +13,7 @@
 
 ## Current follow-up status (read-back 2026-10-16)
 
-The original revision anchors below describe earlier snapshots and must not be read as validation of the current PR #30 branch tip. PR #30 has since added signed owner-acknowledgement verification and a regression preventing an acknowledgement for an older child result from authorizing a newer result. The current branch contains a follow-up commit after `b66889c114953f69da20575999408f0182db88ce` that corrects the comment indentation in `tools/agent_memory_cycle.py`. This read-back confirms the source state only; it does not establish a full CI run on that latest tip. Production trust-root configuration and real archive acceptance remain open.
+The original revision anchors below describe earlier snapshots and must not be read as validation of the current PR #30 branch tip. PR #30 has since added signed owner-acknowledgement verification and a regression preventing an acknowledgement for an older child result from authorizing a newer result. The current branch also corrects the comment indentation in `tools/agent_memory_cycle.py`. GitHub Actions run [38956581475](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38956581475) passed on PR merge checkout `25a2a5c6f3265b8d78b3641190d8e6eb385e38f4`, which includes branch head `a12d6f60dac306e58a912c2a25644873c53bb5e7`: 396 Python unittest tests passed, 1 skipped; 4 Node tests passed; write audit 143/0; memory and knowledge-base validation PASS. This is validation of the merge candidate, not a standalone checkout of the branch tip. Generic pytest and HTML/PWA/JS stack checks were skipped for missing tooling/setup. Production trust-root configuration and real archive acceptance remain open.
 
 ## Revision anchors
 
