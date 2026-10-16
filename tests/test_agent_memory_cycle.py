@@ -251,5 +251,62 @@ class AgentMemoryCycleTests(unittest.TestCase):
         self.assertEqual(result["attention"]["active"]["task_id"], "TASK-SIDE")
 
 
+    def test_return_is_blocked_when_owner_rejects_child_result(self):
+        opened = process_turn(
+            self.attention, turn_id="T-CYCLE-REJECT-SIDE", text="Кстати, отдельный вопрос",
+            active_task_id="TASK-PARENT", active_checkpoint_id="CKPT-PARENT",
+            child_task_id="TASK-SIDE", child_checkpoint_id="CKPT-SIDE",
+        )
+        published = publish_result(self.attention, {
+            "child_branch_id": opened["branch_id"],
+            "parent_checkpoint_id": "CKPT-PARENT", "parent_task_id": "TASK-PARENT",
+            "result_key": "rejected-result-v1", "result_status": "RESULT_REPORTED",
+            "summary": "Result explicitly rejected by owner.",
+            "source_refs": ["tests/test_rejected_result.py#case"],
+            "reported_at": "2026-10-16T12:00:00Z", "evidence_status": "verified",
+        })
+        ack = acknowledge_result(
+            self.attention, published["event_id"], "rejected",
+            "owner-confirmation://cycle-test", "2026-10-16T12:01:00Z",
+        )
+        self.assertEqual(ack["status"], "ACKNOWLEDGED")
+        before = self.attention.read_bytes()
+        result = run_cycle(
+            self.task, self.handoff, self.project_events, self.attention,
+            "cache recovery index pointer", experience_logs=[self.experience],
+            active_task_id="TASK-SIDE", active_checkpoint_id="CKPT-SIDE",
+            current_project_id="TEST", return_turn_id="T-REJECTED-RETURN",
+            parent_task_id="TASK-PARENT",
+        )
+        self.assertEqual(result["status"], "BLOCKED")
+        self.assertNotIn(result["parent_return"]["status"], {"RETURNED", "ALREADY_RETURNED"})
+        self.assertFalse(result["writes_performed"])
+        self.assertEqual(result["attention"]["active"]["task_id"], "TASK-SIDE")
+        self.assertEqual(len([
+            event for event in json.loads("[" + ",".join(self.attention.read_text(encoding="utf-8").splitlines()) + "]")
+            if event.get("type") == "attention_returned"
+        ]), 0)
+        self.assertNotEqual(self.attention.read_bytes(), b"")  # branch/result/ack are recorded, but no return is committed
+        self.assertGreaterEqual(len(self.attention.read_bytes()), len(before))
+
+    def test_return_is_blocked_when_requested_parent_does_not_match_stack(self):
+        process_turn(
+            self.attention, turn_id="T-CYCLE-PARENT-MISMATCH", text="Кстати, отдельный вопрос",
+            active_task_id="TASK-PARENT", active_checkpoint_id="CKPT-PARENT",
+            child_task_id="TASK-SIDE", child_checkpoint_id="CKPT-SIDE",
+        )
+        result = run_cycle(
+            self.task, self.handoff, self.project_events, self.attention,
+            "cache recovery index pointer", experience_logs=[self.experience],
+            active_task_id="TASK-SIDE", active_checkpoint_id="CKPT-SIDE",
+            current_project_id="TEST", return_turn_id="T-WRONG-PARENT",
+            parent_task_id="TASK-OTHER",
+        )
+        self.assertEqual(result["status"], "BLOCKED")
+        self.assertEqual(result["parent_return"]["status"], "BLOCKED_PARENT_MISMATCH")
+        self.assertFalse(result["writes_performed"])
+        self.assertEqual(result["attention"]["active"]["task_id"], "TASK-SIDE")
+        self.assertEqual(result["attention"]["open_branch_count"], 1)
+
 if __name__ == "__main__":
     unittest.main()
