@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "checkpoint_id": "CKPT-AGMS-20261016-INDEX-RESTORE-04",
+  "checkpoint_id": "CKPT-AGMS-20261016-CORRECTION-OVERLAYS-05",
   "project_id": "AGENT_MEMORY_SYSTEM",
   "task_id": "AGMS-2026-10-15-MEMORY-PIPELINE-CONTINUITY",
   "recorded_at": "2026-10-16",
@@ -64,7 +64,8 @@
     "Implemented tools/canonical_memory_index.py with deterministic immutable generations, multidimensional reference views, current-revision map, atomic CURRENT pointer and freshness checks; invalid registries/revision chains block publication; failed pointer publication preserves prior pointer.",
     "Implemented tools/memory_aware_session_restore.py to compose verified task/event restore with freshness-checked current semantic memory, exact project/task/context filtering, provenance/evidence/conflict output, and explicit partial/stale/unavailable status.",
     "Exact code/test HEAD bec868ce9e7491802c5239068b4581eff002a809 passed CI #38851785241: 272 Python tests (1 skipped), 4 Node tests, write audit 108 mutation sites / 0 unclassified, memory validation PASS.",
-    "After integrating the memory-aware restore protocol and implementation-status documentation, exact HEAD 15df917acfa27001b80f7a7049e5c082b7b646e5 passed CI #38851849713: 272 Python tests (1 skipped), 4 Node tests, write audit 108/0, memory validation PASS. Subsequent checkpoint/handoff/event commits are metadata-only."
+    "After integrating the memory-aware restore protocol and implementation-status documentation, exact HEAD 15df917acfa27001b80f7a7049e5c082b7b646e5 passed CI #38851849713: 272 Python tests (1 skipped), 4 Node tests, write audit 108/0, memory validation PASS. Subsequent checkpoint/handoff/event commits are metadata-only.",
+    "Defined an append-only, source-revision/hash-bound edge-correction contract and guarded writer; accepted corrections require a separate receipt bound to exact correction input bytes. Canonical index applies accepted add/retract/replace only to derived relation views and tracks correction-registry freshness. Exact code+protocol HEAD 1fd9c91ae8bb8662a3cb1a1cea3d63452064fc40 passed CI #38852493391: 282 Python tests (1 skipped), 4 Node tests, write audit 116/0, memory validation PASS."
   ],
   "confirmed_open": [
     {
@@ -86,7 +87,7 @@
       "description": "Restore reads project TASK_STATE.md, HANDOFF.md and events.jsonl; source registration does not automatically update or restore these records.",
       "status": "PARTIAL",
       "updated_at": "2026-10-16",
-      "resolution": "Read-only memory-aware restore wrapper implemented and tested; durable end-to-end orchestration/crash recovery remains open."
+      "resolution": "Memory-aware restore and correction-aware index exist; durable coordinator/crash recovery and provenance resolution remain open."
     },
     {
       "id": "OPEN-PAIRED-CHECKPOINT",
@@ -101,7 +102,7 @@
       "description": "The ChatGPT web extension is a prototype verified by static CI only. Must be installed and tested in the user's actual Yandex Browser Android version. Verify send gate (no send before durable receipt), exact text and prior assistant message capture, interrupted connection recovery, response DOM detection, multiple incomplete turns, extension restart, and UI-selector drift. Until these pass, do not claim end-to-end capture is operational."
     }
   ],
-  "next_action": "Define and validate a canonical append-only correction-overlay contract with stable relation/decision/source IDs and provenance; then integrate it into index generation. After that, build and crash-test a durable end-to-end ingestion → approval → promotion → index → fresh restore coordinator.",
+  "next_action": "Implement a durable pipeline coordinator with hash-chained stage ledger and replay/crash recovery across source ingestion, explicit approval, semantic promotion, correction registration, index publication and fresh-session restore. Validate provenance links between promoted records and the source registry; no production archive should be promoted until that contract is verified.",
   "constraints": [
     "Do not merge PR #27 or modify main without explicit user approval.",
     "Do not delete or rewrite source-history exports without a separate explicit decision.",
@@ -113,21 +114,23 @@
   "status": "P1_COMPLETE_WITH_DOWNSTREAM_ITEMS_OPEN",
   "checkpoint_semantics": "This is a durable task checkpoint committed to the integration branch. It is not an automatic ChatGPT autosave or proof that an undelivered response was saved.",
   "repository_state": {
-    "last_verified_code_head": "15df917acfa27001b80f7a7049e5c082b7b646e5",
-    "exact_head_ci_run_id": 38851849713,
-    "exact_head_ci_url": "https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38851849713",
+    "last_verified_code_head": "1fd9c91ae8bb8662a3cb1a1cea3d63452064fc40",
+    "exact_head_ci_run_id": 38852493391,
+    "exact_head_ci_url": "https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38852493391",
     "exact_head_ci_conclusion": "success",
-    "python_tests": 272,
+    "python_tests": 282,
     "python_skipped": 1,
     "node_tests": 4,
-    "write_audit_mutation_sites": 108,
+    "write_audit_mutation_sites": 116,
     "write_audit_unclassified": 0,
     "memory_validation": "PASS",
     "project_validation": "PASS",
     "semantic_memory_registry_tests": 12,
     "canonical_index_tests": 10,
     "memory_aware_restore_tests": 9,
-    "note": "Exact code+protocol HEAD 15df917acfa27001b80f7a7049e5c082b7b646e5 passed exact-head CI #38851849713. Later commits update only TASK_STATE, HANDOFF, CONTINUITY_CHECKPOINT and events. CI uses synthetic records and mocked remote API; canonical index coverage remains PARTIAL because no correction-overlay source/contract is available. No production archive was promoted."
+    "note": "Exact code+protocol HEAD 1fd9c91ae8bb8662a3cb1a1cea3d63452064fc40 passed exact-head CI #38852493391. Edge correction schemas/writer and index consumer are implemented and tested. No production correction file was populated; index coverage remains PARTIAL until source/archive completeness is proven. Later commits update only the four continuity metadata files.",
+    "edge_correction_registry_tests": 8,
+    "correction_index_integration_tests": 2
   },
   "historical_repository_state": {
     "last_verified_code_head": "e30450a5ed516ab1f76f65c3c7874cdd2b951c40",
@@ -170,9 +173,9 @@
     }
   ],
   "open_items": [
-    "Canonical append-only correction-overlay schema/writer and index consumer integration",
-    "Durable end-to-end pipeline coordinator with replay, uncertain-ack reconciliation and crash recovery",
-    "Production archive acceptance and coverage audit",
+    "Durable end-to-end pipeline coordinator with hash-chained stage ledger and crash/replay reconciliation",
+    "Verify promoted semantic-record provenance resolves to source registry records and archive coverage",
+    "Production archive acceptance and completeness audit",
     "Live Android browser-extension acceptance"
   ]
 }
