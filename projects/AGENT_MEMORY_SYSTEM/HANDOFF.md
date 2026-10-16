@@ -663,3 +663,12 @@ Read `projects/AGENT_MEMORY_SYSTEM/MEMORY_PIPELINE_INTEGRATION_AUDIT_2026-10-16.
 Implement the approval-bound semantic registry writer as a separate guarded stage. Bind approval to exact candidate hashes and explicit decision provenance; preserve immutable source and append-only revisions; provide replay/conflict and crash-recovery tests. Do not expand the source-registration writer's scope. Index refresh and normal semantic-memory restore are later dependent milestones.
 
 **Unchanged constraints:** PR #27 stays Draft/open/unmerged; do not modify `main`. Treat exact-head CI as repository validation, not evidence that downstream stages or a real archive were exercised.
+
+
+## Semantic promotion handoff — 2026-10-16
+
+Verified implementation: `tools/semantic_memory_registry.py`; exact-head CI run [38851184392](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38851184392) passed: 253 Python tests (1 skipped), 4 Node tests, write audit 100 mutation sites / 0 unclassified, memory validation PASS.
+
+The writer is separate from source registration, dry-run by default, requires an approval receipt bound to exact manifest/artifact hashes, preserves provenance and old revisions, and blocks conflicting replays. Receipt integrity does not authenticate its author. No production record was promoted; tests use synthetic data.
+
+Next: deterministic versioned canonical index generation over accepted registry envelopes, with source revision/hash, correction-overlay handling, atomic publication and freshness checks. Session restore integration remains later. PR #27 stays Draft/open/unmerged; `main` unchanged.
