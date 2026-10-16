@@ -23,6 +23,7 @@ class TaskStartExperienceMapTests(unittest.TestCase):
         self.handoff = self.project / "HANDOFF.md"
         self.events = self.project / "events.jsonl"
         self.experience = self.root / "shared-events.jsonl"
+        self.experience2 = self.root / "shared-events-duplicate.jsonl"
         self.lessons = self.root / "lessons.jsonl"
         self.attention = self.root / "projects" / "AGENT_MEMORY_SYSTEM" / "events.jsonl"
         self.task.write_text(
@@ -161,6 +162,34 @@ class TaskStartExperienceMapTests(unittest.TestCase):
         self.assertEqual(candidate["source_record_status"], "SOURCE_CHANGED_AFTER_RETRIEVAL")
         self.assertNotIn("experience_details", candidate)
         self.assertFalse(result["writes_performed"])
+
+    def test_duplicate_event_ids_from_two_logs_hold_both_provenance_paths(self):
+        self._write(self.experience2, [{
+            "event_id": "EVT-EXP-1", "project_id": "TEST", "type": "test_result",
+            "summary": "Cache recovery failed after a different index repair",
+            "status": "observed", "action_taken": "Rebuilt index pointer",
+            "outcome": "Recovery failed",
+        }])
+        result = build_task_start_experience_map(
+            self.task, self.handoff, self.events, "cache recovery index pointer",
+            experience_logs=[self.experience, self.experience2], attention_log=self.attention,
+            active_task_id="TASK-PARENT", active_checkpoint_id="CKPT-PARENT",
+            current_project_id="TEST",
+        )
+        frontier = result["experience_map"]["decision_frontier"]
+        self.assertEqual(frontier["summary"]["duplicate_candidate_keys"], 1)
+        self.assertEqual(
+            frontier["next_discriminating_check"]["type"],
+            "RESOLVE_DUPLICATE_CANDIDATE_ID",
+        )
+        rows = [row for row in frontier["directions"] if row["candidate_id"] == "EVT-EXP-1"]
+        self.assertEqual(len(rows), 2)
+        self.assertEqual({row["classification"] for row in rows}, {"HOLD"})
+        self.assertEqual(
+            {row["source"]["path"] for row in rows},
+            {str(self.experience), str(self.experience2)},
+        )
+        self.assertFalse(result["decision_policy"]["planning_authorized"])
 
     def test_no_attention_journal_is_reported_without_inventing_a_branch(self):
         result = build_task_start_experience_map(
