@@ -340,7 +340,7 @@ Next: verify the full coordinator against a controlled end-to-end synthetic fixt
 
 ## 13. UMC-03 applicability assessment — specification and first read-only implementation
 
-**Status: UMC-03 remains `BLOCKED` in the acceptance matrix (section 10).** This section specifies the applicability evaluator and records what the first patch implements: `tools/applicability_evaluator.py`, `retrieve_lesson_candidates` and the wiring in `tools/minimal_agent_loop.py`, with tests in `tests/test_applicability_evaluator.py`. The patch has not been merged; no CI run on a commit containing it exists yet. Items marked "not implemented" below are targets only.
+**Status: UMC-03 remains `BLOCKED` in the acceptance matrix (section 10).** The current implementation is in draft PR #28 and includes the applicability evaluator, trusted-verifier injection seam, and staged S1/S2 retrieval. CI evidence must be checked against the exact head commit; this draft is not merged. Items marked "not implemented" below remain open.
 Basis revision of the specification: `d3f9c610b7865793960dc652c2ccccc88afef732` (branch `integration/memory-core-clean-20261015`). PR #27 remains Draft, unmerged.
 
 ### 13.0 Terms
@@ -462,7 +462,7 @@ The lesson records in these tests are fixtures. They demonstrate the mechanism; 
 ### 13.9 Decisions recorded (owner: user, 2026-10-16)
 
 1. Retrieval searches **both** event logs and lesson-record files, as **separate candidate types** (`candidate_type: event | lesson`); they are not merged. Events carry history (actions, results, errors); lesson records carry trigger/applicability/exceptions. An event without structured conditions stays `INSUFFICIENT_DATA` (R7) and is history, not a rule.
-2. S3 is deferred. The current retrieval function is one lexical-overlap pass, not a completed S1/S2 staged search. The five existing `scope: global` lessons stay as they are and are marked out of scope; this says nothing about their applicability in general.
+2. S3 is deferred. S1 uses explicit same-project marker overlap; S2 is the same-project lexical fallback. The five existing `scope: global` lessons stay as they are and are marked out of scope; this says nothing about their applicability in general.
 3. Tests for the evaluator use project-lesson **fixtures**. Their results are not evidence that any real global lesson is applicable.
 
 ### 13.10 Not implemented by the first patch

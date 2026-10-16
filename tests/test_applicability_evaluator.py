@@ -430,6 +430,26 @@ class LoopIntegrationTests(unittest.TestCase):
         self.assertEqual(result["candidates"][0]["project_scope_match"], "MATCH")
         self.assertGreaterEqual(result["out_of_scope_count"], 2)
 
+    def test_s1_and_s2_candidates_are_deduplicated_and_both_retained(self):
+        self._write_lessons([
+            self._lesson("L-S1"),
+            self._lesson("L-S2", markers={"problem_types": ["other_problem"], "tools": ["Rust"]}),
+        ])
+        result = self._run(
+            None, current_project_id=PROJECT,
+            current_markers={"problem_types": ["snapshot_restore"]},
+        )
+        self.assertEqual(result["lesson_search_stages"][0]["stage"], "S1_STRUCTURED")
+        self.assertEqual(result["lesson_search_stages"][0]["candidate_count"], 1)
+        self.assertEqual(result["lesson_search_stages"][1]["stage"], "S2_LEXICAL")
+        self.assertEqual(result["lesson_search_stages"][1]["candidate_count"], 2)
+        self.assertEqual(
+            {item["lesson_id"] for item in result["lesson_retrieval"]["candidates"]},
+            {"L-S1", "L-S2"},
+        )
+        self.assertEqual(result["lesson_retrieval"]["candidate_count_combined"], 2)
+        self.assertIn(str(self.lessons), result["lesson_search_stages"][0]["source_hashes"])
+
     def test_s2_lexical_fallback_runs_when_s1_has_no_verified_applicable_lesson(self):
         self._write_lessons([self._lesson("L-1")])
         result = self._run(None, current_project_id=PROJECT,

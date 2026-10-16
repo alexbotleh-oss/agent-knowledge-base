@@ -870,6 +870,9 @@ def run_minimal_agent_loop(
         lesson_search_stages.append({
             "stage": "S1_STRUCTURED",
             "status": s1["status"],
+            "query": {"markers": current_markers or {}},
+            "marker_source": current_markers_source,
+            "source_hashes": s1.get("source_hashes", {}),
             "candidate_count": len(s1.get("candidates", [])),
             "verified_applicable_found": s1_has_verified_applicable,
         })
@@ -881,6 +884,8 @@ def run_minimal_agent_loop(
             lesson_search_stages.append({
                 "stage": "S2_LEXICAL",
                 "status": "SKIPPED_SUFFICIENT_S1",
+                "query": query,
+                "source_hashes": {},
                 "candidate_count": 0,
                 "verified_applicable_found": False,
             })
@@ -892,6 +897,8 @@ def run_minimal_agent_loop(
             lesson_search_stages.append({
                 "stage": "S2_LEXICAL",
                 "status": s2["status"],
+                "query": query,
+                "source_hashes": s2.get("source_hashes", {}),
                 "candidate_count": len(s2.get("candidates", [])),
                 "verified_applicable_found": False,
             })
@@ -904,11 +911,10 @@ def run_minimal_agent_loop(
                     if candidate.get("lesson_id") not in seen_lesson_ids:
                         lesson_candidates.append(candidate)
                         seen_lesson_ids.add(candidate.get("lesson_id"))
-                candidate_count_before_limit = len(lesson_candidates)
-                lesson_candidates = lesson_candidates[:max(0, limit)]
+                candidate_count_combined = len(lesson_candidates)
                 lesson_retrieval = dict(s2)
                 lesson_retrieval["candidates"] = lesson_candidates
-                lesson_retrieval["candidate_count_before_limit"] = candidate_count_before_limit
+                lesson_retrieval["candidate_count_combined"] = candidate_count_combined
                 lesson_retrieval["source_hashes"] = {
                     **s1.get("source_hashes", {}), **s2.get("source_hashes", {})
                 }
