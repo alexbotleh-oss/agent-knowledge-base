@@ -184,7 +184,11 @@
     "latest_docs_node_tests": 4,
     "latest_docs_write_audit_mutation_sites": 134,
     "latest_docs_write_audit_unclassified": 0,
-    "note": "Code/test evidence is tied to b5c43096dc51e6d9d4f5951c1b7aaff9740411bb and run 38900736135. Documentation/checkpoint descendant 1cdb4973930a790c847f8de9fe76fc94e45bc0a6 passed run 38900833884. This new checkpoint commit is metadata-only and requires its own exact-head CI status; do not claim it is already tested. PR #30 is Draft/open/unmerged; PR #29 remains a separate Draft/open/unmerged audit; main unchanged."
+    "note": "Code/test evidence is tied to b5c43096dc51e6d9d4f5951c1b7aaff9740411bb and run 38900736135. Documentation/checkpoint predecessor 1cdb4973930a790c847f8de9fe76fc94e45bc0a6 passed run 38900833884. The prior checkpoint metadata revision 7185cb68b5052f0c3bdee8b8e3d4c84b30f5845e passed exact-head CI run 38900933839. This update itself is metadata-only; verify the resulting branch HEAD independently before claiming its exact-head CI status. PR #30 is Draft/open/unmerged; PR #29 remains a separate Draft/open/unmerged audit; main unchanged.",
+    "latest_metadata_head_before_checkpoint_update": "7185cb68b5052f0c3bdee8b8e3d4c84b30f5845e",
+    "latest_metadata_ci_run_id": 38900933839,
+    "latest_metadata_ci_url": "https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38900933839",
+    "latest_metadata_ci_conclusion": "success"
   },
   "historical_repository_state": {
     "last_verified_code_head": "e30450a5ed516ab1f76f65c3c7874cdd2b951c40",
