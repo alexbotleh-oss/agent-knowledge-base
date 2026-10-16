@@ -239,8 +239,10 @@ def run_memory_pipeline(
             preflight_ok=execute("semantic_preflight",lambda:promote_memory_records(semantic_manifest,semantic_approval_receipt,memory_registry_path,apply=False),
                 {"DRY_RUN_READY"},("status","candidate_count","error","writes_performed"))
         if not preflight_ok:
-            final={"status":"BLOCKED_AT_PREFLIGHT","run_id":run_id,"run_dir":str(run_dir),"ledger_path":str(ledger_path),
-                   "staging_writes_performed":False,"canonical_writes_performed":False,"ledger_writes_performed":True,"writes_performed":False}
+            preflight_result=results.get("semantic_preflight",{})
+            final={"status":"BLOCKED_AT_PREFLIGHT","preflight_result":_summary(preflight_result,("status","error","reason","validation_errors")),
+                   "run_id":run_id,"run_dir":str(run_dir),"ledger_path":str(ledger_path),
+                   "source_stage_writes_performed":False,"canonical_writes_performed":False,"ledger_writes_performed":True,"writes_performed":False}
             _append_event(run_dir,run_id,"PIPELINE_RESULT","pipeline",final["status"],{"stages":{name:result.get("status","UNKNOWN") for name,result in results.items()}})
             final["stages"]={name:result.get("status","UNKNOWN") for name,result in results.items()}
             return final
