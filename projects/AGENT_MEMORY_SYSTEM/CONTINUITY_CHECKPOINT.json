@@ -78,7 +78,9 @@
     "The combined test asserts retrieval of MEM-REAL-INGEST-1 / REV-REAL-1 and non-empty provenance under project AGENT_MEMORY_SYSTEM, task TASK-REAL, and context CTX-REAL.",
     "Added projects/AGENT_MEMORY_SYSTEM/END_TO_END_MEMORY_AGENT_AUDIT_2026-10-16.md covering implementation status, stale documentation claims, runtime gaps and next priorities.",
     "Appended current implementation status to core/source_ingestion_protocol.md and core/memory_write_contracts.md; reconciled UMC acceptance matrix in core/unified_memory_control_loop.md while preserving historical entries.",
-    "Audit branch exact-head CI run 38898866464 passed on HEAD 66e1153979300d4b9aff3049f180164c60d63d0e: 295 Python tests (1 skipped), 4 Node tests, 127 mutation sites / 0 unclassified, memory validation PASS."
+    "Audit branch exact-head CI run 38898866464 passed on HEAD 66e1153979300d4b9aff3049f180164c60d63d0e: 295 Python tests (1 skipped), 4 Node tests, 127 mutation sites / 0 unclassified, memory validation PASS.",
+    "Created projects/AGENT_MEMORY_SYSTEM/CAPABILITY_TRACEABILITY_MATRIX_2026-10-16.md mapping 24 capabilities to specifications, code, tests, exact revision/CI, status and residual gaps.",
+    "Audit/docs HEAD 128f93ffad6bd500fd38db5928405a56f150e passed exact-head CI run 38899088495: 295 Python tests (1 skipped), 4 Node tests, 127 mutation sites / 0 unclassified, memory validation PASS."
   ],
   "confirmed_open": [
     {
@@ -139,7 +141,7 @@
       "evidence": "The local turn lifecycle ledger and browser extension prototype do not prove automatic capture/startup on the user's installed Android browser."
     }
   ],
-  "next_action": "Create the single authoritative capability traceability matrix: requirement ID → owning specification → implementation path → tests → exact code SHA/CI → status → residual gap. Use the audit report as the source of truth; do not repeat completed CI or archive checks without changed inputs.",
+  "next_action": "Implement CAP-02/UMC-02: a runtime attention controller and persistent causal return stack that classifies continuation, side branch, deferred idea, new task, priority change and return; integrate it with task-time staged experience retrieval. Use CAPABILITY_TRACEABILITY_MATRIX_2026-10-16.md as the requirement/status map.",
   "constraints": [
     "Do not merge PR #27 or modify main without explicit user approval.",
     "Do not delete or rewrite source-history exports without a separate explicit decision.",
@@ -162,10 +164,17 @@
     "write_audit_unclassified": 0,
     "memory_validation": "PASS",
     "project_validation": "PASS",
-    "latest_audit_branch_head_before_checkpoint_update": "66e1153979300d4b9aff3049f180164c60d63d0e",
-    "latest_audit_branch_ci_run_id": 38898866464,
+    "latest_audit_branch_head_before_checkpoint_update": "128f93ffad6bd500fd38db5928405a56f150e",
+    "latest_audit_branch_ci_run_id": 38899088495,
     "latest_audit_branch_ci_conclusion": "success",
-    "note": "Code/test evidence is tied to code HEAD 0f2c76f1b79d1c73aa89eed0f3e98830658c338d and run 38862706088. Audit/documentation branch HEAD 66e1153979300d4b9aff3049f180164c60d63d0e passed run 38898866464. This checkpoint update is a metadata-only descendant; do not conflate metadata revision with code HEAD. PR #29 remains Draft/open/unmerged; main unchanged."
+    "note": "Code/test evidence is tied to code HEAD 0f2c76f1b79d1c73aa89eed0f3e98830658c338d and run 38862706088. Audit/docs HEAD 128f93ffad6bd500fd38db5928405a56f150e passed run 38899088495: 295 Python tests (1 skipped), 4 Node tests, write audit 127/0, memory validation PASS. This checkpoint update changes only CONTINUITY_CHECKPOINT.json and is a metadata-only descendant. PR #29 remains Draft/open/unmerged; main unchanged.",
+    "latest_audit_branch_ci_url": "https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38899088495",
+    "latest_audit_branch_python_tests": 295,
+    "latest_audit_branch_python_skipped": 1,
+    "latest_audit_branch_node_tests": 4,
+    "latest_audit_branch_write_audit_mutation_sites": 127,
+    "latest_audit_branch_write_audit_unclassified": 0,
+    "latest_audit_branch_memory_validation": "PASS"
   },
   "historical_repository_state": {
     "last_verified_code_head": "e30450a5ed516ab1f76f65c3c7874cdd2b951c40",
@@ -183,10 +192,10 @@
   "revision_semantics": {
     "source_code_checkpoint": "Historical milestone retained in the original source_code_checkpoint object; it is not the current code HEAD.",
     "latest_verified_code_head": "repository_state.last_verified_code_head; exact-head CI run 38862706088 belongs to code SHA 0f2c76f1b79d1c73aa89eed0f3e98830658c338d.",
-    "metadata_revision": "The current checkpoint commit is the metadata revision; it is intentionally not embedded as a self-referential SHA. The preceding audit/doc HEAD 66e1153979300d4b9aff3049f180164c60d63d0e passed CI run 38898866464; this checkpoint update changes only CONTINUITY_CHECKPOINT.json.",
+    "metadata_revision": "The current checkpoint commit is the metadata revision; it is intentionally not embedded as a self-referential SHA. The preceding audit/docs HEAD 128f93ffad6bd500fd38db5928405a56f150e passed CI run 38899088495; this checkpoint update changes only CONTINUITY_CHECKPOINT.json.",
     "chronology_rule": "Historical source checkpoint, previous verified code states, current code SHA/CI and subsequent metadata commit remain separate facts.",
     "live_restore_verification": "tools/verified_session_restore.py fetches the branch tip, exact workflow run and compare API. A later branch tip is accepted only when it is a clean descendant and every changed path is in the explicit metadata-only allowlist.",
-    "audit_branch_validation": "Audit branch HEAD 66e1153979300d4b9aff3049f180164c60d63d0e, CI run 38898866464 success: 295 Python tests (1 skipped), 4 Node tests, write audit 127/0, memory validation PASS."
+    "audit_branch_validation": "Audit/docs HEAD 128f93ffad6bd500fd38db5928405a56f150e, CI run 38899088495 success: 295 Python tests (1 skipped), 4 Node tests, write audit 127/0, memory validation PASS."
   },
   "prior_verified_code_states": [
     {
@@ -211,9 +220,10 @@
   "open_items": [
     "Production archive acceptance and completeness audit; full chat and attachment coverage remains unverified.",
     "Live Android browser-extension acceptance and automatic ChatGPT message capture/startup remain unverified.",
-    "Implement the runtime attention/return controller (UMC-02).",
+    "Implement the runtime attention/return controller (UMC-02 / CAP-02).",
     "Implement production trusted applicability verification and connect the review frontier to a bounded planning consumer without granting execution permission.",
-    "Build the authoritative capability traceability matrix and keep status claims synchronized with exact code/test revisions.",
+    "Connect task start to staged retrieval of current-project events, decisions, lessons, failed attempts and causal links, followed by cautiously evaluated shared experience.",
+    "Expand interruption/replay coverage across source registration, promotion, correction append, index pointer publication and restore.",
     "Do not merge PR #27, #28 or #29 or change main without explicit user approval."
   ]
 }
