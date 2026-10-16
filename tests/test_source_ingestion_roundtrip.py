@@ -155,26 +155,58 @@ class SourceIngestionRoundtripTests(unittest.TestCase):
                          {row["source_record_id"] for row in original_rows})
         self.assertNotEqual(self.registry.read_bytes(), before)
 
-    def test_new_source_snapshot_is_appended_as_a_revision_not_an_overwrite(self):
+    def test_new_source_snapshot_skips_unchanged_record_and_appends_changed_revision(self):
         first_manifest, first_stage = self._stage_and_adapt("first version of the source message")
         first = append_source_records(first_manifest, self.registry, apply=True)
         self.assertEqual(first["status"], "APPENDED")
+        self.assertEqual(first["added_count"], 2)
+        original_rows = [
+            json.loads(line)
+            for line in self.registry.read_text(encoding="utf-8").splitlines()
+        ]
+        original_by_locator = {row["source_locator"]: row for row in original_rows}
 
+        # Only the user message changes; the assistant message is byte-for-byte
+        # the same logical record even though the archive snapshot hash changes.
         second_manifest, second_stage = self._stage_and_adapt("second version of the source message")
         self.assertNotEqual(first_stage["raw_sha256"], second_stage["raw_sha256"])
         second = append_source_records(second_manifest, self.registry, apply=True)
         self.assertEqual(second["status"], "APPENDED")
+        self.assertEqual(second["already_present"], 1)
+        self.assertEqual(second["added_count"], 1)
 
         rows = [json.loads(line) for line in self.registry.read_text(encoding="utf-8").splitlines()]
-        self.assertEqual(len(rows), 4)
+        self.assertEqual(len(rows), 3)
         by_locator = {}
         for row in rows:
             by_locator.setdefault(row["source_locator"], []).append(row)
         self.assertEqual(len(by_locator), 2)  # user and assistant nodes
-        for versions in by_locator.values():
-            self.assertEqual(len(versions), 2)
-            self.assertEqual(len({r["source_record_id"] for r in versions}), 1)
-            self.assertEqual(len({r["source_snapshot_sha256"] for r in versions}), 2)
+        version_counts = sorted(len(versions) for versions in by_locator.values())
+        self.assertEqual(version_counts, [1, 2])
+        unchanged_locator = next(
+            locator for locator, versions in by_locator.items() if len(versions) == 1
+        )
+        self.assertEqual(by_locator[unchanged_locator][0], original_by_locator[unchanged_locator])
+
+    def test_new_snapshot_with_identical_records_is_a_noop_even_if_snapshot_hash_changes(self):
+        manifest_path, first_stage = self._stage_and_adapt("same logical source message")
+        first = append_source_records(manifest_path, self.registry, apply=True)
+        self.assertEqual(first["status"], "APPENDED")
+        before = self.registry.read_bytes()
+
+        # JSON whitespace changes the immutable source hash but not any source record.
+        payload = json.loads(self.source.read_text(encoding="utf-8"))
+        self.source.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\\n", encoding="utf-8")
+        second_stage = build(self.source, self.staging, archive_id="ARCHIVE-TEST-001")
+        self.assertNotEqual(first_stage["raw_sha256"], second_stage["raw_sha256"])
+        adapted = adapt_archive_staging_to_intake(self.staging / "archive_snapshot.json", self.intake_root)
+        second_manifest = Path(adapted["manifest_path"])
+
+        second = append_source_records(second_manifest, self.registry, apply=True)
+        self.assertEqual(second["status"], "ALREADY_REGISTERED")
+        self.assertEqual(second["already_present"], 2)
+        self.assertFalse(second["writes_performed"])
+        self.assertEqual(self.registry.read_bytes(), before)
 
     def test_registry_rejects_raw_text_and_project_assignment(self):
         manifest_path, _ = self._stage_and_adapt("synthetic source message")
