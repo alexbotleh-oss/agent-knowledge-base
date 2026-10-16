@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
 import sys
 from pathlib import Path
 from typing import Any
@@ -20,6 +21,19 @@ if str(TOOLS_DIR) not in sys.path:
 
 from dialogue_attention_controller import inspect as inspect_attention
 from minimal_agent_loop import run_minimal_agent_loop
+
+
+def _infer_task_id(task_state: Path) -> str | None:
+    """Infer only an explicit task ID from canonical task-state markers."""
+    try:
+        text = Path(task_state).read_text(encoding="utf-8")
+    except OSError:
+        return None
+    match = re.search(r"^\\s*(?:parent_task_id|task_id)\\s*:\\s*(\\S+)", text, re.I | re.M)
+    if match:
+        return match.group(1)
+    match = re.search(r"^#\\s*TASK_STATE\\s*[—-]\\s*(\\S+)", text, re.I | re.M)
+    return match.group(1) if match else None
 
 
 def _expand_candidate(candidate: dict[str, Any]) -> dict[str, Any]:
@@ -104,13 +118,14 @@ def build_task_start_experience_map(
     current_task = active_task_id
     current_checkpoint = active_checkpoint_id
     if not current_task:
-        current_task = loop.get("context", {}).get("active_task_id")
+        current_task = loop.get("context", {}).get("active_task_id") or _infer_task_id(task_state)
     attention_active = attention.get("active")
     stack = attention.get("return_stack", [])
     if stack:
         effective_active = stack[-1].get("child", {})
         attention_alignment = (
             "MATCH" if current_task and effective_active.get("task_id") == current_task
+            else "TASK_ID_UNKNOWN" if not current_task
             else "BRANCH_ACTIVE_TASK_DIFFERS_FROM_TASK_STATE"
         )
     elif attention_active is None:
@@ -119,7 +134,8 @@ def build_task_start_experience_map(
     else:
         effective_active = attention_active
         attention_alignment = (
-            "MATCH" if not current_task or attention_active.get("task_id") == current_task
+            "TASK_ID_UNKNOWN" if not current_task
+            else "MATCH" if attention_active.get("task_id") == current_task
             else "ATTENTION_TASK_DIFFERS_FROM_TASK_STATE"
         )
 
