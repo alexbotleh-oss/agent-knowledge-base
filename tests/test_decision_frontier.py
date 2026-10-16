@@ -78,6 +78,32 @@ class DecisionFrontierTests(unittest.TestCase):
         self.assertEqual(frontier["next_discriminating_check"]["type"], "RECONCILE_CONFLICT")
         self.assertEqual(frontier["next_discriminating_check"]["target_ids"], ["L-A", "L-B"])
 
+    def test_duplicate_candidate_ids_preserve_both_sources_and_block_keep(self):
+        candidates = [
+            {"candidate_type": "event", "event_id": "EVT-DUP-1", "project_id": "P",
+             "source": {"path": "project-a/events.jsonl", "line": 3}, "retrieval_stage": "EVENT_LEXICAL"},
+            {"candidate_type": "event", "event_id": "EVT-DUP-1", "project_id": "P",
+             "source": {"path": "project-b/events.jsonl", "line": 9}, "retrieval_stage": "EVENT_LEXICAL"},
+        ]
+        report = {
+            "assessments": [{"candidate_id": "EVT-DUP-1", "candidate_type": "event",
+                             "outcome": "APPLICABLE", "reason": "synthetic positive label"}],
+            "usable_as_rationale": [{"candidate_id": "EVT-DUP-1", "candidate_type": "event"}],
+            "excluded": [], "not_evaluated": [], "needs": [], "blocked_dependent_decisions": [],
+        }
+        frontier = reduce_decision_frontier(candidates, report)
+        duplicates = [row for row in frontier["directions"] if row["candidate_id"] == "EVT-DUP-1"]
+        self.assertEqual(len(duplicates), 2)
+        self.assertEqual({row["classification"] for row in duplicates}, {"HOLD"})
+        self.assertEqual(
+            {row["source"]["path"] for row in duplicates},
+            {"project-a/events.jsonl", "project-b/events.jsonl"},
+        )
+        self.assertTrue(all(row["duplicate_candidate_id"] for row in duplicates))
+        self.assertEqual(frontier["summary"]["duplicate_candidate_keys"], 1)
+        self.assertEqual(frontier["next_discriminating_check"]["type"], "RESOLVE_DUPLICATE_CANDIDATE_ID")
+        self.assertFalse(frontier["grants_planning_permission"])
+
     def test_no_candidates_requests_retrieval_input_review(self):
         frontier = reduce_decision_frontier([], {}, retrieval_status="NO_MATCHES")
         self.assertEqual(frontier["status"], "NO_CANDIDATES")
