@@ -1,0 +1,14 @@
+{
+  "schema_version": "semantic-memory-approval-v1",
+  "decision_id": "DECISION-REPLACE-ME",
+  "decision": "approve",
+  "actor_type": "user",
+  "actor_ref": "explicit-user-approval-reference",
+  "decided_at": "2026-10-16T00:00:00Z",
+  "batch_id": "BATCH-REPLACE-ME",
+  "artifact_id": "ARTIFACT-REPLACE-ME",
+  "manifest_sha256": "REPLACE_WITH_64_HEX_SHA256",
+  "artifact_sha256": "REPLACE_WITH_64_HEX_SHA256",
+  "decision_source_ref": "stable-reference-to-explicit-approval",
+  "rationale": "Record the exact scope of the approval; this example is not a real approval."
+}
