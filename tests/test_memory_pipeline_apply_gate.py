@@ -33,8 +33,14 @@ class PipelineApplyGateTests(unittest.TestCase):
             manifest=root/"manifest.json"; manifest.write_bytes(canon(manifest_data))
             receipt=root/"receipt.json"; receipt.write_text("{}",encoding="utf-8")
             source=root/"source_records.jsonl"
-            source.write_bytes(canon({"source_record_id":"SRC-000000000000000000000001","source_locator":"other",
-                "source_node_id":"N1","source_message_id":"M1","archive_id":"A1","conversation_id":"C1","text_sha256":"b"*64})+b"\n")
+            locator="A1/C1/N1"
+            source_record={"source_record_id":"SRC-"+hashlib.sha256(locator.encode("utf-8")).hexdigest()[:24],
+                "source_locator":locator,"source_node_id":"N1","source_message_id":"M1","archive_id":"A1","conversation_id":"C1",
+                "parent_node_id":None,"child_node_ids":[],"source_time":None,"source_time_unix":None,"role":"user","content_type":"text",
+                "text_sha256":"b"*64,"source_snapshot_sha256":"c"*64,"parser_version":"test-parser","has_attachments":False,
+                "attachment_count":0,"attachment_payloads_inspected":False,"batch_id":"BATCH-TEST-001",
+                "registered_at":"2026-10-16T00:00:00Z","schema_version":"source-record-v1"}
+            source.write_bytes(canon(source_record)+b"\n")
             task=root/"TASK_STATE.md"; task.write_text("task",encoding="utf-8")
             handoff=root/"HANDOFF.md"; handoff.write_text("handoff",encoding="utf-8")
             events=root/"events.jsonl"; events.write_text("{}",encoding="utf-8")
