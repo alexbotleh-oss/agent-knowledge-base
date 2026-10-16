@@ -42,6 +42,7 @@ CONTRACTS = {
     "tools/turn_lifecycle_adapter.py": "authenticated local HTTP adapter: request/response socket writes are protocol output, while all durable state changes delegate to the protected turn lifecycle ledger; loopback by default, bearer auth, body/origin validation",
     "tools/dialogue_attention_controller.py": "dialogue attention controller: append-only attention/return events in the canonical AGENT_MEMORY_SYSTEM event log, stable event IDs, replay-safe projection, explicit child context for task switches, shared journal lock, ambiguous turns remain unknown; no automatic ChatGPT capture or task execution",
     "tools/check_reuse_policy.py": "check reuse ledger: append-only check-result events in canonical AGENT_MEMORY_SYSTEM event log, stable input-bound identity, shared journal lock, fsync, PASS requires evidence refs, exact-input reuse only; recorded result is not independently authenticated",
+    "tools/agent_memory_cycle.py": "memory cycle orchestration: compose task-start retrieval, read-only branch-result reconciliation and explicit parent return; return only after current branch result is accepted and parent checkpoint reconciles; no implicit planning authorization",
 }
 DEFAULT_MUTATING_SUFFIXES = (".md", ".jsonl", ".json", ".sqlite", ".db")
 
