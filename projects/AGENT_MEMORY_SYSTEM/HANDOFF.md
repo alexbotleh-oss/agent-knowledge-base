@@ -855,3 +855,14 @@ Exact code/test HEAD 4a257c059c1b716145e0f6311f9f7a6b8095db9f passed CI 38907787
 **Important limitation:** this is synthetic CI validation, not a real import of the user's full ChatGPT export. Do not report the personal archive as exported or complete. The current chat has not supplied a complete raw export payload to this runner. When a real source file is available, capture its SHA-256 and counts, run the importer, then compare before/after counts and confirm only missing logical records were appended.
 
 **Parent task return point:** close the production trust boundary for signed applicability/check receipts, route parent return through the guarded cycle, and preserve PR #30 as Draft/open/unmerged. main remains unchanged.
+
+
+## Follow-up — reconcile owner acknowledgement and branch-return status (2026-10-16)
+
+Read-back found that the capability matrix still claimed owner identity/reference could not be authenticated by the acknowledgement primitive. That claim was stale: PR #30 now accepts signed `owner_acknowledgement` receipts bound to the exact child result, child branch, parent task/checkpoint, decision and owner reference; the return controller re-verifies the receipt against an externally pinned keyring. A separate regression ensures that a signed acknowledgement for an older result cannot authorize a newer result. Unsigned and tampered receipts are covered by tests.
+
+The source comment indentation in `tools/agent_memory_cycle.py` is now corrected in the branch. The matrix CAP-15 row and its current-follow-up note were updated, and `CONTINUITY_CHECKPOINT.json` now records this discrepancy and the validation boundary.
+
+**Validation boundary:** the last recorded full code CI remains historical: code HEAD `4a257c059c1b716145e0f6311f9f7a6b8095db9f`, run [38907787412](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38907787412), 388 Python tests (1 skipped), write audit 143/0, memory/project validation PASS. Available workflow lookup did not establish a full run on the latest code/test head after the signed-owner-ack and stale-ack changes. Do not represent that older CI as validation of the latest code.
+
+**Remaining:** obtain exact-head full CI; configure a production trusted owner key and pinned keyring; test idempotent import against the actual complete archive; reconcile duplicate UMC-03 source history between PR #28 and PR #30. PR #30 remains Draft/open/unmerged. Do not merge or change `main` without explicit user approval.
