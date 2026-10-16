@@ -711,3 +711,15 @@ P2 is not yet declared ready: this test mocks the final verified restore packet,
 - `tests/test_memory_pipeline_real_ingestion.py` uses the real source-ingestion runner, coordinator promotion/index and real memory-aware restore. It asserts retrieval of `MEM-REAL-INGEST-1`, revision `REV-REAL-1`, and non-empty provenance in scope `AGENT_MEMORY_SYSTEM` / `TASK-REAL` / `CTX-REAL`.
 - This supersedes the earlier statement that the combined test still mocked restore or remained to be created. Earlier entries are retained as chronology, not current status.
 - Still open: synchronize the other continuity files and verify metadata-only descendant CI. Production archive completeness remains unverified. PR #27 remains Draft/open/unmerged; `main` unchanged.
+
+
+## Сквозной аудит памяти и непрерывного агента — 2026-10-16
+
+- **Активная цель:** сверить всю цепочку разработки механизма памяти и запланированных функций агента с реальным кодом, тестами и CI; найти утраченные/неподключённые функции и противоречия статусов между документами.
+- **Отчёт:** `projects/AGENT_MEMORY_SYSTEM/END_TO_END_MEMORY_AGENT_AUDIT_2026-10-16.md`.
+- **Рабочая ветка:** `audit/agent-memory-e2e-20261016`; draft PR #29: https://github.com/alexbotleh-oss/agent-knowledge-base/pull/29.
+- **База аудита:** интеграционная ветка PR #27, HEAD `d3f9c610b7865793960dc652c2ccccc88afef732`, CI run 38864512026 PASS (295 Python tests, 1 skipped; 4 Node tests; memory validation PASS). PR #28 HEAD `b6d32a3c36aa5df8079f63aad20fd41a8f56c512` изучен отдельно; UMC-03 evaluator/frontier в PR #28 не входит в HEAD PR #27.
+- **Подтверждено:** синтетический end-to-end путь source ingestion → approval-bound promotion → canonical index → memory-aware restore реализован и тестируется; PR #27 и #28 остаются Draft/open/unmerged; `main` не изменён.
+- **Ключевые пробелы:** реальный архив не прошёл полный acceptance; tracked production source/memory/correction registries отсутствуют; UMC-02 runtime attention/return controller BLOCKED; автоматический старт/сбор сообщений ChatGPT не доказан; production applicability trust root отсутствует; полноценный retrieval по причинному графу памяти не завершён; skill executor, runtime environment monitor и VLM/Android acceptance не подтверждены.
+- **Найденная проблема процесса:** несколько документов сохраняют статусы до появления поздних инструментов. В этой ветке добавлены superseding status notes в `core/source_ingestion_protocol.md`, `core/memory_write_contracts.md` и обновлена матрица приёмки в `core/unified_memory_control_loop.md`. Исторические выводы не удалялись.
+- **Следующий шаг:** дождаться CI для audit branch, затем обновить контрольную точку/hand-off на проверенную ревизию и продолжить по P0: единая матрица трассировки capability → code → test → exact SHA/CI → status → residual gap. Не менять `main` и не сливать PR без отдельного разрешения.
