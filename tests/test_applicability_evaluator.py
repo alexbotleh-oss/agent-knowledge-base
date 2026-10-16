@@ -17,7 +17,7 @@ if str(TOOLS) not in sys.path:
     sys.path.insert(0, str(TOOLS))
 
 from applicability_evaluator import evaluate_applicability
-from minimal_agent_loop import retrieve_lesson_candidates, run_minimal_agent_loop
+from minimal_agent_loop import retrieve_lesson_candidates, retrieve_lesson_candidates_structured, run_minimal_agent_loop
 
 PROJECT = "TEST"
 FULL = ("problem_similarity", "trigger", "applicability", "evidence_support", "circumstances_unchanged")
