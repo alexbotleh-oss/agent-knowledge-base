@@ -25,14 +25,14 @@ class TaskStartExperienceMapTests(unittest.TestCase):
         self.task.write_text(
             "# TASK_STATE — TASK-PARENT\n"
             "project_id: TEST\n"
-            "## Active goal\nInvestigate cache recovery\n"
-            "## Next step\nCompare prior successful and failed attempts\n",
+            "- **Активная задача в текущей сессии:** Investigate cache recovery\n"
+            "- **Последнее событие:** EVT-CURRENT-1\n",
             encoding="utf-8",
         )
         self.handoff.write_text(
             "# HANDOFF\n"
             "project_id: TEST\n"
-            "## Next step\nCompare prior successful and failed attempts\n",
+            "- **Следующий шаг:** Compare prior successful and failed attempts\n",
             encoding="utf-8",
         )
         self._write(self.events, [{
