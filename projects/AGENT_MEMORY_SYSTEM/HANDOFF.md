@@ -714,3 +714,10 @@ Current code/test branch: `integration/memory-core-clean-20261015`. Latest imple
 Coordinator is in `tools/memory_pipeline_coordinator.py`; tests include `tests/test_memory_pipeline_*.py`. It composes the existing stages and preserves source provenance. The new test `tests/test_memory_pipeline_real_stages.py` was then extended to simulate interruption immediately after the real index pointer publish and rerun the same fingerprint, expecting idempotent promotion/correction replay. The CI run for that exact newer commit must be checked before continuing.
 
 Boundaries: no production archive has been processed; no claim of full source/chat coverage; semantic-memory status may be PARTIAL; stage ledger is audit/recovery evidence, not a cross-registry transaction. PR #27 remains Draft/open/unmerged and `main` must remain unchanged.
+
+
+## CI result — real source ingestion, 2026-10-16
+
+The real-ingestion integration test passed in exact-head CI [38856130862](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38856130862), code SHA `fadc95c083a6a6ffafbe7042e78a70f1a0d2c31f). Result: 295 Python tests (1 skipped), 4 Node tests, write audit 127/0.
+
+Important remaining gap: real ingestion + promotion is tested, but the same test mocks the verified restore packet. A separate test exercises real restore but mocks ingestion. Continue by combining real ingestion, promotion/index, and real verified restore in one synthetic end-to-end test. Do not claim P2 readiness until that passes. No production archive coverage is established.
