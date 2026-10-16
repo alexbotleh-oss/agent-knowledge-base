@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "checkpoint_id": "CKPT-AGMS-20261016-REAL-INGESTION-INTEGRATION-07",
+  "checkpoint_id": "CKPT-AGMS-20261016-REAL-INGESTION-PASS-08",
   "project_id": "AGENT_MEMORY_SYSTEM",
   "task_id": "AGMS-2026-10-15-MEMORY-PIPELINE-CONTINUITY",
   "recorded_at": "2026-10-16",
@@ -19,8 +19,14 @@
   },
   "source_code_checkpoint": {
     "head": "fadc95c083a6a6ffafbe7042e78a70f1a0d2c31f",
-    "ci_run_id": null,
-    "ci_conclusion": "pending"
+    "ci_run_id": 38856130862,
+    "ci_url": "https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38856130862",
+    "ci_conclusion": "success",
+    "python_tests": 295,
+    "python_skipped": 1,
+    "node_tests": 4,
+    "write_audit_mutation_sites": 127,
+    "write_audit_unclassified": 0
   },
   "confirmed_completed": [
     "Resumable source-ingestion runner exists and has CI tests for dry-run, apply/replay, uncertain registry acknowledgement after crash, tampered ledger, and missing state projection reconstruction.",
@@ -66,7 +72,9 @@
     "Added coordinator tests for provenance resolution/ambiguity, preflight blocking, ledger tamper/projection recovery, deterministic dry-run replay, mocked stage composition, and real semantic-promotion/correction/index/restore executors over synthetic data.",
     "Exact-head CI at feeb14446c8b039271b753a8ecd0b2661318b818 passed: 294 Python tests (1 skipped), 4 Node tests, write audit 127 mutation sites / 0 unclassified.",
     "Confirmed exact-head CI run 38853687319 is for feeb14446c8b039271b753a8ecd0b2661318b818, which includes the real-stage crash/replay test added immediately before the run.",
-    "Added tests/test_memory_pipeline_real_ingestion.py: synthetic archive is staged, the real source_ingestion_runner registers source records, and the coordinator then validates provenance and promotes an approved semantic record. Exact-head CI is not yet visible/confirmed."
+    "Added tests/test_memory_pipeline_real_ingestion.py: synthetic archive is staged, the real source_ingestion_runner registers source records, and the coordinator then validates provenance and promotes an approved semantic record. Exact-head CI is not yet visible/confirmed.",
+    "Exact-head CI 38856130862 passed for fadc95c083a6a6ffafbe7042e78a70f1a0d2c31f: 295 Python tests (1 skipped), 4 Node tests, write audit 127 mutation sites / 0 unclassified.",
+    "tests/test_memory_pipeline_real_ingestion.py passed: stages a synthetic archive, uses real source_ingestion_runner.py to register source records, then real provenance validation and semantic promotion successfully execute through the coordinator."
   ],
   "confirmed_open": [
     {
@@ -103,7 +111,7 @@
       "description": "The ChatGPT web extension is a prototype verified by static CI only. Must be installed and tested in the user's actual Yandex Browser Android version. Verify send gate (no send before durable receipt), exact text and prior assistant message capture, interrupted connection recovery, response DOM detection, multiple incomplete turns, extension restart, and UI-selector drift. Until these pass, do not claim end-to-end capture is operational."
     }
   ],
-  "next_action": "Check CI for real-ingestion integration test at fadc95c083a6a6ffafbe7042e78a70f1a0d2c31f; fix failures, then verify full stage result and PR/main boundaries.",
+  "next_action": "Build and run the combined synthetic end-to-end test with real source ingestion and real verified restore; verify exact-head CI, then decide P2 readiness. Keep production archive acceptance/coverage audit separate.",
   "constraints": [
     "Do not merge PR #27 or modify main without explicit user approval.",
     "Do not delete or rewrite source-history exports without a separate explicit decision.",
@@ -112,7 +120,7 @@
     "No semantic record is accepted merely because source metadata was registered.",
     "Never report CI success for a SHA other than the exact checked SHA."
   ],
-  "status": "REAL_SOURCE_INGESTION_INTEGRATION_TEST_ADDED_CI_PENDING",
+  "status": "REAL_INGESTION_AND_SEMANTIC_PROMOTION_PASS_FULL_RESTORE_INTEGRATION_OPEN",
   "checkpoint_semantics": "This is a durable task checkpoint committed to the integration branch. It is not an automatic ChatGPT autosave or proof that an undelivered response was saved.",
   "repository_state": {
     "last_verified_code_head": "1fd9c91ae8bb8662a3cb1a1cea3d63452064fc40",
@@ -180,6 +188,6 @@
     "Live Android browser-extension acceptance",
     "Run a controlled synthetic end-to-end test with real ingestion runner, then separately plan production archive acceptance and coverage audit.",
     "Do not merge PR #27 or change main; PR remains Draft/open/unmerged.",
-    "Run and pass exact-head CI for fadc95c083a6a6ffafbe7042e78a70f1a0d2c31f; fix any integration fixture/runtime failures before P2 gate."
+    "Full combined end-to-end test still mocks build_memory_aware_packet/verified restore in the real-ingestion test. Existing real-stage test exercises real restore but mocks source ingestion. Add a test combining real source ingestion + real promotion/index + real verified restore; ensure controlled fixtures do not rely on impossible or fabricated external revision state."
   ]
 }
