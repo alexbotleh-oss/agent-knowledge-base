@@ -297,3 +297,17 @@ This section supersedes the stage-status conclusions in the 2026-10-15 audit abo
 | End-to-end orchestration/recovery | Source ingestion, promotion, and index refresh remain separate commands. | Still open. Need a durable stage ledger that reconciles registry commit, index publication, and fresh-session restore after interruption. Do not claim the full pipeline is complete. |
 
 The canonical index uses the shared source-registry advisory lock while reading and publishing, and the index lock while publishing. A failed pointer replacement preserves the prior pointer; a newly written but unreferenced generation may remain safely orphaned. The next stage is restore integration with explicit `CURRENT_PARTIAL|STALE|INVALID|UNAVAILABLE` handling, not an assertion that a successful index build means full coverage.
+
+
+## Implementation status update — 2026-10-16, session restore integration
+
+This status supersedes the earlier statement that no semantic-memory restore consumer existed. The full pipeline is still not end-to-end verified against a production registry/archive.
+
+| Stage | Current evidence | Status |
+|---|---|---|
+| Approved semantic promotion | `tools/semantic_memory_registry.py`; exact-head CI #38851184392. | Implemented and tested; no real production batch was promoted. |
+| Canonical memory index | `tools/canonical_memory_index.py`; tests cover deterministic generations, multidimensional views, revision history, freshness and failed pointer publication. | Implemented. Exact source freshness is checked. Coverage remains PARTIAL because no canonical correction-overlay source exists. |
+| Session restore consumes approved semantic memory | `tools/memory_aware_session_restore.py`; tests in `tests/test_memory_aware_session_restore.py` and `tests/test_memory_aware_restore_partial_status.py`; exact-head CI [#38851785241](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38851785241) passed. | Implemented as a read-only composition over the verified task/event restore and a fresh canonical index. It filters by exact project/task/context IDs and optional lexical substring, resolves records back to the canonical registry, returns provenance/evidence/conflicts, and marks partial/stale/unavailable states explicitly. |
+| Live production acceptance / full pipeline crash recovery | Current tests use synthetic registry envelopes and mocked remote API for the base restore. No production registry/archive was run through ingestion → approval → promotion → index → restore as one transaction. | Still open. Do not claim end-to-end production acceptance or a complete index while correction overlays remain unavailable. |
+
+Restore statuses distinguish task/event recovery from semantic-memory coverage. A stale or missing index is not interpreted as an empty memory store; an empty search in the current partial index does not prove that no relevant memory exists. The wrapper does not auto-refresh an index or mutate canonical records.
