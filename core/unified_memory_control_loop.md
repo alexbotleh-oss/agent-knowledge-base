@@ -324,3 +324,16 @@ This section supersedes the earlier statement that no correction-overlay contrac
 - Tests use synthetic source records and corrections. They do not establish that any real project memory is fully reconciled or that all source archives were imported.
 
 Next: validate the exact integrated code HEAD, then add a durable pipeline coordinator that reconciles ingestion, explicit approval, semantic promotion, correction registration, index publication and fresh-session restore after crashes/replays.
+
+
+## Implementation status update — 2026-10-16, durable pipeline coordinator
+
+This section supersedes the earlier statement that ingestion, approval, promotion, correction registration, index generation and restore were only independent manual stages.
+
+- Added `tools/memory_pipeline_coordinator.py`. It preflights approval/restore inputs, invokes source ingestion, resolves every memory provenance reference against schema-valid canonical SourceRecords, then promotes semantic memory, optionally registers a correction, refreshes the index and composes verified restore.
+- The coordinator maintains a deterministic input-bound run ID and a hash-chained append-only stage ledger. Its state JSON is a rebuildable projection. If interrupted after a stage effect but before the result event, rerunning the same input fingerprint replays the idempotent stage; the coordinator does not roll back earlier append-only writes.
+- Provenance validation uses stable source IDs/locators and optional archive/conversation/content-hash constraints. Missing or ambiguous references block semantic promotion. Raw provenance locators are not copied into the durable pipeline ledger.
+- CI exact-head tests cover provenance resolution/ambiguity, preflight stops, ledger integrity/projection rebuild, dry-run replay and a mocked apply-stage sequence. The coordinator has **not** been run against a production archive as one transaction; production acceptance remains open.
+- A partial-memory result remains partial. No source archive completeness is inferred from a successful stage chain or CI pass.
+
+Next: verify the full coordinator against a controlled end-to-end synthetic fixture with the real stage executors, including crash points after source registration, promotion, correction append, index pointer publication and restore. Then perform a separately authorized archive acceptance/coverage audit.
