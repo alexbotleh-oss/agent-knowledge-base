@@ -180,12 +180,11 @@
     }
   ],
   "open_items": [
-    "Durable end-to-end pipeline coordinator with hash-chained stage ledger and crash/replay reconciliation",
-    "Verify promoted semantic-record provenance resolves to source registry records and archive coverage",
     "Production archive acceptance and completeness audit",
     "Live Android browser-extension acceptance",
     "Do not merge PR #27 or change main; PR remains Draft/open/unmerged.",
-    "Synchronize HANDOFF.md and append-only events.jsonl with exact-head CI result 38862706088; verify metadata-only descendant CI.",
-    "Production archive acceptance and completeness audit remain separate; full archive/chat coverage is not established."
+    "Production archive acceptance and completeness audit remain separate; full archive/chat coverage is not established.",
+    "Production archive acceptance and completeness audit: synthetic provenance resolution passed, but production archive coverage and full chat-history completeness are not established.",
+    "Verify exact-head CI for the final metadata revision 360d90c690b0d1e485714889c96239dbe68b762d."
   ]
 }
