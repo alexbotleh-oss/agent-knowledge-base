@@ -721,3 +721,13 @@ Boundaries: no production archive has been processed; no claim of full source/ch
 The real-ingestion integration test passed in exact-head CI [38856130862](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38856130862), code SHA `fadc95c083a6a6ffafbe7042e78a70f1a0d2c31f). Result: 295 Python tests (1 skipped), 4 Node tests, write audit 127/0.
 
 Important remaining gap: real ingestion + promotion is tested, but the same test mocks the verified restore packet. A separate test exercises real restore but mocks ingestion. Continue by combining real ingestion, promotion/index, and real verified restore in one synthetic end-to-end test. Do not claim P2 readiness until that passes. No production archive coverage is established.
+
+
+## Current verified continuation point — 2026-10-16
+
+- **Current code HEAD:** `0f2c76f1b79d1c73aa89eed0f3e98830658c338d`.
+- **Exact-head CI:** [run 38862706088](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38862706088) completed successfully. The exposed run/job metadata confirms memory-protocol/record validation and knowledge-base/stack validation passed; do not infer hidden test counts.
+- **Real combined test:** `tests/test_memory_pipeline_real_ingestion.py` executes real source ingestion, coordinator semantic promotion/index generation, and real memory-aware session restore. It asserts the expected record `MEM-REAL-INGEST-1`, revision `REV-REAL-1`, and non-empty provenance under the matching `AGENT_MEMORY_SYSTEM` project scope, `TASK-REAL` task and `CTX-REAL` context.
+- Earlier handoff entries saying the combined test mocked restore or remained to be created are historical records superseded by this section; they are not current status.
+- **Still not proven:** completeness of any production archive or full chat history; the fixture is synthetic and coverage remains partial. Production acceptance is a separate gate.
+- **Next:** verify the final metadata-only branch HEAD and its CI; preserve PR #27 as Draft/open/unmerged and do not change `main`.
