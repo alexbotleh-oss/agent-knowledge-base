@@ -1,12 +1,12 @@
 {
   "schema_version": "1.0",
-  "checkpoint_id": "CKPT-AGMS-20261015-INTERRUPTION-RECOVERY-03",
+  "checkpoint_id": "CKPT-AGMS-20261016-P1-REVISION-RESTORE-04",
   "project_id": "AGENT_MEMORY_SYSTEM",
   "task_id": "AGMS-2026-10-15-MEMORY-PIPELINE-CONTINUITY",
-  "recorded_at": "2026-10-15",
+  "recorded_at": "2026-10-16",
   "recorded_time_precision": "day",
   "source_chat": "Настройка Агента",
-  "source_message": "User asked to complete the persistent memory mechanism so network interruptions do not force repeated work.",
+  "source_message": "User asked to complete all remaining P1 activities and then continue to the next task.",
   "goal": "Make work recoverable after connection/session interruption without repeating already verified steps; connect source ingestion, approved semantic-memory processing, index refresh, and next-session restore, while preserving provenance and project boundaries.",
   "branch": "integration/memory-core-clean-20261015",
   "pr": {
@@ -53,7 +53,11 @@
     "At code HEAD e30450a5ed516ab1f76f65c3c7874cdd2b951c40, exact-head CI run 38772804206 passed: 230 Python tests (1 skipped), 4 Node tests, strict write audit 92 mutation sites / 0 unclassified, extension JavaScript syntax checks passed.",
     "Closed the causal restoration gap: restore_session_packet follows explicit event links transitively, keeps journal order, and reports PARTIAL for missing transitive event references; unit tests cover complete and incomplete ancestry.",
     "Extended the end-to-end regression scenario across branch result publication, owner acknowledgement, guarded task update, paired checkpoint capture/recovery after simulated projection interruption, and fresh-process restore.",
-    "Audited the source-ingestion route: source_ingestion_runner connects staging → intake adapter → route validation → metadata-only source registration; existing tests cover replay, crash after registry commit, projection rebuild, and tamper rejection. Semantic promotion and canonical index refresh remain NOT_IMPLEMENTED; next-session restore remains NOT_VERIFIED."
+    "Audited the source-ingestion route: source_ingestion_runner connects staging → intake adapter → route validation → metadata-only source registration; existing tests cover replay, crash after registry commit, projection rebuild, and tamper rejection. Semantic promotion and canonical index refresh remain NOT_IMPLEMENTED; next-session restore remains NOT_VERIFIED.",
+    "Added tools/verified_session_restore.py as a read-only single entry point that independently fetches the target GitHub branch HEAD, exact recorded Actions run, and compare result; it composes tools/restore_session_packet.py rather than duplicating event ancestry restoration.",
+    "The verifier accepts an exact code HEAD match or a clean descendant with only allowlisted metadata paths changed; it fails closed on source/code drift, diverged ancestry, truncated compare, wrong/incomplete/failed exact-head CI, invalid checkpoint or unavailable remote evidence.",
+    "Added tests/test_verified_session_restore.py: 6 tests for exact head, metadata-only descendant, wrong/failed CI, unexpected source changes, diverged/truncated compare, and missing checkpoint. Exact code HEAD 467d68795d296b4a5e3ee473e1252be43e5e5bdc passed CI run 38849505217: 241 Python tests (1 skipped), 4 Node tests, strict write audit 92 mutation sites / 0 unclassified, memory and project validation PASS.",
+    "Documented the live remote revision verification entry point and trust boundary in core/agent_runtime_protocol.md. The entry point remains read-only and does not implement semantic promotion, canonical index refresh or automatic chat capture."
   ],
   "confirmed_open": [
     {
@@ -81,7 +85,7 @@
       "description": "The ChatGPT web extension is a prototype verified by static CI only. Must be installed and tested in the user's actual Yandex Browser Android version. Verify send gate (no send before durable receipt), exact text and prior assistant message capture, interrupted connection recovery, response DOM detection, multiple incomplete turns, extension restart, and UI-selector drift. Until these pass, do not claim end-to-end capture is operational."
     }
   ],
-  "next_action": "P1: make the historical source checkpoint, latest verified code HEAD/CI, and metadata revision unambiguous in task state, handoff, checkpoint JSON, and PR description; then read back the resulting revision and report exact evidence.",
+  "next_action": "P1 revision-evidence integration is implemented and exact-head CI is green. Next choose the next scoped milestone from the still-open ingestion → approved semantic promotion/index refresh → normal session-restore path; do not treat those downstream capabilities as completed by P1.",
   "constraints": [
     "Do not merge PR #27 or modify main without explicit user approval.",
     "Do not delete or rewrite source-history exports without a separate explicit decision.",
@@ -90,20 +94,23 @@
     "No semantic record is accepted merely because source metadata was registered.",
     "Never report CI success for a SHA other than the exact checked SHA."
   ],
-  "status": "ACTIVE_PARTIAL",
+  "status": "P1_COMPLETE_WITH_DOWNSTREAM_ITEMS_OPEN",
   "checkpoint_semantics": "This is a durable task checkpoint committed to the integration branch. It is not an automatic ChatGPT autosave or proof that an undelivered response was saved.",
   "repository_state": {
-    "last_verified_code_head": "86c18cfd6266517c2a3488bddf21b7f65ea339fa",
-    "exact_head_ci_run_id": 38804578271,
-    "exact_head_ci_url": "https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38804578271",
+    "last_verified_code_head": "467d68795d296b4a5e3ee473e1252be43e5e5bdc",
+    "exact_head_ci_run_id": 38849505217,
+    "exact_head_ci_url": "https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38849505217",
     "exact_head_ci_conclusion": "success",
-    "python_tests": 232,
+    "python_tests": 241,
     "python_skipped": 1,
     "node_tests": 4,
     "write_audit_mutation_sites": 92,
     "write_audit_unclassified": 0,
     "extension_js_syntax": "PASS",
-    "note": "This is the latest verified code HEAD as of 2026-10-15, before the P1 metadata-only update. CI evidence applies only to this exact code SHA; subsequent metadata commits do not imply code changed or that CI ran on those metadata-only commits."
+    "revision_restore_tests": 6,
+    "memory_validation": "PASS",
+    "project_validation": "PASS",
+    "note": "Exact-head CI run 38849505217 passed on this code SHA. The first implementation commit 7e501f90146bd8623d8178c0789268a8a76126d3 failed five new tests because the fixture expected an unescaped branch ref; commit 467d68795d296b4a5e3ee473e1252be43e5e5bdc corrected the fixture and exact-head CI passed. Later metadata-only commits must not be treated as code revisions."
   },
   "historical_repository_state": {
     "last_verified_code_head": "e30450a5ed516ab1f76f65c3c7874cdd2b951c40",
@@ -120,8 +127,29 @@
   },
   "revision_semantics": {
     "source_code_checkpoint": "Historical milestone retained in the original source_code_checkpoint object; it is not the current code HEAD.",
-    "latest_verified_code_head": "repository_state.last_verified_code_head; paired only with repository_state.exact_head_ci_run_id and its exact-head result.",
-    "metadata_revision": "The Git commit containing this metadata is the authoritative metadata revision. It is intentionally not embedded as a self-referential SHA in this file; record the resulting commit SHA in the handoff and PR description after write/read-back.",
-    "chronology_rule": "Do not overwrite earlier checkpoint evidence when a newer code or metadata revision appears. Append a new verification record or preserve the earlier state under historical_repository_state."
-  }
+    "latest_verified_code_head": "repository_state.last_verified_code_head; exact-head CI run 38849505217 belongs to code SHA 467d68795d296b4a5e3ee473e1252be43e5e5bdc.",
+    "metadata_revision": "The Git commit containing the current checkpoint/task/handoff/event metadata is authoritative for metadata revision; it is intentionally not embedded as a self-referential SHA.",
+    "chronology_rule": "Historical source checkpoint, previous verified code states, current code SHA/CI and subsequent metadata commit remain separate facts.",
+    "live_restore_verification": "tools/verified_session_restore.py fetches the branch tip, exact workflow run and compare API. A later branch tip is accepted only when it is a clean descendant and every changed path is in the explicit metadata-only allowlist."
+  },
+  "prior_verified_code_states": [
+    {
+      "code_head": "86c18cfd6266517c2a3488bddf21b7f65ea339fa",
+      "ci_run_id": "38804578271",
+      "ci_url": "https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38804578271",
+      "ci_conclusion": "success",
+      "python_tests": 232,
+      "python_skipped": 1,
+      "node_tests": 4,
+      "recorded_note": "This is the latest verified code HEAD as of 2026-10-15, before the P1 metadata-only update. CI evidence applies only to this exact code SHA; subsequent metadata commits do not imply code changed or that CI ran on those metadata-only commits.",
+      "superseded_at_code_head": "467d68795d296b4a5e3ee473e1252be43e5e5bdc"
+    },
+    {
+      "code_head": "ca9fabe998f9203bb8fe78f1b51515d54f5f4f09",
+      "ci_run_id": "38848337390",
+      "ci_url": "https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38848337390",
+      "ci_conclusion": "success",
+      "recorded_note": "P1 restore_session_packet revision-evidence implementation; retained from earlier HANDOFF record."
+    }
+  ]
 }

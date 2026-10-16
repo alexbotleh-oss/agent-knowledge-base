@@ -628,3 +628,23 @@ Read back the checkpoint, task state and this handoff at the resulting branch HE
 - **Tests and protocol:** added tests for historical/current separation, observed match/mismatch, missing checkpoint, and inclusion in the restore packet; documented the contract in `core/agent_runtime_protocol.md`.
 - **Exact code SHA:** `ca9fabe998f9203bb8fe78f1b51515d54f5f4f09`; exact-head [CI 38848337390](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38848337390) PASS.
 - **Next:** refresh PR description with this verified code SHA/run, then read back PR metadata and changed files. Keep PR #27 Draft/open/unmerged; no main changes.
+
+
+## P1 completion handoff — live repository revision verification, 2026-10-16
+
+### Verified implementation
+- Code HEAD: `467d68795d296b4a5e3ee473e1252be43e5e5bdc`.
+- Exact-head GitHub Actions [run 38849505217](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38849505217) PASS: 241 Python tests (1 skipped), 4 Node tests, write audit 92/0, memory validation PASS and project validation PASS.
+- New entry point: `tools/verified_session_restore.py`. It independently checks the configured GitHub branch HEAD, fetches the exact CI run recorded in `CONTINUITY_CHECKPOINT.json`, compares the recorded code SHA with the branch tip, and then calls the existing `restore_session_packet.py`.
+- Metadata-only descendants are accepted only if the compare response is complete and all changed files belong to the explicit metadata allowlist. Source/code drift, failed or mismatched CI, divergent ancestry, malformed evidence, and unavailable remote evidence fail closed.
+- `repository_revision_evidence` preserves the verified code SHA/CI pair; `remote_repository_evidence` separately exposes the live branch HEAD. The command is read-only.
+
+### Failed attempt preserved
+- Initial implementation commit `7e501f90146bd8623d8178c0789268a8a76126d3`, CI [38849443114](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38849443114): FAIL, five new tests failed because their fixture expected an unescaped branch ref.
+- Corrected test fixture commit `467d68795d296b4a5e3ee473e1252be43e5e5bdc`, exact-head CI [38849505217](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38849505217): PASS. The failure was fixed; it is not erased from the chronology.
+
+### Boundaries and return point
+- P1 revision-evidence integration is complete at the code/test/protocol level. The new CLI was covered by mocked remote-response tests in CI; it has not been executed as a local CLI against the live API from this chat runtime.
+- This does not close the separate ingestion → semantic approval/promotion → canonical index refresh → normal session-restore path, nor live Android browser-extension acceptance.
+- PR #27 remains Draft/open/unmerged; `main` unchanged.
+- **Next action:** choose the next bounded milestone from the still-open downstream memory pipeline. Do not repeat P1 or claim downstream integration is complete.

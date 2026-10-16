@@ -621,3 +621,14 @@ Tests added for first pass, completed replay, and a changed source under the sam
 - **Tests/docs:** added regression tests for recorded-vs-historical separation, matching pair, mismatch, missing checkpoint, and restore packet behavior; documented semantics in `core/agent_runtime_protocol.md`.
 - **Exact code HEAD:** `ca9fabe998f9203bb8fe78f1b51515d54f5f4f09`; exact-head GitHub Actions [run 38848337390](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38848337390) PASS. This run's workflow job completed successfully; no failure steps were reported.
 - **Next:** align PR description and this handoff with the exact code SHA/run; read back changed files and verify PR remains Draft/open/unmerged. No merge or main changes.
+
+
+## P1 completion — live revision verification in restore, 2026-10-16
+
+- **Code HEAD:** `467d68795d296b4a5e3ee473e1252be43e5e5bdc`; exact-head [CI run 38849505217](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38849505217) PASS.
+- **Validation:** 241 Python tests (1 skipped), 4 Node tests, strict write audit 92 mutation sites / 0 unclassified; memory and project validation PASS.
+- **Implemented:** `tools/verified_session_restore.py` is the live-verification entry point. It queries the GitHub branch HEAD, the exact recorded Actions run and the compare API, then composes `restore_session_packet.py`. It preserves the live branch tip separately from the code SHA that owns the CI evidence.
+- **Fail-closed cases:** failed/incomplete or wrong-head CI, invalid/missing checkpoint, remote API failure, divergent history, potentially truncated compare response, and any changed path outside the explicit metadata-only allowlist block revision verification.
+- **Regression history preserved:** initial implementation HEAD `7e501f90146bd8623d8178c0789268a8a76126d3` failed five new tests due to the fixture's unescaped branch-ref expectation. The fixture was corrected in `467d68795d296b4a5e3ee473e1252be43e5e5bdc`; exact-head CI then passed.
+- **Boundaries:** P1 closes the revision-evidence integration gap. It does not complete semantic promotion, canonical index refresh, automatic ingestion-to-session restore, or live Android extension acceptance.
+- **Next:** select the next scoped milestone from the still-open downstream ingestion/semantic-memory/restore path. Do not merge PR #27 or change `main` as part of this checkpoint.
