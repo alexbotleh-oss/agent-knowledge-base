@@ -20,6 +20,7 @@ if str(TOOLS_DIR) not in sys.path:
     sys.path.insert(0, str(TOOLS_DIR))
 
 from dialogue_attention_controller import inspect as inspect_attention
+from check_reuse_policy import evaluate_check_reuse
 from minimal_agent_loop import run_minimal_agent_loop
 
 
@@ -154,6 +155,50 @@ def build_task_start_experience_map(
         classification: [row for row in directions if isinstance(row, dict) and row.get("classification") == classification]
         for classification in ("CONFLICT", "HOLD", "KEEP_FOR_RATIONALE_REVIEW", "EXCLUDE", "OUT_OF_SCOPE")
     }
+    source_hashes_for_reuse = {}
+    restored_hashes = loop.get("context", {}).get("source_hashes", {})
+    if isinstance(restored_hashes, dict):
+        source_hashes_for_reuse.update({
+            f"restore:{key}": value for key, value in restored_hashes.items()
+            if isinstance(value, str) and re.fullmatch(r"[0-9a-f]{64}", value)
+        })
+    retrieval_hashes = raw_retrieval.get("source_hashes", {}) if isinstance(raw_retrieval, dict) else {}
+    if isinstance(retrieval_hashes, dict):
+        source_hashes_for_reuse.update({
+            f"events:{key}": value for key, value in retrieval_hashes.items()
+            if isinstance(value, str) and re.fullmatch(r"[0-9a-f]{64}", value)
+        })
+    lesson_hashes = lesson_retrieval.get("source_hashes", {}) if isinstance(lesson_retrieval, dict) else {}
+    if isinstance(lesson_hashes, dict):
+        source_hashes_for_reuse.update({
+            f"lessons:{key}": value for key, value in lesson_hashes.items()
+            if isinstance(value, str) and re.fullmatch(r"[0-9a-f]{64}", value)
+        })
+    candidate_fingerprints = [
+        {
+            "candidate_type": "event", "candidate_id": str(item.get("event_id")),
+            "source_sha256": item.get("source", {}).get("sha256"),
+            "source_path": item.get("source", {}).get("path", ""),
+            "line": item.get("source", {}).get("line"),
+        }
+        for item in expanded if isinstance(item.get("source"), dict)
+    ]
+    candidate_fingerprints.extend(
+        {
+            "candidate_type": "lesson", "candidate_id": str(item.get("lesson_id")),
+            "source_sha256": item.get("source", {}).get("sha256"),
+            "source_path": item.get("source", {}).get("path", ""),
+            "line": item.get("source", {}).get("line"),
+        }
+        for item in lesson_candidates if isinstance(item, dict) and isinstance(item.get("source"), dict)
+    )
+    check_spec = frontier.get("next_discriminating_check") if isinstance(frontier, dict) else None
+    check_reuse = evaluate_check_reuse(
+        attention_path, check_spec, source_hashes_for_reuse, candidate_fingerprints
+    ) if isinstance(check_spec, dict) else {
+        "status": "NO_CHECK_TO_REUSE", "action": "NO_CHECK", "writes_performed": False
+    }
+
     grouped = {
         "current_project_scope": [c for c in expanded if c.get("project_scope_match") == "MATCH"],
         "cross_project_excluded": [c for c in expanded if c.get("project_scope_match") == "MISMATCH"],
@@ -193,6 +238,7 @@ def build_task_start_experience_map(
             "decision_frontier": frontier,
             "review_directions_by_classification": frontier_groups,
             "next_discriminating_check": frontier.get("next_discriminating_check") if isinstance(frontier, dict) else None,
+            "check_reuse_policy": check_reuse,
             "candidate_review_only": True,
         },
         "decision_policy": {
@@ -201,7 +247,9 @@ def build_task_start_experience_map(
             "planning_authorized": False,
             "execution_performed": False,
             "writes_performed": False,
-            "do_not_repeat": "reuse prior verification only when its evidence is still current and its inputs have not changed",
+            "do_not_repeat": "reuse a recorded PASS only when the check signature, relevant source hashes and candidate identities match exactly",
+            "next_check_action": check_reuse.get("action", "RUN_CHECK"),
+            "repeat_check": check_reuse.get("action") not in {"DO_NOT_REPEAT_CHECK", "NO_CHECK"},
         },
         "limitations": [
             "Task-start invocation is explicit; automatic new-chat startup is not implemented.",

@@ -269,6 +269,39 @@ class TaskStartExperienceMapTests(unittest.TestCase):
         self.assertEqual(set(conflicts), {"LESSON-A", "LESSON-B"})
         self.assertFalse(result["decision_policy"]["planning_authorized"])
 
+    def test_task_start_reuses_prior_pass_only_when_inputs_match(self):
+        result = build_task_start_experience_map(
+            self.task, self.handoff, self.events, "cache recovery index pointer",
+            experience_logs=[self.experience], attention_log=self.attention,
+            active_task_id="TASK-PARENT", active_checkpoint_id="CKPT-PARENT",
+            current_project_id="TEST",
+        )
+        policy = result["experience_map"]["check_reuse_policy"]
+        self.assertEqual(policy["status"], "RUN_CHECK")
+        from check_reuse_policy import record_check_result
+        recorded = record_check_result(
+            self.attention,
+            policy["check_spec"],
+            policy["source_hashes"],
+            policy["candidate_fingerprints"],
+            result_status="PASS",
+            evidence_refs=["tests/test_task_start_experience_map.py#case"],
+            summary="The requested discriminating check was run and passed",
+            recorded_by="synthetic-test-run",
+        )
+        self.assertEqual(recorded["status"], "RECORDED")
+        replay = build_task_start_experience_map(
+            self.task, self.handoff, self.events, "cache recovery index pointer",
+            experience_logs=[self.experience], attention_log=self.attention,
+            active_task_id="TASK-PARENT", active_checkpoint_id="CKPT-PARENT",
+            current_project_id="TEST",
+        )
+        reuse = replay["experience_map"]["check_reuse_policy"]
+        self.assertEqual(reuse["status"], "REUSE_RECORDED_PASS")
+        self.assertEqual(reuse["action"], "DO_NOT_REPEAT_CHECK")
+        self.assertFalse(replay["decision_policy"]["repeat_check"])
+        self.assertFalse(replay["decision_policy"]["planning_authorized"])
+
     def test_no_attention_journal_is_reported_without_inventing_a_branch(self):
         result = build_task_start_experience_map(
             self.task, self.handoff, self.events, "cache recovery",
