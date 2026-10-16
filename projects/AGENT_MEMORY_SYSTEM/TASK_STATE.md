@@ -792,3 +792,12 @@ The no-repeat check fingerprint now binds the current request and relevant seman
 - Integration tests cover side-branch open → child result → owner acceptance → parent checkpoint projection → check result → unified return → no-repeat reuse; missing child result blocks return; same return turn replay does not write twice.
 - Exact code/test HEAD `2e47f8e596de7c3329dea73dea6845d7a0276d2d` passed CI [38903772855](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38903772855): 377 Python tests (1 skipped), 4 Node tests, write audit 140/0, memory/project validation PASS.
 - **Next:** close the production trust boundary (trusted applicability verifier and identity for recorded check results), then validate the real archive/client path. Do not bypass guarded TASK_STATE writes or claim automatic ChatGPT capture. PR #30 remains draft/unmerged; main unchanged.
+
+## Identity continuity checkpoint — RIMA (2026-10-16)
+
+- Пользователь присвоил агенту имя **РИМА — Развивающаяся Интеллектуальная Модель Агента** и определил женский род.
+- Append-only событие `EVT-AGMS-20261016-009` фиксирует состояние до присвоения имени, сообщение-основание и состояние после.
+- Текущее состояние проекта отражено в `PROJECT_STATE.md`; принятое решение — `DEC-AGMS-20261016-001`.
+- **Требование:** последующее восстановление задачи должно поднимать имя РИМА и связанное событие из постоянной памяти, а не выводить их только из локального контекста текущего чата.
+- **Проверенная часть:** событие записано в `events.jsonl` и прочитано обратно; синхронизация остальных проекций и exact-head CI относятся к текущему этапу.
+- **Не подтверждено:** автоматическая передача этой идентичности каждому новому чату/клиенту.
