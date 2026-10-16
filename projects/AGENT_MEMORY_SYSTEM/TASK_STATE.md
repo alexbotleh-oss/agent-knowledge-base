@@ -654,3 +654,16 @@ Tests added for first pass, completed replay, and a changed source under the sam
 - CI chronology preserved: runs #38851141269 and #38851163529 failed while the new persistence sites had not yet been classified in the strict write audit. Added the explicit operation contract in `tools/audit_write_contracts.py`; run #38851184392 then passed. No semantic test failures remained.
 - Next bounded stage: deterministic, versioned canonical index generation from `registry/memory_records.jsonl`, with source revision/hash, counts, correction-overlay application, atomic generation publication and stale/freshness detection. Normal session restore remains later.
 - PR #27 remains Draft/open/unmerged; `main` unchanged.
+
+
+## Canonical index and semantic-memory-aware restore — 2026-10-16
+
+- Added `tools/canonical_memory_index.py`: deterministic versioned generations from `registry/memory_records.jsonl`, multidimensional views by project/task/context/type/topic/evidence/lifecycle/sign/decision/incident/time/source/relation, current-revision map, registry hash and atomic `CURRENT.json` publication.
+- The builder validates accepted envelopes, embedded record hashes and revision chains; it locks the canonical source registry and index publication. A failed pointer publish preserves the previous pointer. Freshness reports CURRENT/PARTIAL/STALE/INVALID/UNAVAILABLE.
+- The index deliberately reports PARTIAL because no canonical correction-overlay source/contract was found. It does not claim to apply corrections that are not available.
+- Added `tools/memory_aware_session_restore.py`: composes the live-verified task/event restore with a freshness-checked semantic-memory section. It requires matching task/handoff/event project scope, resolves references back to canonical records, filters current revisions by explicit project/task/context IDs and optional lexical substring, and exposes provenance, evidence status and contradictions.
+- Stale/unavailable indexes and project-scope ambiguity are explicit; no-match in a partial index is not treated as proof that memory does not exist. Retrieval is lexical, not embedding/semantic ranking. The wrapper is read-only and does not refresh indexes or promote records.
+- Exact code/test HEAD `bec868ce9e7491802c5239068b4581eff002a809`, CI [38851785241](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38851785241) PASS: 272 Python tests (1 skipped), 4 Node tests, write audit 108 mutation sites / 0 unclassified, memory validation PASS.
+- Failed index attempts preserved: #38851392586 and #38851433945/#38851415699 failed strict write audit before the new index mutation contract was registered; #38851424245 exposed two tests returning WRITE_FAILED for invalid registry input instead of BLOCKED. The audit contract and validation/publication error boundary were corrected; #38851494196, #38851553475, #38851610818 passed. The final semantic-memory-aware restore tests passed in #38851785241.
+- Still open: define a canonical correction-overlay contract and integrate it into index views; then exercise a durable end-to-end ingestion → approval → promotion → index → restore run with interruption/replay tests against a controlled synthetic pipeline. No production archive was promoted or restored.
+- PR #27 remains Draft/open/unmerged; `main` unchanged.
