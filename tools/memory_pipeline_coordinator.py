@@ -172,6 +172,10 @@ def run_memory_pipeline(
             "correction_input_sha256":_sha(Path(correction_input).read_bytes()) if correction_input and Path(correction_input).is_file() else None,
             "correction_approval_sha256":_sha(Path(correction_approval_receipt).read_bytes()) if correction_approval_receipt and Path(correction_approval_receipt).is_file() else None,
             "repository":repository,"ref":ref or "checkpoint-default",
+            "source_registry_path":str(Path(source_registry_path).resolve()),
+            "memory_registry_path":str(Path(memory_registry_path).resolve()),
+            "correction_registry_path":str(Path(correction_registry_path).resolve()),
+            "index_root":str(Path(index_root).resolve()),
         }
     except Exception as exc: return {"status":"BLOCKED","reason":str(exc),"writes_performed":False}
     run_id="PIPE-"+_sha(_canonical(fingerprint))[:24]
@@ -188,7 +192,32 @@ def run_memory_pipeline(
             try: _projection(run_dir/"pipeline_state.json",events)
             except OSError: pass
     _append_event(run_dir,run_id,"PIPELINE_STARTED","pipeline","RUNNING",{"apply":apply,"input_fingerprint":fingerprint})
-    results={}; staging_writes=False; canonical_writes=False
+    results={}; canonical_writes=False
+    if apply:
+        missing_restore_files=[str(p) for p in (Path(task_state),Path(handoff),Path(event_log)) if not Path(p).is_file()]
+        correction_approval_missing=False
+        if correction_input is not None:
+            try:
+                correction_data=json.loads(Path(correction_input).read_text(encoding="utf-8"))
+                correction_approval_missing=correction_data.get("status")=="accepted" and correction_approval_receipt is None
+            except Exception:
+                correction_data={}
+        preflight_ok=True
+        if missing_restore_files:
+            _append_event(run_dir,run_id,"STAGE_RESULT","preflight","BLOCKED",{"missing_restore_files":missing_restore_files})
+            preflight_ok=False
+        elif correction_approval_missing:
+            _append_event(run_dir,run_id,"STAGE_RESULT","preflight","BLOCKED",{"reason":"accepted correction requires --correction-approval-receipt"})
+            preflight_ok=False
+        else:
+            preflight_ok=execute("semantic_preflight",lambda:promote_memory_records(semantic_manifest,semantic_approval_receipt,memory_registry_path,apply=False),
+                {"DRY_RUN_READY"},("status","candidate_count","error","writes_performed"))
+        if not preflight_ok:
+            final={"status":"BLOCKED_AT_PREFLIGHT","run_id":run_id,"run_dir":str(run_dir),"ledger_path":str(ledger_path),
+                   "staging_writes_performed":False,"canonical_writes_performed":False,"ledger_writes_performed":True,"writes_performed":False}
+            _append_event(run_dir,run_id,"PIPELINE_RESULT","pipeline",final["status"],{"stages":{name:result.get("status","UNKNOWN") for name,result in results.items()}})
+            final["stages"]={name:result.get("status","UNKNOWN") for name,result in results.items()}
+            return final
     def execute(stage:str,func:Callable,success:set[str],summary_fields:tuple[str,...]):
         _append_event(run_dir,run_id,"STAGE_STARTED",stage,"RUNNING",{"apply":apply})
         try: result=func()
