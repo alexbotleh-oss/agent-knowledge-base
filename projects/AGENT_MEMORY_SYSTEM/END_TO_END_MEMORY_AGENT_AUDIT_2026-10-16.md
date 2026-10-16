@@ -231,3 +231,13 @@ After the UMC-02/UMC-03 integration above, PR #30 added a source-bound check-reu
 - Event/lesson source lines are revalidated after retrieval. Source mutation blocks review and check reuse; duplicate IDs remain HOLD with all source locators.
 - Exact code/test HEAD `2e0135175421cb99ab2b7325018b0bb648f5a1e0` passed CI [38902931125](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38902931125): 373 Python tests (1 skipped), 4 Node tests, write audit 140/0, memory/project validation PASS.
 - The result remains PARTIAL: recorded check results are not independently authenticated; production applicability verifier/trust root, full child-result/parent-state/return reconciliation, automatic ChatGPT capture/startup, full semantic graph retrieval and real archive acceptance remain open. PR #30 is still draft/unmerged; no changes to main.
+
+## 13. Unified memory-cycle entry point — 2026-10-16
+
+The separate task-start, attention controller, child-result registry and return reconciliation now have a single local orchestration entry point: `tools/agent_memory_cycle.py`.
+
+It composes task-start experience retrieval, attention-stack inspection, read-only branch-result reconciliation, exact current-branch result/accepted-acknowledgement checks and (when explicitly requested) parent return. It refuses the return if reconciliation is inconsistent, the parent ID does not match the top frame, the matching child result is missing, or the latest acknowledgement for that result is not accepted. After a successful return it rebuilds the task-start experience map so the returned state and no-repeat decision are visible in the same output. Replaying the same return turn is idempotent.
+
+Exact code/test HEAD `2e47f8e596de7c3329dea73dea6845d7a0276d2d` passed CI [38903772855](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38903772855): 377 Python tests (1 skipped), 4 Node tests, strict write audit 140/0, memory/project validation PASS.
+
+This establishes a tested synthetic repository path, not an automatically running production agent. The caller must still provide paths and explicit task context; the guarded parent checkpoint is represented as already projected; production applicability trust, real archive acceptance and automatic ChatGPT capture/startup remain open. No planning permission is granted by a successful cycle.

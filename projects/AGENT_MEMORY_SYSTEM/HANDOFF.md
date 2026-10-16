@@ -823,3 +823,11 @@ The no-repeat policy now uses a semantic task-context fingerprint plus line-leve
 Exact code/test HEAD `2e0135175421cb99ab2b7325018b0bb648f5a1e0` passed CI [38902931125](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38902931125): 373 Python tests (1 skipped), 4 Node tests, write audit 140/0, memory/project validation PASS.
 
 **Next action:** connect check reuse with branch-result acknowledgement, guarded parent TASK_STATE projection and attention-stack return without bypassing the existing trust gate. PR #30 remains draft/unmerged; PR #28 remains separately draft/unmerged; consolidate duplicated UMC-03 source history before merge.
+
+## Updated handoff — unified local cycle (2026-10-16)
+
+Use `tools/agent_memory_cycle.py` as the current single entry point for the connected local path. It composes task-start retrieval and no-repeat, source/applicability review, canonical attention projection, branch-result/acknowledgement reconciliation and explicit parent return. Return fails closed unless the current child result exists, its latest owner acknowledgement is accepted, the parent checkpoint is projected and the reconciliation report is consistent. After return, the task-start map is rebuilt and the exact prior check can be reused when its relevant inputs are unchanged.
+
+Exact code/test HEAD `2e47f8e596de7c3329dea73dea6845d7a0276d2d` passed CI [38903772855](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38903772855): 377 Python tests (1 skipped), 4 Node tests, write audit 140/0, memory/project validation PASS.
+
+**Boundary:** explicit local invocation only; no automatic ChatGPT capture/startup, no production trusted applicability verifier, and no autonomous execution. The synthetic parent checkpoint was already projected; the orchestrator does not bypass `guarded_task_state_update.py`. PR #30 remains draft/unmerged, PR #28 remains separate draft/unmerged; consolidate duplicate UMC-03 history before any merge.

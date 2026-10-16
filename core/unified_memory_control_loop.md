@@ -441,3 +441,19 @@ The check-reuse fingerprint was refined so unrelated checkpoint metadata or unre
 - Exact code/test HEAD 2e0135175421cb99ab2b7325018b0bb648f5a1e0 passed CI run 38902931125: 373 Python tests (1 skipped), 4 Node tests, strict write audit 140 mutation sites / 0 unclassified, memory/project validation PASS.
 
 Remaining gap: this is no-repeat within the task-start/check path. Branch-result acknowledgement, guarded parent TASK_STATE projection and return-stack reconciliation are not yet one automatic transaction. The recorded PASS is not independently authenticated; production trusted verification remains open.
+
+## 20. Unified local memory cycle — partial implementation
+
+`tools/agent_memory_cycle.py` is the single local entry point composing the previously separate tools:
+1. Build the task-start experience map: restore, attention projection, event/lesson retrieval, source revalidation, applicability/frontier review and no-repeat evaluation.
+2. Inspect the canonical attention/return stack.
+3. Reconcile published child results, owner acknowledgements and projected parent checkpoints from the canonical AGENT_MEMORY_SYSTEM event log.
+4. If an explicit return is requested, verify that the top stack frame matches the requested parent, the current branch has a corresponding child result, the owner explicitly accepted it, and the reconciliation report is CONSISTENT.
+5. Only then append the parent-return event; afterward rebuild the task-start map against the post-return state.
+6. Preserve idempotency: replaying the same return turn ID is a no-op success and does not append another event.
+
+Integration tests cover a complete synthetic path (open side branch → publish child result → explicit acceptance → parent checkpoint projection → record a check result → run the unified cycle → return to parent → reuse the exact check without repeating it), plus fail-closed behavior when the branch result is missing and idempotent return replay.
+
+Exact code/test HEAD `2e47f8e596de7c3329dea73dea6845d7a0276d2d` passed CI run [38903772855](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38903772855): 377 Python tests (1 skipped), 4 Node tests, write audit 140 mutation sites / 0 unclassified; memory and project validation PASS.
+
+**Boundary:** this is a local explicit-invocation coordinator, not a background service or automatic ChatGPT observer. It requires supplied file paths and explicit caller context; the task-state checkpoint in the synthetic test represents a previously guarded parent projection. Production trusted applicability verification, full real-archive acceptance, automatic client capture/startup and a planning/execution consumer remain open. The coordinator never grants planning permission.
