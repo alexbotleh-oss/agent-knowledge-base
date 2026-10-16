@@ -1,13 +1,13 @@
 {
   "schema_version": "1.0",
-  "checkpoint_id": "CKPT-AGMS-20261016-UMC02-TASK-START-01",
+  "checkpoint_id": "CKPT-AGMS-20261016-UMC03-TASK-START-INTEGRATION-01",
   "project_id": "AGENT_MEMORY_SYSTEM",
   "task_id": "TASK-AGMS-UMC02-TASK-START",
-  "recorded_at": "2026-10-16T12:29:54.565Z",
+  "recorded_at": "2026-10-16T12:34:38.928Z",
   "recorded_time_precision": "day",
   "source_chat": "Настройка Агента",
   "source_message": "User authorized completing continuity synchronization after exact-head CI verified the combined real-ingestion and real-memory-restore test.",
-  "goal": "Connect the memory tools into one working mechanism: persistent dialogue attention/return, source-backed task restore, and provenance-preserving experience retrieval; continue with staged applicability review and runtime integration.",
+  "goal": "Connect memory tools into one working mechanism: persistent attention/return, source-backed restore, staged same-project experience retrieval, applicability review and an auditable decision frontier.",
   "branch": "umc02/attention-return-controller-20261016",
   "pr": {
     "number": 30,
@@ -18,16 +18,16 @@
     "base": "audit/agent-memory-e2e-20261016"
   },
   "source_code_checkpoint": {
-    "head": "b5c43096dc51e6d9d4f5951c1b7aaff9740411bb",
-    "ci_run_id": 38900736135,
-    "ci_url": "https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38900736135",
+    "head": "e15efb0083c69a85de66aee1171a5e17c83cb027",
+    "ci_run_id": 38901329090,
+    "ci_url": "https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38901329090",
     "ci_conclusion": "success",
-    "python_tests": 307,
+    "python_tests": 357,
     "python_skipped": 1,
     "node_tests": 4,
     "write_audit_mutation_sites": 134,
     "write_audit_unclassified": 0,
-    "evidence_scope": "Exact code/test HEAD includes persistent UMC-02 attention/return controller and task_start_experience_map.py; 307 Python tests (1 skipped), 4 Node tests, write audit 134/0. Latest code changes after this SHA are documentation/checkpoint-only; latest docs branch HEAD 1cdb4973930a790c847f8de9fe76fc94e45bc0a6 passed run 38900833884. Neither run proves automatic ChatGPT capture, production archive completeness, full semantic graph retrieval, or production applicability verification."
+    "evidence_scope": "Exact code/test HEAD includes UMC-02 attention/return, task-start composition, UMC-03 S1/S2 same-project lesson retrieval, read-only applicability evaluator and decision frontier. Exact-head CI passed. This does not establish a production trusted verifier, automatic ChatGPT capture/startup, complete semantic graph retrieval, real archive completeness, or permission to plan/execute."
   },
   "confirmed_completed": [
     "Resumable source-ingestion runner exists and has CI tests for dry-run, apply/replay, uncertain registry acknowledgement after crash, tampered ledger, and missing state projection reconstruction.",
@@ -86,7 +86,10 @@
     "Implemented tools/dialogue_attention_controller.py and tests/test_dialogue_attention_controller.py: conservative lexical turn classification, append-only attention events in the canonical AGENT_MEMORY_SYSTEM event log, nested causal return-stack projection, explicit child task/checkpoint requirements, deferred ideas without task switching, stable replay IDs, lock contention handling, and LIFO parent return. Exact code/test HEAD e7f9b2e111f5166c43e918603bc8961382a371a7 passed CI run 38900377700: 305 Python tests (1 skipped), workflow validation steps passed.",
     "CI caught a regression in deferred-idea projection: active task was None. The defect was fixed; later exact-head CI passed. Earlier failed runs 38900228526, 38900264799, 38900277002, 38900303398, 38900312671 and 38900337765 are retained as failure history, not current status.",
     "Implemented tools/task_start_experience_map.py and tests/test_task_start_experience_map.py to compose restore/context/trust review, bounded lexical retrieval and the attention stack. Candidate source lines are expanded only when source SHA-256 and event_id still match. Exact code/test HEAD b5c43096dc51e6d9d4f5951c1b7aaff9740411bb passed CI run 38900736135: 307 Python tests (1 skipped), 4 Node tests, strict write audit 134 mutation sites / 0 unclassified.",
-    "Current docs/continuity branch HEAD 1cdb4973930a790c847f8de9fe76fc94e45bc0a6 passed exact-head CI run 38900833884: 307 Python tests (1 skipped), 4 Node tests, strict write audit 134/0; workflow validation steps passed."
+    "Current docs/continuity branch HEAD 1cdb4973930a790c847f8de9fe76fc94e45bc0a6 passed exact-head CI run 38900833884: 307 Python tests (1 skipped), 4 Node tests, strict write audit 134/0; workflow validation steps passed.",
+    "Connected the task-start experience map to staged UMC-03 retrieval and the decision frontier. S1 uses explicit same-project structured markers; S2 is the same-project lexical fallback; S3 remains deferred. The map returns stage reports, applicability assessments, frontier directions and the next discriminating information check without granting planning/execution permission.",
+    "Copied UMC-03 source files from PR #28 branch with exact blob provenance: minimal_agent_loop.py 5e0f5b6626c1d8c2fe5006a2559c3ab79d87eee0; applicability_evaluator.py 2c271c3e4859014c64b1a75b04185a45e4135cb2; decision_frontier.py eced52b37478301725cc1246fdca0a8b03037c97; corresponding tests and explicit-marker templates were copied from the same branch. PR #28 remains separately open/draft/unmerged; duplicate implementation history must be consolidated before merging.",
+    "Exact code/test HEAD e15efb0083c69a85de66aee1171a5e17c83cb027 passed CI run 38901329090: 357 Python tests (1 skipped), 4 Node tests, strict write audit 134 mutation sites / 0 unclassified; memory and project validation steps passed."
   ],
   "confirmed_open": [
     {
@@ -126,17 +129,17 @@
       "id": "OPEN-ATTENTION-RETURN-CONTROLLER",
       "description": "Implement runtime classification and persistent causal return stack for continuation, side branch, deferred idea, new task, priority change and return.",
       "status": "PARTIAL",
-      "evidence": "tools/dialogue_attention_controller.py; tests/test_dialogue_attention_controller.py; CI 38900736135.",
+      "evidence": "tools/dialogue_attention_controller.py + tools/task_start_experience_map.py; exact-head CI 38901329090.",
       "updated_at": "2026-10-16",
-      "resolution": "Local explicit-call controller implemented in PR #30 with exact-head CI evidence; automatic ChatGPT capture, task-state projection updates, robust semantic classification and production runtime integration remain open."
+      "resolution": "Local explicit-call controller is connected to task-start restore and staged retrieval. Automatic ChatGPT capture/startup, automatic TASK_STATE/HANDOFF reconciliation, and semantic intent classification remain open."
     },
     {
       "id": "OPEN-TASK-TIME-EXPERIENCE-RETRIEVAL",
       "description": "Connect task start to staged, provenance-preserving retrieval of current-project events, decisions, lessons, failed attempts and linked causal paths, then cautiously inspect shared experience.",
       "status": "PARTIAL",
-      "evidence": "tests/test_task_start_experience_map.py; exact-head CI 38900736135.",
+      "evidence": "tools/minimal_agent_loop.py; tools/applicability_evaluator.py; tools/decision_frontier.py; tests/test_task_start_experience_map.py; exact-head CI 38901329090.",
       "updated_at": "2026-10-16",
-      "resolution": "tools/task_start_experience_map.py composes restore, attention stack and bounded lexical candidate retrieval with source hash/event-ID verification; staged S1/S2 applicability review and complete canonical graph retrieval remain open."
+      "resolution": "S1/S2 lesson retrieval, read-only applicability evaluator and decision frontier are now connected to task-start composition. Production verifier/trust root, full graph/semantic retrieval and production acceptance remain open."
     },
     {
       "id": "OPEN-PRODUCTION-ARCHIVE-ACCEPTANCE",
@@ -149,9 +152,16 @@
       "description": "Verify actual client integration for message capture, new-chat restore, interruption recovery and genuine delivery acknowledgements.",
       "status": "OPEN",
       "evidence": "The local turn lifecycle ledger and browser extension prototype do not prove automatic capture/startup on the user's installed Android browser."
+    },
+    {
+      "id": "OPEN-UMC03-PRODUCTION-VERIFIER",
+      "description": "Configure and independently validate a production trusted verifier/trust root for positive applicability judgments; do not treat the injected test verifier as production trust.",
+      "status": "OPEN",
+      "updated_at": "2026-10-16",
+      "evidence": "tests/test_applicability_evaluator.py positive path uses an injected test double; no production verifier configuration or bounded planning consumer is present."
     }
   ],
-  "next_action": "Integrate the staged S1/S2 retrieval and read-only decision frontier from PR #28 into the task-start experience map, without treating lexical overlap as applicability or granting execution permission. Test cross-project exclusions, conflicts, unknowns, provenance preservation, changed source bytes, duplicate IDs, nested return after restart, and no-repeat behavior. Keep PR #30 draft/unmerged and do not change main.",
+  "next_action": "Add combined-path tests for source mutation between retrieval and review, duplicate candidate IDs/provenance gaps, cross-project exclusion, conflicts, unknown criteria, nested return after process restart and no-repeat behavior. Then design the production verifier trust root as a separate guarded step. Keep PR #30 draft/unmerged; do not change main.",
   "constraints": [
     "Do not merge PR #27, #28, #29 or #30 or modify main without explicit user approval.",
     "Do not delete or rewrite source-history exports without a separate explicit decision.",
@@ -161,34 +171,21 @@
     "Never report CI success for a SHA other than the exact checked SHA.",
     "Treat lexical retrieval as candidate discovery only; transfer/applicability remains UNASSESSED without the trusted review path."
   ],
-  "status": "UMC02_AND_TASK_START_COMPOSITION_IMPLEMENTED_PARTIAL_EXACT_HEAD_CI_PASS_STAGED_APPLICABILITY_AND_RUNTIME_GAPS_OPEN",
+  "status": "UMC02_UMC03_STAGED_TASK_START_CONNECTED_PARTIAL_EXACT_HEAD_CI_PASS_PRODUCTION_TRUST_AND_RUNTIME_GAPS_OPEN",
   "checkpoint_semantics": "This is a durable task checkpoint committed to the integration branch. It is not an automatic ChatGPT autosave or proof that an undelivered response was saved.",
   "repository_state": {
-    "last_verified_code_head": "b5c43096dc51e6d9d4f5951c1b7aaff9740411bb",
-    "exact_head_ci_run_id": 38900736135,
-    "exact_head_ci_url": "https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38900736135",
+    "last_verified_code_head": "e15efb0083c69a85de66aee1171a5e17c83cb027",
+    "exact_head_ci_run_id": 38901329090,
+    "exact_head_ci_url": "https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38901329090",
     "exact_head_ci_conclusion": "success",
-    "python_tests": 307,
+    "python_tests": 357,
     "python_skipped": 1,
     "node_tests": 4,
     "write_audit_mutation_sites": 134,
     "write_audit_unclassified": 0,
     "memory_validation": "PASS",
     "project_validation": "PASS",
-    "latest_docs_head": "1cdb4973930a790c847f8de9fe76fc94e45bc0a6",
-    "latest_docs_ci_run_id": 38900833884,
-    "latest_docs_ci_url": "https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38900833884",
-    "latest_docs_ci_conclusion": "success",
-    "latest_docs_python_tests": 307,
-    "latest_docs_python_skipped": 1,
-    "latest_docs_node_tests": 4,
-    "latest_docs_write_audit_mutation_sites": 134,
-    "latest_docs_write_audit_unclassified": 0,
-    "note": "Code/test evidence is tied to b5c43096dc51e6d9d4f5951c1b7aaff9740411bb and run 38900736135. Documentation/checkpoint predecessor 1cdb4973930a790c847f8de9fe76fc94e45bc0a6 passed run 38900833884. The prior checkpoint metadata revision 7185cb68b5052f0c3bdee8b8e3d4c84b30f5845e passed exact-head CI run 38900933839. This update itself is metadata-only; verify the resulting branch HEAD independently before claiming its exact-head CI status. PR #30 is Draft/open/unmerged; PR #29 remains a separate Draft/open/unmerged audit; main unchanged.",
-    "latest_metadata_head_before_checkpoint_update": "7185cb68b5052f0c3bdee8b8e3d4c84b30f5845e",
-    "latest_metadata_ci_run_id": 38900933839,
-    "latest_metadata_ci_url": "https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38900933839",
-    "latest_metadata_ci_conclusion": "success"
+    "note": "Code/test evidence is tied to exact HEAD e15efb0083c69a85de66aee1171a5e17c83cb027 and CI run 38901329090. This following commit updates only docs, traceability and checkpoint state; verify its resulting SHA separately before claiming exact-head CI. PR #30 remains draft/unmerged; PR #29 and PR #28 remain separate draft/unmerged; main unchanged."
   },
   "historical_repository_state": {
     "last_verified_code_head": "e30450a5ed516ab1f76f65c3c7874cdd2b951c40",
@@ -232,11 +229,12 @@
     }
   ],
   "open_items": [
-    "Integrate staged S1/S2 retrieval and the read-only decision frontier from PR #28 into task_start_experience_map.py, keeping transfer/applicability UNASSESSED until a production trusted verifier exists.",
-    "Extend cross-project, conflict, unknown, duplicate-ID, source-mutation, restart/return and no-repeat regression coverage across the combined task-start path.",
+    "Combined-path regression gaps: source mutation between retrieval and review; duplicate candidate IDs and provenance gaps; cross-project exclusions; conflicts and unknown criteria; nested return after restart; no-repeat behavior.",
+    "Production trusted applicability verifier/trust root and a bounded consumer for usable_as_rationale remain unimplemented; test verifier callbacks are not production trust.",
     "Automatic ChatGPT message capture, new-chat restore and delivery acknowledgement remain unverified in the user's actual Yandex Browser Android environment.",
     "Production archive acceptance and full chat/attachment coverage remain PARTIAL/UNKNOWN; no complete production source/memory/correction registry is proven.",
     "Full canonical-memory graph retrieval, executable skill dispatcher, runtime environment monitor, VLM/Android acceptance and reversible memory quarantine/deletion lifecycle remain open.",
+    "Consolidate duplicate UMC-03 source history between draft PR #28 and PR #30 before merging either branch.",
     "Do not merge PR #27, #28, #29 or #30 or change main without explicit user approval."
   ]
 }

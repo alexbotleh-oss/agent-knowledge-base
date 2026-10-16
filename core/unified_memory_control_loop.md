@@ -378,3 +378,18 @@ Implemented in tools/task_start_experience_map.py with tests in tests/test_task_
 **Acceptance boundary:** this is an explicitly invoked local composition path, not automatic new-chat startup. Retrieval is bounded lexical overlap over caller-supplied event logs, not full canonical-memory graph traversal, embedding-based ranking, or the staged S1/S2 + decision frontier implementation in separate PR #28. The controller does not update TASK_STATE/HANDOFF when a branch returns. CAP-02 and CAP-11 remain IMPLEMENTED_PARTIAL.
 
 **Next gate:** integrate staged retrieval and decision-frontier review without confusing a lexical candidate with an applicable lesson; preserve provenance and exclusions; test current-project and cross-project cases, conflicts, unknowns, duplicate source IDs, source mutation between lookup and review, and restart/return/no-repeat behavior. Then separately test the real client capture/startup boundary.
+
+
+## 15. UMC-03 staged retrieval and decision frontier connected to task start — partial
+
+The task-start composition now calls the staged lesson retrieval and read-only evaluator/frontier path from tools/minimal_agent_loop.py. The evaluator and reducer source were copied from the separately open PR #28 implementation; source blob SHAs are recorded in TASK_STATE/HANDOFF to preserve lineage. PR #28 remains separate and unmerged; consolidate the duplicate branch history before any merge.
+
+- S1 retrieves same-project lesson candidates by explicit structured marker overlap (problem types, tools, languages, environments). Markers must be present in a valid explicit experience-markers JSON block or supplied JSON object; prose is not used to infer marker values.
+- If S1 does not find a verifier-backed APPLICABLE lesson, S2 performs same-project lexical fallback. S1/S2 are retrieval stages, not proof of applicability. S3 cross-project retrieval remains deferred.
+- tools/applicability_evaluator.py keeps permissive judgments UNKNOWN unless a trusted verifier callback supplies a receipt bound to candidate, criterion, result, basis reference and source digest. The production trusted verifier/trust root is not configured; current positive-path tests use injected test doubles only.
+- tools/decision_frontier.py returns KEEP_FOR_RATIONALE_REVIEW, EXCLUDE, HOLD, CONFLICT and OUT_OF_SCOPE with provenance and one next discriminating information check. KEEP is permitted only when the evaluator put that exact candidate in usable_as_rationale. The frontier never grants planning or execution permission.
+- tools/task_start_experience_map.py now exposes S1/S2 stage reports, lesson candidates, applicability assessments, the decision frontier and its next discriminating check alongside event-history candidates and the attention return stack.
+
+Acceptance boundary: the integrated path is read-only and explicitly invoked. It does not execute the suggested check, does not automatically start on a new ChatGPT chat, and does not establish real lesson-marker coverage or production trusted applicability verification. A candidate can be surfaced as a possible path while remaining HOLD/INSUFFICIENT_DATA; it is never silently promoted. UMC-02/UMC-03/CAP-11/12/13 remain IMPLEMENTED_PARTIAL.
+
+Next validation gate: add combined-path regressions for duplicate candidate IDs across sources, candidate/source provenance gaps, source mutation between retrieval and review, cross-project exclusion, conflicts, unknown criteria, nested return after process restart, and no-repeat handling. Then implement or explicitly reject a production trusted-verifier design; do not treat a test callback as production trust.

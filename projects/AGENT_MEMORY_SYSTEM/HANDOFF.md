@@ -776,3 +776,16 @@ The immediate UMC-02 gap now has a first connected local path. PR #30 / branch `
 **Remaining:** staged S1/S2 retrieval and decision-frontier integration; full canonical graph/semantic retrieval; automatic ChatGPT capture/startup; automatic TASK_STATE/HANDOFF reconciliation on return; real archive acceptance. Do not confuse successful synthetic integration with production readiness. PR #30 remains draft/unmerged and `main` is untouched.
 
 **Next action:** confirm CI on the exact current code head, then connect the separate staged retrieval/evaluator path only after checking its branch-specific status and trust boundary. Test exclusions, conflicts, unknowns, provenance preservation, changed-source detection, and restart/return/no-repeat behavior. Keep PR #30 draft and do not merge without explicit user approval.
+
+
+## Updated handoff — staged retrieval and decision frontier connected (2026-10-16)
+
+The local task-start composition now connects UMC-02 attention/return with UMC-03 staged lesson retrieval and the read-only decision frontier. PR #30 branch `umc02/attention-return-controller-20261016` contains `tools/dialogue_attention_controller.py`, `tools/task_start_experience_map.py`, the updated `tools/minimal_agent_loop.py`, `tools/applicability_evaluator.py`, `tools/decision_frontier.py`, and their tests. S1 uses explicit same-project marker overlap; S2 is the same-project lexical fallback; S3 cross-project retrieval remains deferred. The frontier preserves KEEP_FOR_RATIONALE_REVIEW / EXCLUDE / HOLD / CONFLICT / OUT_OF_SCOPE and proposes the next discriminating information check without granting planning or execution permission.
+
+**Provenance of integration:** UMC-03 source files were copied from PR #28 branch `umc03/verifier-positive-path-20261016` at exact blob SHAs: minimal loop `5e0f5b6626c1d8c2fe5006a2559c3ab79d87eee0`; evaluator `2c271c3e4859014c64b1a75b04185a45e4135cb2`; frontier `eced52b37478301725cc1246fdca0a8b03037c97`. PR #28 remains open/draft/unmerged, so the two branches now contain overlapping implementation history. Consolidate the duplicate work before merging either branch; do not silently merge PR #28.
+
+**Validation:** exact code/test HEAD `e15efb0083c69a85de66aee1171a5e17c83cb027` passed CI [38901329090](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38901329090): 357 Python tests (1 skipped), 4 Node tests, write audit 134/0, validation steps PASS.
+
+**Remaining acceptance gaps:** no production trusted verifier/trust root; positive-path verifier tests use test doubles; real lesson-marker coverage unproven; no bounded planning consumer; no automatic ChatGPT capture/startup; no automatic TASK_STATE/HANDOFF update on return; retrieval is not complete semantic/graph traversal; production archive completeness remains PARTIAL/UNKNOWN.
+
+**Next action:** add integrated tests for source mutation between retrieval and review, duplicate IDs/provenance gaps, cross-project exclusion, conflicts, unknown criteria, nested return after process restart and no-repeat. Then design a production verifier trust root. Keep PR #30 draft/unmerged and `main` untouched.
