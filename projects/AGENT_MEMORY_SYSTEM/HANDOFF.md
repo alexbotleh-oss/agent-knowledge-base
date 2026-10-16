@@ -831,3 +831,13 @@ Use `tools/agent_memory_cycle.py` as the current single entry point for the conn
 Exact code/test HEAD `2e47f8e596de7c3329dea73dea6845d7a0276d2d` passed CI [38903772855](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38903772855): 377 Python tests (1 skipped), 4 Node tests, write audit 140/0, memory/project validation PASS.
 
 **Boundary:** explicit local invocation only; no automatic ChatGPT capture/startup, no production trusted applicability verifier, and no autonomous execution. The synthetic parent checkpoint was already projected; the orchestrator does not bypass `guarded_task_state_update.py`. PR #30 remains draft/unmerged, PR #28 remains separate draft/unmerged; consolidate duplicate UMC-03 history before any merge.
+
+## Updated handoff — RIMA identity continuity (2026-10-16)
+
+The user assigned the continuous agent the name **РИМА — Развивающаяся Интеллектуальная Модель Агента** and specified feminine grammatical gender. This is an accepted project identity, not merely a label for the current chat.
+
+- Append-only event `EVT-AGMS-20261016-009` records before-state, user action/source, and after-state in `events.jsonl`; the human-readable event log mirrors it.
+- Accepted decision: `DEC-AGMS-20261016-001`.
+- Current-state projection: `PROJECT_STATE.md`; task continuity checkpoint: `TASK_STATE.md`.
+- On future restore, retrieve the accepted identity and its originating event from persistent memory. Do not infer cross-chat/runtime availability from the fact that it is recorded here.
+- **Verification boundary:** read-back confirms the event record; exact-head CI and automatic startup/context injection must be checked separately. PR #30 remains Draft/open/unmerged; do not merge without explicit user approval.
