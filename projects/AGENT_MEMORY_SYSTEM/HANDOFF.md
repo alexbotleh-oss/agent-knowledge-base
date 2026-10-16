@@ -875,3 +875,14 @@ A follow-up read of workflow job logs found that run [38956581475](https://githu
 Scope qualification: this validates the PR merge candidate including the current branch head, not a standalone checkout of the branch tip. Generic stack validation still skipped pytest-based tests because pytest was not installed, and HTML/PWA/JS lint/test/build checks were skipped because the repository has no package/test setup for those stacks. Do not describe those skipped checks as passed.
 
 The continuity checkpoint has been updated with the exact merge checkout, run URL, counts and scope. Production trusted owner key/keyring and real complete archive import remain open; PR #30 remains Draft/open/unmerged.
+
+
+## Follow-up — bind restored local memory to live branch (2026-10-16)
+
+A code-path audit found a continuity-integrity gap: `verified_session_restore.py` independently checked the live branch/CI but then built the packet from caller-supplied local files without proving those bytes came from the selected branch. This could combine current remote revision evidence with stale local `TASK_STATE.md`, `HANDOFF.md` or `events.jsonl`.
+
+**Fix:** the verifier now fetches the Git blob SHA for all three canonical sources at the selected branch and computes the corresponding Git blob ID from the local bytes. Missing local files, unavailable/invalid remote source evidence, or any SHA mismatch blocks packet creation. The pipeline integration fixtures now provide source-blob evidence explicitly. Regression test `test_local_source_drift_blocks_restore` confirms that stale local state yields `REVISION_CHECK_BLOCKED` and performs no writes.
+
+**Validation:** run [38957595449](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38957595449) passed on pull-request merge checkout `ed386dd`, which includes branch code head `d16faebbe404e7af5418f239aa8482a2c2383002`. Python unittest suite: **397 tests, 1 skipped**; Node tests: **4 passed**; write audit: **143 mutation sites / 0 unclassified**; memory and knowledge-base validation PASS. This is merge-candidate validation, not a standalone checkout of the branch tip. Generic pytest and HTML/PWA/JS stack checks remain skipped because the relevant tooling/setup is absent.
+
+**Remaining:** verify the checkpoint's `repository_state` against the current code and the workflow run's actual API head SHA before claiming live restore is unblocked; configure a production trust root; test the real complete archive; reconcile UMC-03 overlap between PR #28 and #30. PR #30 remains Draft/open/unmerged; `main` is unchanged.
