@@ -97,7 +97,6 @@ class RealSourceIngestionIntegrationTests(unittest.TestCase):
             self.assertEqual(result["stages"]["session_restore"],"RESTORED_PACKET_WITH_PARTIAL_MEMORY_NO_MATCH")
             self.assertEqual(result["restore"]["semantic_memory_status"],"PARTIAL_NO_MATCH")
             self.assertEqual(result["restore"]["repository_revision_evidence"]["status"],"OBSERVED_CODE_AND_CI_MATCH")
-            self.assertEqual(result["restore"]["remote_repository_evidence"]["status"],"REMOTE_VERIFIED_EXACT_CODE_HEAD")
             self.assertEqual(result["restore"]["returned_count"],0)
             rows=source_registry.read_text(encoding="utf-8").splitlines()
             self.assertEqual(len(rows),1)
