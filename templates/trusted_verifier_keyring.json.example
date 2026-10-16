@@ -1,0 +1,16 @@
+{
+  "schema_version": "1.0",
+  "keys": [
+    {
+      "key_id": "REPLACE_WITH_OPERATOR_MANAGED_KEY_ID",
+      "issuer_id": "REPLACE_WITH_TRUSTED_SIGNER_ID",
+      "algorithm": "Ed25519",
+      "status": "REVOKED",
+      "allowed_receipt_types": [
+        "applicability_judgment",
+        "check_result"
+      ],
+      "public_key_pem": "REPLACE_WITH_PUBLIC_KEY_PEM"
+    }
+  ]
+}
