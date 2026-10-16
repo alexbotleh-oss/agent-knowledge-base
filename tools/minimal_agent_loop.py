@@ -24,6 +24,7 @@ from decision_frontier import reduce_decision_frontier
 from context_extractor import extract_semantic_context
 from context_trust_gate import authorize_next_step
 from restore_session_packet import build_session_packet
+from trusted_receipt_verifier import make_applicability_verifier_from_env
 
 TOKEN_RE = re.compile(r"[^\W_]+", re.UNICODE)
 STOP_WORDS = {
@@ -825,6 +826,8 @@ def run_minimal_agent_loop(
     query_parts = [user_request.strip(), context.get("active_goal", "UNKNOWN")]
     blockers = context.get("blockers", [])
     if isinstance(blockers, list):
+    if judgment_verifier is None:
+        judgment_verifier = make_applicability_verifier_from_env(Path(__file__).resolve().parents[1])
         query_parts.extend(item for item in blockers if isinstance(item, str))
     query = " ".join(part for part in query_parts if part and part != "UNKNOWN")
 

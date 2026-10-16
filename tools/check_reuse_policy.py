@@ -16,6 +16,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from trusted_receipt_verifier import make_check_receipt_verifier_from_env
+
 DEFAULT_LOG = Path(__file__).resolve().parents[1] / "projects" / "AGENT_MEMORY_SYSTEM" / "events.jsonl"
 RESULTS = {"PASS", "FAIL", "BLOCKED", "UNKNOWN"}
 HASH_RE = re.compile(r"^[0-9a-f]{64}$")
@@ -140,6 +142,8 @@ def evaluate_check_reuse(
     check_spec: Any,
     source_hashes: Any,
     candidate_fingerprints: Any,
+    *,
+    receipt_verifier=None,
 ) -> dict[str, Any]:
     """Decide whether an exact prior recorded PASS can be reused without rerunning."""
     fingerprint = make_fingerprint(check_spec, source_hashes, candidate_fingerprints)
@@ -179,11 +183,36 @@ def evaluate_check_reuse(
         record = event["check_result"]
         evidence_refs = record.get("evidence_refs")
         if record.get("result_status") == "PASS" and isinstance(evidence_refs, list) and evidence_refs:
+            expected_claim = {
+                "check_key": fingerprint["check_key"],
+                "input_fingerprint": fingerprint["input_fingerprint"],
+                "result_status": "PASS",
+                "evidence_refs": evidence_refs,
+                "source_hashes": fingerprint["source_hashes"],
+                "candidate_fingerprints": fingerprint["candidate_fingerprints"],
+            }
+            verifier = receipt_verifier if receipt_verifier is not None else make_check_receipt_verifier_from_env()
+            receipt = record.get("signed_receipt")
+            if isinstance(receipt, dict) and verifier is not None:
+                verification = verifier(receipt, expected_claim)
+                if isinstance(verification, dict) and verification.get("verified") is True:
+                    return {
+                        **fingerprint, "status": "REUSE_VERIFIED_PASS", "action": "DO_NOT_REPEAT_CHECK",
+                        "prior_event_id": event["event_id"], "result_status": "PASS",
+                        "evidence_refs": evidence_refs, "recorded_by": record.get("recorded_by", "UNKNOWN"),
+                        "receipt_id": verification.get("receipt_id"),
+                        "trust_boundary": "Ed25519 receipt verified against externally pinned trusted keyring and exact input claim",
+                        "writes_performed": False,
+                    }
+                verification_status = verification.get("status", "RECEIPT_VERIFICATION_FAILED") if isinstance(verification, dict) else "RECEIPT_VERIFICATION_FAILED"
+            else:
+                verification_status = "TRUST_ROOT_UNCONFIGURED_OR_RECEIPT_MISSING"
             return {
-                **fingerprint, "status": "REUSE_RECORDED_PASS", "action": "DO_NOT_REPEAT_CHECK",
+                **fingerprint, "status": "REUSE_RECORDED_PASS_UNTRUSTED", "action": "REVIEW_PRIOR_RESULT",
                 "prior_event_id": event["event_id"], "result_status": "PASS",
                 "evidence_refs": evidence_refs, "recorded_by": record.get("recorded_by", "UNKNOWN"),
-                "trust_boundary": "recorded result and matching inputs; not independently authenticated",
+                "receipt_verification_status": verification_status,
+                "trust_boundary": "Unsigned or unverified result is a review hint only; it cannot suppress the check",
                 "writes_performed": False,
             }
         return {
@@ -220,6 +249,7 @@ def record_check_result(
     evidence_refs: list[str],
     summary: str,
     recorded_by: str,
+    signed_receipt: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Append a source-bound check result. PASS requires evidence references."""
     fingerprint = make_fingerprint(check_spec, source_hashes, candidate_fingerprints)
@@ -233,6 +263,8 @@ def record_check_result(
         return {"status": "REJECTED", "reason": "PASS_REQUIRES_EVIDENCE_REFS", "writes_performed": False}
     if not isinstance(summary, str) or not summary.strip() or not isinstance(recorded_by, str) or not recorded_by.strip():
         return {"status": "REJECTED", "reason": "SUMMARY_AND_RECORDED_BY_REQUIRED", "writes_performed": False}
+    if signed_receipt is not None and not isinstance(signed_receipt, dict):
+        return {"status": "REJECTED", "reason": "INVALID_SIGNED_RECEIPT", "writes_performed": False}
     path = Path(event_log)
     record = {
         "check_key": fingerprint["check_key"],
@@ -245,6 +277,8 @@ def record_check_result(
         "recorded_by": recorded_by,
         "summary": summary.strip(),
     }
+    if signed_receipt is not None:
+        record["signed_receipt"] = signed_receipt
     event = {
         "event_id": _event_id(record["check_key"], record["input_fingerprint"], result_status),
         "project_id": "AGENT_MEMORY_SYSTEM",
@@ -305,11 +339,13 @@ def main(argv=None) -> int:
     record.add_argument("--evidence-ref", action="append", default=[])
     record.add_argument("--summary", required=True)
     record.add_argument("--recorded-by", required=True)
+    record.add_argument("--signed-receipt", type=Path)
     args = parser.parse_args(argv)
     try:
         check_spec = json.loads(args.check_spec.read_text(encoding="utf-8"))
         source_hashes = json.loads(args.source_hashes.read_text(encoding="utf-8"))
         candidates = json.loads(args.candidate_fingerprints.read_text(encoding="utf-8"))
+        signed_receipt = json.loads(args.signed_receipt.read_text(encoding="utf-8")) if getattr(args, "signed_receipt", None) else None
     except Exception as exc:
         print(json.dumps({"status": "BLOCKED", "error": f"INVALID_INPUT_FILE: {exc}"}, ensure_ascii=False))
         return 2
@@ -319,11 +355,12 @@ def main(argv=None) -> int:
         result = record_check_result(
             args.event_log, check_spec, source_hashes, candidates,
             result_status=args.result_status, evidence_refs=args.evidence_ref,
-            summary=args.summary, recorded_by=args.recorded_by,
+            summary=args.summary, recorded_by=args.recorded_by, signed_receipt=signed_receipt,
         )
     print(json.dumps(result, ensure_ascii=False, indent=2))
-    return 0 if result.get("status") in {"RUN_CHECK", "REUSE_RECORDED_PASS", "RECHECK_INPUTS_CHANGED",
-        "RECHECK_PRIOR_RESULT_NOT_REUSABLE", "CHECK_RESULT_CONFLICT", "RECORDED", "ALREADY_RECORDED"} else 2
+    return 0 if result.get("status") in {"RUN_CHECK", "REUSE_VERIFIED_PASS", "REUSE_RECORDED_PASS_UNTRUSTED",
+        "RECHECK_INPUTS_CHANGED", "RECHECK_PRIOR_RESULT_NOT_REUSABLE", "CHECK_RESULT_CONFLICT",
+        "RECORDED", "ALREADY_RECORDED"} else 2
 
 
 if __name__ == "__main__":

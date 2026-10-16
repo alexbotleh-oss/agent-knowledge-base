@@ -312,9 +312,9 @@ class TaskStartExperienceMapTests(unittest.TestCase):
             current_project_id="TEST",
         )
         reuse = replay["experience_map"]["check_reuse_policy"]
-        self.assertEqual(reuse["status"], "REUSE_RECORDED_PASS")
-        self.assertEqual(reuse["action"], "DO_NOT_REPEAT_CHECK")
-        self.assertFalse(replay["decision_policy"]["repeat_check"])
+        self.assertEqual(reuse["status"], "REUSE_RECORDED_PASS_UNTRUSTED")
+        self.assertEqual(reuse["action"], "REVIEW_PRIOR_RESULT")
+        self.assertTrue(replay["decision_policy"]["repeat_check"])
         self.assertFalse(replay["decision_policy"]["planning_authorized"])
 
     def test_lesson_source_mutation_blocks_frontier_and_check_reuse(self):

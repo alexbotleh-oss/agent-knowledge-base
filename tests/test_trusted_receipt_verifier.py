@@ -154,9 +154,17 @@ class TrustedReceiptVerifierTests(unittest.TestCase):
         self.assertIsNone(verifier(candidate, judgment))
 
     def test_environment_factory_is_disabled_without_external_trust_root(self):
-        for key in ("AGMS_TRUSTED_KEYRING_PATH", "AGMS_TRUSTED_KEYRING_SHA256", "AGMS_SIGNED_RECEIPTS_PATH"):
-            os.environ.pop(key, None)
-        self.assertIsNone(make_applicability_verifier_from_env(self.root))
+        old = {key: os.environ.get(key) for key in ("AGMS_TRUSTED_KEYRING_PATH", "AGMS_TRUSTED_KEYRING_SHA256", "AGMS_SIGNED_RECEIPTS_PATH")}
+        try:
+            for key in old:
+                os.environ.pop(key, None)
+            self.assertIsNone(make_applicability_verifier_from_env(self.root))
+        finally:
+            for key, value in old.items():
+                if value is None:
+                    os.environ.pop(key, None)
+                else:
+                    os.environ[key] = value
 
 
 if __name__ == "__main__":

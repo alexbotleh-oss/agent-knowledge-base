@@ -217,9 +217,13 @@ def _candidate_record_digest(candidate: dict[str, Any], repo_root: Path) -> str 
     source = candidate.get("source")
     if not isinstance(source, dict) or not isinstance(source.get("path"), str):
         return None
+    root = repo_root.resolve()
     path = Path(source["path"])
-    if not path.is_absolute():
-        path = (repo_root / path).resolve()
+    path = path.resolve() if path.is_absolute() else (root / path).resolve()
+    try:
+        path.relative_to(root)
+    except ValueError:
+        return None
     try:
         raw = path.read_bytes()
     except OSError:

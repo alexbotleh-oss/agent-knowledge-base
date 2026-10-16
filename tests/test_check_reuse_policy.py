@@ -44,11 +44,42 @@ class CheckReusePolicyTests(unittest.TestCase):
         self.assertEqual(replay["status"], "ALREADY_RECORDED")
         self.assertFalse(replay["writes_performed"])
         reused = evaluate_check_reuse(self.log, self.check, self.sources, self.candidates)
-        self.assertEqual(reused["status"], "REUSE_RECORDED_PASS")
-        self.assertEqual(reused["action"], "DO_NOT_REPEAT_CHECK")
+        self.assertEqual(reused["status"], "REUSE_RECORDED_PASS_UNTRUSTED")
+        self.assertEqual(reused["action"], "REVIEW_PRIOR_RESULT")
         self.assertEqual(reused["prior_event_id"], first["event_id"])
-        self.assertIn("not independently authenticated", reused["trust_boundary"])
+        self.assertIn("cannot suppress the check", reused["trust_boundary"])
         self.assertEqual(len(self.log.read_text(encoding="utf-8").splitlines()), 1)
+
+    def test_signed_pass_is_reused_only_when_receipt_verifier_accepts_exact_claim(self):
+        recorded = record_check_result(
+            self.log, self.check, self.sources, self.candidates,
+            result_status="PASS", evidence_refs=["tests/test_trigger.py#case-1"],
+            summary="Trigger condition was verified", recorded_by="CI run 123",
+            signed_receipt={"receipt_id": "RECEIPT-1", "signature": {"algorithm": "Ed25519", "value": "test"}},
+        )
+        self.assertEqual(recorded["status"], "RECORDED")
+        verifier = lambda receipt, claim: {"verified": True, "receipt_id": receipt["receipt_id"]}
+        result = evaluate_check_reuse(
+            self.log, self.check, self.sources, self.candidates, receipt_verifier=verifier
+        )
+        self.assertEqual(result["status"], "REUSE_VERIFIED_PASS")
+        self.assertEqual(result["action"], "DO_NOT_REPEAT_CHECK")
+        self.assertEqual(result["receipt_id"], "RECEIPT-1")
+
+    def test_invalid_signed_pass_receipt_does_not_suppress_check(self):
+        record_check_result(
+            self.log, self.check, self.sources, self.candidates,
+            result_status="PASS", evidence_refs=["tests/test_trigger.py#case-1"],
+            summary="Trigger condition was verified", recorded_by="CI run 123",
+            signed_receipt={"receipt_id": "RECEIPT-1"},
+        )
+        verifier = lambda receipt, claim: {"verified": False, "status": "INVALID_RECEIPT_SIGNATURE"}
+        result = evaluate_check_reuse(
+            self.log, self.check, self.sources, self.candidates, receipt_verifier=verifier
+        )
+        self.assertEqual(result["status"], "REUSE_RECORDED_PASS_UNTRUSTED")
+        self.assertEqual(result["action"], "REVIEW_PRIOR_RESULT")
+        self.assertEqual(result["receipt_verification_status"], "INVALID_RECEIPT_SIGNATURE")
 
     def test_changed_source_hash_forces_recheck(self):
         record_check_result(
