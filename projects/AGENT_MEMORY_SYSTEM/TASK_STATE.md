@@ -611,3 +611,13 @@ Tests added for first pass, completed replay, and a changed source under the sam
 - **Chronology rule:** code HEAD + exact-head CI and metadata commit are separate facts. A metadata-only commit does not imply code changed or that CI ran on that metadata commit. Earlier checkpoints remain historical evidence and are not overwritten.
 - **P1 status:** checkpoint JSON now preserves the prior repository state as `historical_repository_state` and records the latest verified code/CI state separately. PR #27 remains Draft/open/unmerged; `main` unchanged.
 - **Next:** finish HANDOFF/PR alignment, read back all changed metadata, and confirm exact resulting metadata HEAD. Do not merge.
+
+
+## P1 implementation checkpoint — revision evidence in restore packet (2026-10-16)
+
+- **Gap confirmed in code:** `tools/restore_session_packet.py` restored task/handoff excerpts and linked events but did not expose the checkpoint's recorded code HEAD / exact CI pair. The caller could therefore read stale checkpoint prose without a structured revision-status field.
+- **Implemented:** added `load_revision_evidence()` and `repository_revision_evidence` in the restore packet. It distinguishes `RECORDED_EVIDENCE_ONLY`, `OBSERVED_CODE_HEAD_MATCH`, `OBSERVED_CODE_HEAD_MISMATCH`, `OBSERVED_CI_RUN_MISMATCH`, `OBSERVED_CODE_AND_CI_MATCH`, `UNAVAILABLE`, and `INVALID`.
+- **Trust boundary:** the tool does not query GitHub or infer live state. Optional `--observed-code-head` and `--observed-ci-run-id` values must come from an independent caller observation. A matching pair is a comparison result, not independently verified CI evidence inside this tool. Missing revision metadata does not block otherwise valid task/event restoration.
+- **Tests/docs:** added regression tests for recorded-vs-historical separation, matching pair, mismatch, missing checkpoint, and restore packet behavior; documented semantics in `core/agent_runtime_protocol.md`.
+- **Exact code HEAD:** `ca9fabe998f9203bb8fe78f1b51515d54f5f4f09`; exact-head GitHub Actions [run 38848337390](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38848337390) PASS. This run's workflow job completed successfully; no failure steps were reported.
+- **Next:** align PR description and this handoff with the exact code SHA/run; read back changed files and verify PR remains Draft/open/unmerged. No merge or main changes.
