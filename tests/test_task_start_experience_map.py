@@ -8,7 +8,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
 
-from dialogue_attention_controller import process_turn, return_to_parent
+from dialogue_attention_controller import process_turn
+from agent_memory_cycle import run_cycle
 from branch_result_registry import publish_result, acknowledge_result
 from reconcile_branch_returns import build_report as build_branch_return_report
 from check_reuse_policy import record_check_result
@@ -421,10 +422,15 @@ class TaskStartExperienceMapTests(unittest.TestCase):
         )
         self.assertEqual(recorded["status"], "RECORDED")
 
-        returned = return_to_parent(
-            self.attention, turn_id="T-INTEGRATED-RETURN", parent_task_id="TASK-PARENT"
+        cycle = run_cycle(
+            self.task, self.handoff, self.events, self.attention, request,
+            experience_logs=[self.events, self.experience],
+            active_task_id="TASK-PARENT", active_checkpoint_id="CKPT-PARENT",
+            current_project_id="TEST", task_state_paths=[self.task],
+            return_turn_id="T-INTEGRATED-RETURN", parent_task_id="TASK-PARENT",
         )
-        self.assertEqual(returned["status"], "RETURNED")
+        self.assertEqual(cycle["status"], "READY", json.dumps(cycle["parent_return"], ensure_ascii=False))
+        self.assertEqual(cycle["parent_return"]["status"], "RETURNED")
         after_return = build_task_start_experience_map(
             self.task, self.handoff, self.events, request,
             experience_logs=[self.events, self.experience],
