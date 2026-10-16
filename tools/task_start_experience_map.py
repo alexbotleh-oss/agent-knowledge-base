@@ -81,6 +81,49 @@ def _expand_candidate(candidate: dict[str, Any]) -> dict[str, Any]:
     return result
 
 
+def _expand_lesson_candidate(candidate: dict[str, Any]) -> dict[str, Any]:
+    """Resolve a lesson source line only while the captured file hash and lesson ID match."""
+    result = dict(candidate)
+    source = candidate.get("source")
+    if not isinstance(source, dict) or not isinstance(source.get("path"), str):
+        result["source_record_status"] = "SOURCE_POINTER_INVALID"
+        return result
+    path = Path(source["path"])
+    try:
+        raw = path.read_bytes()
+    except OSError as exc:
+        result["source_record_status"] = "SOURCE_UNAVAILABLE"
+        result["source_record_error"] = str(exc)
+        return result
+    actual_hash = hashlib.sha256(raw).hexdigest()
+    if actual_hash != source.get("sha256"):
+        result["source_record_status"] = "SOURCE_CHANGED_AFTER_RETRIEVAL"
+        result["source_record_sha256_observed"] = actual_hash
+        return result
+    try:
+        lines = raw.decode("utf-8").splitlines()
+        line_number = source.get("line")
+        if not isinstance(line_number, int) or line_number < 1 or line_number > len(lines):
+            raise ValueError("source line locator is outside the captured file")
+        lesson = json.loads(lines[line_number - 1])
+    except (UnicodeDecodeError, json.JSONDecodeError, ValueError) as exc:
+        result["source_record_status"] = "SOURCE_RECORD_INVALID"
+        result["source_record_error"] = str(exc)
+        return result
+    if not isinstance(lesson, dict) or lesson.get("lesson_id") != candidate.get("lesson_id"):
+        result["source_record_status"] = "SOURCE_LINE_ID_MISMATCH"
+        return result
+    result["source_record_status"] = "HASH_AND_LESSON_ID_MATCH"
+    result["experience_details"] = {
+        key: lesson[key] for key in (
+            "title", "status", "scope", "project_id", "trigger", "observed_problem",
+            "prevention_rule", "applicability", "exceptions", "supersedes", "markers",
+            "evidence_refs", "related_event_ids",
+        ) if key in lesson
+    }
+    return result
+
+
 def build_task_start_experience_map(
     task_state: Path,
     handoff: Path,
@@ -147,10 +190,59 @@ def build_task_start_experience_map(
             else "ATTENTION_TASK_DIFFERS_FROM_TASK_STATE"
         )
 
-    lesson_retrieval = loop.get("lesson_retrieval", {"status": "NOT_REQUESTED", "candidates": []})
-    lesson_candidates = lesson_retrieval.get("candidates", []) if isinstance(lesson_retrieval, dict) else []
-    frontier = loop.get("decision_frontier", {})
-    directions = frontier.get("directions", []) if isinstance(frontier, dict) else []
+    lesson_retrieval = dict(loop.get("lesson_retrieval", {"status": "NOT_REQUESTED", "candidates": []}))
+    raw_lesson_candidates = lesson_retrieval.get("candidates", []) if isinstance(lesson_retrieval, dict) else []
+    lesson_candidates = [_expand_lesson_candidate(item) for item in raw_lesson_candidates if isinstance(item, dict)]
+    lesson_retrieval["candidates"] = lesson_candidates
+    frontier = dict(loop.get("decision_frontier", {})) if isinstance(loop.get("decision_frontier", {}), dict) else {}
+    source_status_by_locator = {}
+    stale_sources = []
+    for candidate, valid_status in [
+        *((item, "HASH_AND_EVENT_ID_MATCH") for item in expanded),
+        *((item, "HASH_AND_LESSON_ID_MATCH") for item in lesson_candidates),
+    ]:
+        source = candidate.get("source", {})
+        locator = (
+            candidate.get("candidate_type", "event" if "event_id" in candidate else "lesson"),
+            candidate.get("event_id", candidate.get("lesson_id")),
+            source.get("path") if isinstance(source, dict) else None,
+            source.get("line") if isinstance(source, dict) else None,
+        )
+        status_value = candidate.get("source_record_status", "SOURCE_POINTER_INVALID")
+        source_status_by_locator[locator] = status_value
+        if status_value != valid_status:
+            stale_sources.append({
+                "candidate_type": locator[0], "candidate_id": locator[1],
+                "source": source if isinstance(source, dict) else {},
+                "source_record_status": status_value,
+            })
+    if stale_sources:
+        revised_directions = []
+        stale_locators = {
+            (item["candidate_type"], item["candidate_id"],
+             item["source"].get("path"), item["source"].get("line"))
+            for item in stale_sources
+        }
+        for original in frontier.get("directions", []):
+            row = dict(original)
+            source = row.get("source", {}) if isinstance(row.get("source"), dict) else {}
+            locator = (row.get("candidate_type"), row.get("candidate_id"), source.get("path"), source.get("line"))
+            if locator in stale_locators:
+                status_value = source_status_by_locator.get(locator, "SOURCE_NOT_CURRENT")
+                row["classification"] = "HOLD"
+                row["reason"] = "SOURCE_NOT_CURRENT:" + status_value
+                row["source_record_status"] = status_value
+                row["needs"] = ["refresh retrieval from current source bytes before reviewing this candidate"]
+            revised_directions.append(row)
+        frontier["directions"] = revised_directions
+        frontier["next_discriminating_check"] = {
+            "type": "REFRESH_CHANGED_SOURCES",
+            "target_ids": sorted({str(item["candidate_id"]) for item in stale_sources}),
+            "why": "At least one source changed or could not be resolved after retrieval; refresh candidate evidence before further review.",
+        }
+        frontier["summary"] = dict(frontier.get("summary", {}))
+        frontier["summary"]["stale_source_count"] = len(stale_sources)
+    directions = frontier.get("directions", [])
     frontier_groups = {
         classification: [row for row in directions if isinstance(row, dict) and row.get("classification") == classification]
         for classification in ("CONFLICT", "HOLD", "KEEP_FOR_RATIONALE_REVIEW", "EXCLUDE", "OUT_OF_SCOPE")
@@ -193,11 +285,17 @@ def build_task_start_experience_map(
         for item in lesson_candidates if isinstance(item, dict) and isinstance(item.get("source"), dict)
     )
     check_spec = frontier.get("next_discriminating_check") if isinstance(frontier, dict) else None
-    check_reuse = evaluate_check_reuse(
-        attention_path, check_spec, source_hashes_for_reuse, candidate_fingerprints
-    ) if isinstance(check_spec, dict) else {
-        "status": "NO_CHECK_TO_REUSE", "action": "NO_CHECK", "writes_performed": False
-    }
+    if stale_sources:
+        check_reuse = {
+            "status": "BLOCKED_SOURCE_NOT_CURRENT", "action": "STOP_AND_RETRIEVE_AGAIN",
+            "stale_sources": stale_sources, "writes_performed": False,
+        }
+    elif isinstance(check_spec, dict):
+        check_reuse = evaluate_check_reuse(
+            attention_path, check_spec, source_hashes_for_reuse, candidate_fingerprints
+        )
+    else:
+        check_reuse = {"status": "NO_CHECK_TO_REUSE", "action": "NO_CHECK", "writes_performed": False}
 
     grouped = {
         "current_project_scope": [c for c in expanded if c.get("project_scope_match") == "MATCH"],
@@ -205,6 +303,8 @@ def build_task_start_experience_map(
         "scope_unknown": [c for c in expanded if c.get("project_scope_match") == "UNKNOWN"],
     }
     status = "READY_FOR_REVIEW" if loop.get("status") == "READY_FOR_REVIEW" else "CONTEXT_OR_RETRIEVAL_BLOCKED"
+    if stale_sources:
+        status = "PARTIAL_SOURCE_PROVENANCE_STALE"
     if attention.get("status") != "OK":
         status = "PARTIAL_ATTENTION_STATE_UNAVAILABLE"
     return {
@@ -237,6 +337,7 @@ def build_task_start_experience_map(
             "applicability": loop.get("applicability", {}),
             "decision_frontier": frontier,
             "review_directions_by_classification": frontier_groups,
+            "stale_sources": stale_sources,
             "next_discriminating_check": frontier.get("next_discriminating_check") if isinstance(frontier, dict) else None,
             "check_reuse_policy": check_reuse,
             "candidate_review_only": True,
