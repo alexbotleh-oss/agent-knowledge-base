@@ -50,7 +50,8 @@ def _current_branch_result_ready(
     ]
     if not results:
         return {"status": "BLOCKED_CHILD_RESULT_MISSING", "branch_id": branch_id}
-        # Only the newest result for this branch can authorize a return.
+
+    # Only the newest result for this branch can authorize a return.
     # An acknowledgement for an older result must not authorize a newer one.
     result = results[-1]
     result_ids = {result["event_id"]}
