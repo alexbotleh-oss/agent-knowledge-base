@@ -188,6 +188,15 @@ def _load_existing_registry(path: Path) -> tuple[list[dict[str, Any]], dict[tupl
     return rows, by_key
 
 
+def _logical_payload(record: dict[str, Any]) -> dict[str, Any]:
+    """Compare stable source content across snapshots, ignoring only snapshot provenance/bookkeeping."""
+    return {
+        key: value
+        for key, value in record.items()
+        if key not in {"source_snapshot_sha256", "batch_id", "registered_at", "schema_version"}
+    }
+
+
 def _write_atomic(path: Path, rows: list[dict[str, Any]]) -> None:
     payload = "".join(
         json.dumps(row, ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n"
@@ -221,9 +230,10 @@ def append_source_records(
 ) -> dict[str, Any]:
     """Validate and optionally append metadata-only source records.
 
-    The default is read-only. Revisions are keyed by (source_record_id,
-    source_snapshot_sha256, parser_version); exact replay is a no-op and older
-    source/parser revisions are retained.
+    The default is read-only. Exact source-record revisions are idempotent.
+    Across a newer snapshot, unchanged logical records are skipped even when
+    the snapshot hash changes; changed content is appended as a new revision.
+    Older snapshots and changed-content revisions are retained.
     """
     registry_path = Path(registry_path)
     try:
@@ -272,6 +282,11 @@ def append_source_records(
 
         additions = []
         already_present = 0
+        existing_by_logical: dict[tuple[str, str], list[dict[str, Any]]] = {}
+        for prior_row in existing_rows:
+            logical_key = (prior_row["source_record_id"], prior_row["parser_version"])
+            existing_by_logical.setdefault(logical_key, []).append(prior_row)
+
         for row in current_batch["rows"]:
             key = (row["source_record_id"], row["source_snapshot_sha256"], row["parser_version"])
             prior = existing_by_key.get(key)
@@ -284,6 +299,21 @@ def append_source_records(
                     }
                 already_present += 1
                 continue
+
+            logical_key = (row["source_record_id"], row["parser_version"])
+            unchanged_prior = next(
+                (
+                    candidate for candidate in existing_by_logical.get(logical_key, [])
+                    if _logical_payload(candidate) == _logical_payload(row)
+                ),
+                None,
+            )
+            if unchanged_prior is not None:
+                # Raw snapshots remain separately preserved by the import/staging
+                # layer; do not duplicate an unchanged logical source record here.
+                already_present += 1
+                continue
+
             stored = dict(row)
             stored["batch_id"] = current_batch["batch_id"]
             stored["registered_at"] = utc_now()
@@ -293,6 +323,7 @@ def append_source_records(
                 return {"status": "REJECTED", "error": "invalid registry record: " + "; ".join(errors), "writes_performed": False}
             additions.append(stored)
             existing_by_key[key] = stored
+            existing_by_logical.setdefault(logical_key, []).append(stored)
 
         if not additions:
             return {
