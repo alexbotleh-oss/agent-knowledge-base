@@ -191,6 +191,84 @@ class TaskStartExperienceMapTests(unittest.TestCase):
         )
         self.assertFalse(result["decision_policy"]["planning_authorized"])
 
+    def test_cross_project_and_global_lessons_remain_out_of_scope(self):
+        self.task.write_text(
+            self.task.read_text(encoding="utf-8")
+            + "\n\n```experience-markers\n"
+            + json.dumps({"problem_types": ["cache-recovery"], "tools": ["Python"],
+                          "languages": ["Python"], "environments": ["GitHub Actions"]})
+            + "\n```\n",
+            encoding="utf-8",
+        )
+        common = {
+            "status": "validated", "trigger": "cache recovery index pointer",
+            "observed_problem": "cache recovery index pointer", "applicability": ["cache recovery"],
+            "exceptions": [], "evidence_refs": [],
+            "markers": {"problem_types": ["cache-recovery"], "tools": ["Python"],
+                        "languages": ["Python"], "environments": ["GitHub Actions"]},
+        }
+        self._write(self.lessons, [
+            {"lesson_id": "LESSON-CURRENT", "scope": "project", "project_id": "TEST",
+             "title": "Cache recovery index pointer current project", **common},
+            {"lesson_id": "LESSON-OTHER", "scope": "project", "project_id": "OTHER",
+             "title": "Cache recovery index pointer other project", **common},
+            {"lesson_id": "LESSON-GLOBAL", "scope": "global", "project_id": "global",
+             "title": "Cache recovery index pointer global lesson", **common},
+        ])
+        result = build_task_start_experience_map(
+            self.task, self.handoff, self.events, "cache recovery index pointer",
+            experience_logs=[self.experience], lesson_logs=[self.lessons],
+            attention_log=self.attention, active_task_id="TASK-PARENT",
+            active_checkpoint_id="CKPT-PARENT", current_project_id="TEST",
+        )
+        frontier = result["experience_map"]["decision_frontier"]
+        by_id = {row["candidate_id"]: row["classification"] for row in frontier["directions"]}
+        self.assertEqual(by_id["LESSON-CURRENT"], "HOLD")
+        self.assertEqual(by_id["LESSON-OTHER"], "OUT_OF_SCOPE")
+        self.assertEqual(by_id["LESSON-GLOBAL"], "OUT_OF_SCOPE")
+        self.assertNotIn("LESSON-OTHER", [row["candidate_id"] for row in result["experience_map"]["review_directions_by_classification"]["KEEP_FOR_RATIONALE_REVIEW"]])
+        self.assertFalse(result["decision_policy"]["planning_authorized"])
+
+    def test_conflicting_lessons_surface_conflict_through_task_start(self):
+        self.task.write_text(
+            self.task.read_text(encoding="utf-8")
+            + "\n\n```experience-markers\n"
+            + json.dumps({"problem_types": ["cache-recovery"], "tools": ["Python"]})
+            + "\n```\n",
+            encoding="utf-8",
+        )
+        common = {
+            "scope": "project", "project_id": "TEST", "status": "validated",
+            "trigger": "cache recovery index pointer", "observed_problem": "cache recovery",
+            "applicability": ["cache recovery"], "exceptions": [],
+            "markers": {"problem_types": ["cache-recovery"], "tools": ["Python"]},
+            "evidence_refs": [{"kind": "test", "ref": "tests/test_cache.py"}],
+        }
+        self._write(self.lessons, [
+            {"lesson_id": "LESSON-A", "title": "Cache recovery use prior index pointer", **common},
+            {"lesson_id": "LESSON-B", "title": "Cache recovery rebuild index pointer", **common},
+        ])
+        judgments = [
+            {"candidate_id": "LESSON-A", "candidate_type": "lesson", "criterion": "compatibility",
+             "result": "CONFLICT", "judged_by": "user", "basis_ref": "tests/test_cache.py#case-a",
+             "with_candidate_id": "LESSON-B"},
+            {"candidate_id": "LESSON-B", "candidate_type": "lesson", "criterion": "compatibility",
+             "result": "CONFLICT", "judged_by": "user", "basis_ref": "tests/test_cache.py#case-b",
+             "with_candidate_id": "LESSON-A"},
+        ]
+        result = build_task_start_experience_map(
+            self.task, self.handoff, self.events, "cache recovery index pointer",
+            experience_logs=[self.experience], lesson_logs=[self.lessons], judgments=judgments,
+            attention_log=self.attention, active_task_id="TASK-PARENT",
+            active_checkpoint_id="CKPT-PARENT", current_project_id="TEST",
+        )
+        frontier = result["experience_map"]["decision_frontier"]
+        self.assertEqual(frontier["summary"]["conflicts"], 2)
+        self.assertEqual(frontier["next_discriminating_check"]["type"], "RECONCILE_CONFLICT")
+        conflicts = [row["candidate_id"] for row in frontier["directions"] if row["classification"] == "CONFLICT"]
+        self.assertEqual(set(conflicts), {"LESSON-A", "LESSON-B"})
+        self.assertFalse(result["decision_policy"]["planning_authorized"])
+
     def test_no_attention_journal_is_reported_without_inventing_a_branch(self):
         result = build_task_start_experience_map(
             self.task, self.handoff, self.events, "cache recovery",
