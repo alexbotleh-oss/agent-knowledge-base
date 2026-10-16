@@ -105,6 +105,61 @@ class EvaluatorUnitTests(unittest.TestCase):
         self.assertEqual(outcome_of(report, "L-VERIFIED"), "INSUFFICIENT_DATA")
         self.assertEqual(report["usable_as_rationale"], [])
 
+    def test_verifier_exception_fails_closed(self):
+        candidate = lesson_candidate("L-VERIFIED", status="validated")
+        def broken_verifier(candidate_arg, judgment):
+            raise RuntimeError("verification service unavailable")
+        report = evaluate_applicability(
+            [candidate], full_judgments("L-VERIFIED"), verifier=broken_verifier
+        )
+        self.assertEqual(outcome_of(report, "L-VERIFIED"), "INSUFFICIENT_DATA")
+        self.assertEqual(report["usable_as_rationale"], [])
+
+    def test_restrictive_judgment_overrides_verified_permissive_claims(self):
+        candidate = lesson_candidate("L-VERIFIED", status="validated")
+        judgments = full_judgments("L-VERIFIED") + [
+            judge("L-VERIFIED", "problem_similarity", "MISMATCH")
+        ]
+        def verifier(candidate_arg, judgment):
+            return {
+                "verified": True,
+                "candidate_id": candidate_arg["lesson_id"],
+                "candidate_type": "lesson",
+                "criterion": judgment["criterion"],
+                "result": judgment["result"],
+                "basis_ref": judgment["basis_ref"],
+                "verifier_id": "test-independent-verifier",
+                "source_sha256": "d" * 64,
+            }
+        report = evaluate_applicability([candidate], judgments, verifier=verifier)
+        self.assertEqual(outcome_of(report, "L-VERIFIED"), "NOT_APPLICABLE")
+        self.assertEqual(report["usable_as_rationale"], [])
+
+    def test_verifier_receipt_with_wrong_result_or_digest_fails_closed(self):
+        candidate = lesson_candidate("L-VERIFIED", status="validated")
+        judgments = full_judgments("L-VERIFIED")
+        def wrong_result(candidate_arg, judgment):
+            return {
+                "verified": True, "candidate_id": candidate_arg["lesson_id"],
+                "candidate_type": "lesson", "criterion": judgment["criterion"],
+                "result": "MISMATCH", "basis_ref": judgment["basis_ref"],
+                "verifier_id": "test-verifier", "source_sha256": "e" * 64,
+            }
+        report = evaluate_applicability([candidate], judgments, verifier=wrong_result)
+        self.assertEqual(outcome_of(report, "L-VERIFIED"), "INSUFFICIENT_DATA")
+        self.assertEqual(report["usable_as_rationale"], [])
+
+        def invalid_digest(candidate_arg, judgment):
+            return {
+                "verified": True, "candidate_id": candidate_arg["lesson_id"],
+                "candidate_type": "lesson", "criterion": judgment["criterion"],
+                "result": judgment["result"], "basis_ref": judgment["basis_ref"],
+                "verifier_id": "test-verifier", "source_sha256": "not-a-digest",
+            }
+        report = evaluate_applicability([candidate], judgments, verifier=invalid_digest)
+        self.assertEqual(outcome_of(report, "L-VERIFIED"), "INSUFFICIENT_DATA")
+        self.assertEqual(report["usable_as_rationale"], [])
+
     def test_rule_label_and_nonempty_basis_cannot_self_certify(self):
         report = evaluate_applicability(
             [lesson_candidate("L-1")], full_judgments("L-1", judged_by="rule")

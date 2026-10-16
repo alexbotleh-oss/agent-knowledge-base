@@ -355,7 +355,7 @@ Basis revision of the specification: `d3f9c610b7865793960dc652c2ccccc88afef732` 
 
 ### 13.2 Evaluator contract (as implemented in the current patch)
 
-`evaluate_applicability(candidates, judgments=None) -> dict` in `tools/applicability_evaluator.py`.
+`evaluate_applicability(candidates, judgments=None, *, verifier=None) -> dict` in `tools/applicability_evaluator.py`.
 
 - Pure and read-only: no file access, no writes, no execution; inputs are not mutated (`writes_performed: false`, `grants_planning_permission: false`).
 - Inputs: the candidate list from event retrieval (`candidate_type: "event"`) and lesson retrieval (`candidate_type: "lesson"`, `retrieve_lesson_candidates`), plus explicit judgments. Conditions are **not** an input and are never extracted from free text: every criterion result is a recorded judgment.
