@@ -20,6 +20,7 @@ if str(TOOLS_DIR) not in sys.path:
     sys.path.insert(0, str(TOOLS_DIR))
 
 from applicability_evaluator import evaluate_applicability
+from decision_frontier import reduce_decision_frontier
 from context_extractor import extract_semantic_context
 from context_trust_gate import authorize_next_step
 from restore_session_packet import build_session_packet
@@ -929,10 +930,20 @@ def run_minimal_agent_loop(
         and retrieval["status"] not in {"BLOCKED", "NO_QUERY_TERMS"}
         and lesson_retrieval["status"] not in {"BLOCKED"}
     )
+    all_candidates = (
+        list(retrieval.get("candidates", []))
+        + list(lesson_candidates or lesson_retrieval.get("candidates", []))
+    )
     applicability = evaluate_applicability(
-        list(retrieval.get("candidates", [])) + list(lesson_candidates or lesson_retrieval.get("candidates", [])),
+        all_candidates,
         judgments,
         verifier=judgment_verifier,
+    )
+    decision_frontier = reduce_decision_frontier(
+        all_candidates,
+        applicability,
+        retrieval_status=retrieval.get("status", "UNKNOWN"),
+        lesson_retrieval_status=lesson_retrieval.get("status", "UNKNOWN"),
     )
     next_action_policy = (
         "REVIEW_CANDIDATES_ONLY_NO_PLANNING"
@@ -965,6 +976,7 @@ def run_minimal_agent_loop(
         "lesson_search_stages": lesson_search_stages,
         "current_markers_source": current_markers_source,
         "applicability": applicability,
+        "decision_frontier": decision_frontier,
         "current_project_id": effective_project_id or "UNKNOWN",
         "current_project_id_source": project_id_source,
         "next_action_policy": next_action_policy,
