@@ -184,3 +184,17 @@ The receipt is an integrity binding, **not a cryptographic signature** and not i
 - A lock covers input revalidation, existing-registry validation and atomic same-directory replacement. The registry is fsynced before replace; directory fsync is attempted where supported. An OS advisory lock is released on process exit; arbitrary writers that ignore the lock remain outside the contract.
 - Rejected, stale, malformed or conflicted input writes nothing. This stage does not refresh indexes, assign new project applicability, or modify source registry records.
 - Unit tests exercise dry-run, promotion, replay, approval/hash mismatch, missing provenance, rejected decision, revision chain, and corrupt-registry failure. CI results must be checked at the exact code HEAD before claiming this stage verified.
+
+
+## Canonical multidimensional index generation — initial implementation
+
+`tools/canonical_memory_index.py` builds a deterministic index from `registry/memory_records.jsonl`; it does not treat an archive export as canonical memory.
+
+- It validates every envelope and embedded record hash, accepted lifecycle, unique `(memory_id, revision_id)`, and the append-only revision parent chain before building.
+- The immutable generation ID is derived from index schema/version, source registry SHA-256, and correction-overlay status. Repeating the same source revision reuses the same generation bytes.
+- The generation contains references to records/revisions, a current-revision map, and derived dimensions for project, task, context, type, topic, evidence status, sign, decision status, incident, event/source time, source provenance, and relation type/target. It does not copy semantic records into independent catalogs.
+- Publication writes the immutable generation first, then atomically replaces `CURRENT.json`. The source-registry lock and index lock are held while reading, validating, generating and publishing. A failed pointer publication leaves the prior pointer intact; an orphan generation is safe to reuse or ignore.
+- `--check` reports `CURRENT_PARTIAL`, `STALE`, `INVALID` or `UNAVAILABLE`; freshness is compared to the live source-registry SHA-256.
+- **Correction-overlay boundary:** no canonical edge-correction overlay file/contract was found at this revision. The generated index explicitly reports `NOT_AVAILABLE_NO_CANONICAL_OVERLAY_SOURCE` and `coverage.status=PARTIAL`; it must not be presented as fully reconciled.
+- Default is dry-run; `--apply` is required to publish. Repository paths are restricted to `registry/memory_records.jsonl` and `registry/memory_index/`; external paths are available only for isolated tests.
+- Tests cover deterministic output, multiple dimensions without duplicate records, historical/current revisions, freshness, replay, corrupt registry/revision chain, and failed-pointer publication preserving the previous pointer.
