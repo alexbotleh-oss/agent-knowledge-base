@@ -749,4 +749,6 @@ Important remaining gap: real ingestion + promotion is tested, but the same test
 
 **Highest-impact gaps:** UMC-02 runtime attention/return controller remains BLOCKED; no verified automatic ChatGPT message capture/startup; no production applicability verifier/trust root; memory retrieval does not yet construct a complete cause-linked path across all canonical records; skill execution, runtime environment monitoring, and VLM/Android acceptance remain unverified. Multiple documents had stale implementation claims; this audit branch appends current status without deleting historical entries.
 
-**Next action:** verify CI for PR #29's audit/doc changes, then synchronize the continuity checkpoint with the verified code HEAD, metadata revision, and current audit PR. After that, build the single authoritative capability traceability matrix. Do not restart the archive audit or re-run already completed CI unless inputs/revision change or a new contradiction appears.
+**Traceability matrix:** `projects/AGENT_MEMORY_SYSTEM/CAPABILITY_TRACEABILITY_MATRIX_2026-10-16.md` is now created and maps each planned capability to specification, code, tests, revision-scoped CI, status, and residual gap.
+
+**Next action:** implement CAP-02/UMC-02 — a runtime attention controller and causal return stack — then connect it to task-time experience retrieval. Do not restart the archive audit or re-run completed CI unless inputs/revision change or a new contradiction appears.
