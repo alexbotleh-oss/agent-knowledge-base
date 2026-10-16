@@ -185,7 +185,7 @@ Status meanings: **PARTIAL** means a component/test covers a narrow subcase but 
 |---|---|---|
 | UMC-01 | PARTIAL | `tools/restore_session_packet.py` and `tests/test_restore_session_packet.py` build a source-backed packet from TASK_STATE/HANDOFF/events with hashes and linked events; automatic startup in a new ChatGPT chat and semantic goal verification remain unimplemented. |
 | UMC-02 | BLOCKED | Return rules are documented; no runtime dialogue controller classifying side branches and preserving/returning active goals. |
-| UMC-03 | BLOCKED | Intake planner carries observed tool/language/task tags; no runtime applicability evaluator that gates use of shared lessons. |
+| UMC-03 | PARTIAL | S1 structured same-project marker retrieval and S2 lexical fallback are wired into `run_minimal_agent_loop`; T1–T4 plus injected-verifier positive-path tests pass on exact-head CI. Remaining: production trusted verifier/trust root, a consumer that acts on `usable_as_rationale`, and real project lesson-marker coverage. S3 remains deferred. |
 | UMC-04 | PARTIAL | `tests/test_resumable_chat_import.py` covers replay/resume for immutable source snapshots; promotion and index refresh are not in that pipeline. |
 | UMC-05 | PARTIAL | Manifest hash/path validation and importer incomplete-source tests exist; full staging-to-quarantine-to-promotion recovery is not end-to-end. |
 | UMC-06 | PARTIAL | Disputed lifecycle and routing exist; end-to-end conflicting-source preservation and dependent-state impact review need stronger tests. |
@@ -262,7 +262,7 @@ Safety and interpretation:
 Limitations:
 - Retrieval is lexical, not embedding/semantic retrieval, and it searches supplied event logs only; it is not yet a complete query over every canonical MemoryRecord, lesson, decision and relation.
 - It does not classify dialogue turns, preserve parent goals across side branches, publish child results automatically, or run at new-chat startup.
-- The prototype does not complete UMC-01, UMC-02 or UMC-03. The acceptance matrix above remains unchanged until end-to-end behavior is demonstrated.
+- The prototype does not complete UMC-01 or UMC-02. UMC-03 is PARTIAL for staged S1/S2 retrieval and evaluator behavior only; production trusted verification and a downstream consumer remain unimplemented. The matrix does not claim full end-to-end completion.
 
 
 ## Implementation audit — 2026-10-15 (PR #27)
@@ -340,7 +340,7 @@ Next: verify the full coordinator against a controlled end-to-end synthetic fixt
 
 ## 13. UMC-03 applicability assessment — specification and first read-only implementation
 
-**Status: UMC-03 remains `BLOCKED` in the acceptance matrix (section 10).** The current implementation is in draft PR #28 and includes the applicability evaluator, trusted-verifier injection seam, and staged S1/S2 retrieval. CI evidence must be checked against the exact head commit; this draft is not merged. Items marked "not implemented" below remain open.
+**Status: UMC-03 is `PARTIAL` in the acceptance matrix (section 10) for the executable S1/S2 retrieval and evaluator path.** The current implementation is in draft PR #28 and includes the trusted-verifier injection seam. The positive path is demonstrated with a test double only; no production trusted verifier/trust root is configured, and the loop still cannot plan or act on `usable_as_rationale`. This draft is not merged. Items marked "not implemented" below remain open.
 Basis revision of the specification: `d3f9c610b7865793960dc652c2ccccc88afef732` (branch `integration/memory-core-clean-20261015`). PR #27 remains Draft, unmerged.
 
 ### 13.0 Terms
@@ -457,7 +457,7 @@ The lesson records in these tests are fixtures. They demonstrate the mechanism; 
 
 ### 13.8 Condition for leaving BLOCKED
 
-`UMC-03` changes from `BLOCKED` to `PARTIAL` only when: the evaluator is called from `run_minimal_agent_loop`; T1–T4 pass; and CI is green on the exact commit that contains them. It cannot be `PASS` while the loop has no consumer that actually plans or acts on `usable_as_rationale` and `blocked_dependent_decisions`; until then the matrix row must say so. T5 gates the provisional-ledger part separately and does not affect the T1–T4 condition.
+`UMC-03` is now `PARTIAL`: the evaluator is called from `run_minimal_agent_loop`, T1–T4 pass, and exact-head CI is green. It cannot be `PASS` while no production trusted verifier/trust root is configured and the loop has no consumer that actually plans or acts on `usable_as_rationale` and `blocked_dependent_decisions`; those gaps remain explicit. T5 gates the provisional-ledger part separately and does not affect the T1–T4 condition.
 
 ### 13.9 Decisions recorded (owner: user, 2026-10-16)
 
