@@ -210,3 +210,20 @@ The receipt is an integrity binding, **not a cryptographic signature** and not i
 - The indexer validates the correction registry and applies accepted add/retract/replace operations only to derived relation views. Canonical MemoryRecord bytes remain unchanged. The correction registry hash is part of generation identity and freshness; changing either registry makes the index stale.
 - Coverage remains PARTIAL even when overlays apply because complete source/archive coverage has not been proven. If no correction registry exists, the index reports `NOT_AVAILABLE_NO_CANONICAL_OVERLAY_SOURCE`.
 
+
+
+## Durable pipeline coordinator
+
+`tools/memory_pipeline_coordinator.py` composes the existing stage executors without pretending that separate registries form one atomic database transaction.
+
+1. Preflight the semantic manifest/approval receipt and required restore inputs before canonical writes.
+2. Run the resumable source-ingestion runner.
+3. Resolve every memory-record provenance reference to exactly one source registry record, with optional archive/conversation scope and content-hash verification. Missing or ambiguous links block semantic promotion.
+4. Promote approved memory records, optionally append a correction, publish the deterministic index, then run the verified memory-aware restore.
+5. Record stage starts/results in a deterministic-run-ID, hash-chained append-only event ledger. The state JSON is only a rebuildable projection; the ledger is authoritative.
+
+The stage writers are independently idempotent. If the process stops after a stage commits but before its result event is appended, rerunning the same input fingerprint replays that stage and relies on the writer's replay contract. The coordinator does not roll back an already appended source record or promoted memory if a later stage blocks; it records the stopping stage and can resume.
+
+The coordinator records hashes, stage status and counts in its ledger rather than storing full restored memory payloads or raw provenance locators there. Provenance validation results returned to the caller may include diagnostic references; keep the run directory private.
+
+`--apply` is required for canonical source/memory/correction/index writes. The existing source-ingestion runner may still create staging artifacts and its own run ledger during dry-run, so the coordinator reports source-stage, canonical and ledger writes separately. The coordinator is not yet production-accepted as a single end-to-end run; tests use synthetic source records and mocked stage/API results.
