@@ -62,6 +62,67 @@ def _git_blob_sha(raw: bytes) -> str:
     return hashlib.sha1(header + raw).hexdigest()
 
 
+def _verify_local_sources(
+    project_dir: Path,
+    repository: str,
+    ref: str,
+    *,
+    fetch_json: Callable[[str], dict[str, Any]],
+) -> dict[str, Any]:
+    """Require local restore inputs to match the selected live branch blobs."""
+    project_dir = Path(project_dir)
+    encoded_ref = urllib.parse.quote(ref, safe="")
+    prefix = f"{API_ROOT}/repos/{repository}/contents"
+    filenames = ("TASK_STATE.md", "HANDOFF.md", "events.jsonl")
+    mismatches = []
+    for filename in filenames:
+        local_path = project_dir / filename
+        relative_path = f"projects/{project_dir.name}/{filename}"
+        if not local_path.is_file():
+            return {
+                "status": "LOCAL_SOURCE_UNAVAILABLE",
+                "missing_path": str(local_path),
+                "writes_performed": False,
+            }
+        url = f"{prefix}/{urllib.parse.quote(relative_path, safe='/')}?ref={encoded_ref}"
+        try:
+            remote = fetch_json(url)
+        except RemoteEvidenceError as exc:
+            return {
+                "status": "REMOTE_SOURCE_UNAVAILABLE",
+                "path": relative_path,
+                "reason": str(exc),
+                "writes_performed": False,
+            }
+        remote_sha = remote.get("sha")
+        if not isinstance(remote_sha, str) or not re.fullmatch(r"[0-9a-fA-F]{40}", remote_sha):
+            return {
+                "status": "REMOTE_SOURCE_INVALID",
+                "path": relative_path,
+                "reason": "GitHub contents response has no valid blob SHA.",
+                "writes_performed": False,
+            }
+        local_sha = _git_blob_sha(local_path.read_bytes())
+        if local_sha.lower() != remote_sha.lower():
+            mismatches.append({
+                "path": relative_path,
+                "local_blob_sha": local_sha,
+                "remote_blob_sha": remote_sha.lower(),
+            })
+    if mismatches:
+        return {
+            "status": "LOCAL_SOURCE_DRIFT",
+            "mismatches": mismatches,
+            "reason": "Local TASK_STATE/HANDOFF/event-log bytes do not match the selected live branch.",
+            "writes_performed": False,
+        }
+    return {
+        "status": "LOCAL_SOURCES_MATCH_LIVE_BRANCH",
+        "verified_paths": [f"projects/{project_dir.name}/{name}" for name in filenames],
+        "writes_performed": False,
+    }
+
+
 def verify_remote_revision(
     project_dir: Path,
     repository: str,
