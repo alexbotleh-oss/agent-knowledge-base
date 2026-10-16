@@ -15,8 +15,18 @@ def _key(item: dict[str, Any]) -> tuple[str, str]:
     return str(candidate_type), str(candidate_id)
 
 
+def _candidate_groups(candidates: list[dict[str, Any]]) -> dict[tuple[str, str], list[dict[str, Any]]]:
+    grouped: dict[tuple[str, str], list[dict[str, Any]]] = {}
+    for item in candidates:
+        if isinstance(item, dict):
+            grouped.setdefault(_key(item), []).append(item)
+    return grouped
+
+
 def _candidate_index(candidates: list[dict[str, Any]]) -> dict[tuple[str, str], dict[str, Any]]:
-    return {_key(item): item for item in candidates if isinstance(item, dict)}
+    """Index only unambiguous keys; duplicate IDs must never silently overwrite provenance."""
+    grouped = _candidate_groups(candidates)
+    return {key: rows[0] for key, rows in grouped.items() if len(rows) == 1}
 
 
 def _reason_for(assessment: dict[str, Any]) -> str:
@@ -52,6 +62,8 @@ def reduce_decision_frontier(
     """
     if not isinstance(applicability, dict):
         applicability = {}
+    candidate_groups = _candidate_groups(candidates)
+    duplicate_groups = {key: rows for key, rows in candidate_groups.items() if len(rows) > 1}
     indexed = _candidate_index(candidates)
     assessments = applicability.get("assessments", [])
     excluded_rows = applicability.get("excluded", [])
@@ -73,6 +85,28 @@ def reduce_decision_frontier(
     usable_map = row_map(usable_rows)
 
     directions: list[dict[str, Any]] = []
+    for key, rows in duplicate_groups.items():
+        for occurrence, candidate in enumerate(rows, 1):
+            source = candidate.get("source", {})
+            directions.append({
+                "candidate_id": key[1],
+                "candidate_type": key[0],
+                "project_id": candidate.get("project_id", "UNKNOWN"),
+                "source": source if isinstance(source, dict) else {},
+                "retrieval_stage": candidate.get("retrieval_stage", "UNKNOWN"),
+                "matched_terms": candidate.get("matched_terms", []),
+                "classification": "HOLD",
+                "reason": "DUPLICATE_CANDIDATE_ID_AMBIGUOUS_PROVENANCE",
+                "conflicts_with": [],
+                "needs": ["resolve duplicate candidate ID or assign distinct canonical identities"],
+                "unknown_criteria": [],
+                "adaptation_notes": [],
+                "caps": [],
+                "duplicate_candidate_id": True,
+                "duplicate_occurrence": occurrence,
+                "duplicate_source_count": len(rows),
+            })
+
     for key, candidate in indexed.items():
         assessment = assessment_map.get(key, {})
         outcome = assessment.get("outcome")
@@ -157,7 +191,11 @@ def reduce_decision_frontier(
         "CONFLICT": 0, "HOLD": 1, "KEEP_FOR_RATIONALE_REVIEW": 2,
         "EXCLUDE": 3, "OUT_OF_SCOPE": 4,
     }
-    directions.sort(key=lambda item: (priority.get(item["classification"], 9), item["candidate_type"], item["candidate_id"]))
+    directions.sort(key=lambda item: (
+        priority.get(item["classification"], 9), item["candidate_type"], item["candidate_id"],
+        str(item.get("source", {}).get("path", "")) if isinstance(item.get("source"), dict) else "",
+        item.get("source", {}).get("line", 0) if isinstance(item.get("source"), dict) and isinstance(item.get("source", {}).get("line", 0), int) else 0,
+    ))
 
     conflicts = [item for item in directions if item["classification"] == "CONFLICT"]
     holds = [item for item in directions if item["classification"] == "HOLD"]
@@ -165,7 +203,14 @@ def reduce_decision_frontier(
     excluded = [item for item in directions if item["classification"] == "EXCLUDE"]
     out_of_scope = [item for item in directions if item["classification"] == "OUT_OF_SCOPE"]
 
-    if conflicts:
+    if duplicate_groups:
+        next_check = {
+            "type": "RESOLVE_DUPLICATE_CANDIDATE_ID",
+            "target_ids": sorted(key[1] for key in duplicate_groups),
+            "source_count": sum(len(rows) for rows in duplicate_groups.values()),
+            "why": "The same candidate identity appears more than once; preserve all source locators and resolve identity before using any direction.",
+        }
+    elif conflicts:
         next_check = {
             "type": "RECONCILE_CONFLICT",
             "target_ids": sorted({item["candidate_id"] for item in conflicts} | {
@@ -211,6 +256,7 @@ def reduce_decision_frontier(
             "hold": len(holds),
             "conflicts": len(conflicts),
             "out_of_scope": len(out_of_scope),
+            "duplicate_candidate_keys": len(duplicate_groups),
             "retrieval_status": retrieval_status,
             "lesson_retrieval_status": lesson_retrieval_status,
         },
