@@ -615,7 +615,6 @@ def retrieve_lesson_candidates_structured(
             )
             indexed.append({
                 "candidate_type": "lesson",
-                "retrieval_stage": "S2_LEXICAL",
                 "lesson_id": lesson["lesson_id"],
                 "score": round(matched_weight / total_weight, 4) if total_weight else 0.0,
                 "matched_terms": sorted(f"{dimension}:{value}" for dimension, values in matched.items() for value in values),
@@ -736,6 +735,7 @@ def retrieve_lesson_candidates(
             source_validation = _validate_evidence_sources({"evidence_refs": refs}, evidence_root)
             indexed.append({
                 "candidate_type": "lesson",
+                "retrieval_stage": "S2_LEXICAL",
                 "lesson_id": lesson["lesson_id"],
                 "score": round(len(overlap) / len(query_tokens), 4),
                 "matched_terms": sorted(overlap),
