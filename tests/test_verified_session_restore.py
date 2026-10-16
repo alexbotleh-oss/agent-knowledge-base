@@ -64,7 +64,10 @@ class VerifiedSessionRestoreTests(unittest.TestCase):
             },
             f"{self.base_url}/compare/{RECORDED}...{LIVE}": {
                 "status": "ahead", "merge_base_commit": {"sha": RECORDED},
-                "files": [{"filename": "projects/AGENT_MEMORY_SYSTEM/HANDOFF.md"}],
+                "files": [
+                    {"filename": "projects/AGENT_MEMORY_SYSTEM/HANDOFF.md"},
+                    {"filename": "projects/AGENT_MEMORY_SYSTEM/CAPABILITY_TRACEABILITY_MATRIX_2026-10-16.md"},
+                ],
             },
         }
 
