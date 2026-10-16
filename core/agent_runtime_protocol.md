@@ -133,3 +133,12 @@ For environments with observed long-session/network interruptions, follow `core/
 ## Client-side turn lifecycle adapter
 
 For client-mediated chat work, follow `core/turn_lifecycle_client_adapter.md`. A trusted host must persist the exact incoming message via `POST /v1/turns` and wait for acknowledgement before starting work; emit durable progress/artifact/report references; distinguish response submission from delivery acknowledgement; and inspect incomplete turns after restart. The local service defaults to loopback and requires a bearer token. This API/SDK is a callable integration boundary, not automatic capture of the ChatGPT web UI. Do not claim the latter until a host-specific integration and end-to-end tests exist. Use 10–12 minute work slices where long-session interruptions have been observed, with checkpoints at each material verified boundary.
+
+
+## Revision evidence in session restore
+
+`tools/restore_session_packet.py` includes `repository_revision_evidence` when the project's `CONTINUITY_CHECKPOINT.json` is present. It keeps the checkpoint's recorded code HEAD and exact CI run separate from any historical repository state. By default the status is `RECORDED_EVIDENCE_ONLY`: stored metadata is not proof of the live remote HEAD or a currently valid CI result.
+
+A caller may pass `--observed-code-head` and `--observed-ci-run-id` only after independently observing those values. The restore tool compares supplied values with the stored pair and reports a match or mismatch; it does not fetch GitHub, infer the current branch, or validate the remote run itself. Missing metadata is `UNAVAILABLE`; malformed revision metadata is `INVALID`. Revision uncertainty is surfaced in the packet and does not block otherwise valid task/event restoration.
+
+A metadata-only Git commit is not the code HEAD. Never replace the recorded code SHA with the metadata commit SHA or attach code-test results to a different SHA. If the current HEAD or exact-head CI has not been independently checked, leave the status as recorded evidence only.
