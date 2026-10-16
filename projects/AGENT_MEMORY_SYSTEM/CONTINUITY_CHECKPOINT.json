@@ -299,8 +299,8 @@
     "recorded_at": "2026-10-16",
     "purpose": "Reconcile live PR #30 state with capability matrix and preserve exact validation boundaries.",
     "branch": "umc02/attention-return-controller-20261016",
-    "observed_head": "c7b61b987501516c829473789c91156351645b2f",
-    "observed_head_url": "https://github.com/alexbotleh-oss/agent-knowledge-base/commit/c7b61b987501516c829473789c91156351645b2f",
+    "observed_head": "a12d6f60dac306e58a912c2a25644873c53bb5e7",
+    "observed_head_url": "https://github.com/alexbotleh-oss/agent-knowledge-base/commit/a12d6f60dac306e58a912c2a25644873c53bb5e7",
     "changes_after_previous_checkpoint": [
       "Owner acknowledgements now support signed owner_acknowledgement receipts bound to the child result, branch, parent task/checkpoint, decision, and owner reference.",
       "Parent return re-verifies the receipt against an externally pinned keyring; unsigned or tampered acknowledgements do not authorize return.",
@@ -308,15 +308,25 @@
       "The source comment indentation in tools/agent_memory_cycle.py was corrected in a follow-up commit."
     ],
     "validation": {
-      "latest_full_ci_for_observed_head": "NOT_FOUND_IN_AVAILABLE_WORKFLOW_LOOKUP",
-      "last_recorded_exact_code_ci": {
-        "head": "4a257c059c1b716145e0f6311f9f7a6b8095db9f",
-        "run_id": 38907787412,
+      "latest_pr_validation_run": {
+        "run_id": 38956581475,
+        "url": "https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38956581475",
         "conclusion": "success",
-        "python_tests": 388,
-        "python_skipped": 1
+        "tested_checkout": "25a2a5c6f3265b8d78b3641190d8e6eb385e38f4",
+        "tested_checkout_url": "https://github.com/alexbotleh-oss/agent-knowledge-base/commit/25a2a5c6f3265b8d78b3641190d8e6eb385e38f4",
+        "checkout_type": "GitHub pull_request merge ref; merges PR #30 head a12d6f60dac306e58a912c2a25644873c53bb5e7 into base 57aa847f0f0104625d6cb6104111c4ee66a9b0cd",
+        "python_tests": 396,
+        "python_skipped": 1,
+        "node_tests": 4,
+        "node_passed": 4,
+        "write_audit_mutation_sites": 143,
+        "write_audit_unclassified": 0,
+        "memory_validation": "PASS",
+        "knowledge_base_validation": "PASS",
+        "project_stack_validation": "PARTIAL",
+        "project_stack_notes": "The generic validator skipped pytest-based stack tests because pytest is not installed; the workflow separately ran python -m unittest discover and reported 396 tests, 1 skipped. HTML/PWA/JS stack tests/build were skipped because package/test setup was absent."
       },
-      "interpretation": "The recorded CI validates its exact historical code head, not the observed latest branch head. Do not claim the newest code changes passed full CI until a run on the exact latest code/test revision is found or executed."
+      "interpretation": "The latest PR validation merge commit includes the current PR #30 head and passed the repository's unittest suite, Node tests and write audit. This is evidence for the tested PR merge candidate, not a standalone test run on the branch head. Generic detected-stack checks still skipped pytest and HTML/JS build/lint steps. Production trust-root configuration and real archive acceptance remain open."
     },
     "remaining": [
       "Run/locate full validation on exact latest code/test revision.",
