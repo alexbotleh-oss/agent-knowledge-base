@@ -648,3 +648,18 @@ Read back the checkpoint, task state and this handoff at the resulting branch HE
 - This does not close the separate ingestion → semantic approval/promotion → canonical index refresh → normal session-restore path, nor live Android browser-extension acceptance.
 - PR #27 remains Draft/open/unmerged; `main` unchanged.
 - **Next action:** choose the next bounded milestone from the still-open downstream memory pipeline. Do not repeat P1 or claim downstream integration is complete.
+
+
+## Downstream memory-pipeline audit handoff — 2026-10-16
+
+**Audit source revision:** `95524a90a4e1b024e237e7a49e1d4be9c795a433` (branch `integration/memory-core-clean-20261015`); exact-head CI [38849636651](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38849636651) PASS.
+
+Read `projects/AGENT_MEMORY_SYSTEM/MEMORY_PIPELINE_INTEGRATION_AUDIT_2026-10-16.md` before changing pipeline code.
+
+### Verified current boundary
+`immutable snapshot → staging → intake adapter/validation → dry-run route plan → metadata-only source registry` is present. The runner expressly stops at `SOURCE_REGISTERED_DOWNSTREAM_PENDING`. Intake schemas encode approval statuses, but `IMPORT_READY` is not authorization and a status field is not a verified decision. No complete semantic promotion executor or canonical memory index rebuilder was found. Existing restore recovers task/handoff/events and revision evidence, not approved semantic memory.
+
+### Next step
+Implement the approval-bound semantic registry writer as a separate guarded stage. Bind approval to exact candidate hashes and explicit decision provenance; preserve immutable source and append-only revisions; provide replay/conflict and crash-recovery tests. Do not expand the source-registration writer's scope. Index refresh and normal semantic-memory restore are later dependent milestones.
+
+**Unchanged constraints:** PR #27 stays Draft/open/unmerged; do not modify `main`. Treat exact-head CI as repository validation, not evidence that downstream stages or a real archive were exercised.

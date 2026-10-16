@@ -632,3 +632,13 @@ Tests added for first pass, completed replay, and a changed source under the sam
 - **Regression history preserved:** initial implementation HEAD `7e501f90146bd8623d8178c0789268a8a76126d3` failed five new tests due to the fixture's unescaped branch-ref expectation. The fixture was corrected in `467d68795d296b4a5e3ee473e1252be43e5e5bdc`; exact-head CI then passed.
 - **Boundaries:** P1 closes the revision-evidence integration gap. It does not complete semantic promotion, canonical index refresh, automatic ingestion-to-session restore, or live Android extension acceptance.
 - **Next:** select the next scoped milestone from the still-open downstream ingestion/semantic-memory/restore path. Do not merge PR #27 or change `main` as part of this checkpoint.
+
+
+## Downstream memory-pipeline audit — 2026-10-16
+
+- Audited branch HEAD `95524a90a4e1b024e237e7a49e1d4be9c795a433`; exact-head workflow run [38849636651](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38849636651) completed successfully.
+- Added `projects/AGENT_MEMORY_SYSTEM/MEMORY_PIPELINE_INTEGRATION_AUDIT_2026-10-16.md` documenting the stage-by-stage evidence, hard boundaries and next implementation contract.
+- Confirmed: ingestion reaches metadata-only source registration and stops at `SOURCE_REGISTERED_DOWNSTREAM_PENDING`; intake approval fields are validated, but no complete approval executor or semantic promotion writer was found; no canonical memory-index rebuild tool was found; normal restore includes task/handoff/events but not approved semantic-memory retrieval.
+- `archive_temporal_index.py` indexes an export, not the canonical semantic-memory registry. The target architecture doc itself says its index contract does not mean the indexer is implemented.
+- Next bounded implementation: approval-bound, append-only semantic registry writer with hash-bound decisions, idempotency/conflict checks and crash recovery. Index generation and restore integration remain subsequent stages.
+- PR #27 remains Draft/open/unmerged; `main` unchanged.

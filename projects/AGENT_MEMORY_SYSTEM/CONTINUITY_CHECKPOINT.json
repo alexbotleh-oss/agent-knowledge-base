@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "checkpoint_id": "CKPT-AGMS-20261016-P1-REVISION-RESTORE-04",
+  "checkpoint_id": "CKPT-AGMS-20261016-MEMORY-PIPELINE-AUDIT-01",
   "project_id": "AGENT_MEMORY_SYSTEM",
   "task_id": "AGMS-2026-10-15-MEMORY-PIPELINE-CONTINUITY",
   "recorded_at": "2026-10-16",
@@ -57,7 +57,8 @@
     "Added tools/verified_session_restore.py as a read-only single entry point that independently fetches the target GitHub branch HEAD, exact recorded Actions run, and compare result; it composes tools/restore_session_packet.py rather than duplicating event ancestry restoration.",
     "The verifier accepts an exact code HEAD match or a clean descendant with only allowlisted metadata paths changed; it fails closed on source/code drift, diverged ancestry, truncated compare, wrong/incomplete/failed exact-head CI, invalid checkpoint or unavailable remote evidence.",
     "Added tests/test_verified_session_restore.py: 6 tests for exact head, metadata-only descendant, wrong/failed CI, unexpected source changes, diverged/truncated compare, and missing checkpoint. Exact code HEAD 467d68795d296b4a5e3ee473e1252be43e5e5bdc passed CI run 38849505217: 241 Python tests (1 skipped), 4 Node tests, strict write audit 92 mutation sites / 0 unclassified, memory and project validation PASS.",
-    "Documented the live remote revision verification entry point and trust boundary in core/agent_runtime_protocol.md. The entry point remains read-only and does not implement semantic promotion, canonical index refresh or automatic chat capture."
+    "Documented the live remote revision verification entry point and trust boundary in core/agent_runtime_protocol.md. The entry point remains read-only and does not implement semantic promotion, canonical index refresh or automatic chat capture.",
+    "Audited the full source-ingestion → approval → semantic-promotion → canonical-index → normal-restore path at branch HEAD 95524a90a4e1b024e237e7a49e1d4be9c795a433; exact-head CI run 38849636651 passed. Findings and stage contracts are in projects/AGENT_MEMORY_SYSTEM/MEMORY_PIPELINE_INTEGRATION_AUDIT_2026-10-16.md."
   ],
   "confirmed_open": [
     {
@@ -85,7 +86,7 @@
       "description": "The ChatGPT web extension is a prototype verified by static CI only. Must be installed and tested in the user's actual Yandex Browser Android version. Verify send gate (no send before durable receipt), exact text and prior assistant message capture, interrupted connection recovery, response DOM detection, multiple incomplete turns, extension restart, and UI-selector drift. Until these pass, do not claim end-to-end capture is operational."
     }
   ],
-  "next_action": "P1 revision-evidence integration is implemented and exact-head CI is green. Next choose the next scoped milestone from the still-open ingestion → approved semantic promotion/index refresh → normal session-restore path; do not treat those downstream capabilities as completed by P1.",
+  "next_action": "Implement the approval-bound append-only semantic registry writer as a separate guarded stage; index refresh and normal semantic-memory restore remain subsequent milestones.",
   "constraints": [
     "Do not merge PR #27 or modify main without explicit user approval.",
     "Do not delete or rewrite source-history exports without a separate explicit decision.",
@@ -151,5 +152,13 @@
       "ci_conclusion": "success",
       "recorded_note": "P1 restore_session_packet revision-evidence implementation; retained from earlier HANDOFF record."
     }
+  ],
+  "open_items": [
+    "Approval workflow/executor with hash-bound decision evidence",
+    "Append-only semantic promotion writer with replay/conflict handling and crash recovery",
+    "Deterministic canonical multidimensional index generation and freshness verification",
+    "Normal session restore consuming approved semantic memory with explicit coverage/freshness",
+    "Apply edge_corrections overlays in graph/index consumers",
+    "Live Android browser-extension acceptance"
   ]
 }
