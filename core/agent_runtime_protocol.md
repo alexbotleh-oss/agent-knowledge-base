@@ -142,3 +142,24 @@ For client-mediated chat work, follow `core/turn_lifecycle_client_adapter.md`. A
 A caller may pass `--observed-code-head` and `--observed-ci-run-id` only after independently observing those values. The restore tool compares supplied values with the stored pair and reports a match or mismatch; it does not fetch GitHub, infer the current branch, or validate the remote run itself. Missing metadata is `UNAVAILABLE`; malformed revision metadata is `INVALID`. Revision uncertainty is surfaced in the packet and does not block otherwise valid task/event restoration.
 
 A metadata-only Git commit is not the code HEAD. Never replace the recorded code SHA with the metadata commit SHA or attach code-test results to a different SHA. If the current HEAD or exact-head CI has not been independently checked, leave the status as recorded evidence only.
+
+
+## Live remote revision verification in session restore
+
+Use `tools/verified_session_restore.py` as the single entry point when a restore must establish current repository/CI evidence. It composes the existing read-only `restore_session_packet.py`; it does not replace event ancestry resolution or write canonical state.
+
+Example:
+
+```bash
+python3 tools/verified_session_restore.py \
+  projects/AGENT_MEMORY_SYSTEM/TASK_STATE.md \
+  projects/AGENT_MEMORY_SYSTEM/HANDOFF.md \
+  projects/AGENT_MEMORY_SYSTEM/events.jsonl \
+  --repository alexbotleh-oss/agent-knowledge-base
+```
+
+The entry point independently queries the GitHub branch, compares the live branch tip with the checkpoint's recorded code SHA, and fetches the exact recorded Actions run. It accepts either an exact code-head match or a descendant whose complete changed-file list contains only the explicitly allowlisted checkpoint/task/handoff/event metadata files. Any source-code change, divergent history, truncated compare result, wrong CI head, failed/incomplete CI, malformed checkpoint, or unavailable API evidence fails closed. The live branch tip and recorded code SHA are returned as separate fields.
+
+The existing `repository_revision_evidence` remains the code-SHA/CI pair comparison; `remote_repository_evidence` reports the independently observed branch tip and code-vs-metadata comparison. A metadata-only descendant is not mislabeled as the code SHA, and a successful old CI run is never attached to a newer code revision. The command is read-only and returns a non-zero exit code unless the source-backed restore packet and remote revision verification both succeed.
+
+This validates the repository branch and recorded code/CI pair at invocation time; it does not prove that every chat message was captured, that the branch is the user's intended project branch, or that downstream semantic-memory promotion/index refresh is implemented.
