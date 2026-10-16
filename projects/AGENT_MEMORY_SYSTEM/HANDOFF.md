@@ -705,3 +705,12 @@ Read `tools/edge_correction_registry.py`, `schemas/edge_correction.schema.json`,
 Accepted corrections are source-revision/hash-bound and require a receipt tied to exact correction input bytes. The index applies accepted add/retract/replace operations to derived relation views only; canonical MemoryRecord bytes remain unchanged. The correction-registry hash participates in index generation identity and freshness. The receipt hash does not authenticate the author.
 
 No production correction file or archive was processed. Index coverage remains PARTIAL until source/archive completeness is proven. Next: implement a durable coordinator/ledger that can resume and reconcile interruption across source ingestion, semantic promotion, correction registration, index generation and fresh-session restore. Keep PR #27 Draft/open/unmerged and do not change `main`.
+
+
+## Pipeline coordinator continuation — 2026-10-16
+
+Current code/test branch: `integration/memory-core-clean-20261015`. Latest implementation at time of checkpoint: `feeb14446c8b039271b753a8ecd0b2661318b818`; exact-head CI [38853687319](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38853687319) PASS (294 Python tests, 1 skipped; 4 Node tests; write audit 127/0).
+
+Coordinator is in `tools/memory_pipeline_coordinator.py`; tests include `tests/test_memory_pipeline_*.py`. It composes the existing stages and preserves source provenance. The new test `tests/test_memory_pipeline_real_stages.py` was then extended to simulate interruption immediately after the real index pointer publish and rerun the same fingerprint, expecting idempotent promotion/correction replay. The CI run for that exact newer commit must be checked before continuing.
+
+Boundaries: no production archive has been processed; no claim of full source/chat coverage; semantic-memory status may be PARTIAL; stage ledger is audit/recovery evidence, not a cross-registry transaction. PR #27 remains Draft/open/unmerged and `main` must remain unchanged.
