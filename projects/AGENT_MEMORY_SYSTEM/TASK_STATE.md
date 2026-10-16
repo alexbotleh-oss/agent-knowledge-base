@@ -750,3 +750,12 @@ P2 is not yet declared ready: this test mocks the final verified restore packet,
 - **Exact code/test evidence:** HEAD `e15efb0083c69a85de66aee1171a5e17c83cb027`, GitHub Actions run [38901329090](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38901329090), passed: 357 Python tests (1 skipped), 4 Node tests, strict write audit 134 mutation sites / 0 unclassified; memory and project validation steps passed.
 - **Boundary:** all paths remain read-only; permissive applicability requires an injected verifier receipt, but the positive path uses test doubles only. No production trust root, automatic ChatGPT startup/capture, full graph retrieval, planning consumer or task-state reconciliation on return is established. S3 cross-project lesson retrieval remains deferred.
 - **Next:** exercise combined source mutation/provenance gaps, duplicate candidate IDs, cross-project exclusion, conflicts, unknown criteria, nested return after process restart and no-repeat. Then design a production verifier trust root separately. Do not merge PR #28 or #30 without explicit approval.
+
+
+## Replay and provenance hardening checkpoint — 2026-10-16
+
+- Added tests for source mutation between retrieval and review, duplicate event IDs across separate experience logs, fresh-process attention-stack reconstruction, and idempotent replay of a parent-return event.
+- Duplicate candidate IDs now produce HOLD for each source occurrence, preserve both source locators and set the next check to RESOLVE_DUPLICATE_CANDIDATE_ID; a positive evaluator label cannot override that frontier result.
+- Return replay with the same turn ID produces ALREADY_RETURNED without a second event. A fresh process can inspect and reconstruct the persisted nested return stack.
+- Exact code/test HEAD `1fa6079379feb19afb4d39b7d77e39f0a4ac2d79` passed CI [38901785446](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38901785446): 362 Python tests (1 skipped), 4 Node tests, write audit 134/0, memory/project validation PASS.
+- **Next:** test cross-project exclusion, conflicts and unknown criteria through the complete task-start wrapper; test no-repeat across the complete workflow; keep production verifier/trust-root design separate. Do not merge PR #28 or #30 without explicit approval.

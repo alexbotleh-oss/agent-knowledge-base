@@ -393,3 +393,17 @@ The task-start composition now calls the staged lesson retrieval and read-only e
 Acceptance boundary: the integrated path is read-only and explicitly invoked. It does not execute the suggested check, does not automatically start on a new ChatGPT chat, and does not establish real lesson-marker coverage or production trusted applicability verification. A candidate can be surfaced as a possible path while remaining HOLD/INSUFFICIENT_DATA; it is never silently promoted. UMC-02/UMC-03/CAP-11/12/13 remain IMPLEMENTED_PARTIAL.
 
 Next validation gate: add combined-path regressions for duplicate candidate IDs across sources, candidate/source provenance gaps, source mutation between retrieval and review, cross-project exclusion, conflicts, unknown criteria, nested return after process restart, and no-repeat handling. Then implement or explicitly reject a production trusted-verifier design; do not treat a test callback as production trust.
+
+
+## 16. Combined-path provenance and replay hardening — partial
+
+The connected task-start path now has additional regression coverage for two failure modes that can make an apparently valid memory result unsafe:
+
+- Duplicate candidate identities across supplied source logs no longer silently overwrite one another in the decision frontier. Each source locator is preserved; every duplicate is classified HOLD and the next check is RESOLVE_DUPLICATE_CANDIDATE_ID, even if the evaluator report contains a positive outcome label.
+- Event candidate details are not expanded when the source file changes between retrieval and review. The map reports SOURCE_CHANGED_AFTER_RETRIEVAL and omits the source-derived experience details.
+- A fresh Python process can rebuild the open attention/return stack from the canonical event log.
+- Replaying a successful parent-return event with the same turn ID returns ALREADY_RETURNED without appending a second event or popping another stack frame.
+
+Exact code/test HEAD 1fa6079379feb19afb4d39b7d77e39f0a4ac2d79 passed GitHub Actions run 38901785446: 362 Python tests (1 skipped), 4 Node tests, strict write audit 134 mutation sites / 0 unclassified; memory and project validation passed.
+
+Remaining acceptance work: run cross-project exclusion, conflict and unknown-criteria cases through the full task-start wrapper (not only the underlying evaluator/frontier unit tests); test no-repeat across the complete workflow; validate the production trust boundary; and accept the real archive/client path. These results do not establish automatic ChatGPT capture or production applicability verification.

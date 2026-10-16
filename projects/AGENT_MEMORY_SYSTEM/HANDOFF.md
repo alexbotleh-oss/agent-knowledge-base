@@ -789,3 +789,12 @@ The local task-start composition now connects UMC-02 attention/return with UMC-0
 **Remaining acceptance gaps:** no production trusted verifier/trust root; positive-path verifier tests use test doubles; real lesson-marker coverage unproven; no bounded planning consumer; no automatic ChatGPT capture/startup; no automatic TASK_STATE/HANDOFF update on return; retrieval is not complete semantic/graph traversal; production archive completeness remains PARTIAL/UNKNOWN.
 
 **Next action:** add integrated tests for source mutation between retrieval and review, duplicate IDs/provenance gaps, cross-project exclusion, conflicts, unknown criteria, nested return after process restart and no-repeat. Then design a production verifier trust root. Keep PR #30 draft/unmerged and `main` untouched.
+
+
+## Updated handoff — provenance/replay regression results (2026-10-16)
+
+The integrated path now has targeted fail-closed regression tests for source mutation after retrieval, duplicate candidate identities, fresh-process stack restore and return-event replay. Exact code/test HEAD `1fa6079379feb19afb4d39b7d77e39f0a4ac2d79` passed CI [38901785446](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38901785446): 362 Python tests (1 skipped), 4 Node tests, strict write audit 134 mutation sites / 0 unclassified, memory and project validation PASS.
+
+**What this proves:** these synthetic test paths behave as specified at that revision. It does not prove real archive completeness, automatic client capture/startup, production trusted applicability verification, or full canonical graph search. Positive applicability remains gated by an injected verifier callback and no production trust root is configured.
+
+**Next action:** add integrated task-start tests for cross-project exclusions, conflicts and unknown criteria; exercise the no-repeat policy through the whole task-start/branch-return flow; then design the production verifier trust boundary separately. PR #28 and PR #30 both remain draft/unmerged and contain overlapping UMC-03 source history that must be consolidated before merge.
