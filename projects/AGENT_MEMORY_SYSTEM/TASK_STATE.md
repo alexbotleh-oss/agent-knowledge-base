@@ -767,3 +767,12 @@ P2 is not yet declared ready: this test mocks the final verified restore packet,
 - Insufficiently evidenced same-project lesson candidates remain HOLD; these tests do not treat retrieval or user-provided labels as proof of applicability.
 - Exact code/test HEAD `0cc63385747561eea01cdc52d65cae6bbe291cc4` passed CI [38902032991](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38902032991): 364 Python tests (1 skipped), 4 Node tests, write audit 134/0, memory/project validation PASS.
 - **Next:** test no-repeat across the complete task-start/branch-result/parent-return flow; then design production trusted verification separately. No production verifier, automatic ChatGPT capture/startup or complete archive acceptance is claimed.
+
+
+## Source-bound no-repeat checkpoint — 2026-10-16
+
+- Added tools/check_reuse_policy.py and tests/test_check_reuse_policy.py. The task-start map now fingerprints the next check, relevant restore/retrieval source hashes and candidate identities. It can reuse an exact prior PASS only when evidence references exist and the fingerprint matches; changed inputs force recheck.
+- Check results are appended to the canonical AGENT_MEMORY_SYSTEM event log with a stable input-bound event ID, shared lock, fsync, replay/conflict handling and a strict write contract. PASS without evidence refs is rejected; corrupt logs or insufficient hashes never authorize reuse.
+- The record is explicitly not independently authenticated. The feature prevents accidental repeated work based on matching recorded inputs; it is not proof of correct execution or a planning authorization.
+- Exact code/test HEAD `842088a1c3210e716318f830c687f76e9af58878` passed CI [38902588618](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38902588618): 373 Python tests (1 skipped), 4 Node tests, write audit 140/0, memory/project validation PASS.
+- **Next:** connect no-repeat to child-result and parent-task reconciliation; then design production trusted verification and validate the actual client/runtime path. Keep PR #30 draft/unmerged and `main` unchanged.

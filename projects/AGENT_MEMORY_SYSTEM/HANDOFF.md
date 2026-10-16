@@ -805,3 +805,12 @@ The integrated path now has targeted fail-closed regression tests for source mut
 The integrated task-start wrapper now exercises cross-project/global exclusion and conflicting lesson recommendations. Same-project lessons with insufficient evidence remain HOLD; conflicts surface as CONFLICT and the next check is RECONCILE_CONFLICT. Exact code/test HEAD `0cc63385747561eea01cdc52d65cae6bbe291cc4` passed CI [38902032991](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38902032991): 364 Python tests (1 skipped), 4 Node tests, write audit 134/0, memory/project validation PASS.
 
 **Next action:** test no-repeat across the complete task-start, branch-result and parent-return workflow, including unchanged evidence and previously completed checks. Then design the production trusted verifier/trust root. Keep PR #30 draft/unmerged and do not change `main`.
+
+
+## Updated handoff — source-bound check reuse (2026-10-16)
+
+The task-start path now includes a read-only no-repeat decision backed by a write-once/check-replay-safe event recorder. A check is reusable only when the stable check key, current input fingerprint, relevant source hashes and candidate fingerprints match and the recorded PASS has evidence references. If inputs change, it returns RECHECK_INPUTS_CHANGED; missing/malformed hashes or corrupt journals fail closed. The result is explicitly recorded evidence, not independently authenticated truth.
+
+Exact code/test HEAD `842088a1c3210e716318f830c687f76e9af58878` passed CI [38902588618](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38902588618): 373 Python tests (1 skipped), 4 Node tests, write audit 140/0, memory/project validation PASS.
+
+**Next action:** connect check reuse to child-result publication and parent-task reconciliation so completed checks are not repeated across branch return, then design the production trusted verifier. PR #30 remains draft/unmerged; PR #28 remains separately draft/unmerged; consolidate overlapping UMC-03 source history before any merge.

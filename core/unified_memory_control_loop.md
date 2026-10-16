@@ -416,3 +416,17 @@ The task-start wrapper now has end-to-end synthetic tests for same-project lesso
 Exact code/test HEAD 0cc63385747561eea01cdc52d65cae6bbe291cc4 passed CI run 38902032991: 364 Python tests (1 skipped), 4 Node tests, write audit 134 mutation sites / 0 unclassified, memory/project validation PASS.
 
 Remaining next gate: test no-repeat across the complete task-start/branch-result/parent-return workflow, including unchanged evidence and already completed checks; then design the production trusted verifier/trust root. This is still a synthetic repository acceptance path, not automatic ChatGPT runtime integration.
+
+
+## 18. Source-bound no-repeat check reuse — partial
+
+Implemented in tools/check_reuse_policy.py and integrated into tools/task_start_experience_map.py. The policy computes a stable check key and an input fingerprint from the next discriminating check, relevant task/restore and retrieval source hashes, and candidate identities/source hashes. It records check results as append-only verification_check_completed events in the existing canonical AGENT_MEMORY_SYSTEM event log, using the same lock file as the attention controller.
+
+- A prior PASS is reusable only when the check key and full input fingerprint match and evidence_refs are present. The task-start map then reports REUSE_RECORDED_PASS / DO_NOT_REPEAT_CHECK and sets repeat_check=false.
+- Changed source hashes or candidate fingerprints produce RECHECK_INPUTS_CHANGED. Missing/invalid source hashes do not permit reuse. PASS without evidence references is rejected. Non-PASS results are never reused as success. Conflicting prior results fail closed.
+- The writer uses stable event identity, append-only persistence, fsync, lock contention handling and replay/conflict checks. Reuse evidence is stored in the canonical AGENT_MEMORY_SYSTEM event log; no second authoritative check database is introduced.
+- A recorded PASS is not independently authenticated. The policy prevents accidental repetition when recorded inputs/evidence match; it does not itself prove that the check was executed correctly or grant planning/execution permission.
+
+Exact code/test HEAD 842088a1c3210e716318f830c687f76e9af58878 passed CI run 38902588618: 373 Python tests (1 skipped), 4 Node tests, strict write audit 140 mutation sites / 0 unclassified, memory/project validation PASS.
+
+Remaining gap: no-repeat is connected to the task-start experience map, but is not yet orchestrated across the complete child-result → parent reconciliation → return workflow. Production identity/authentication for recorded_by and the production applicability verifier remain separate open trust-boundary tasks.

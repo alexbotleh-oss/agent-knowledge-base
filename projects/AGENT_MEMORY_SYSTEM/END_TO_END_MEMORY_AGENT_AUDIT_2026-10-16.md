@@ -208,3 +208,16 @@ PR #22 с cross-chat memory export остаётся отдельным draft и 
 - Не подтверждено: полнота реального архива; заполненность production canonical registries; automatic ChatGPT startup/message capture; runtime attention/return controller; production applicability verifier; полноценный retrieval по всему графу памяти; runtime skill executor/environment discovery/VLM acceptance.
 - Обнаружено: статусы в нескольких документах отстают от реализации; нужен единый traceability ledger и явные superseding updates.
 - Единая матрица трассировки создана: `projects/AGENT_MEMORY_SYSTEM/CAPABILITY_TRACEABILITY_MATRIX_2026-10-16.md`. Следующий шаг — реализовать CAP-02/UMC-02: runtime-контроллер внимания и причинный стек возврата; затем подключить task-time experience map.
+
+
+## 12. Implementation update after the audited revision — 2026-10-16
+
+The earlier sections above remain a snapshot of the exact revisions named in section 3. The following changes occurred later on separate draft branch `umc02/attention-return-controller-20261016`, PR #30 (base `audit/agent-memory-e2e-20261016` / PR #29); they must not be read as already merged into PR #27 or `main`.
+
+- UMC-02 now has an executable local attention/return controller and task-start composition. The controller reconstructs a persistent nested return stack from the canonical AGENT_MEMORY_SYSTEM event log, and return replay is idempotent.
+- UMC-03 S1/S2 retrieval, applicability evaluator and decision frontier from PR #28 were copied into PR #30 with exact blob provenance recorded in TASK_STATE/HANDOFF. PR #28 remains separately open/draft/unmerged, so duplicate branch history must be consolidated before merging either PR.
+- The task-start path now composes restore, attention, event/lesson retrieval, applicability/frontier review, source hash/event-ID revalidation and source-bound no-repeat check reuse. Duplicate candidate IDs remain HOLD with all source locators; source mutation blocks candidate expansion; cross-project/global lessons remain OUT_OF_SCOPE; conflicting judgments surface as CONFLICT.
+- A completed check is reused only when check identity, relevant source hashes and candidate fingerprints match exactly and evidence refs are present. Changed inputs require recheck; missing/malformed inputs and invalid journals fail closed. A recorded PASS is not independently authenticated and does not grant planning/execution permission.
+- Exact code/test HEAD `842088a1c3210e716318f830c687f76e9af58878` passed CI [38902588618](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38902588618): 373 Python tests (1 skipped), 4 Node tests, write audit 140 mutation sites / 0 unclassified, memory/project validation PASS.
+
+These are synthetic repository tests. They do not prove complete real-archive ingestion, automatic ChatGPT capture/new-chat startup, production trusted applicability verification, a production planning consumer, or automatic TASK_STATE/HANDOFF reconciliation on return.
