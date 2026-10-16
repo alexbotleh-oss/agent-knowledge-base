@@ -58,6 +58,7 @@ def _load_source(source_path:Path):
         rec=row.get("record")
         if not isinstance(rec,dict) or _sha(_canonical(rec))!=row.get("record_sha256"):
             raise ValueError(f"canonical memory registry record hash mismatch at line {n}")
+        if row.get("lifecycle_status")!="accepted": raise ValueError(f"source memory revision is not accepted at line {n}")
         key=(row.get("memory_id"),row.get("revision_id"))
         if key in found: raise ValueError(f"duplicate canonical memory revision {key}")
         found[key]=row
@@ -117,7 +118,7 @@ def _load_input(correction_path:Path,receipt_path:Path|None,source_path:Path):
     if correction_path.read_bytes()!=cbytes: raise ValueError("correction changed during validation")
     if receipt_path and receipt_bytes is not None and Path(receipt_path).read_bytes()!=receipt_bytes: raise ValueError("approval receipt changed during validation")
     if Path(source_path).read_bytes()!=source_bytes: raise ValueError("source registry changed during validation")
-    return {"correction":c,"correction_bytes":cbytes,"correction_sha256":_sha(cbytes),"source_sha256":_sha(source_bytes),
+    return {"correction":c,"correction_bytes":cbytes,"correction_sha256":_sha(cbytes),"correction_content_sha256":_sha(_canonical(c)),"source_sha256":_sha(source_bytes),
             "receipt":receipt,"receipt_sha256":_sha(receipt_bytes) if receipt_bytes is not None else None}
 def _target_error(path:Path):
     path=Path(path); resolved=path.resolve()
@@ -188,10 +189,10 @@ def register_edge_correction(correction_path:Path,source_path:Path=DEFAULT_SOURC
         except Exception as exc: return {"status":"CONFLICT","reason":str(exc),"writes_performed":False}
         prior=byid.get(c["correction_id"])
         if prior:
-            if prior["correction_sha256"]!=batch["correction_sha256"]: return {"status":"CONFLICT","reason":"same correction_id has different content","writes_performed":False}
+            if prior["correction_sha256"]!=batch["correction_content_sha256"]: return {"status":"CONFLICT","reason":"same correction_id has different content","writes_performed":False}
             return {"status":"ALREADY_REGISTERED","correction_id":c["correction_id"],"writes_performed":False}
         envelope={"registry_schema_version":"edge-correction-registry-v1","correction_id":c["correction_id"],
-                  "correction_sha256":batch["correction_sha256"],"correction":c,
+                  "correction_sha256":batch["correction_content_sha256"],"correction_input_sha256":batch["correction_sha256"],"correction":c,
                   "approval_receipt_sha256":batch["receipt_sha256"],"source_registry_sha256":batch["source_sha256"],
                   "registered_at":datetime.now().astimezone().isoformat()}
         try: _atomic_write(registry_path,[*rows,envelope])
