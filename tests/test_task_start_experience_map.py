@@ -68,7 +68,7 @@ class TaskStartExperienceMapTests(unittest.TestCase):
             active_task_id="TASK-PARENT", active_checkpoint_id="CKPT-PARENT",
             current_project_id="TEST",
         )
-        self.assertEqual(result["status"], "READY_FOR_REVIEW")
+        self.assertEqual(result["status"], "READY_FOR_REVIEW", json.dumps({"task_restore": result["task_restore"], "experience_map": result["experience_map"], "attention": result["attention"]}, ensure_ascii=False))
         self.assertEqual(result["task_restore"]["status"], "RESTORED_PACKET")
         self.assertEqual(result["attention"]["open_branch_count"], 1)
         self.assertEqual(result["attention"]["return_stack"][0]["parent"]["task_id"], "TASK-PARENT")
