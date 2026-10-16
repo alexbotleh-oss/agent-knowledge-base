@@ -221,3 +221,13 @@ The earlier sections above remain a snapshot of the exact revisions named in sec
 - Exact code/test HEAD `842088a1c3210e716318f830c687f76e9af58878` passed CI [38902588618](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38902588618): 373 Python tests (1 skipped), 4 Node tests, write audit 140 mutation sites / 0 unclassified, memory/project validation PASS.
 
 These are synthetic repository tests. They do not prove complete real-archive ingestion, automatic ChatGPT capture/new-chat startup, production trusted applicability verification, a production planning consumer, or automatic TASK_STATE/HANDOFF reconciliation on return.
+
+
+## 13. No-repeat and source-fingerprint update — 2026-10-16
+
+After the UMC-02/UMC-03 integration above, PR #30 added a source-bound check-reuse ledger and refined the fingerprint so unrelated checkpoint metadata does not cause unnecessary repeated work. The current task-start map records and evaluates verification_check_completed events in the existing AGENT_MEMORY_SYSTEM event log; it does not create a second authoritative database.
+
+- A prior PASS is reusable only when the stable check key, next-check specification, relevant semantic task context, candidate identities and source-line hashes match and evidence references are present. Changed candidate/context inputs force a rerun. If retrieval is truncated, whole-source hashes are included to guard against unseen candidates.
+- Event/lesson source lines are revalidated after retrieval. Source mutation blocks review and check reuse; duplicate IDs remain HOLD with all source locators.
+- Exact code/test HEAD `2e0135175421cb99ab2b7325018b0bb648f5a1e0` passed CI [38902931125](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38902931125): 373 Python tests (1 skipped), 4 Node tests, write audit 140/0, memory/project validation PASS.
+- The result remains PARTIAL: recorded check results are not independently authenticated; production applicability verifier/trust root, full child-result/parent-state/return reconciliation, automatic ChatGPT capture/startup, full semantic graph retrieval and real archive acceptance remain open. PR #30 is still draft/unmerged; no changes to main.

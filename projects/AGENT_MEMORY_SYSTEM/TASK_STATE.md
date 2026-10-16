@@ -776,3 +776,10 @@ P2 is not yet declared ready: this test mocks the final verified restore packet,
 - The record is explicitly not independently authenticated. The feature prevents accidental repeated work based on matching recorded inputs; it is not proof of correct execution or a planning authorization.
 - Exact code/test HEAD `842088a1c3210e716318f830c687f76e9af58878` passed CI [38902588618](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38902588618): 373 Python tests (1 skipped), 4 Node tests, write audit 140/0, memory/project validation PASS.
 - **Next:** connect no-repeat to child-result and parent-task reconciliation; then design production trusted verification and validate the actual client/runtime path. Keep PR #30 draft/unmerged and `main` unchanged.
+
+
+## No-repeat fingerprint refinement — 2026-10-16
+
+The no-repeat check fingerprint now binds the current request and relevant semantic task context, the decision-frontier check specification, and line-level candidate hashes. Unrelated TASK_STATE/HANDOFF metadata and unrelated events do not force a repeat if the reviewed inputs are unchanged. When retrieval is truncated, whole-source hashes are included as a conservative guard. Changed candidate/context inputs force a recheck; event/lesson source mutation blocks review. Exact code/test HEAD `2e0135175421cb99ab2b7325018b0bb648f5a1e0` passed CI [38902931125](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38902931125): 373 Python tests (1 skipped), 4 Node tests, write audit 140/0, memory/project validation PASS.
+
+**Next:** connect check reuse to child-result publication and parent-task reconciliation so unchanged completed checks are not repeated across branch return, then design production trusted verification separately. Do not bypass the existing trust verdict or auto-apply parent-state changes. Keep PR #30 draft/unmerged.

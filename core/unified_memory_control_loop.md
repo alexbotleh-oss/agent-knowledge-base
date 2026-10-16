@@ -430,3 +430,14 @@ Implemented in tools/check_reuse_policy.py and integrated into tools/task_start_
 Exact code/test HEAD 842088a1c3210e716318f830c687f76e9af58878 passed CI run 38902588618: 373 Python tests (1 skipped), 4 Node tests, strict write audit 140 mutation sites / 0 unclassified, memory/project validation PASS.
 
 Remaining gap: no-repeat is connected to the task-start experience map, but is not yet orchestrated across the complete child-result → parent reconciliation → return workflow. Production identity/authentication for recorded_by and the production applicability verifier remain separate open trust-boundary tasks.
+
+
+## 19. Relevant-input fingerprints and no-repeat stability — partial
+
+The check-reuse fingerprint was refined so unrelated checkpoint metadata or unrelated events do not force an identical check to rerun. It includes the current user request and relevant semantic task context (active goal, project, scope, constraints, blockers, acceptance criteria), the next discriminating check specification, and per-record candidate fingerprints. If retrieval is truncated by its candidate limit, the whole retrieval-source hashes are included as a conservative guard against unseen candidates.
+
+- Event and lesson candidates are revalidated against the captured source-file SHA-256 and exact source-line identity before review. Their line-level SHA-256 is used in the no-repeat fingerprint; any source mutation after retrieval blocks review and check reuse.
+- A new matching candidate changes the candidate set and fingerprint. A changed candidate record changes its line fingerprint. A changed task goal/request/check specification changes the semantic fingerprint. Unrelated notes and unrelated appended events do not invalidate a completed check when the reviewed inputs remain identical.
+- Exact code/test HEAD 2e0135175421cb99ab2b7325018b0bb648f5a1e0 passed CI run 38902931125: 373 Python tests (1 skipped), 4 Node tests, strict write audit 140 mutation sites / 0 unclassified, memory/project validation PASS.
+
+Remaining gap: this is no-repeat within the task-start/check path. Branch-result acknowledgement, guarded parent TASK_STATE projection and return-stack reconciliation are not yet one automatic transaction. The recorded PASS is not independently authenticated; production trusted verification remains open.

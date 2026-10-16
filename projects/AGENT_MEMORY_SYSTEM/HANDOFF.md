@@ -814,3 +814,12 @@ The task-start path now includes a read-only no-repeat decision backed by a writ
 Exact code/test HEAD `842088a1c3210e716318f830c687f76e9af58878` passed CI [38902588618](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38902588618): 373 Python tests (1 skipped), 4 Node tests, write audit 140/0, memory/project validation PASS.
 
 **Next action:** connect check reuse to child-result publication and parent-task reconciliation so completed checks are not repeated across branch return, then design the production trusted verifier. PR #30 remains draft/unmerged; PR #28 remains separately draft/unmerged; consolidate overlapping UMC-03 source history before any merge.
+
+
+## Updated handoff — relevant-input no-repeat fingerprint (2026-10-16)
+
+The no-repeat policy now uses a semantic task-context fingerprint plus line-level candidate hashes instead of blindly hashing all task-state files. This avoids repeating an unchanged check after unrelated checkpoint notes or events, while changed requests/goals/check specifications/candidate records force recheck. If retrieval is truncated, whole-source hashes remain part of the fingerprint. Source changes between retrieval and review block candidate use. A recorded PASS still requires evidence refs and is not independently authenticated.
+
+Exact code/test HEAD `2e0135175421cb99ab2b7325018b0bb648f5a1e0` passed CI [38902931125](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38902931125): 373 Python tests (1 skipped), 4 Node tests, write audit 140/0, memory/project validation PASS.
+
+**Next action:** connect check reuse with branch-result acknowledgement, guarded parent TASK_STATE projection and attention-stack return without bypassing the existing trust gate. PR #30 remains draft/unmerged; PR #28 remains separately draft/unmerged; consolidate duplicated UMC-03 source history before merge.
