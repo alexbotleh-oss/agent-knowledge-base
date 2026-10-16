@@ -468,3 +468,23 @@ The lesson records in these tests are fixtures. They demonstrate the mechanism; 
 ### 13.10 Not implemented by the first patch
 
 The provisional-experience ledger (13.5.2) and its scenario T5; S3 / `allow_cross_project`; a production trusted verifier implementation and its trust configuration; writing any ledger to disk; automatic promotion of lessons; automatic extraction of conditions from free text; any change to record schemas, status vocabularies or registry contracts. If a record's status or scope cannot be determined from existing contracts, the evaluator reports the uncertainty (R13) rather than supplying a meaning.
+
+
+### 13.11 Decision frontier reducer — first read-only integration
+
+Added in `tools/decision_frontier.py` and called by `run_minimal_agent_loop`. The loop now returns `decision_frontier` beside the raw retrieval and applicability reports.
+
+The reducer emits one auditable direction per retrieved candidate:
+- `KEEP_FOR_RATIONALE_REVIEW` only when the candidate is present in evaluator `usable_as_rationale`; an `APPLICABLE` label alone is not enough.
+- `EXCLUDE` for explicit `NOT_APPLICABLE`/evaluator exclusions, retaining the reason.
+- `HOLD` for insufficient or absent assessment, with unresolved criteria and needs.
+- `CONFLICT` for incompatible recommendations; it does not choose a winner.
+- `OUT_OF_SCOPE` for candidates not evaluated in the current scope.
+
+Each direction retains candidate identity, project, source locator, retrieval stage and matched terms when available. If an evaluator row has no matching retrieved candidate, the output flags `provenance_gap: true` instead of silently inventing provenance.
+
+The reducer returns summary counts and one `next_discriminating_check`: reconcile a conflict first; otherwise resolve a missing-evidence hold; otherwise verify current context and boundaries for rationale candidates; otherwise improve retrieval. This is an information-gathering priority, **not** a task plan.
+
+Safety contract: pure/read-only; no writes, promotion, execution, planning permission, or changes to source records. It does not independently validate the truth of evaluator judgments. The loop still has no production trusted verifier, and the overall UMC-03 status remains `PARTIAL`.
+
+Coverage: `tests/test_decision_frontier.py` covers mixed classifications, provenance, conflict priority, no-candidate behavior, and fail-closed handling of an `APPLICABLE` label not included in `usable_as_rationale`. Integration assertions in `tests/test_applicability_evaluator.py` verify that a verified lesson is reviewable and an event-only history item remains on hold. All fixtures are synthetic; real lesson-marker coverage remains unproven.
