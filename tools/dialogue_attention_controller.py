@@ -168,6 +168,11 @@ def project_state(events: list[dict[str, Any]]) -> dict[str, Any]:
             turn_id = data.get("turn_id")
             if isinstance(turn_id, str):
                 turn_records[turn_id] = data
+            if not stack:
+                active = {
+                    "task_id": data.get("active_task_id"),
+                    "checkpoint_id": data.get("active_checkpoint_id"),
+                }
         elif kind == "attention_returned":
             if not stack:
                 raise ValueError(f"return event {event['event_id']} has no open parent frame")
