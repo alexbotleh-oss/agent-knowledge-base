@@ -13,7 +13,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from dialogue_attention_controller import inspect as inspect_attention, return_to_parent
+from dialogue_attention_controller import inspect as inspect_attention, _return_to_parent_unchecked
 from reconcile_branch_returns import build_report as build_branch_return_report
 from task_start_experience_map import build_task_start_experience_map
 
@@ -138,7 +138,7 @@ def run_cycle(
         elif not attention.get("return_stack"):
             # Preserve controller idempotency: a replay of the same return turn
             # is a no-op success, not a new blocked operation.
-            return_result = return_to_parent(
+            return_result = _return_to_parent_unchecked(
                 attention_log, turn_id=return_turn_id, parent_task_id=parent_task_id
             )
             if return_result.get("status") == "ALREADY_RETURNED":
@@ -169,7 +169,7 @@ def run_cycle(
                 if ready.get("status") != "READY":
                     return_result = {**ready, "writes_performed": False}
                 else:
-                    return_result = return_to_parent(
+                    return_result = _return_to_parent_unchecked(
                         attention_log, turn_id=return_turn_id, parent_task_id=parent_task_id
                     )
                     if return_result.get("status") in {"RETURNED", "ALREADY_RETURNED"}:
