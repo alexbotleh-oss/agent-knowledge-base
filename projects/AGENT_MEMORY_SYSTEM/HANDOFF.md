@@ -752,3 +752,16 @@ Important remaining gap: real ingestion + promotion is tested, but the same test
 **Traceability matrix:** `projects/AGENT_MEMORY_SYSTEM/CAPABILITY_TRACEABILITY_MATRIX_2026-10-16.md` is now created and maps each planned capability to specification, code, tests, revision-scoped CI, status, and residual gap.
 
 **Next action:** implement CAP-02/UMC-02 — a runtime attention controller and causal return stack — then connect it to task-time experience retrieval. Do not restart the archive audit or re-run completed CI unless inputs/revision change or a new contradiction appears.
+
+
+## Current handoff — UMC-02 attention/return controller (2026-10-16)
+
+**Active goal:** connect separate memory tools into one working agent mechanism. Immediate milestone is CAP-02/UMC-02 runtime attention control; next is task-start staged experience retrieval. Do not restart the completed end-to-end audit unless a new contradiction appears.
+
+**Implementation:** branch `umc02/attention-return-controller-20261016`, draft PR #30 (https://github.com/alexbotleh-oss/agent-knowledge-base/pull/30), based on audit branch `audit/agent-memory-e2e-20261016` / PR #29. `main` is untouched. Both PRs remain draft/unmerged.
+
+**New files:** `tools/dialogue_attention_controller.py`, `tests/test_dialogue_attention_controller.py`. The controller proposes a turn class, writes to the canonical AGENT_MEMORY_SYSTEM event log, rebuilds active state and nested causal return stack from the log, requires explicit child task/checkpoint IDs for switches, preserves deferred ideas without activating them, and returns in LIFO order. It uses stable event IDs and the canonical journal lock-file convention.
+
+**Acceptance boundary:** local explicit-call primitive only. It does not observe ChatGPT automatically, authenticate supplied task IDs, update TASK_STATE/HANDOFF, or call staged experience retrieval. Lexical matches are suggestions, not proof of intent; ambiguous turns are retained as unknown. A stale lock requires manual recovery after checking that no writer is active. Exact-head CI must be checked before calling this implementation verified.
+
+**Next action:** check CI for the exact current PR #30 head, correct any failures, then implement a task-start composition entry point that restores the task/checkpoint, retrieves staged current-project experience and relevant failures/decisions, carries provenance/conflicts/unknowns, and uses the attention stack to prevent side branches from displacing the parent goal. Keep PRs draft and do not change `main` without explicit user approval.
