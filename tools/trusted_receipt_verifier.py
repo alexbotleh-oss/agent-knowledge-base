@@ -126,7 +126,7 @@ def verify_signed_receipt(
     expires = receipt.get("expires_at")
     if expires is not None:
         expires_at = _timestamp(expires)
-        if expires_at is None or expires_at <= current:
+        if expires_at is None or expires_at <= current or expires_at <= issued_at:
             return {"status": "RECEIPT_EXPIRED_OR_INVALID", "verified": False}
     claim = receipt.get("claim")
     if not isinstance(claim, dict) or not isinstance(expected_claim, dict) or not expected_claim:
