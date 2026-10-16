@@ -375,7 +375,7 @@ class TaskStartExperienceMapTests(unittest.TestCase):
         )
         self.assertEqual(opened["status"], "BRANCH_OPENED")
 
-        published = publish_result(self.events, {
+        published = publish_result(self.attention, {
             "child_branch_id": opened["branch_id"],
             "parent_checkpoint_id": "CKPT-PARENT",
             "parent_task_id": "TASK-PARENT",
@@ -388,7 +388,7 @@ class TaskStartExperienceMapTests(unittest.TestCase):
         })
         self.assertEqual(published["status"], "RESULT_REPORTED")
         acknowledged = acknowledge_result(
-            self.events, published["event_id"], "accepted",
+            self.attention, published["event_id"], "accepted",
             "owner-confirmation://integrated-test", "2026-10-16T12:01:00Z",
         )
         self.assertEqual(acknowledged["status"], "ACKNOWLEDGED")
@@ -400,14 +400,14 @@ class TaskStartExperienceMapTests(unittest.TestCase):
                 f"- Supporting event: `{acknowledged['event_id']}`\n"
                 "Child result reviewed; parent acceptance criteria reconciled.\n"
             )
-        reconciled = build_branch_return_report(self.events, [self.task])
+        reconciled = build_branch_return_report(self.attention, [self.task])
         self.assertEqual(reconciled["status"], "CONSISTENT")
         self.assertEqual(reconciled["issues"], [])
 
         request = "cache recovery index pointer"
         before_return = build_task_start_experience_map(
             self.task, self.handoff, self.events, request,
-            experience_logs=[self.events, self.experience],
+            experience_logs=[self.attention, self.events, self.experience],
             attention_log=self.attention, active_task_id="TASK-PARENT",
             active_checkpoint_id="CKPT-PARENT", current_project_id="TEST",
         )
@@ -424,7 +424,7 @@ class TaskStartExperienceMapTests(unittest.TestCase):
 
         cycle = run_cycle(
             self.task, self.handoff, self.events, self.attention, request,
-            experience_logs=[self.events, self.experience],
+            experience_logs=[self.attention, self.events, self.experience],
             active_task_id="TASK-PARENT", active_checkpoint_id="CKPT-PARENT",
             current_project_id="TEST", task_state_paths=[self.task],
             return_turn_id="T-INTEGRATED-RETURN", parent_task_id="TASK-PARENT",
