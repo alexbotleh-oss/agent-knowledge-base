@@ -87,7 +87,7 @@ class MinimalAgentLoopTests(unittest.TestCase):
         judgments = [{
             "candidate_id": "LESSON-TRUST-1", "candidate_type": "lesson",
             "criterion": "trigger", "result": "MATCH",
-            "judged_by": "untrusted-agent", "basis_ref": "basis://test",
+            "judged_by": "agent", "basis_ref": "basis://test",
         }]
 
         def test_verifier(candidate, judgment):
@@ -116,7 +116,7 @@ class MinimalAgentLoopTests(unittest.TestCase):
         )
         trigger = assessment["criteria"]["trigger"]
         self.assertEqual(trigger["judged_by"], "rule")
-        self.assertEqual(trigger["asserted_by"], "untrusted-agent")
+        self.assertEqual(trigger["asserted_by"], "agent")
         self.assertEqual(trigger["verification"]["verifier_id"], "test-pinned-verifier")
         self.assertFalse(result["writes_performed"])
         self.assertFalse(result["execution_performed"])
