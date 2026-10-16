@@ -371,12 +371,20 @@ class LoopIntegrationTests(unittest.TestCase):
                 "verifier_id": "test-independent-verifier",
                 "source_sha256": "c" * 64,
             }
+        fence = chr(96) * 3
+        self.task.write_text(
+            self.task.read_text(encoding="utf-8")
+            + fence + "experience-markers\n"
+            + '{"problem_types":["snapshot_restore"],"tools":["Python"]}\n'
+            + fence + "\n",
+            encoding="utf-8",
+        )
         result = self._run(
             full_judgments("L-VERIFIED", judged_by="agent"),
             current_project_id=PROJECT,
-            current_markers={"problem_types": ["snapshot_restore"], "tools": ["Python"]},
             judgment_verifier=verifier,
         )
+        self.assertEqual(result["current_markers_source"], "TASK_STATE_EXPLICIT_BLOCK")
         self.assertEqual(outcome_of(result["applicability"], "L-VERIFIED"), "APPLICABLE")
         self.assertEqual(result["applicability"]["usable_as_rationale"][0]["candidate_id"], "L-VERIFIED")
         self.assertEqual(result["next_action_policy"], "REVIEW_CANDIDATES_ONLY_NO_PLANNING")
