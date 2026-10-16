@@ -302,6 +302,55 @@ class TaskStartExperienceMapTests(unittest.TestCase):
         self.assertFalse(replay["decision_policy"]["repeat_check"])
         self.assertFalse(replay["decision_policy"]["planning_authorized"])
 
+    def test_lesson_source_mutation_blocks_frontier_and_check_reuse(self):
+        self.task.write_text(
+            self.task.read_text(encoding="utf-8")
+            + "\n\n```experience-markers\n"
+            + json.dumps({"problem_types": ["cache-recovery"], "tools": ["Python"]})
+            + "\n```\n",
+            encoding="utf-8",
+        )
+        self._write(self.lessons, [{
+            "lesson_id": "LESSON-MUTATE", "scope": "project", "project_id": "TEST",
+            "title": "Cache recovery index pointer", "status": "candidate",
+            "trigger": "cache recovery index pointer", "observed_problem": "cache recovery",
+            "applicability": ["cache recovery"], "exceptions": [],
+            "markers": {"problem_types": ["cache-recovery"], "tools": ["Python"]},
+            "evidence_refs": [],
+        }])
+        real_loop = task_start_module.run_minimal_agent_loop
+
+        def mutate_after_retrieval(*args, **kwargs):
+            result = real_loop(*args, **kwargs)
+            self.lessons.write_text(
+                json.dumps({
+                    "lesson_id": "LESSON-MUTATE", "scope": "project", "project_id": "TEST",
+                    "title": "Changed after retrieval", "status": "candidate",
+                    "trigger": "changed content",
+                }) + "\n",
+                encoding="utf-8",
+            )
+            return result
+
+        with patch("task_start_experience_map.run_minimal_agent_loop", side_effect=mutate_after_retrieval):
+            result = build_task_start_experience_map(
+                self.task, self.handoff, self.events, "cache recovery index pointer",
+                experience_logs=[self.experience], lesson_logs=[self.lessons],
+                attention_log=self.attention, active_task_id="TASK-PARENT",
+                active_checkpoint_id="CKPT-PARENT", current_project_id="TEST",
+            )
+        stale = [item for item in result["experience_map"]["stale_sources"]
+                 if item["candidate_id"] == "LESSON-MUTATE"]
+        self.assertEqual(len(stale), 1)
+        self.assertEqual(stale[0]["source_record_status"], "SOURCE_CHANGED_AFTER_RETRIEVAL")
+        direction = next(row for row in result["experience_map"]["decision_frontier"]["directions"]
+                         if row["candidate_id"] == "LESSON-MUTATE")
+        self.assertEqual(direction["classification"], "HOLD")
+        self.assertEqual(direction["source_record_status"], "SOURCE_CHANGED_AFTER_RETRIEVAL")
+        self.assertEqual(result["experience_map"]["check_reuse_policy"]["status"], "BLOCKED_SOURCE_NOT_CURRENT")
+        self.assertEqual(result["status"], "PARTIAL_SOURCE_PROVENANCE_STALE")
+        self.assertFalse(result["decision_policy"]["planning_authorized"])
+
     def test_no_attention_journal_is_reported_without_inventing_a_branch(self):
         result = build_task_start_experience_map(
             self.task, self.handoff, self.events, "cache recovery",
