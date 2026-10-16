@@ -324,9 +324,9 @@
         "memory_validation": "PASS",
         "knowledge_base_validation": "PASS",
         "project_stack_validation": "PARTIAL",
-        "project_stack_notes": "The generic validator skipped pytest-based stack tests because pytest is not installed; the workflow separately ran python -m unittest discover and reported 396 tests, 1 skipped. HTML/PWA/JS stack tests/build were skipped because package/test setup was absent."
+        "project_stack_notes": "Python unittest discovery ran 396 tests (1 skipped); generic pytest-based stack tests were skipped because pytest is not installed. HTML/PWA/JS lint/test/build were skipped because package/test setup was absent. Validation checkout is the PR merge candidate, not a standalone branch-tip checkout."
       },
-      "interpretation": "The latest PR validation merge commit includes the current PR #30 head and passed the repository's unittest suite, Node tests and write audit. This is evidence for the tested PR merge candidate, not a standalone test run on the branch head. Generic detected-stack checks still skipped pytest and HTML/JS build/lint steps. Production trust-root configuration and real archive acceptance remain open."
+      "interpretation": "The PR merge candidate including code head a12d6f60 passed the Python unittest suite, Node tests, write audit, memory and knowledge-base validation. Subsequent branch commits before this checkpoint update are documentation-only. Generic stack validation still skipped pytest and HTML/JS build/lint steps. Production trust-root configuration and real archive acceptance remain open."
     },
     "remaining": [
       "Run/locate full validation on exact latest code/test revision.",
@@ -334,6 +334,18 @@
       "Test the importer against the actual complete archive; synthetic idempotency tests are not real archive acceptance.",
       "Reconcile PR #28 and PR #30 duplicate UMC-03 implementation before any merge."
     ],
-    "safety": "PR #30 remains Draft/open/unmerged. Do not merge or change main without explicit user approval."
+    "safety": "PR #30 remains Draft/open/unmerged. Do not merge or change main without explicit user approval.",
+    "last_code_change_head": "a12d6f60dac306e58a912c2a25644873c53bb5e7",
+    "last_code_change_url": "https://github.com/alexbotleh-oss/agent-knowledge-base/commit/a12d6f60dac306e58a912c2a25644873c53bb5e7",
+    "metadata_followups_before_this_checkpoint": [
+      {
+        "head": "d51de43279af989222e170e4dbeb7761c6aa4e27",
+        "scope": "HANDOFF validation evidence update"
+      },
+      {
+        "head": "9d5ed9f0a77f5be98a50e83ea3ee93d59da8ddc2",
+        "scope": "CAPABILITY_TRACEABILITY_MATRIX validation evidence update"
+      }
+    ]
   }
 }
