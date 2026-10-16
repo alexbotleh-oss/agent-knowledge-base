@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "checkpoint_id": "CKPT-AGMS-20261016-SEMANTIC-PROMOTION-02",
+  "checkpoint_id": "CKPT-AGMS-20261016-INDEX-RESTORE-03",
   "project_id": "AGENT_MEMORY_SYSTEM",
   "task_id": "AGMS-2026-10-15-MEMORY-PIPELINE-CONTINUITY",
   "recorded_at": "2026-10-16",
@@ -59,7 +59,11 @@
     "Added tests/test_verified_session_restore.py: 6 tests for exact head, metadata-only descendant, wrong/failed CI, unexpected source changes, diverged/truncated compare, and missing checkpoint. Exact code HEAD 467d68795d296b4a5e3ee473e1252be43e5e5bdc passed CI run 38849505217: 241 Python tests (1 skipped), 4 Node tests, strict write audit 92 mutation sites / 0 unclassified, memory and project validation PASS.",
     "Documented the live remote revision verification entry point and trust boundary in core/agent_runtime_protocol.md. The entry point remains read-only and does not implement semantic promotion, canonical index refresh or automatic chat capture.",
     "Audited the full source-ingestion → approval → semantic-promotion → canonical-index → normal-restore path at branch HEAD 95524a90a4e1b024e237e7a49e1d4be9c795a433; exact-head CI run 38849636651 passed. Findings and stage contracts are in projects/AGENT_MEMORY_SYSTEM/MEMORY_PIPELINE_INTEGRATION_AUDIT_2026-10-16.md.",
-    "Implemented tools/semantic_memory_registry.py as a separate guarded append-only promotion stage; exact manifest/artifact hashes and explicit approval receipt are checked; dry-run is default; replay/conflict/revision-chain/provenance/corrupt-registry cases are tested. Exact code HEAD d9da0b6991b282bd8ddd7de25edb1fae8330e016 passed CI #38851184392 (253 Python tests, 1 skipped; 4 Node tests; write audit 100/0; memory validation PASS)."
+    "Implemented tools/semantic_memory_registry.py as a separate guarded append-only promotion stage; exact manifest/artifact hashes and explicit approval receipt are checked; dry-run is default; replay/conflict/revision-chain/provenance/corrupt-registry cases are tested. Exact code HEAD d9da0b6991b282bd8ddd7de25edb1fae8330e016 passed CI #38851184392 (253 Python tests, 1 skipped; 4 Node tests; write audit 100/0; memory validation PASS).",
+    "Implemented tools/semantic_memory_registry.py as a guarded append-only semantic promotion writer; exact-head CI #38851184392 passed.",
+    "Implemented tools/canonical_memory_index.py with deterministic immutable generations, multidimensional reference views, current-revision map, atomic CURRENT pointer and freshness checks; invalid registries/revision chains block publication; failed pointer publication preserves prior pointer.",
+    "Implemented tools/memory_aware_session_restore.py to compose verified task/event restore with freshness-checked current semantic memory, exact project/task/context filtering, provenance/evidence/conflict output, and explicit partial/stale/unavailable status.",
+    "Exact code/test HEAD bec868ce9e7491802c5239068b4581eff002a809 passed CI #38851785241: 272 Python tests (1 skipped), 4 Node tests, write audit 108 mutation sites / 0 unclassified, memory validation PASS."
   ],
   "confirmed_open": [
     {
@@ -67,15 +71,21 @@
       "description": "Inspect existing lifecycle/approval contracts. No canonical semantic-promotion executor was found in inspected tools. Specify and test an executor before implementing; never treat metadata-only source registration as accepted memory.",
       "status": "RESOLVED",
       "resolved_at": "2026-10-16",
-      "resolution": "Implemented in tools/semantic_memory_registry.py; exact-head CI run 38851184392 passed."
+      "resolution": "Implemented and exact-head CI passed #38851184392."
     },
     {
       "id": "OPEN-CANONICAL-INDEX",
-      "description": "No verified canonical memory-index refresh executor is connected to the ingestion runner. archive_temporal_index.py is a read-only archive search/index, not a canonical memory index rebuild."
+      "description": "No verified canonical memory-index refresh executor is connected to the ingestion runner. archive_temporal_index.py is a read-only archive search/index, not a canonical memory index rebuild.",
+      "status": "RESOLVED_WITH_PARTIAL_COVERAGE",
+      "resolved_at": "2026-10-16",
+      "resolution": "Deterministic index builder and freshness checker implemented; index coverage remains PARTIAL because correction overlay source/contract is unavailable."
     },
     {
       "id": "OPEN-RESTORE-ORCHESTRATION",
-      "description": "Restore reads project TASK_STATE.md, HANDOFF.md and events.jsonl; source registration does not automatically update or restore these records."
+      "description": "Restore reads project TASK_STATE.md, HANDOFF.md and events.jsonl; source registration does not automatically update or restore these records.",
+      "status": "PARTIAL",
+      "updated_at": "2026-10-16",
+      "resolution": "Read-only memory-aware restore wrapper implemented and tested; durable end-to-end orchestration/crash recovery remains open."
     },
     {
       "id": "OPEN-PAIRED-CHECKPOINT",
@@ -90,7 +100,7 @@
       "description": "The ChatGPT web extension is a prototype verified by static CI only. Must be installed and tested in the user's actual Yandex Browser Android version. Verify send gate (no send before durable receipt), exact text and prior assistant message capture, interrupted connection recovery, response DOM detection, multiple incomplete turns, extension restart, and UI-selector drift. Until these pass, do not claim end-to-end capture is operational."
     }
   ],
-  "next_action": "Implement deterministic, versioned canonical multidimensional index generation from registry/memory_records.jsonl with source revision/hash, stable record IDs, correction-overlay handling, atomic generation publication, and freshness detection. Session restore integration remains later.",
+  "next_action": "Define and validate a canonical append-only correction-overlay contract with stable relation/decision/source IDs and provenance; then integrate it into index generation. After that, build and crash-test a durable end-to-end ingestion → approval → promotion → index → fresh restore coordinator.",
   "constraints": [
     "Do not merge PR #27 or modify main without explicit user approval.",
     "Do not delete or rewrite source-history exports without a separate explicit decision.",
@@ -102,19 +112,21 @@
   "status": "P1_COMPLETE_WITH_DOWNSTREAM_ITEMS_OPEN",
   "checkpoint_semantics": "This is a durable task checkpoint committed to the integration branch. It is not an automatic ChatGPT autosave or proof that an undelivered response was saved.",
   "repository_state": {
-    "last_verified_code_head": "d9da0b6991b282bd8ddd7de25edb1fae8330e016",
-    "exact_head_ci_run_id": 38851184392,
-    "exact_head_ci_url": "https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38851184392",
+    "last_verified_code_head": "bec868ce9e7491802c5239068b4581eff002a809",
+    "exact_head_ci_run_id": 38851785241,
+    "exact_head_ci_url": "https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38851785241",
     "exact_head_ci_conclusion": "success",
-    "python_tests": 253,
+    "python_tests": 272,
     "python_skipped": 1,
     "node_tests": 4,
-    "write_audit_mutation_sites": 100,
+    "write_audit_mutation_sites": 108,
     "write_audit_unclassified": 0,
     "memory_validation": "PASS",
     "project_validation": "PASS",
     "semantic_memory_registry_tests": 12,
-    "note": "Semantic promotion writer added and validated at this exact code HEAD. Earlier CI runs 38851141269 and 38851163529 failed because new mutation sites were not yet classified in the strict write audit; tools/audit_write_contracts.py now classifies them. Exact-head run 38851184392 passed. Approval receipt integrity does not authenticate its author."
+    "canonical_index_tests": 10,
+    "memory_aware_restore_tests": 9,
+    "note": "Exact code/test HEAD bec868ce9e7491802c5239068b4581eff002a809 passed exact-head CI #38851785241. CI tests use synthetic registry envelopes and mocked remote GitHub evidence. The canonical index explicitly reports PARTIAL because no canonical correction-overlay source/contract exists. No production archive was promoted."
   },
   "historical_repository_state": {
     "last_verified_code_head": "e30450a5ed516ab1f76f65c3c7874cdd2b951c40",
@@ -157,9 +169,9 @@
     }
   ],
   "open_items": [
-    "Deterministic canonical multidimensional index generation and freshness verification",
-    "Normal session restore consuming approved semantic memory with explicit coverage/freshness",
-    "Apply edge_corrections overlays in graph/index consumers or report unresolved handling explicitly",
+    "Canonical append-only correction-overlay schema/writer and index consumer integration",
+    "Durable end-to-end pipeline coordinator with replay, uncertain-ack reconciliation and crash recovery",
+    "Production archive acceptance and coverage audit",
     "Live Android browser-extension acceptance"
   ]
 }
