@@ -37,9 +37,22 @@ def _canonical(value: Any) -> str:
     return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
 
 
+def _stable_payload(value: Any) -> Any:
+    if isinstance(value, dict):
+        return {k: _stable_payload(v) for k, v in value.items()
+                if k not in {"recorded_at", "returned_at"}}
+    if isinstance(value, list):
+        return [_stable_payload(item) for item in value]
+    return value
+
+
 def _event_id(turn_id: str, kind: str, payload: dict[str, Any]) -> str:
-    material = _canonical({"turn_id": turn_id, "kind": kind, "payload": payload})
+    material = _canonical({"turn_id": turn_id, "kind": kind, "payload": _stable_payload(payload)})
     return "EVT-ATTN-" + hashlib.sha256(material.encode("utf-8")).hexdigest()[:24].upper()
+
+
+def _same_event(left: dict[str, Any], right: dict[str, Any]) -> bool:
+    return _canonical(_stable_payload(left)) == _canonical(_stable_payload(right))
 
 
 def classify_turn(text: str) -> dict[str, Any]:
@@ -178,7 +191,7 @@ def _append_unlocked(path: Path, event: dict[str, Any]) -> dict[str, Any]:
     events = read_events(path)
     for old in events:
         if old["event_id"] == event["event_id"]:
-            if _canonical(old) == _canonical(event):
+            if _same_event(old, event):
                 return {"status": "ALREADY_RECORDED", "event_id": event["event_id"], "writes_performed": False}
             return {"status": "CONFLICT", "event_id": event["event_id"], "writes_performed": False}
     # Validate the projected stack before committing the proposed event.
@@ -296,7 +309,18 @@ def process_turn(
                 "open_branch_count": state["open_branch_count"],
                 "writes_performed": result.get("writes_performed", False),
                 "event_id": result["event_id"]}
-    return _run_exclusive(path, operation)
+    result = _run_exclusive(path, operation)
+    if classification == "RETURN_TO_PARENT" and result.get("status") in {"TURN_RECORDED", "ALREADY_RECORDED"}:
+        state = inspect(path)
+        if not state["return_stack"]:
+            return {"status": "NO_PARENT", "classification": classification,
+                    "classification_event_id": result.get("event_id"), "writes_performed": result.get("writes_performed", False)}
+        parent_id = state["return_stack"][-1]["parent"].get("task_id")
+        returned = return_to_parent(path, turn_id=turn_id + "-RETURN", parent_task_id=parent_id)
+        return {"status": returned.get("status"), "classification": classification,
+                "classification_event_id": result.get("event_id"), "return": returned,
+                "writes_performed": result.get("writes_performed", False) or returned.get("writes_performed", False)}
+    return result
 
 
 def return_to_parent(event_log: Path, *, turn_id: str, parent_task_id: str) -> dict[str, Any]:
