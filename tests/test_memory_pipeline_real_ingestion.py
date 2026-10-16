@@ -81,6 +81,12 @@ class RealSourceIngestionIntegrationTests(unittest.TestCase):
             (project/"CONTINUITY_CHECKPOINT.json").write_bytes(canon({"branch":"integration/memory-core-clean-20261015",
                 "repository_state":{"last_verified_code_head":code_sha,"exact_head_ci_run_id":7,"exact_head_ci_conclusion":"success"}}))
             def fake_fetch(url):
+                if "/contents/projects/AGENT_MEMORY_SYSTEM/" in url:
+                    name=url.split("?",1)[0].rsplit("/",1)[-1]
+                    local={"TASK_STATE.md":task,"HANDOFF.md":handoff,"events.jsonl":events}.get(name)
+                    if local is None: raise AssertionError(url)
+                    raw=local.read_bytes()
+                    return {"sha":hashlib.sha1(b"blob "+str(len(raw)).encode("ascii")+bytes([0])+raw).hexdigest()}
                 if "/branches/" in url:return {"commit":{"sha":code_sha}}
                 if "/actions/runs/7" in url:return {"head_sha":code_sha,"status":"completed","conclusion":"success"}
                 if "/compare/" in url:return {"status":"identical","merge_base_commit":{"sha":code_sha},"files":[]}
