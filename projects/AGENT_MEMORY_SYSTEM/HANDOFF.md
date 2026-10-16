@@ -902,3 +902,14 @@ A direct source comparison of PR #28 (`b6d32a3c36aa5df8079f63aad20fd41a8f56c512`
 **Consolidation guidance:** treat PR #30's duplicate-source safeguard and environment-verifier integration as necessary deltas to preserve. The identical evaluator files need one canonical implementation after branch history is reconciled; do not blindly cherry-pick the whole file set or delete PR #28 history. This is a source-level comparison, not a merge or an integration test of the combined branch.
 
 PR #28 and PR #30 remain Draft/open/unmerged. No merge or change to `main` is authorized.
+
+## Handoff — RIMA continuity and trusted-evidence work (2026-10-17)
+
+- **Identity:** Р.И.М.А. / Рима; stable agreed agent name/role across chats and projects. Feminine grammatical gender in Russian. Project identity and active task must remain separate from agent identity.
+- **Active goal:** improve the continuous memory system itself in `alexbotleh-oss/agent-knowledge-base`; do not switch to ORGANISM/CARD111 application development.
+- **Branch/PR:** `umc02/attention-return-controller-20261016`; PR #30 remains Draft/open/unmerged; do not merge or change `main` without explicit approval.
+- **Recent verified changes:** identity and anti-degradation contract added to `core/continuous_agent_architecture.md` §11, runtime requirement added to `core/agent_runtime_protocol.md`, and reusable adapter added to `core/platform_project_chat_instruction_templates.md`. Read-back confirmed all three. Decision `DEC-AGMS-20261017-001` is in `DECISIONS.md`.
+- **CI evidence:** workflow run [38966741608](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38966741608) is completed/success for commit `688aa217050cf8d76a9e262d6755fef0b0cb6b03`. This does not cover later metadata writes unless a new run confirms them.
+- **Next action:** inspect signed check-result reuse and trust binding, identify one concrete security/correctness gap, add a focused regression test and validate exact code HEAD. Do not fabricate/configure production signing trust without an externally managed keyring and owner-approved trust-root hash.
+- **Known gaps:** no production trust root configured; generated-key tests are synthetic; real archive end-to-end acceptance and universal ChatGPT cross-chat startup/capture remain unverified.
+
