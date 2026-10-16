@@ -176,3 +176,14 @@ Use `tools/memory_aware_session_restore.py` when a restore must include approved
 - A stale, invalid or missing index returns an explicit unavailable/stale state with no memory records; it must not be interpreted as proof that no relevant memory exists. No matches in the current partial index likewise do not prove absence.
 - The edge-correction contract and guarded writer now exist in `schemas/edge_correction.schema.json` and `tools/edge_correction_registry.py`. If `registry/edge_corrections.jsonl` is absent, the index reports `NOT_AVAILABLE_NO_CANONICAL_OVERLAY_SOURCE`; if present, accepted corrections are hash-validated and applied only to derived relation views. Coverage remains `PARTIAL` because complete source/archive coverage is not established.
 - The tool is read-only. It does not refresh a stale index, approve candidates, or modify canonical state. Index refresh and session restore are separate operations.
+
+
+## Durable memory-pipeline coordinator — 2026-10-16
+
+`tools/memory_pipeline_coordinator.py` composes the existing stage tools. Supply a persistent private `--run-root`, snapshot path, semantic manifest + approval receipt, repository, and project TASK_STATE/HANDOFF/events. Use `--apply` only when canonical writes are intended; without it the source-ingestion stage may still create staging artifacts and its own ledger, while semantic/correction/index canonical writes remain disabled.
+
+- A deterministic input-bound run ID locates `pipeline_events.jsonl`; the ledger is append-only and hash-chained. `pipeline_state.json` is a rebuildable projection, not the source of truth.
+- The coordinator preflights semantic approval and required restore inputs before canonical pipeline writes. After source registration it validates each memory provenance reference against the canonical SourceRecord schema and resolves it by stable ID/locator with scope/hash checks. Missing or ambiguous references block promotion.
+- Stages are independently idempotent, not one cross-registry transaction. On interruption, rerun the same input fingerprint: completed writes are reconciled through each stage's replay contract. The coordinator does not roll back prior append-only source or memory records.
+- The final result distinguishes source-stage writes, canonical memory/correction/index writes and ledger writes. `PIPELINE_COMPLETE_WITH_PARTIAL_MEMORY` is not a claim of complete archive coverage; read the nested semantic-memory coverage/freshness fields.
+- Tests cover source provenance resolution/ambiguity, ledger-chain integrity and projection rebuild, preflight blocking, deterministic dry-run replay, and mocked stage composition. No production archive has been run through this coordinator as one end-to-end transaction.
