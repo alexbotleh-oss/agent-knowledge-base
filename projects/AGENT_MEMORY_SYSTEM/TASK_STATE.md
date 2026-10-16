@@ -667,3 +667,10 @@ Tests added for first pass, completed replay, and a changed source under the sam
 - Failed index attempts preserved: #38851392586 and #38851433945/#38851415699 failed strict write audit before the new index mutation contract was registered; #38851424245 exposed two tests returning WRITE_FAILED for invalid registry input instead of BLOCKED. The audit contract and validation/publication error boundary were corrected; #38851494196, #38851553475, #38851610818 passed. The final semantic-memory-aware restore tests passed in #38851785241.
 - Still open: define a canonical correction-overlay contract and integrate it into index views; then exercise a durable end-to-end ingestion → approval → promotion → index → restore run with interruption/replay tests against a controlled synthetic pipeline. No production archive was promoted or restored.
 - PR #27 remains Draft/open/unmerged; `main` unchanged.
+
+
+## Exact-head validation after protocol integration — 2026-10-16
+
+- The latest code + protocol/documentation revision before this metadata-only update is `15df917acfa27001b80f7a7049e5c082b7b646e5`.
+- Exact-head CI [38851849713](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38851849713) passed: 272 Python tests (1 skipped), 4 Node tests, write audit 108 mutation sites / 0 unclassified, memory validation PASS.
+- This verifies the integrated source revision after adding the semantic-memory-aware restore protocol. Subsequent updates to TASK_STATE, HANDOFF, CONTINUITY_CHECKPOINT and events are metadata-only and remain distinct from this code HEAD.
