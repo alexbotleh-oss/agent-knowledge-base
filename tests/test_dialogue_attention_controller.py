@@ -104,12 +104,14 @@ class DialogueAttentionControllerTests(unittest.TestCase):
     def test_return_language_requires_unified_cycle_guard(self):
         self.turn("T-SIDE-1", "Кстати, проверь отдельный вопрос",
                   child_task_id="TASK-SIDE", child_checkpoint_id="CKPT-SIDE")
-        before = self.log.read_bytes()
         result = self.turn("T-RETURN-1", "Вернись к основной задаче",
                            active_task_id="TASK-SIDE", active_checkpoint_id="CKPT-SIDE")
         self.assertEqual(result["status"], "BLOCKED_GUARD_REQUIRED")
-        self.assertFalse(result["writes_performed"])
-        self.assertEqual(self.log.read_bytes(), before)
+        self.assertTrue(result["writes_performed"])  # intent classification is persisted
+        self.assertEqual(len([
+            event for event in controller.read_events(self.log)
+            if event.get("type") == "attention_returned"
+        ]), 0)
         self.assertEqual(controller.inspect(self.log)["open_branch_count"], 1)
 
     def test_deferred_idea_is_recorded_without_switching_or_stack_push(self):
