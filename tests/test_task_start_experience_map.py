@@ -8,7 +8,10 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
 
-from dialogue_attention_controller import process_turn
+from dialogue_attention_controller import process_turn, return_to_parent
+from branch_result_registry import publish_result, acknowledge_result
+from reconcile_branch_returns import build_report as build_branch_return_report
+from check_reuse_policy import record_check_result
 import task_start_experience_map as task_start_module
 from task_start_experience_map import build_task_start_experience_map
 
@@ -362,6 +365,82 @@ class TaskStartExperienceMapTests(unittest.TestCase):
         self.assertEqual(result["experience_map"]["check_reuse_policy"]["status"], "BLOCKED_SOURCE_NOT_CURRENT")
         self.assertEqual(result["status"], "PARTIAL_SOURCE_PROVENANCE_STALE")
         self.assertFalse(result["decision_policy"]["planning_authorized"])
+
+    def test_no_repeat_survives_child_result_ack_parent_reconciliation_and_return(self):
+        opened = process_turn(
+            self.attention, turn_id="T-INTEGRATED-SIDE", text="Кстати, проверь отдельный вопрос",
+            active_task_id="TASK-PARENT", active_checkpoint_id="CKPT-PARENT",
+            child_task_id="TASK-SIDE", child_checkpoint_id="CKPT-SIDE",
+        )
+        self.assertEqual(opened["status"], "BRANCH_OPENED")
+
+        published = publish_result(self.events, {
+            "child_branch_id": opened["branch_id"],
+            "parent_checkpoint_id": "CKPT-PARENT",
+            "parent_task_id": "TASK-PARENT",
+            "result_key": "cache-recovery-check-v1",
+            "result_status": "RESULT_REPORTED",
+            "summary": "Cache recovery check completed in the side branch.",
+            "source_refs": ["tests/test_cache_recovery.py#case-1"],
+            "reported_at": "2026-10-16T12:00:00Z",
+            "evidence_status": "verified",
+        })
+        self.assertEqual(published["status"], "RESULT_REPORTED")
+        acknowledged = acknowledge_result(
+            self.events, published["event_id"], "accepted",
+            "owner-confirmation://integrated-test", "2026-10-16T12:01:00Z",
+        )
+        self.assertEqual(acknowledged["status"], "ACKNOWLEDGED")
+
+        with self.task.open("a", encoding="utf-8") as stream:
+            stream.write(
+                "\n## Checkpoint update UPDATE-INTEGRATED-1\n"
+                "- Parent checkpoint: `CKPT-PARENT`\n"
+                f"- Supporting event: `{acknowledged['event_id']}`\n"
+                "Child result reviewed; parent acceptance criteria reconciled.\n"
+            )
+        reconciled = build_branch_return_report(self.events, [self.task])
+        self.assertEqual(reconciled["status"], "CONSISTENT")
+        self.assertEqual(reconciled["issues"], [])
+
+        request = "cache recovery index pointer"
+        before_return = build_task_start_experience_map(
+            self.task, self.handoff, self.events, request,
+            experience_logs=[self.events, self.experience],
+            attention_log=self.attention, active_task_id="TASK-PARENT",
+            active_checkpoint_id="CKPT-PARENT", current_project_id="TEST",
+        )
+        policy = before_return["experience_map"]["check_reuse_policy"]
+        self.assertEqual(policy["status"], "RUN_CHECK")
+        recorded = record_check_result(
+            self.attention, policy["check_spec"], policy["source_hashes"],
+            policy["candidate_fingerprints"], result_status="PASS",
+            evidence_refs=["tests/test_cache_recovery.py#case-1"],
+            summary="The discriminating check passed after parent reconciliation.",
+            recorded_by="synthetic-integration-test",
+        )
+        self.assertEqual(recorded["status"], "RECORDED")
+
+        returned = return_to_parent(
+            self.attention, turn_id="T-INTEGRATED-RETURN", parent_task_id="TASK-PARENT"
+        )
+        self.assertEqual(returned["status"], "RETURNED")
+        after_return = build_task_start_experience_map(
+            self.task, self.handoff, self.events, request,
+            experience_logs=[self.events, self.experience],
+            attention_log=self.attention, active_task_id="TASK-PARENT",
+            active_checkpoint_id="CKPT-PARENT", current_project_id="TEST",
+        )
+        reuse = after_return["experience_map"]["check_reuse_policy"]
+        self.assertEqual(reuse["status"], "REUSE_RECORDED_PASS")
+        self.assertEqual(reuse["action"], "DO_NOT_REPEAT_CHECK")
+        self.assertFalse(after_return["decision_policy"]["repeat_check"])
+        self.assertFalse(after_return["decision_policy"]["planning_authorized"])
+        self.assertEqual(len([
+            event for event in json.loads("[" + ",".join(
+                self.attention.read_text(encoding="utf-8").splitlines()
+            ) + "]") if event.get("type") == "verification_check_completed"
+        ]), 1)
 
     def test_no_attention_journal_is_reported_without_inventing_a_branch(self):
         result = build_task_start_experience_map(
