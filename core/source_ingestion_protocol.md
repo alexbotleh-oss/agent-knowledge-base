@@ -255,3 +255,23 @@ PASS присваивается только если тест намеренн�
 Код этого участка прошёл CI на commit `fb7747c48de4eec774da2702e0db2b2201f34025` ([run #38742274796](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38742274796)).
 
 **Граница реализации:** это не полный end-to-end pipeline. Операции `register_source_reference` и `register_inventory` остаются плановыми маршрутами без writer-реализации. Смысловая классификация, promotion в canonical memory, обновление производных индексов и полный сценарий восстановления из нового чата ещё не соединены. Raw archive остаётся внешним источником; registry хранит ссылки и хеши, а не исходный текст.
+
+
+## Актуализация статуса — 2026-10-16 (дополнение к исторической границе выше)
+
+Раздел «Реализованный участок конвейера — 2026-10-15» фиксирует состояние на той ревизии. Его утверждение, что promotion, индекс и восстановление ещё не соединены, **не является текущим статусом интеграционной ветки**.
+
+На интеграционной ветке теперь присутствуют:
+
+- `tools/semantic_memory_registry.py` — отдельный guarded append-only promotion с проверкой точного approval receipt и provenance;
+- `tools/canonical_memory_index.py` — детерминированный индекс, поколения и freshness gate;
+- `tools/edge_correction_registry.py` — append-only correction overlay;
+- `tools/memory_aware_session_restore.py` — восстановление с принятыми семантическими записями и явным статусом покрытия;
+- `tools/memory_pipeline_coordinator.py` — координатор ingestion → provenance/approval → promotion → optional correction → index → restore;
+- `tests/test_memory_pipeline_real_ingestion.py` — синтетический end-to-end сценарий с реальным source-ingestion runner, promotion/index и memory-aware restore.
+
+Проверенная интеграционная ревизия: `d3f9c610b7865793960dc652c2ccccc88afef732`; CI run [38864512026](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38864512026) — 295 Python-тестов пройдены, 1 пропущен; 4 Node-теста пройдены; memory validation PASS.
+
+**Граница:** это доказательство связности на синтетических данных, не production acceptance. На этой ветке не обнаружены tracked-файлы `registry/source_records.jsonl`, `registry/memory_records.jsonl`, `registry/edge_corrections.jsonl`; полный пользовательский архив и вложения не прошли end-to-end acceptance. `IMPORT_READY` не означает одобрение; успешный coordinator не означает COMPLETE archive coverage. См. `projects/AGENT_MEMORY_SYSTEM/END_TO_END_MEMORY_AGENT_AUDIT_2026-10-16.md`.
+
+Отдельно: UMC-03 evaluator и decision frontier находятся в draft PR #28, а не в интеграционном HEAD PR #27. Не считать этот слой уже интегрированным в ветку PR #27.
