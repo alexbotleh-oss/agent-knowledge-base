@@ -335,7 +335,23 @@ def return_to_parent(event_log: Path, *, turn_id: str, parent_task_id: str) -> d
     """Pop exactly the current top frame; never guess which parent to restore."""
     path = Path(event_log)
     def operation(target: Path):
-        state = project_state(read_events(target))
+        events = read_events(target)
+        state = project_state(events)
+        prior_returns = [
+            event for event in events
+            if event.get("type") == "attention_returned"
+            and isinstance(event.get("attention"), dict)
+            and event["attention"].get("turn_id") == turn_id
+        ]
+        if prior_returns:
+            prior = prior_returns[-1]
+            prior_data = prior.get("attention", {})
+            if prior_data.get("parent_task_id") != parent_task_id:
+                return {"status": "TURN_ID_CONFLICT", "writes_performed": False,
+                        "existing_parent_task_id": prior_data.get("parent_task_id")}
+            return {"status": "ALREADY_RETURNED", "active": state["active"],
+                    "branch_id": prior_data.get("branch_id"), "event_id": prior["event_id"],
+                    "writes_performed": False}
         if not state["return_stack"]:
             return {"status": "NO_PARENT", "writes_performed": False}
         top = state["return_stack"][-1]
