@@ -364,3 +364,17 @@ Implemented in tools/dialogue_attention_controller.py with tests in tests/test_d
 Acceptance boundary: this is a local repository primitive invoked explicitly by a caller. It does not capture ChatGPT turns automatically, authenticate caller-supplied task IDs, update the project TASK_STATE/HANDOFF projection, or run on every new chat. Its lexical classifier needs broader adversarial/ambiguous-language testing. It is not yet wired into task-time staged experience retrieval or the PR #28 UMC-03 decision frontier. Therefore CAP-02/UMC-02 remains IMPLEMENTED_PARTIAL, not PASS.
 
 Next integration gate: add a task-start entry point that restores the current task/checkpoint, invokes staged experience retrieval, returns a compact evidence/provenance-bound experience map, and includes the attention stack's deferred/side-branch state without promoting uncertain lessons. Test the combined path after a process restart, including branch return and no-repeat checks. Keep automatic ChatGPT capture as a separate client acceptance gate.
+
+
+## 14. Task-start experience map composition — partial
+
+Implemented in tools/task_start_experience_map.py with tests in tests/test_task_start_experience_map.py. This supersedes the previous section's statement that the task-start composition entry point remained to be created.
+
+- The entry point composes the existing restore → context/trust review → bounded experience retrieval path from tools/minimal_agent_loop.py with the persistent attention/return projection from tools/dialogue_attention_controller.py.
+- It groups candidates by current-project match, cross-project mismatch and unknown scope. For each candidate it re-reads the exact source file only when its captured SHA-256 still matches, then verifies that the cited line still contains the expected event_id before exposing action_taken/outcome/hypotheses/relations as experience details.
+- It includes the current attention stack, deferred ideas and task-state alignment so a parent task remains visible while a side branch is active. A mismatch is reported, not silently reconciled.
+- The result is read-only. Candidate transfer remains UNASSESSED; planning authorization and execution remain false. A matching source hash establishes byte identity, not truth or applicability.
+
+**Acceptance boundary:** this is an explicitly invoked local composition path, not automatic new-chat startup. Retrieval is bounded lexical overlap over caller-supplied event logs, not full canonical-memory graph traversal, embedding-based ranking, or the staged S1/S2 + decision frontier implementation in separate PR #28. The controller does not update TASK_STATE/HANDOFF when a branch returns. CAP-02 and CAP-11 remain IMPLEMENTED_PARTIAL.
+
+**Next gate:** integrate staged retrieval and decision-frontier review without confusing a lexical candidate with an applicable lesson; preserve provenance and exclusions; test current-project and cross-project cases, conflicts, unknowns, duplicate source IDs, source mutation between lookup and review, and restart/return/no-repeat behavior. Then separately test the real client capture/startup boundary.
