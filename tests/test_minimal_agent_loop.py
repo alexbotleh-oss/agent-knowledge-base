@@ -2,6 +2,7 @@ import json
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -70,6 +71,55 @@ class MinimalAgentLoopTests(unittest.TestCase):
         verdict = authorize_next_step(context)
         self.assertEqual(verdict["status"], "PLAN_REQUIRES_CONFIRMATION")
         self.assertIn("explicit cross-project link", verdict["reason"])
+
+    def test_environment_verifier_factory_is_used_for_applicability_judgments(self):
+        lessons = self.root / "lessons.jsonl"
+        self._write_events(lessons, [{
+            "lesson_id": "LESSON-TRUST-1",
+            "scope": "project", "project_id": "TEST",
+            "title": "Staging snapshot recovery",
+            "status": "validated",
+            "trigger": "staging snapshot recovery",
+            "observed_problem": "staging snapshot recovery failed",
+            "applicability": ["staging snapshot recovery"],
+            "exceptions": [],
+        }])
+        judgments = [{
+            "candidate_id": "LESSON-TRUST-1", "candidate_type": "lesson",
+            "criterion": "trigger", "result": "MATCH",
+            "judged_by": "untrusted-agent", "basis_ref": "basis://test",
+        }]
+
+        def test_verifier(candidate, judgment):
+            return {
+                "verified": True,
+                "candidate_id": candidate["lesson_id"],
+                "candidate_type": "lesson",
+                "criterion": judgment["criterion"],
+                "result": judgment["result"],
+                "basis_ref": judgment["basis_ref"],
+                "verifier_id": "test-pinned-verifier",
+                "source_sha256": "a" * 64,
+                "receipt_id": "TEST-RECEIPT",
+            }
+
+        with patch("minimal_agent_loop.make_applicability_verifier_from_env", return_value=test_verifier) as factory:
+            result = run_minimal_agent_loop(
+                self.task, self.handoff, self.events,
+                "Investigate staging snapshot recovery", [self.experience],
+                lesson_logs=[lessons], judgments=judgments,
+            )
+        factory.assert_called_once()
+        assessment = next(
+            item for item in result["applicability"]["assessments"]
+            if item["candidate_id"] == "LESSON-TRUST-1"
+        )
+        trigger = assessment["criteria"]["trigger"]
+        self.assertEqual(trigger["judged_by"], "rule")
+        self.assertEqual(trigger["asserted_by"], "untrusted-agent")
+        self.assertEqual(trigger["verification"]["verifier_id"], "test-pinned-verifier")
+        self.assertFalse(result["writes_performed"])
+        self.assertFalse(result["execution_performed"])
 
     def test_restore_then_retrieve_returns_provenance_without_auto_applicability(self):
         self._write_events(self.experience, [
