@@ -125,5 +125,22 @@ class CheckReusePolicyTests(unittest.TestCase):
         self.assertEqual(result["action"], "RUN_CHECK")
 
 
+
+    def test_malformed_unhashable_result_status_fails_closed_without_crashing(self):
+        recorded = record_check_result(
+            self.log, self.check, self.sources, self.candidates,
+            result_status="PASS", evidence_refs=["tests/test_trigger.py#case-1"],
+            summary="Trigger condition was verified", recorded_by="CI run 123",
+        )
+        self.assertEqual(recorded["status"], "RECORDED")
+        events = [json.loads(line) for line in self.log.read_text(encoding="utf-8").splitlines()]
+        events[0]["check_result"]["result_status"] = {"unexpected": "shape"}
+        self.log.write_text(json.dumps(events[0]) + "\\n", encoding="utf-8")
+
+        result = evaluate_check_reuse(self.log, self.check, self.sources, self.candidates)
+        self.assertEqual(result["status"], "RECHECK_PRIOR_RESULT_NOT_REUSABLE")
+        self.assertEqual(result["action"], "RUN_CHECK")
+        self.assertFalse(result["writes_performed"])
+
 if __name__ == "__main__":
     unittest.main()
