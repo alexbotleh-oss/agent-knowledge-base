@@ -21,6 +21,7 @@ class TaskStartExperienceMapTests(unittest.TestCase):
         self.handoff = self.project / "HANDOFF.md"
         self.events = self.project / "events.jsonl"
         self.experience = self.root / "shared-events.jsonl"
+        self.lessons = self.root / "lessons.jsonl"
         self.attention = self.root / "projects" / "AGENT_MEMORY_SYSTEM" / "events.jsonl"
         self.task.write_text(
             "# TASK_STATE — TASK-PARENT\n"
@@ -82,6 +83,55 @@ class TaskStartExperienceMapTests(unittest.TestCase):
         self.assertFalse(result["decision_policy"]["planning_authorized"])
         self.assertFalse(result["writes_performed"])
         self.assertFalse(result["execution_performed"])
+
+    def test_staged_s1_s2_and_frontier_are_connected_to_task_start(self):
+        self.task.write_text(
+            self.task.read_text(encoding="utf-8")
+            + "\n\n```experience-markers\n"
+            + json.dumps({
+                "problem_types": ["cache-recovery"],
+                "tools": ["Python"],
+                "languages": ["Python"],
+                "environments": ["GitHub Actions"],
+            }) + "\n```\n",
+            encoding="utf-8",
+        )
+        self._write(self.lessons, [{
+            "lesson_id": "LESSON-CACHE-1", "scope": "project", "project_id": "TEST",
+            "title": "Cache recovery after stale index pointer",
+            "status": "candidate",
+            "trigger": "cache recovery and index pointer mismatch",
+            "observed_problem": "cache recovery",
+            "applicability": ["same project and matching tool context"],
+            "exceptions": [],
+            "prevention_rule": "verify the index pointer before retrying",
+            "markers": {
+                "problem_types": ["cache-recovery"], "tools": ["Python"],
+                "languages": ["Python"], "environments": ["GitHub Actions"],
+            },
+            "evidence_refs": [{"kind": "test", "ref": "tests/test_cache.py"}],
+        }])
+        result = build_task_start_experience_map(
+            self.task, self.handoff, self.events, "cache recovery index pointer",
+            experience_logs=[self.experience], lesson_logs=[self.lessons],
+            attention_log=self.attention, active_task_id="TASK-PARENT",
+            active_checkpoint_id="CKPT-PARENT", current_project_id="TEST",
+        )
+        self.assertEqual(result["status"], "READY_FOR_REVIEW")
+        stages = result["experience_map"]["lesson_search_stages"]
+        self.assertEqual([stage["stage"] for stage in stages], ["S1_STRUCTURED", "S2_LEXICAL"])
+        self.assertEqual(stages[0]["status"], "CANDIDATES_FOUND")
+        self.assertEqual(stages[1]["status"], "CANDIDATES_FOUND")
+        self.assertEqual(result["experience_map"]["current_markers_source"], "TASK_STATE_EXPLICIT_BLOCK")
+        frontier = result["experience_map"]["decision_frontier"]
+        lesson_direction = next(
+            row for row in frontier["directions"] if row["candidate_id"] == "LESSON-CACHE-1"
+        )
+        self.assertEqual(lesson_direction["classification"], "HOLD")
+        self.assertEqual(lesson_direction["candidate_type"], "lesson")
+        self.assertFalse(frontier["grants_planning_permission"])
+        self.assertFalse(result["decision_policy"]["planning_authorized"])
+        self.assertFalse(result["writes_performed"])
 
     def test_no_attention_journal_is_reported_without_inventing_a_branch(self):
         result = build_task_start_experience_map(
