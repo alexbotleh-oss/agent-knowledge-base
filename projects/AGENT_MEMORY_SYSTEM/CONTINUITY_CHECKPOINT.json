@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "checkpoint_id": "CKPT-AGMS-20261016-MEMORY-PIPELINE-AUDIT-01",
+  "checkpoint_id": "CKPT-AGMS-20261016-SEMANTIC-PROMOTION-02",
   "project_id": "AGENT_MEMORY_SYSTEM",
   "task_id": "AGMS-2026-10-15-MEMORY-PIPELINE-CONTINUITY",
   "recorded_at": "2026-10-16",
@@ -58,12 +58,16 @@
     "The verifier accepts an exact code HEAD match or a clean descendant with only allowlisted metadata paths changed; it fails closed on source/code drift, diverged ancestry, truncated compare, wrong/incomplete/failed exact-head CI, invalid checkpoint or unavailable remote evidence.",
     "Added tests/test_verified_session_restore.py: 6 tests for exact head, metadata-only descendant, wrong/failed CI, unexpected source changes, diverged/truncated compare, and missing checkpoint. Exact code HEAD 467d68795d296b4a5e3ee473e1252be43e5e5bdc passed CI run 38849505217: 241 Python tests (1 skipped), 4 Node tests, strict write audit 92 mutation sites / 0 unclassified, memory and project validation PASS.",
     "Documented the live remote revision verification entry point and trust boundary in core/agent_runtime_protocol.md. The entry point remains read-only and does not implement semantic promotion, canonical index refresh or automatic chat capture.",
-    "Audited the full source-ingestion → approval → semantic-promotion → canonical-index → normal-restore path at branch HEAD 95524a90a4e1b024e237e7a49e1d4be9c795a433; exact-head CI run 38849636651 passed. Findings and stage contracts are in projects/AGENT_MEMORY_SYSTEM/MEMORY_PIPELINE_INTEGRATION_AUDIT_2026-10-16.md."
+    "Audited the full source-ingestion → approval → semantic-promotion → canonical-index → normal-restore path at branch HEAD 95524a90a4e1b024e237e7a49e1d4be9c795a433; exact-head CI run 38849636651 passed. Findings and stage contracts are in projects/AGENT_MEMORY_SYSTEM/MEMORY_PIPELINE_INTEGRATION_AUDIT_2026-10-16.md.",
+    "Implemented tools/semantic_memory_registry.py as a separate guarded append-only promotion stage; exact manifest/artifact hashes and explicit approval receipt are checked; dry-run is default; replay/conflict/revision-chain/provenance/corrupt-registry cases are tested. Exact code HEAD d9da0b6991b282bd8ddd7de25edb1fae8330e016 passed CI #38851184392 (253 Python tests, 1 skipped; 4 Node tests; write audit 100/0; memory validation PASS)."
   ],
   "confirmed_open": [
     {
       "id": "OPEN-SEMANTIC-PROMOTION",
-      "description": "Inspect existing lifecycle/approval contracts. No canonical semantic-promotion executor was found in inspected tools. Specify and test an executor before implementing; never treat metadata-only source registration as accepted memory."
+      "description": "Inspect existing lifecycle/approval contracts. No canonical semantic-promotion executor was found in inspected tools. Specify and test an executor before implementing; never treat metadata-only source registration as accepted memory.",
+      "status": "RESOLVED",
+      "resolved_at": "2026-10-16",
+      "resolution": "Implemented in tools/semantic_memory_registry.py; exact-head CI run 38851184392 passed."
     },
     {
       "id": "OPEN-CANONICAL-INDEX",
@@ -86,7 +90,7 @@
       "description": "The ChatGPT web extension is a prototype verified by static CI only. Must be installed and tested in the user's actual Yandex Browser Android version. Verify send gate (no send before durable receipt), exact text and prior assistant message capture, interrupted connection recovery, response DOM detection, multiple incomplete turns, extension restart, and UI-selector drift. Until these pass, do not claim end-to-end capture is operational."
     }
   ],
-  "next_action": "Implement the approval-bound append-only semantic registry writer as a separate guarded stage; index refresh and normal semantic-memory restore remain subsequent milestones.",
+  "next_action": "Implement deterministic, versioned canonical multidimensional index generation from registry/memory_records.jsonl with source revision/hash, stable record IDs, correction-overlay handling, atomic generation publication, and freshness detection. Session restore integration remains later.",
   "constraints": [
     "Do not merge PR #27 or modify main without explicit user approval.",
     "Do not delete or rewrite source-history exports without a separate explicit decision.",
@@ -98,20 +102,19 @@
   "status": "P1_COMPLETE_WITH_DOWNSTREAM_ITEMS_OPEN",
   "checkpoint_semantics": "This is a durable task checkpoint committed to the integration branch. It is not an automatic ChatGPT autosave or proof that an undelivered response was saved.",
   "repository_state": {
-    "last_verified_code_head": "467d68795d296b4a5e3ee473e1252be43e5e5bdc",
-    "exact_head_ci_run_id": 38849505217,
-    "exact_head_ci_url": "https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38849505217",
+    "last_verified_code_head": "d9da0b6991b282bd8ddd7de25edb1fae8330e016",
+    "exact_head_ci_run_id": 38851184392,
+    "exact_head_ci_url": "https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38851184392",
     "exact_head_ci_conclusion": "success",
-    "python_tests": 241,
+    "python_tests": 253,
     "python_skipped": 1,
     "node_tests": 4,
-    "write_audit_mutation_sites": 92,
+    "write_audit_mutation_sites": 100,
     "write_audit_unclassified": 0,
-    "extension_js_syntax": "PASS",
-    "revision_restore_tests": 6,
     "memory_validation": "PASS",
     "project_validation": "PASS",
-    "note": "Exact-head CI run 38849505217 passed on this code SHA. The first implementation commit 7e501f90146bd8623d8178c0789268a8a76126d3 failed five new tests because the fixture expected an unescaped branch ref; commit 467d68795d296b4a5e3ee473e1252be43e5e5bdc corrected the fixture and exact-head CI passed. Later metadata-only commits must not be treated as code revisions."
+    "semantic_memory_registry_tests": 12,
+    "note": "Semantic promotion writer added and validated at this exact code HEAD. Earlier CI runs 38851141269 and 38851163529 failed because new mutation sites were not yet classified in the strict write audit; tools/audit_write_contracts.py now classifies them. Exact-head run 38851184392 passed. Approval receipt integrity does not authenticate its author."
   },
   "historical_repository_state": {
     "last_verified_code_head": "e30450a5ed516ab1f76f65c3c7874cdd2b951c40",
@@ -154,11 +157,9 @@
     }
   ],
   "open_items": [
-    "Approval workflow/executor with hash-bound decision evidence",
-    "Append-only semantic promotion writer with replay/conflict handling and crash recovery",
     "Deterministic canonical multidimensional index generation and freshness verification",
     "Normal session restore consuming approved semantic memory with explicit coverage/freshness",
-    "Apply edge_corrections overlays in graph/index consumers",
+    "Apply edge_corrections overlays in graph/index consumers or report unresolved handling explicitly",
     "Live Android browser-extension acceptance"
   ]
 }
