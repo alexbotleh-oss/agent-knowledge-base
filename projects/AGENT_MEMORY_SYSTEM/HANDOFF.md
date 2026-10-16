@@ -694,3 +694,14 @@ PR #27 remains Draft/open/unmerged; `main` unchanged.
 ## Final exact-head evidence — 2026-10-16
 
 Latest code + protocol/documentation revision: `15df917acfa27001b80f7a7049e5c082b7b646e5`; exact-head CI [38851849713](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38851849713) PASS (272 Python tests, 1 skipped; 4 Node tests; write audit 108/0; memory validation PASS). The later branch commits update only the four checkpoint/handoff/event metadata files; keep this code SHA/CI pair separate from the live branch tip.
+
+
+## Correction-overlay implementation handoff — 2026-10-16
+
+Exact code + protocol HEAD `1fd9c91ae8bb8662a3cb1a1cea3d63452064fc40`; exact-head CI [38852493391](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38852493391) PASS: 282 Python tests (1 skipped), 4 Node tests, write audit 116/0, memory validation PASS.
+
+Read `tools/edge_correction_registry.py`, `schemas/edge_correction.schema.json`, `schemas/edge_correction_approval.schema.json`, `tools/canonical_memory_index.py`, and `tests/test_correction_index_integration.py` / `tests/test_correction_retraction_index.py`.
+
+Accepted corrections are source-revision/hash-bound and require a receipt tied to exact correction input bytes. The index applies accepted add/retract/replace operations to derived relation views only; canonical MemoryRecord bytes remain unchanged. The correction-registry hash participates in index generation identity and freshness. The receipt hash does not authenticate the author.
+
+No production correction file or archive was processed. Index coverage remains PARTIAL until source/archive completeness is proven. Next: implement a durable coordinator/ledger that can resume and reconcile interruption across source ingestion, semantic promotion, correction registration, index generation and fresh-session restore. Keep PR #27 Draft/open/unmerged and do not change `main`.
