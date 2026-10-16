@@ -92,16 +92,27 @@ def _append_event(run_dir:Path,run_id:str,event_type:str,stage:str,status:str,de
         except OSError: pass
         return event
 
-def _source_rows(path:Path)->list[dict]:
+def _source_rows(path:Path)->tuple[list[dict],str]:
     if not path.is_file(): raise ValueError("source registry is unavailable")
-    rows=[]
-    for n,line in enumerate(path.read_text(encoding="utf-8").splitlines(),1):
-        if not line.strip(): raise ValueError(f"source registry has blank line {n}")
-        try: row=json.loads(line)
-        except Exception as exc: raise ValueError(f"source registry invalid JSON at line {n}") from exc
-        if not isinstance(row,dict) or not isinstance(row.get("source_record_id"),str): raise ValueError(f"invalid source record at line {n}")
-        rows.append(row)
-    return rows
+    with _lock(path.with_name(path.name+".lock")):
+        raw=path.read_bytes()
+        try: lines=raw.decode("utf-8").splitlines()
+        except UnicodeDecodeError as exc: raise ValueError("source registry is not UTF-8") from exc
+        rows=[]; seen=set()
+        for n,line in enumerate(lines,1):
+            if not line.strip(): raise ValueError(f"source registry has blank line {n}")
+            try: row=json.loads(line)
+            except Exception as exc: raise ValueError(f"source registry invalid JSON at line {n}") from exc
+            if not isinstance(row,dict): raise ValueError(f"invalid source record at line {n}")
+            required=("source_record_id","source_locator","archive_id","conversation_id","source_node_id","text_sha256")
+            if any(not isinstance(row.get(k),str) or not row[k].strip() for k in required):
+                raise ValueError(f"source record lacks stable locator/hash fields at line {n}")
+            if row["source_record_id"] in seen: raise ValueError(f"duplicate source_record_id at line {n}")
+            if len(row["text_sha256"])!=64 or any(ch not in "0123456789abcdef" for ch in row["text_sha256"]):
+                raise ValueError(f"invalid text_sha256 at line {n}")
+            seen.add(row["source_record_id"]); rows.append(row)
+        if path.read_bytes()!=raw: raise ValueError("source registry changed during provenance validation")
+        return rows,_sha(raw)
 
 def validate_provenance_links(manifest_path:Path,source_registry_path:Path)->dict:
     errors=validate_intake_manifest(Path(manifest_path))
@@ -115,7 +126,7 @@ def validate_provenance_links(manifest_path:Path,source_registry_path:Path)->dic
         raw=artifact_path.read_bytes()
         if _sha(raw)!=artifact.get("sha256"): raise ValueError("memory artifact hash differs from manifest")
         records=[json.loads(line) for line in raw.decode("utf-8").splitlines() if line.strip()]
-        sources=_source_rows(Path(source_registry_path))
+        sources,source_sha=_source_rows(Path(source_registry_path))
     except Exception as exc: return {"status":"BLOCKED","errors":[str(exc)],"resolved_refs":0}
     resolved=0; missing=[]; ambiguous=[]
     for record in records:
@@ -126,17 +137,22 @@ def validate_provenance_links(manifest_path:Path,source_registry_path:Path)->dic
         for ref in refs:
             if isinstance(ref,str): criteria={"source_record_id":ref} if ref.startswith("SRC-") else {"source_locator":ref}
             elif isinstance(ref,dict):
-                criteria={k:ref[k] for k in ("source_record_id","source_locator","source_node_id","message_id") if isinstance(ref.get(k),str) and ref[k].strip()}
+                criteria={k:ref[k] for k in ("source_record_id","source_locator","source_node_id","message_id","source_ref") if isinstance(ref.get(k),str) and ref[k].strip()}
                 if "message_id" in criteria: criteria["source_message_id"]=criteria.pop("message_id")
+                if "source_ref" in criteria:
+                    source_ref=criteria.pop("source_ref")
+                    criteria["source_record_id" if source_ref.startswith("SRC-") else "source_locator"]=source_ref
                 for field in ("archive_id","conversation_id"):
                     if isinstance(ref.get(field),str) and ref[field].strip(): criteria[field]=ref[field]
             else: criteria={}
             primary=[k for k in ("source_record_id","source_locator","source_node_id","source_message_id") if k in criteria]
-            if len(primary)!=1:
-                missing.append({"memory_id":mid,"revision_id":revision,"reference":ref,"reason":"provenance needs exactly one stable source ID/locator"}); continue
+            if not primary:
+                missing.append({"memory_id":mid,"revision_id":revision,"reference":ref,"reason":"provenance needs a stable source ID/locator"}); continue
             matches=[s for s in sources if all(s.get(k)==v for k,v in criteria.items())]
             content_hash=ref.get("content_hash") if isinstance(ref,dict) else None
             if content_hash not in (None,"unknown",""):
+                if not isinstance(content_hash,str) or len(content_hash)!=64 or any(ch not in "0123456789abcdef" for ch in content_hash):
+                    missing.append({"memory_id":mid,"revision_id":revision,"reference":ref,"reason":"content_hash is not a SHA-256 value"}); continue
                 if len(matches)==1 and matches[0].get("text_sha256")!=content_hash:
                     missing.append({"memory_id":mid,"revision_id":revision,"reference":ref,"reason":"content_hash does not match source text hash"}); continue
             if len(matches)==1: resolved+=1
@@ -144,7 +160,7 @@ def validate_provenance_links(manifest_path:Path,source_registry_path:Path)->dic
             else: ambiguous.append({"memory_id":mid,"revision_id":revision,"reference":ref,"match_count":len(matches)})
     status="RESOLVED" if not missing and not ambiguous else "BLOCKED"
     return {"status":status,"resolved_refs":resolved,"missing_refs":missing,"ambiguous_refs":ambiguous,
-            "source_registry_sha256":_sha(Path(source_registry_path).read_bytes()) if Path(source_registry_path).is_file() else None,
+            "source_registry_sha256":source_sha,
             "memory_artifact_sha256":artifact.get("sha256")}
 
 def _summary(result:dict,keep:tuple[str,...])->dict:
