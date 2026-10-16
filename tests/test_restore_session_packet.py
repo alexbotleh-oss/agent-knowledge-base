@@ -160,5 +160,71 @@ class RestoreSessionPacketTests(unittest.TestCase):
         self.assertLessEqual(len(packet["latest_handoff_excerpt"]), 100)
 
 
+    def test_revision_evidence_distinguishes_recorded_current_and_historical_state(self):
+        checkpoint = {
+            "repository_state": {
+                "last_verified_code_head": "a" * 40,
+                "exact_head_ci_run_id": 12345,
+                "exact_head_ci_conclusion": "success",
+            },
+            "historical_repository_state": {
+                "last_verified_code_head": "b" * 40,
+                "exact_head_ci_run_id": 12300,
+            },
+            "revision_semantics": {"metadata_revision": "commit containing metadata"},
+        }
+        (self.project / "CONTINUITY_CHECKPOINT.json").write_text(
+            json.dumps(checkpoint), encoding="utf-8"
+        )
+        from restore_session_packet import load_revision_evidence
+
+        recorded = load_revision_evidence(self.project)
+        self.assertEqual(recorded["status"], "RECORDED_EVIDENCE_ONLY")
+        self.assertEqual(recorded["recorded_code_head"], "a" * 40)
+        self.assertEqual(
+            recorded["historical_repository_state"]["last_verified_code_head"],
+            "b" * 40,
+        )
+
+        matching = load_revision_evidence(
+            self.project, observed_code_head="a" * 40, observed_ci_run_id="12345"
+        )
+        self.assertEqual(matching["status"], "OBSERVED_CODE_AND_CI_MATCH")
+
+        mismatch = load_revision_evidence(
+            self.project, observed_code_head="c" * 40, observed_ci_run_id="12345"
+        )
+        self.assertEqual(mismatch["status"], "OBSERVED_CODE_HEAD_MISMATCH")
+        self.assertFalse(mismatch["writes_performed"])
+
+    def test_revision_evidence_missing_checkpoint_is_explicitly_unavailable(self):
+        from restore_session_packet import load_revision_evidence
+
+        evidence = load_revision_evidence(self.project)
+        self.assertEqual(evidence["status"], "UNAVAILABLE")
+        self.assertFalse(evidence["writes_performed"])
+
+    def test_restore_packet_exposes_revision_evidence_without_blocking_task_restore(self):
+        (self.project / "CONTINUITY_CHECKPOINT.json").write_text(json.dumps({
+            "repository_state": {
+                "last_verified_code_head": "a" * 40,
+                "exact_head_ci_run_id": 12345,
+                "exact_head_ci_conclusion": "success",
+            },
+            "historical_repository_state": {
+                "last_verified_code_head": "b" * 40,
+                "exact_head_ci_run_id": 12300,
+            },
+        }), encoding="utf-8")
+        packet = build_session_packet(
+            self.task, self.handoff, self.events, observed_code_head="c" * 40
+        )
+        self.assertEqual(packet["status"], "RESTORED_PACKET")
+        self.assertEqual(
+            packet["repository_revision_evidence"]["status"],
+            "OBSERVED_CODE_HEAD_MISMATCH",
+        )
+
+
 if __name__ == "__main__":
     unittest.main()
