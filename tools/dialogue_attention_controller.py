@@ -411,7 +411,7 @@ def main(argv=None) -> int:
     else:
         result = inspect(args.event_log)
     print(json.dumps(result, ensure_ascii=False, indent=2))
-    return 0 if result.get("status") in {"OK", "TURN_RECORDED", "BRANCH_OPENED", "RETURNED", "ALREADY_RECORDED"} else 2
+    return 0 if result.get("status") in {"OK", "TURN_RECORDED", "BRANCH_OPENED", "RETURNED", "ALREADY_RETURNED", "ALREADY_RECORDED"} else 2
 
 
 if __name__ == "__main__":
