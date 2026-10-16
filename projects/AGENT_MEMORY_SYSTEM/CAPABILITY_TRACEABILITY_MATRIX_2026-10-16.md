@@ -16,7 +16,7 @@
 | Evidence set | Revision | CI |
 |---|---|---|
 | Integration branch (PR #27) | `d3f9c610b7865793960dc652c2ccccc88afef732` | [38864512026](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38864512026): 295 Python passed, 1 skipped; 4 Node passed; memory validation PASS. |
-| UMC-03 separate draft (PR #28) | branch HEAD `b6d32a3c36aa5df8079f63aad20eab7743af1070` | Code/test commit `40d41701a9c58d498ccb5d2e092089a61e56dd12`, [38897781306](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38897781306): 344 Python passed, 1 skipped; 4 Node passed. |
+| UMC-03 separate draft (PR #28) | branch HEAD `b6d32a3c36aa5df8079f63aad20fd41a8f56c512` | Code/test commit `40d41701a9c58d498ccb5d2e092089a61e56dd12`, [38897781306](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38897781306): 344 Python passed, 1 skipped; 4 Node passed. |
 | Audit/docs branch | `66e1153979300d4b9aff3049f180164c60d63d0e` | [38898866464](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38898866464): 295 Python passed, 1 skipped; 4 Node passed; 127 mutation sites / 0 unclassified; memory validation PASS. A checkpoint-only metadata descendant follows this tested head. |
 
 PR #27 and #28 are Draft/open/unmerged. The code and test evidence in this matrix must not be represented as code already installed in `main`.
