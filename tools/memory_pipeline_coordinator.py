@@ -193,6 +193,14 @@ def run_memory_pipeline(
             except OSError: pass
     _append_event(run_dir,run_id,"PIPELINE_STARTED","pipeline","RUNNING",{"apply":apply,"input_fingerprint":fingerprint})
     results={}; canonical_writes=False
+    def execute(stage:str,func:Callable,success:set[str],summary_fields:tuple[str,...]):
+        _append_event(run_dir,run_id,"STAGE_STARTED",stage,"RUNNING",{"apply":apply})
+        try: result=func()
+        except Exception as exc: result={"status":"ERROR","reason":str(exc),"writes_performed":False}
+        status=str(result.get("status","UNKNOWN"))
+        _append_event(run_dir,run_id,"STAGE_RESULT",stage,status,{"result":_summary(result,summary_fields)})
+        results[stage]=result
+        return status in success
     if apply:
         missing_restore_files=[str(p) for p in (Path(task_state),Path(handoff),Path(event_log)) if not Path(p).is_file()]
         correction_approval_missing=False
@@ -218,14 +226,6 @@ def run_memory_pipeline(
             _append_event(run_dir,run_id,"PIPELINE_RESULT","pipeline",final["status"],{"stages":{name:result.get("status","UNKNOWN") for name,result in results.items()}})
             final["stages"]={name:result.get("status","UNKNOWN") for name,result in results.items()}
             return final
-    def execute(stage:str,func:Callable,success:set[str],summary_fields:tuple[str,...]):
-        _append_event(run_dir,run_id,"STAGE_STARTED",stage,"RUNNING",{"apply":apply})
-        try: result=func()
-        except Exception as exc: result={"status":"ERROR","reason":str(exc),"writes_performed":False}
-        status=str(result.get("status","UNKNOWN"))
-        _append_event(run_dir,run_id,"STAGE_RESULT",stage,status,{"result":_summary(result,summary_fields)})
-        results[stage]=result
-        return status in success
     source_ok=execute("source_ingestion",lambda:run_ingestion(snapshot_path,Path(run_root)/"source_ingestion",
         intake_root=intake_root,registry_path=source_registry_path,apply=apply),
         {"SOURCE_REGISTERED_DOWNSTREAM_PENDING"} if apply else {"READY_FOR_SOURCE_REGISTRATION"},
