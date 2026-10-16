@@ -86,16 +86,18 @@ class RealSourceIngestionIntegrationTests(unittest.TestCase):
                 if "/compare/" in url:return {"status":"identical","merge_base_commit":{"sha":code_sha},"files":[]}
                 raise AssertionError(url)
             memory_registry=root/"registry"/"memory_records.jsonl"; index_root=root/"registry"/"index"
-            with mock.patch.object(pipeline,"build_memory_aware_packet",return_value={
-                "status":"RESTORED_PACKET_WITH_PARTIAL_MEMORY","semantic_memory":{"status":"PARTIAL","coverage_status":"PARTIAL",
-                "index_generation_id":"GEN-REAL","returned_count":1},"repository_revision_evidence":{"status":"REMOTE_VERIFIED_EXACT_CODE_HEAD"}}):
-                result=pipeline.run_memory_pipeline(snapshot,root/"pipeline-runs",manifest,receipt,repository="owner/repo",
-                    task_state=task,handoff=handoff,event_log=events,source_registry_path=source_registry,
-                    memory_registry_path=memory_registry,index_root=index_root,apply=True,fetch_json=fake_fetch)
+            result=pipeline.run_memory_pipeline(snapshot,root/"pipeline-runs",manifest,receipt,repository="owner/repo",
+                task_state=task,handoff=handoff,event_log=events,source_registry_path=source_registry,
+                memory_registry_path=memory_registry,index_root=index_root,apply=True,fetch_json=fake_fetch)
             self.assertEqual(result["status"],"PIPELINE_COMPLETE_WITH_PARTIAL_MEMORY",result)
             self.assertEqual(result["stages"]["source_ingestion"],"SOURCE_REGISTERED_DOWNSTREAM_PENDING")
             self.assertEqual(result["stages"]["provenance_validation"],"RESOLVED")
             self.assertEqual(result["stages"]["semantic_promotion"],"PROMOTED")
+            self.assertEqual(result["stages"]["canonical_index"],"BUILT_PARTIAL")
+            self.assertEqual(result["stages"]["session_restore"],"RESTORED_PACKET_WITH_PARTIAL_MEMORY")
+            self.assertEqual(result["restore"]["semantic_memory_status"],"PARTIAL")
+            self.assertEqual(result["restore"]["repository_revision_evidence"]["status"],"REMOTE_VERIFIED_EXACT_CODE_HEAD")
+            self.assertEqual(result["restore"]["returned_count"],1)
             rows=source_registry.read_text(encoding="utf-8").splitlines()
             self.assertEqual(len(rows),1)
             self.assertEqual(json.loads(rows[0])["source_record_id"],source["source_record_id"])
