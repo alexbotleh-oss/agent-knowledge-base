@@ -703,3 +703,11 @@ Next: confirm CI for the new real-stage interruption/replay test, then test the 
 Exact-head CI [38856130862](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38856130862) passed for code SHA `fadc95c083a6a6ffafbe7042e78a70f1a0d2c31f`: 295 Python tests (1 skipped), 4 Node tests, write audit 127 mutation sites / 0 unclassified. New test `tests/test_memory_pipeline_real_ingestion.py` uses the real `source_ingestion_runner.py` on a synthetic archive and verifies real source registration, provenance resolution and semantic promotion through the coordinator.
 
 P2 is not yet declared ready: this test mocks the final verified restore packet, while the separate real-restore integration test mocks source ingestion. Next gate is one combined synthetic end-to-end test using the real ingestion runner, real promotion/index and real verified restore. Production archive completeness remains a separate acceptance task.
+
+
+## Verified real ingestion-to-restore E2E — 2026-10-16
+
+- Exact code HEAD: `0f2c76f1b79d1c73aa89eed0f3e98830658c338d`; exact-head CI run [38862706088](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38862706088) completed successfully.
+- `tests/test_memory_pipeline_real_ingestion.py` uses the real source-ingestion runner, coordinator promotion/index and real memory-aware restore. It asserts retrieval of `MEM-REAL-INGEST-1`, revision `REV-REAL-1`, and non-empty provenance in scope `AGENT_MEMORY_SYSTEM` / `TASK-REAL` / `CTX-REAL`.
+- This supersedes the earlier statement that the combined test still mocked restore or remained to be created. Earlier entries are retained as chronology, not current status.
+- Still open: synchronize the other continuity files and verify metadata-only descendant CI. Production archive completeness remains unverified. PR #27 remains Draft/open/unmerged; `main` unchanged.
