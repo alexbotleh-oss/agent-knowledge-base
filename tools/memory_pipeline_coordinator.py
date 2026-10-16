@@ -11,6 +11,7 @@ from semantic_memory_registry import promote_memory_records
 from edge_correction_registry import register_edge_correction
 from canonical_memory_index import DEFAULT_INDEX_ROOT, DEFAULT_REGISTRY as DEFAULT_MEMORY_REGISTRY, refresh_canonical_index
 from source_evidence_registry import DEFAULT_REGISTRY as DEFAULT_SOURCE_REGISTRY
+from source_registry_contract import validate_source_record
 from memory_aware_session_restore import build_memory_aware_packet
 from validate_memory import validate_intake_manifest
 
@@ -104,12 +105,9 @@ def _source_rows(path:Path)->tuple[list[dict],str]:
             try: row=json.loads(line)
             except Exception as exc: raise ValueError(f"source registry invalid JSON at line {n}") from exc
             if not isinstance(row,dict): raise ValueError(f"invalid source record at line {n}")
-            required=("source_record_id","source_locator","archive_id","conversation_id","source_node_id","text_sha256")
-            if any(not isinstance(row.get(k),str) or not row[k].strip() for k in required):
-                raise ValueError(f"source record lacks stable locator/hash fields at line {n}")
+            errors=validate_source_record(row)
+            if errors: raise ValueError(f"invalid canonical source record at line {n}: {errors}")
             if row["source_record_id"] in seen: raise ValueError(f"duplicate source_record_id at line {n}")
-            if len(row["text_sha256"])!=64 or any(ch not in "0123456789abcdef" for ch in row["text_sha256"]):
-                raise ValueError(f"invalid text_sha256 at line {n}")
             seen.add(row["source_record_id"]); rows.append(row)
         if path.read_bytes()!=raw: raise ValueError("source registry changed during provenance validation")
         return rows,_sha(raw)
