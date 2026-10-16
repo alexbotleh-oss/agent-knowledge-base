@@ -672,3 +672,20 @@ Verified implementation: `tools/semantic_memory_registry.py`; exact-head CI run 
 The writer is separate from source registration, dry-run by default, requires an approval receipt bound to exact manifest/artifact hashes, preserves provenance and old revisions, and blocks conflicting replays. Receipt integrity does not authenticate its author. No production record was promoted; tests use synthetic data.
 
 Next: deterministic versioned canonical index generation over accepted registry envelopes, with source revision/hash, correction-overlay handling, atomic publication and freshness checks. Session restore integration remains later. PR #27 stays Draft/open/unmerged; `main` unchanged.
+
+
+## Canonical index + memory-aware restore handoff — 2026-10-16
+
+**Verified code/test HEAD:** `bec868ce9e7491802c5239068b4581eff002a809`; exact-head CI [38851785241](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38851785241) PASS (272 Python tests, 1 skipped; 4 Node tests; write audit 108/0; memory validation PASS).
+
+Read `tools/canonical_memory_index.py`, `tests/test_canonical_memory_index.py`, `tests/test_canonical_memory_lifecycle_index.py`, `tools/memory_aware_session_restore.py`, and the related tests/protocol sections.
+
+- Canonical index generation is deterministic and versioned, stores immutable generations and atomically updates a CURRENT pointer. It checks registry freshness and preserves the previous pointer on a failed publication.
+- Index views are references to canonical records/revisions, not duplicate memory copies. Historical revisions remain indexed; current revisions are explicit.
+- Semantic-memory-aware restore composes the verified task/event restore and current index. It enforces matching project scope, resolves references to the canonical registry, and reports provenance/evidence/conflict information and independent coverage/freshness statuses.
+- **Known incompleteness:** no canonical edge-correction overlay source/contract exists in the inspected revision. The index and retrieval therefore remain PARTIAL; do not report complete memory coverage.
+- CI uses synthetic registry data and mocked GitHub API results. No production archive was promoted and no full pipeline was executed as one transaction.
+
+Next bounded task: specify a canonical, append-only correction-overlay contract with stable relation/decision/source IDs, explicit status and provenance; validate its semantics before making index consumers apply it. Then add a pipeline coordinator/crash-recovery test spanning ingestion, approval, promotion, index publication and fresh restore.
+
+PR #27 remains Draft/open/unmerged; `main` unchanged.
