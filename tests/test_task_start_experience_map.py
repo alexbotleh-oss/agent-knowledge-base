@@ -2,12 +2,14 @@ import json
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
 
 from dialogue_attention_controller import process_turn
+import task_start_experience_map as task_start_module
 from task_start_experience_map import build_task_start_experience_map
 
 
@@ -131,6 +133,33 @@ class TaskStartExperienceMapTests(unittest.TestCase):
         self.assertEqual(lesson_direction["candidate_type"], "lesson")
         self.assertFalse(frontier["grants_planning_permission"])
         self.assertFalse(result["decision_policy"]["planning_authorized"])
+        self.assertFalse(result["writes_performed"])
+
+    def test_source_mutation_after_retrieval_blocks_candidate_expansion(self):
+        real_loop = task_start_module.run_minimal_agent_loop
+
+        def mutate_after_retrieval(*args, **kwargs):
+            result = real_loop(*args, **kwargs)
+            self.experience.write_text(
+                json.dumps({
+                    "event_id": "EVT-EXP-1", "project_id": "TEST", "type": "test_result",
+                    "summary": "Changed after retrieval; this must not be trusted",
+                    "status": "observed",
+                }) + "\n",
+                encoding="utf-8",
+            )
+            return result
+
+        with patch("task_start_experience_map.run_minimal_agent_loop", side_effect=mutate_after_retrieval):
+            result = build_task_start_experience_map(
+                self.task, self.handoff, self.events, "cache recovery index pointer",
+                experience_logs=[self.experience], attention_log=self.attention,
+                active_task_id="TASK-PARENT", active_checkpoint_id="CKPT-PARENT",
+                current_project_id="TEST",
+            )
+        candidate = result["experience_map"]["groups"]["current_project_scope"][0]
+        self.assertEqual(candidate["source_record_status"], "SOURCE_CHANGED_AFTER_RETRIEVAL")
+        self.assertNotIn("experience_details", candidate)
         self.assertFalse(result["writes_performed"])
 
     def test_no_attention_journal_is_reported_without_inventing_a_branch(self):
