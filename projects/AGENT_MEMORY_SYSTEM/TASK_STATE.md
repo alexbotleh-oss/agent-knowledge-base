@@ -642,3 +642,15 @@ Tests added for first pass, completed replay, and a changed source under the sam
 - `archive_temporal_index.py` indexes an export, not the canonical semantic-memory registry. The target architecture doc itself says its index contract does not mean the indexer is implemented.
 - Next bounded implementation: approval-bound, append-only semantic registry writer with hash-bound decisions, idempotency/conflict checks and crash recovery. Index generation and restore integration remain subsequent stages.
 - PR #27 remains Draft/open/unmerged; `main` unchanged.
+
+
+## Approval-bound semantic memory writer — 2026-10-16
+
+- Implemented `tools/semantic_memory_registry.py` as a separate guarded persistence stage. It accepts exactly one `memory_records` artifact whose manifest status is accepted/user_approved and whose approval evidence resolves to a separate receipt.
+- The receipt binds the exact manifest and artifact SHA-256, batch/artifact IDs, explicit approve decision, actor type, timestamp, decision-source reference and rationale. This is an integrity binding, not a signature or independent authentication of the receipt author.
+- Canonical write target is restricted to `registry/memory_records.jsonl`; default operation is dry-run. Apply uses an OS advisory lock, revalidates inputs under lock, validates the existing registry, appends a canonical envelope via fsync + atomic replacement, and keeps old revisions.
+- Exact replay is a no-op; same revision/different content or decision conflicts; new revisions must reference the current revision. Provenance is mandatory. Rejections/conflicts do not write.
+- Added approval receipt schema/example and 12 regression tests. Exact code HEAD `d9da0b6991b282bd8ddd7de25edb1fae8330e016`, CI [38851184392](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38851184392) PASS: 253 Python tests (1 skipped), 4 Node tests, write audit 100 mutation sites / 0 unclassified, memory validation PASS.
+- CI chronology preserved: runs #38851141269 and #38851163529 failed while the new persistence sites had not yet been classified in the strict write audit. Added the explicit operation contract in `tools/audit_write_contracts.py`; run #38851184392 then passed. No semantic test failures remained.
+- Next bounded stage: deterministic, versioned canonical index generation from `registry/memory_records.jsonl`, with source revision/hash, counts, correction-overlay application, atomic generation publication and stale/freshness detection. Normal session restore remains later.
+- PR #27 remains Draft/open/unmerged; `main` unchanged.
