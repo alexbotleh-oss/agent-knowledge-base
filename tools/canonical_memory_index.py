@@ -96,7 +96,9 @@ def _validate_registry(rows: list[dict]) -> list[dict]:
 
 def _load_corrections(correction_bytes: bytes | None, rows: list[dict]):
     if correction_bytes is None:
-        return {}, {}, {"path":"registry/edge_corrections.jsonl","sha256":None,"byte_count":0,"correction_count":0,"active_count":0}, "NOT_AVAILABLE_NO_CANONICAL_OVERLAY_SOURCE"
+        base_relations={ (row["memory_id"],row["revision_id"]):list(row["record"].get("relations",[])) for row in rows }
+        no_corrections={ key:[] for key in base_relations }
+        return base_relations, no_corrections, {"path":"registry/edge_corrections.jsonl","sha256":None,"byte_count":0,"correction_count":0,"active_count":0}, "NOT_AVAILABLE_NO_CANONICAL_OVERLAY_SOURCE"
     source={(row["memory_id"],row["revision_id"]):row for row in rows}
     active_relations={key:list(row["record"].get("relations",[])) for key,row in source.items()}
     applied_ids={key:[] for key in source}
