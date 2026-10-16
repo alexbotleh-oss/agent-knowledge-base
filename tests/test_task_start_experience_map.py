@@ -407,7 +407,7 @@ class TaskStartExperienceMapTests(unittest.TestCase):
         request = "cache recovery index pointer"
         before_return = build_task_start_experience_map(
             self.task, self.handoff, self.events, request,
-            experience_logs=[self.attention, self.events, self.experience],
+            experience_logs=[self.events, self.experience],
             attention_log=self.attention, active_task_id="TASK-PARENT",
             active_checkpoint_id="CKPT-PARENT", current_project_id="TEST",
         )
@@ -424,7 +424,7 @@ class TaskStartExperienceMapTests(unittest.TestCase):
 
         cycle = run_cycle(
             self.task, self.handoff, self.events, self.attention, request,
-            experience_logs=[self.attention, self.events, self.experience],
+            experience_logs=[self.events, self.experience],
             active_task_id="TASK-PARENT", active_checkpoint_id="CKPT-PARENT",
             current_project_id="TEST", task_state_paths=[self.task],
             return_turn_id="T-INTEGRATED-RETURN", parent_task_id="TASK-PARENT",
