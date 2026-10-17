@@ -9,7 +9,6 @@ from __future__ import annotations
 import argparse
 import ast
 import json
-import re
 from pathlib import Path
 from typing import Any
 
@@ -202,15 +201,10 @@ def build_audit(repo_root: Path, expected_paths: tuple[str, ...] = EXPECTED_ENTR
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo-root", type=Path, default=Path(__file__).resolve().parents[1])
-    parser.add_argument("--output", type=Path, help="optional report path; omitted means stdout only")
     args = parser.parse_args()
     report = build_audit(args.repo_root)
     payload = json.dumps(report, ensure_ascii=False, indent=2) + "\n"
-    if args.output:
-        args.output.parent.mkdir(parents=True, exist_ok=True)
-        args.output.write_text(payload, encoding="utf-8")
-    else:
-        print(payload, end="")
+    print(payload, end="")
     return 0 if report["status"] in {"COMPLETE_SCAN", "PARTIAL_SCAN"} else 2
 
 
