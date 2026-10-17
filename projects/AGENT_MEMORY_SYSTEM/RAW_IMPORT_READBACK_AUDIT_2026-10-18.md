@@ -69,3 +69,14 @@ No merge was performed and `main` was not changed. Approved semantic-memory regi
 - Exact-head CI run [#39071356427](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/39071356427) passed on `1f12c4fc116df9bafc3f1f9e3857a65f137505aa`: **502 Python tests, 1 skipped; 4 Node tests; strict write audit 162 mutation sites / 0 unclassified; memory, event-log, and project/stack validation passed.**
 - As expected, restore/task-start smoke deferred because these new source/test files are not metadata-only descendants of the currently recorded code SHA. Refresh the checkpoint to this exact code/test SHA and CI run, then rerun the smoke. The previous successful smoke remains valid for its recorded code head, but is not a smoke run on this new revision.
 - Native-export completeness, exact message-to-attachment mapping, and live ChatGPT-host invocation/writeback remain unverified.
+
+
+## Raw importer ambiguity guards — 2026-10-18
+
+- Fixed a source-loss edge case in `tools/resumable_chat_import.py`: duplicate JSON object keys are rejected rather than silently keeping only the last value during decode/re-serialization.
+- Added a second strictness guard: non-standard JSON numeric constants (`NaN`, `Infinity`, `-Infinity`) are rejected rather than staged as non-standard JSON.
+- Aligned ZIP conversation-candidate selection with the inventory audit: directory entries named `conversations.json` are not treated as conversation payloads.
+- Added `tests/test_import_edge_cases.py` covering duplicate-key rejection with zero staged rows, non-standard numeric constant rejection with zero staged rows, directory-entry filtering, and duplicate member-path agreement between inventory and importer.
+- Exact code/test HEAD `c09e5a5d72f345fc534289981c9b12d971946c74` passed CI run [#39072044539](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/39072044539): **506 Python tests, 1 skipped; 4 Node tests; strict write audit 162 mutation sites / 0 unclassified; memory/event-log/project validation passed.**
+- Restore/task-start smoke correctly deferred on that run because the checkpoint still records the prior code HEAD; this run is not a fresh smoke PASS. The next checkpoint refresh must cite this exact code SHA and CI run before the metadata-descendant smoke is accepted.
+- The source snapshot remains the byte-exact archive of record; the staged payload is decoded JSON and is not claimed to preserve whitespace/formatting byte-for-byte. Duplicate-key and non-standard-number cases now fail closed rather than silently changing semantics.
