@@ -764,3 +764,15 @@ P2 is not yet declared ready: this test mocks the final verified restore packet,
 - **Current PR chain:** #35 remains Draft/open/unmerged on #34/#27; no merge and no main edits. Exact-head CI for audit checkpoint `f4d874c7a9bc3e81c5ebe29f5609d4b1c2055acd` passed run [39016798651](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/39016798651). The correction/checkpoint commit following that checkpoint requires its own exact-head CI result.
 - **Next action:** implement and test a pre-write temporal relation validator, then define the unified task-start packet contract so approved-memory retrieval, experience candidates, applicability/frontier and attention/return can be composed without duplicating authority.
 - **Status:** audit source review expanded; relation corrected append-only; prevention and unified runtime remain unimplemented.
+
+## Active checkpoint — unified task-start cluster (2026-10-17)
+
+- **Current goal:** connect the existing memory, experience retrieval, applicability, attention, check-reuse and branch-return mechanisms into one explicit task-start path without duplicating sources of truth.
+- **Current PR:** #36, Draft/open/unmerged, branch feature/unified-task-start-cluster-20261017, stacked on #35 → #34 → #27. main unchanged.
+- **Implemented:** selected #28/#30 modules are ported into the #35 lineage; tools/agent_memory_cycle.py can invoke memory_aware_session_restore when --repository is configured and passes the same packet into task-start candidate retrieval; applicability evaluator and decision frontier run in the candidate loop; attention/check-reuse and explicit guarded parent-return remain distinct.
+- **Single-restore invariant:** the task-start path reuses the verified memory-aware packet instead of running a second independent local restore. Regression test asserts the second restore call would fail the test.
+- **Readiness semantics:** cluster_readiness is separate from legacy cycle status. Missing repository/approved-memory configuration yields PARTIAL; READY_FOR_REVIEW never authorizes planning or execution.
+- **Code checkpoint evidence:** 9f89d5f2156ac34c862875f76bfcdab046c49454 passed exact-head CI run 39018028508: 429 Python tests, 1 skipped; strict write audit 143 mutation sites / 0 unclassified. Later documentation/checkpoint changes require final-head CI verification.
+- **Known gaps:** no automatic ChatGPT session-start invocation; no callable host bridge to local turn-lifecycle adapter; remote GitHub branch/revision source discovery not implemented; external archives/connectors/device storage not in catalog; positive applicability remains fail-closed without externally pinned trusted keyring; archive transfer remains deferred.
+- **Next action:** verify final-head CI after documentation/checkpoint updates; then implement read-only GitHub branch/revision discovery preserving branch HEAD SHA and file blob SHA, access/coverage and conflicting revisions.
+- **Status:** local task-start composition is implemented and narrowly CI-tested; live ChatGPT end-to-end behavior is not confirmed.
