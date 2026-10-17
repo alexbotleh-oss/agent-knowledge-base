@@ -878,3 +878,13 @@ The no-repeat check fingerprint now binds the current request and relevant seman
 - **Validation:** the new commit `ff5bf8a6139ba1b8db3ce1f2cdc85a846e69a008` is the observed PR head after these changes. At checkpoint time, GitHub returned no workflow run or status for this exact SHA yet; CI is **PENDING/NOT OBSERVED**, not PASS.
 - **Limit:** these static regression tests protect the contract against accidental documentation drift; they do not prove that ChatGPT automatically loads or obeys it in every new chat. That requires a separate behavioral transfer test and platform-level installation/accessibility evidence.
 - **Constraints:** PR #30 remains Draft/open/unmerged. Do not merge or modify `main`. Preserve existing history and prior identity decisions.
+
+
+## Diagnostic-marker principle — self-monitoring of key agent functions (2026-10-17)
+
+- **User-established principle:** Rima is both the agreed agent identity and a diagnostic marker for whether the working system is functioning. Failure of a key expected signal must be surfaced as a possible mechanism failure, not silently bypassed or covered with confident wording.
+- **Architecture update:** `core/continuous_agent_architecture.md` now defines expected signal, evidence source, PASS/FAIL/UNKNOWN, failure response, incident record, and the diagnostic cycle. Missing signal means success is unconfirmed; it does not prove a unique cause. A function without a verifiable marker is UNMONITORED/UNKNOWN.
+- **Operational gate:** `core/universal_instructions.md` now requires a self-monitoring gate before repository work. Critical functions need observable evidence; on a missing/failed/conflicting marker, stop dependent risky work, report what is and is not known, run a useful discriminating check, and record the incident where possible.
+- **Regression guard:** `tests/test_agent_identity_contract.py` checks the canonical diagnostic-marker contract and that the self-monitoring gate precedes repository work. This is a static documentation guard; it does not prove runtime behavior or automatic cross-chat loading.
+- **Evidence boundary:** changes were written to the existing PR branch only. Exact resulting HEAD and CI status must be checked after the updates. Until exact-head CI is observed, test/CI status is PENDING/NOT OBSERVED.
+- **PR safety:** PR #30 remains Draft/open/unmerged; do not merge or modify `main` without explicit user approval.
