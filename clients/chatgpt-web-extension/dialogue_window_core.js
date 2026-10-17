@@ -84,7 +84,7 @@
       current_chat_pending_turns: currentPending,
       source_scope: "CAPTURED_EXTENSION_LEDGER_ONLY",
       project_assignment: "UNKNOWN_NOT_INFERRED_FROM_CONVERSATION_ID",
-      attachment_capture: "NOT_IMPLEMENTED_BY_CURRENT_EXTENSION",
+      attachment_capture: "MANUAL_LIBRARY_IMPORT_ONLY_AUTOMATIC_CHATGPT_UPLOAD_CAPTURE_NOT_IMPLEMENTED",
     };
   }
 
