@@ -50,7 +50,7 @@ class ChatGPTWebExtensionContractTests(unittest.TestCase):
         self.assertIn('action: "LINK_ATTACHMENT"', popup)
         self.assertIn('case "LINK_ATTACHMENT"', background)
         self.assertIn("manual second selection", docs)
-        self.assertIn("never logs", (ROOT / "tools" / "project_attachment_adapter.py").read_text(encoding="utf-8"))
+        self.assertIn("Never log file bytes", (ROOT / "tools" / "project_attachment_adapter.py").read_text(encoding="utf-8"))
 
     def test_docs_state_live_browser_validation_is_pending(self):
         docs = (EXT / "README.md").read_text(encoding="utf-8")
