@@ -33,7 +33,11 @@ Similarity may suggest where to look; it cannot establish that two records are t
 
 \`tools/relocation_aware_discovery.py\` is a read-only, bounded local filesystem discovery primitive. It accepts explicit search roots, checks the expected path first, searches for a stable identity/hash before using normalized text, reports incomplete coverage, and performs no writes or relocation.
 
-It does **not** yet query GitHub branches, external connectors, device storage, or arbitrary archives automatically. It is not automatically invoked by ChatGPT merely because the file exists in this repository. Runtime integration must explicitly call it or compose equivalent retrieval across those sources. The existing semantic-memory restore also returns \`PARTIAL_NO_MATCH\` for a zero-result partial index; that must trigger this discovery sequence before a broader absence claim is made.
+It is called by \`tools/memory_aware_session_restore.py\` when approved semantic retrieval returns \`PARTIAL_NO_MATCH\`, using available task/context IDs and/or a text query. Its results remain separate from approved memory and never promote a candidate automatically.
+
+For source ordering across multiple known local locations, \`tools/adaptive_source_search.py\` adds capability-aware tiers: known-compatible sources first, sources with unknown metadata second, and known-conflicting sources only as an emergency fallback. It keeps expanding after text-only candidates and stops early only on verified identity/hash evidence.
+
+Neither tool is automatically invoked by ChatGPT merely because the files exist in the repository. The memory-aware restore command must actually run. Remote GitHub branches, connected apps, device storage, and arbitrary external archives still require dedicated source adapters and runtime integration.
 
 ## Acceptance tests
 
