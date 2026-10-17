@@ -752,3 +752,16 @@ Important remaining gap: real ingestion + promotion is tested, but the same test
 - Privacy: no raw user chat text or attachment payloads added to the public repo.
 - Next action: read back exact candidate files, open a Draft PR targeting `integration/memory-core-clean-20261015`, inspect exact-head CI, repair failures, then update checkpoint. PR #27 and PR #30 remain Draft/open/unmerged; `main` unchanged.
 - Completeness: PARTIAL.
+
+
+## Handoff update — exact-head CI PASS (2026-10-17)
+
+- Active priority: rolling dialogue memory, references-only attachment windows and private project attachment library.
+- Added `tools/project_attachment_library.py`; it stores an incoming file once under a project-scoped content-addressed object path, records a stable library reference and separate conversation/message provenance. Private files remain outside Git. The library tool must be explicitly called with a file path; current ChatGPT upload capture is not automatic.
+- Added `tests/test_project_attachment_library.py`; dialogue tests are in `tests/test_dialogue_window.py`.
+- Exact code HEAD `1f1a06a5402b3983c775a9bb8e141fbda3025aca`; exact-head CI [39001405812](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/39001405812) PASS: 310 Python tests, strict write audit 136/0 unclassified, memory validation PASS, project validation PASS.
+- Failure chronology: earlier CI failed because the new library writer had not yet been classified in the strict mutation audit. The contract was added and the later exact-head run passed.
+- PR #31 is Draft/open/unmerged and stacked on `integration/memory-core-clean-20261015`; no merge or main changes. PR #27/#30 remain open/unmerged.
+- Not yet implemented/verified: automatic ChatGPT upload capture, platform project-library integration, trusted client invocation before model work, persistent cross-device journal access and end-to-end restore in a new chat.
+- Next: after this metadata update, verify the new branch HEAD and its CI; then design/implement the smallest trusted client adapter path for receiving a message + attachment, storing its library ref, appending the dialogue ledger, and restoring both windows at chat start.
+- Completeness: PARTIAL.
