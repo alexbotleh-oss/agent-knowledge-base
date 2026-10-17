@@ -551,5 +551,27 @@ class AgentMemoryCycleTests(unittest.TestCase):
         )
         self.assertFalse(result["cluster_readiness"]["planning_authorized"])
 
+    def test_attempt_failure_routes_unified_cycle_to_deep_analysis_without_writes(self):
+        result = run_cycle(
+            self.task, self.handoff, self.project_events, self.attention,
+            "restore task context", experience_logs=[self.project_events, self.experience],
+            lesson_logs=[], current_project_id="TEST", attempt_result_status="FAIL",
+        )
+        route = result["attempt_outcome_route"]
+        self.assertEqual(route["mode"], "DEEP_ANALYSIS_EXTERNAL_SEARCH")
+        self.assertTrue(route["external_search_required_now"])
+        self.assertFalse(route["execution_performed"])
+        self.assertFalse(result["writes_performed"])
+
+    def test_verified_attempt_routes_unified_cycle_to_experience_capture(self):
+        result = run_cycle(
+            self.task, self.handoff, self.project_events, self.attention,
+            "restore task context", experience_logs=[self.project_events, self.experience],
+            lesson_logs=[], current_project_id="TEST", attempt_result_status="VERIFIED_SUCCESS",
+        )
+        self.assertEqual(result["attempt_outcome_route"]["mode"], "CAPTURE_CONFIRMED_EXPERIENCE")
+        self.assertFalse(result["attempt_outcome_route"]["writes_performed"])
+        self.assertFalse(result["writes_performed"])
+
 if __name__ == "__main__":
     unittest.main()

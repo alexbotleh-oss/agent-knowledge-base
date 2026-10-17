@@ -63,6 +63,10 @@
 - `tools/generate_report.sh` — отчёт о проверках.
 - `.github/workflows/validate.yml` — CI.
 
+## Проверенный исполнитель действия
+
+- [Практический runbook](docs/verified_task_executor.md) для `tools/verified_task_executor.py`: синтетический сквозной тест, dry-run, явное выполнение и проверка повторного извлечения сохранённого результата. Исполнитель не является песочницей и не запускается автоматически из ChatGPT.
+
 ## Запуск проверок
 ```bash
 chmod +x core/*.sh tools/*.sh stacks/*/*.sh
