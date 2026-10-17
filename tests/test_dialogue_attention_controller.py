@@ -177,6 +177,23 @@ class DialogueAttentionControllerTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, "missing turn/task/checkpoint identifier"):
                     controller.project_state([event])
 
+    def test_deferred_idea_requires_nonempty_turn_task_and_checkpoint(self):
+        malformed = (
+            {"turn_id": "", "active_task_id": "TASK-A", "active_checkpoint_id": "CKPT-A"},
+            {"turn_id": "T-IDEA-NO-TASK", "active_task_id": "", "active_checkpoint_id": "CKPT-A"},
+            {"turn_id": "T-IDEA-NO-CHECKPOINT", "active_task_id": "TASK-A", "active_checkpoint_id": ""},
+            {"turn_id": None, "active_task_id": "TASK-A", "active_checkpoint_id": "CKPT-A"},
+        )
+        for index, attention in enumerate(malformed):
+            event = {
+                "event_id": f"EVT-MALFORMED-IDEA-{index}",
+                "type": "attention_idea_deferred",
+                "attention": {**attention, "classification": "DEFERRED_IDEA"},
+            }
+            with self.subTest(attention=attention):
+                with self.assertRaisesRegex(ValueError, "missing turn/task/checkpoint identifier"):
+                    controller.project_state([event])
+
     def test_return_replay_rejects_child_and_checkpoint_mismatch(self):
         opened = {
             "event_id": "EVT-OPEN-RETURN-CHECK",
