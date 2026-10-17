@@ -738,3 +738,16 @@ P2 is not yet declared ready: this test mocks the final verified restore packet,
 - **Privacy:** no raw conversation text or attachment bytes from the user's uploads were copied into the public repository; only code, protocol text and synthetic tests were added.
 - **Next action:** read back the exact candidate HEAD and changed files, open a Draft PR targeting the current memory-core integration branch, inspect exact-head CI, correct any test/validation failures, then update this checkpoint with the observed result. Keep PR #27 and #30 open/unmerged and do not modify `main`.
 - **Status:** PARTIAL / active.
+
+
+## Checkpoint update — attachment library and exact-head validation (2026-10-17)
+
+- Added `tools/project_attachment_library.py`: explicit file intake to a private user-local project library, project-scoped content-addressed object storage, SHA-256 verification, stable `project-library://...` references, separate source-occurrence records, OS advisory locking, fsynced append-only registries, idempotent replay and fail-closed corruption/conflict handling. Raw file bytes remain outside Git.
+- Added `tests/test_project_attachment_library.py` covering first registration/replay, content-object reuse across messages, project isolation, references-only registry, invalid source/project and corrupted registry.
+- The first strict write-audit run failed because the new library tool had not yet been classified (9 unclassified mutation sites). Added its explicit contract in `tools/audit_write_contracts.py`; the failure is retained as development history, not treated as a passing check.
+- **Verified exact code HEAD:** `1f1a06a5402b3983c775a9bb8e141fbda3025aca`.
+- **Exact-head CI:** [run 39001405812](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/39001405812) PASS. Python unittest suite: 310 tests passed; strict write audit: 136 mutation sites / 0 unclassified; memory validation PASS; project/stack validation PASS.
+- The run included the new 8 dialogue-window tests and 6 attachment-library tests, all PASS.
+- The result verifies repository code on this candidate branch. It does not verify automatic capture of ChatGPT uploads, integration with the active platform's project library, mobile/browser synchronization or real new-chat restoration.
+- Current branch includes code, tests and docs only; no user's raw conversation or attachment payloads were committed. PR #31 remains Draft/open/unmerged and is stacked on PR #27's integration branch; PR #27/#30 and `main` remain unchanged.
+- **Next action:** update HANDOFF/TASK_STATE, then recheck exact latest HEAD and CI because metadata writes create a new revision. After that, keep the active priority on client integration and actual new-chat recovery rather than returning prematurely to unrelated controller/importer work.
