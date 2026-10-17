@@ -139,6 +139,9 @@ def project_state(events: list[dict[str, Any]]) -> dict[str, Any]:
             turn_id = data.get("turn_id")
             if not isinstance(turn_id, str):
                 raise ValueError(f"attention event {event['event_id']} missing turn_id")
+            previous = turn_records.get(turn_id)
+            if previous is not None and _canonical(previous) != _canonical(data):
+                raise ValueError(f"conflicting turn_id {turn_id} at event {event['event_id']}")
             turn_records[turn_id] = data
             # Outside a suspended branch, the latest caller-observed task is the
             # current projection. While a branch is open, its child remains active
@@ -174,6 +177,9 @@ def project_state(events: list[dict[str, Any]]) -> dict[str, Any]:
         elif kind == "attention_idea_deferred":
             turn_id = data.get("turn_id")
             if isinstance(turn_id, str):
+                previous = turn_records.get(turn_id)
+                if previous is not None and _canonical(previous) != _canonical(data):
+                    raise ValueError(f"conflicting turn_id {turn_id} at event {event['event_id']}")
                 turn_records[turn_id] = data
             if not stack:
                 active = {
