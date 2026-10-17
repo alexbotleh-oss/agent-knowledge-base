@@ -168,7 +168,7 @@ Until the bridge is available, the agent must use the GitHub connector for the o
 2. Reconcile contracts first: PR #33 bootstrap/identity + PR #32 writeback + current #27 runtime protocol. Resolve edits to universal_instructions.md, event IDs and journal ownership; do not create duplicate authoritative logs.
 3. Choose one task-start orchestrator: use agent_memory_cycle.py from PR #30 as a candidate, not an automatic winner. Compare its actual call graph with memory_aware_session_restore.py and minimal_agent_loop.py; ensure approved-memory retrieval, candidate retrieval, applicability, attention state and trust gates are all reached exactly once.
 4. Integrate the import front-end: selectively bring resumable_archive_pipeline.py and its tests from PR #31 only after matching interfaces with the current memory_pipeline_coordinator.py. Keep the browser extension and attachment integration out of scope.
-5. Finish retrieval routing: add the remote GitHub source adapter and pass real source-type/capability constraints into adaptive search.
+5. Finish retrieval routing: wire the bounded remote GitHub adapter into the partial-memory fallback, preserve branch/blob provenance, and test stale refs and partial access. PR #37 now implements this bounded step.
 6. Define one host/runtime bridge for this ChatGPT + GitHub operating method. Do not assume a local HTTP server or instructions are callable from the chat.
 7. Run cross-path end-to-end tests on the final integrated head: source import → approved memory/index → restore; task start → experience candidates → applicability/trust gate → decision frontier; side branch → accepted result → parent return; turn receipt → result writeback → restart recovery; missing expected source → alternate branch discovery.
 8. Only then return to production archive completeness. Preserve the raw archive and prior findings; don't repeat already completed source-report reconciliation without a new evidence-based reason.
@@ -194,7 +194,7 @@ Direct inspection of `projects/AGENT_MEMORY_SYSTEM/events.jsonl` found that `EVT
 - **System implication:** this is direct evidence that a stored lesson did not reliably influence the next write. A pre-write temporal-relation validator and regression test are still missing. The current architecture audit can identify imports and declared paths, but does not check semantic consistency of event relations.
 - **Status:** source discrepancy confirmed and corrected append-only; prevention is not implemented.
 
-## Current status after PR #36 composition
+## Previous checkpoint after PR #36 composition
 
 - Implemented and narrowly tested: PR #36 ports the applicable #28/#30 modules into the #35 lineage; one explicit `agent_memory_cycle.py` entry point now composes verified task restore + approved semantic-memory retrieval + event/lesson candidate retrieval + applicability/frontier + attention/check-reuse + optional guarded parent return.
 - Single-restore contract: the memory-aware packet is passed through to the candidate loop; a regression test rejects a second call to the local restore builder.
@@ -202,3 +202,13 @@ Direct inspection of `projects/AGENT_MEMORY_SYSTEM/events.jsonl` found that `EVT
 - Exact code checkpoint `9f89d5f2156ac34c862875f76bfcdab046c49454` passed CI run 39018028508: 429 Python tests, 1 skipped; strict write audit 143 mutation sites / 0 unclassified. Final documentation/checkpoint HEAD still requires its own exact-head CI check.
 - Still not one production runtime: ChatGPT does not automatically invoke this CLI; trusted local host/writeback bridge is absent; remote branch/commit search and external source adapters are not implemented; trusted applicability remains fail-closed without external pinned keyring configuration.
 - PR #36 is Draft/open/unmerged, stacked on #35/#34/#27. main unchanged. Browser-extension integration and large archive transfer remain deferred.
+
+## Current status after PR #37 remote source integration
+
+- **Remote adapter implemented:** tools/github_source_discovery.py searches expected paths across explicit branch/commit refs, then known alternate paths. It records exact commit SHA, Git blob SHA, content SHA-256, size and identity evidence; it rechecks branch stability after a verified match.
+- **Catalog added:** registry/remote_source_catalog.json lists known refs and source paths, including the exact blob for core/agent_bootstrap.md previously located in PR #33. The catalog is a bounded allowlist, not a claim that every branch or external source is covered.
+- **Connected to recovery:** after a PARTIAL_NO_MATCH, memory_aware_session_restore first performs local capability-aware discovery. If no verified local identity is found and repository access is configured, it then searches the remote catalog. Remote matches/candidates are returned as evidence only; approved semantic memory status is not changed and no relocation/promotion occurs.
+- **Tests:** remote exact match, alternate branch/path, text-only false positive, access denial, branch movement, invalid input, and restore integration without promotion are covered.
+- **Code CI checkpoint:** PR #37 adapter/integration code checkpoint 0ada1a3db718ad09a050206cd1767681507bc1fe has a workflow run in progress at the time this note was drafted; fetch live exact-head CI before claiming final success. Prior standalone adapter checkpoint 9d2275ccf6e78b65742fd84f8aa7e12f972a57d5 passed run 39018402645 (435 Python tests, 1 skipped; write audit 143/0).
+- **Still missing:** remote catalog does not enumerate all branches or search arbitrary paths/history; external archive/connector/device adapters are absent; ChatGPT does not automatically invoke the local CLI; local host writeback bridge is not connected; positive applicability remains fail-closed without external trusted-keyring configuration.
+- **Branch safety:** PR #37 Draft/open/unmerged, stacked on #36 → #35 → #34 → #27. main unchanged. Archive transfer and browser-extension work remain deferred.
