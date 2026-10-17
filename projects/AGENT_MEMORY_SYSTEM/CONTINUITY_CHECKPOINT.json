@@ -125,7 +125,7 @@
       "status": "NOT_IMPLEMENTED_OR_NOT_CONNECTED"
     }
   ],
-  "next_action": "Continue the full PR #1–#38 overlap/contract audit, prioritizing parallel branches with duplicate IDs and duplicated project-memory transfers. Preserve the current successful restore/task-start smoke. Keep approved semantic memory UNAVAILABLE/PARTIAL until an actual approved registry record exists; do not restart the large archive transfer or claim automatic ChatGPT host execution.",
+  "next_action": "Continue the PR #1–#38 overlap and contract audit. Prioritize reconciling duplicate/parallel memory-transfer branches and the current-vs-historical status text in PROJECT_STATE/audit/PR description in a planned code-head revision. After exact-head CI, refresh the checkpoint and rerun the branch-tip smoke. Keep approved semantic memory UNAVAILABLE/PARTIAL until an actual approved record exists; do not restart the deferred archive transfer or claim automatic ChatGPT-host execution.",
   "constraints": [
     "Do not merge PR #27 or modify main without explicit user approval.",
     "Do not delete or rewrite source-history exports without a separate explicit decision.",
@@ -242,6 +242,7 @@
     "Do not merge PR #27 or change main; PR remains Draft/open/unmerged.",
     "Production archive acceptance and completeness audit remain separate; full archive/chat coverage is not established.",
     "Production archive acceptance and completeness audit: synthetic provenance resolution passed, but production archive coverage and full chat-history completeness are not established.",
-    "Canonical approved semantic-memory registry is absent; task-start currently proceeds in PARTIAL mode. Keep archive transfer deferred and use the existing approval-bound promotion path when explicitly resumed."
+    "Canonical approved semantic-memory registry is absent; task-start currently proceeds in PARTIAL mode. Keep archive transfer deferred and use the existing approval-bound promotion path when explicitly resumed.",
+    "PROJECT_STATE.md, the dated cluster audit and PR #38 description still contain historical pre-smoke status text. Treat CONTINUITY_CHECKPOINT.json plus the latest TASK_STATE/HANDOFF sections as current. Reconcile those summary surfaces in one planned non-metadata revision, then run exact-head CI, refresh the checkpoint and rerun the live smoke; do not weaken the revision gate."
   ]
 }
