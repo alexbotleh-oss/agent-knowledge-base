@@ -25,10 +25,10 @@ Continue the resumable raw-import work without repeating the PR #38/#39 integrat
 ## Verification status
 
 - Code-under-test HEAD: `05058571f2e2ed90e2af3d5ef8a581f43f818e4f`.
-- Exact-head GitHub Actions workflow runs: **NOT VISIBLE** when checked. The tests have not been reported as passing; do not label this change CI-verified.
+- First exact-head workflow run #39070052586 for code-under-test SHA `05058571f2e2ed90e2af3d5ef8a581f43f818e4f` **FAILED before unit tests ran**: the strict write-contract audit classified four SQLite `.execute()` calls as `UNCLASSIFIED`. The calls are SELECT-only against a database opened with `mode=ro`; the audit's contract registry had no entry for this new tool. Added an explicit read-only contract entry in `tools/audit_write_contracts.py` at follow-up code HEAD `2fa702cdbc551e0b3760a3d4cb14db0d7ddfc384`. Exact-head CI for that follow-up SHA is **NOT YET VISIBLE**; tests remain unverified.
 - The source files were read back from GitHub after writes, so persistence of the implementation and tests is verified.
 - No full native ChatGPT export was available in this turn. Synthetic fixtures cannot establish real archive completeness, message chronology, or attachment mapping.
 
 ## Next action
 
-Obtain exact-head CI for the code-under-test SHA, inspect any failure, and fix it before acceptance. After that, run the importer and read-back verifier against the actual native ChatGPT export when its bytes are available. Keep semantic extraction and memory promotion as later stages. Do not merge PR #39 or change `main` without explicit user authorization.
+Obtain exact-head CI for `2fa702cdbc551e0b3760a3d4cb14db0d7ddfc384`, inspect whether the strict audit now passes and whether the seven new tests pass, then fix any remaining failures before acceptance. After that, run the importer and read-back verifier against the actual native ChatGPT export when its bytes are available. Keep semantic extraction and memory promotion as later stages. Do not merge PR #39 or change `main` without explicit user authorization.
