@@ -864,3 +864,11 @@ Important remaining gap: real ingestion + promotion is tested, but the same test
 - The outcome-capture lock mismatch is fixed: both success and failure event appends now use the same exclusive `events.jsonl.lock` as the other canonical event writers. Regression test `test_capture_paths_share_exclusive_canonical_journal_lock` passes.
 - The workflow now runs the temporal-log audit and task-start smoke for either integration branch, reads task/checkpoint IDs from `CONTINUITY_CHECKPOINT.json`, and resolves the branch from `github.head_ref` rather than a hardcoded PR #38 ref.
 - The exact-head CI correctly deferred smoke until this integrated code SHA is recorded in the checkpoint. Next: verify the metadata-only descendant restore/task-start smoke. Readiness remains PARTIAL because approved semantic memory is unavailable; automatic ChatGPT-host invocation and production archive completeness remain unverified.
+
+
+## Current return point — integrated adaptive task-start contract repaired (2026-10-17)
+
+- Integrated branch remains PR #39 stacked on PR #38; both PRs are Draft/open/unmerged and `main` is unchanged.
+- First integrated smoke found a real TypeError: `build_memory_aware_packet()` was passed adaptive routing parameters that belong to `build_task_start_experience_map()`. Corrected the call boundary and added a regression test.
+- Exact code HEAD `5ffedd908c1fdda2ed32d83c5ba316b94ccea86e` passed CI run `39069265060`: 479 Python tests (1 skipped), 4 Node tests, write audit 158 mutation sites / 0 unclassified, whole-log temporal audit PASS, memory validation PASS and project/stack validation PASS.
+- This exact-head run deferred smoke until the checkpoint is refreshed to the new SHA/run. Next: refresh and verify `VERIFIED_SESSION_RESTORE_PASS` plus `TASK_START_CLUSTER_PASS`; expected readiness remains PARTIAL while approved semantic memory is unavailable.

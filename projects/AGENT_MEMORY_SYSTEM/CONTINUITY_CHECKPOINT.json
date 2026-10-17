@@ -125,7 +125,7 @@
       "status": "NOT_IMPLEMENTED_OR_NOT_CONNECTED"
     }
   ],
-  "next_action": "Refresh evidence on the metadata-only descendant by running verified restore and agent_memory_cycle. If the smoke passes, record its run and final readiness. Then finish the broader system acceptance plan: approved semantic-memory availability, native archive import/read-back, and a real host invocation/writeback bridge remain open. Do not merge PRs or change main.",
+  "next_action": "Refresh the checkpoint to this exact code HEAD and CI run, then verify restore/task-start on the metadata-only descendant. If smoke passes, record the observed result and retain PARTIAL readiness while approved semantic memory is unavailable. Next engineering priorities after that: establish an approved memory record/registry through the existing approval path, then native archive import/read-back and a supported host invocation/writeback bridge. Do not merge PRs or change main.",
   "constraints": [
     "Do not merge PR #27 or modify main without explicit user approval.",
     "Do not delete or rewrite source-history exports without a separate explicit decision.",
@@ -137,11 +137,11 @@
   "status": "INTEGRATED_PR38_PR39_EXACT_HEAD_CI_PASS_SMOKE_PENDING",
   "checkpoint_semantics": "This is a durable task checkpoint committed to the integration branch. It is not an automatic ChatGPT autosave or proof that an undelivered response was saved.",
   "repository_state": {
-    "last_verified_code_head": "9d924ba172a306cc7f221f065367582daf9fe91e",
-    "exact_head_ci_run_id": 39069110273,
-    "exact_head_ci_url": "https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/39069110273",
+    "last_verified_code_head": "5ffedd908c1fdda2ed32d83c5ba316b94ccea86e",
+    "exact_head_ci_run_id": 39069265060,
+    "exact_head_ci_url": "https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/39069265060",
     "exact_head_ci_conclusion": "success",
-    "python_tests": 478,
+    "python_tests": 479,
     "python_skipped": 1,
     "node_tests": 4,
     "write_audit_mutation_sites": 158,
@@ -151,7 +151,7 @@
     "semantic_memory_registry_tests": 12,
     "canonical_index_tests": 10,
     "memory_aware_restore_tests": 9,
-    "note": "Integrated code HEAD 9d924ba172a306cc7f221f065367582daf9fe91e passed exact-head CI run 39069110273: 478 Python tests (1 skipped), 4 Node tests, strict write audit 158 mutation sites / 0 unclassified, canonical temporal event-log audit PASS, memory validation PASS and project/stack validation PASS. The workflow correctly deferred task-start smoke because this exact code SHA was not yet recorded in the checkpoint. The next metadata-only commit records this SHA/run; the following CI must verify restore/task-start against the integrated branch.",
+    "note": "Integrated code HEAD 5ffedd908c1fdda2ed32d83c5ba316b94ccea86e passed exact-head CI run 39069265060: 479 Python tests (1 skipped), 4 Node tests, strict write audit 158 mutation sites / 0 unclassified, whole-log temporal relation audit PASS, memory validation PASS and project/stack validation PASS. The prior integrated smoke failure exposed a real API mismatch: adaptive route parameters were passed to build_memory_aware_packet although they belong to build_task_start_experience_map. The call was corrected and regression test test_adaptive_route_inputs_are_forwarded_to_task_start_not_memory_restore passed. This run deferred smoke because the checkpoint still referenced pre-fix code; refresh checkpoint then rerun smoke.",
     "edge_correction_registry_tests": 8,
     "correction_index_integration_tests": 2,
     "extension_js_syntax": "PASS_STATIC_ONLY",
@@ -159,7 +159,7 @@
     "live_restore_smoke_run_id": null,
     "live_restore_smoke_url": null,
     "live_restore_smoke_conclusion": null,
-    "live_restore_status": "NOT_RUN_FOR_INTEGRATED_CODE",
+    "live_restore_status": "NOT_RUN_FOR_CURRENT_CODE_HEAD",
     "task_restore_status": "NOT_RUN",
     "task_start_status": "NOT_RUN",
     "cluster_readiness": "UNKNOWN",
@@ -183,10 +183,10 @@
   },
   "revision_semantics": {
     "source_code_checkpoint": "Historical milestone retained in the original source_code_checkpoint object; it is not the current code HEAD.",
-    "latest_verified_code_head": "Integrated code HEAD 9d924ba172a306cc7f221f065367582daf9fe91e passed exact-head CI run 39069110273. Whole-log temporal validation and repository checks passed; restore/task-start smoke was explicitly deferred pending checkpoint refresh.",
+    "latest_verified_code_head": "Integrated code HEAD 5ffedd908c1fdda2ed32d83c5ba316b94ccea86e passed exact-head CI run 39069265060: 479 Python tests (1 skipped), 4 Node tests, strict write audit 158/0, whole-log temporal audit PASS, memory validation PASS and project/stack validation PASS. The adaptive-argument call-contract defect found by the first integrated smoke was fixed and covered by a regression test. Restore/task-start smoke is pending checkpoint refresh.",
     "metadata_revision": "The Git commit containing the current checkpoint/task/handoff/event metadata is authoritative for metadata revision; it is intentionally not embedded as a self-referential SHA.",
     "chronology_rule": "Historical source checkpoint, previous verified code states, current code SHA/CI and subsequent metadata commit remain separate facts.",
-    "live_restore_verification": "NOT RUN for integrated code HEAD 9d924ba172a306cc7f221f065367582daf9fe91e. The exact-head CI passed, but the workflow deferred smoke because the checkpoint referred to pre-integration code. Refresh the checkpoint with this exact SHA/run, then verify the metadata-only descendant."
+    "live_restore_verification": "NOT RUN for integrated code HEAD 5ffedd908c1fdda2ed32d83c5ba316b94ccea86e. CI run 39069265060 passed but deferred smoke because the checkpoint still referred to pre-fix code. Refresh checkpoint with this exact SHA/run, then verify restore/task-start on the metadata-only descendant."
   },
   "prior_verified_code_states": [
     {

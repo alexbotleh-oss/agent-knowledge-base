@@ -343,3 +343,13 @@ Scope is the canonical project journal `projects/AGENT_MEMORY_SYSTEM/events.json
 - Workflow conditions now cover both branch names, the restore target ref comes from `github.head_ref`, and task/checkpoint IDs are read from the checkpoint file. This removes the hardcoded PR #38 ref and stale checkpoint ID.
 - Smoke was explicitly deferred in run `39069110273` until the integrated SHA/run is recorded. Do not mark integrated restore/task-start PASS until the subsequent metadata-only run passes.
 - The earlier writer table's lock mismatch row is historical and superseded by this correction. Approved semantic memory remains UNAVAILABLE; archive completeness and actual ChatGPT-host invocation remain open.
+
+
+## Integrated task-start API mismatch correction — 2026-10-17
+
+- Integrated smoke run `39069186619` exposed `TypeError: build_memory_aware_packet() got an unexpected keyword argument 'prior_failed_attempts'`.
+- Root cause: adaptive routing controls were sent to the memory-retrieval/restore function instead of the task-start function that owns them.
+- Correction: `agent_memory_cycle.py` now passes `prior_failed_attempts` and `risk_level` to `build_task_start_experience_map`; the memory restore call no longer receives those fields.
+- Regression test `test_adaptive_route_inputs_are_forwarded_to_task_start_not_memory_restore` passes in exact-head CI run `39069265060`.
+- Exact integrated code HEAD `5ffedd908c1fdda2ed32d83c5ba316b94ccea86e`: 479 Python tests (1 skipped), 4 Node tests, write audit 158/0, whole-log temporal audit PASS, memory validation PASS and project/stack validation PASS.
+- Restore/task-start smoke was deferred because checkpoint evidence still pointed to the pre-fix SHA. Update checkpoint and run the metadata-only smoke before marking the integrated path PASS.

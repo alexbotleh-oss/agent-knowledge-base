@@ -863,3 +863,12 @@ P2 is not yet declared ready: this test mocks the final verified restore packet,
 - **Canonical project event writers now share one lock contract:** branch result/acknowledgement, check reuse, dialogue attention, and verified-outcome/failure capture all use the same exclusive `events.jsonl.lock` protocol. PR #39 added a regression test that proves outcome capture refuses writes while that lock exists.
 - **Runtime smoke status:** intentionally deferred in this exact-head run because the checkpoint still referenced pre-integration code. A metadata-only checkpoint refresh is the next step; do not report integrated restore/task-start PASS until the subsequent run emits `VERIFIED_SESSION_RESTORE_PASS` and `TASK_START_CLUSTER_PASS`.
 - **Still partial:** approved semantic-memory registry/records are unavailable; cluster readiness cannot exceed PARTIAL. Native archive completeness and actual ChatGPT host invocation/writeback remain unverified.
+
+
+## Integrated smoke defect fixed — exact-head CI (2026-10-17)
+
+- The first integrated smoke on `f5acba6dfcf7a39c2e36d516cde3e9a45d71c4a9` exposed a real contract mismatch: `agent_memory_cycle.py` forwarded `prior_failed_attempts` and `risk_level` to `build_memory_aware_packet()`, whose API does not accept adaptive routing parameters.
+- Fixed in `tools/agent_memory_cycle.py`: memory restore receives only memory-retrieval arguments; adaptive route inputs are passed to `build_task_start_experience_map()`, which owns that contract.
+- Added regression test `test_adaptive_route_inputs_are_forwarded_to_task_start_not_memory_restore`.
+- Integrated exact code HEAD `5ffedd908c1fdda2ed32d83c5ba316b94ccea86e` passed CI run `39069265060`: 479 Python tests (1 skipped), 4 Node tests, write audit 158/0, whole-log temporal audit PASS, memory validation PASS, project/stack validation PASS.
+- Smoke was deferred in this run because the checkpoint still referenced pre-fix code. Next step is checkpoint refresh and a fresh restore/task-start smoke. Approved semantic memory remains unavailable, so readiness cannot exceed PARTIAL.

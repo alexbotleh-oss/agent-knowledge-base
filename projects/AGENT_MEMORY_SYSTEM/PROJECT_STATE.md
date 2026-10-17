@@ -39,3 +39,7 @@
 
 - **Integrated branch checkpoint (2026-10-17):** PR #39 is stacked on PR #38 through merge commit `9d924ba172a306cc7f221f065367582daf9fe91e`; no PR merge or `main` change. Exact-head CI run `39069110273` passed 478 Python tests (1 skipped), 4 Node tests, write audit 158/0, whole-log temporal validation, memory validation and project/stack validation.
 - **Remaining readiness boundary:** restore/task-start smoke must be rerun after the checkpoint refresh; approved semantic memory is still unavailable. Native archive completeness and automatic ChatGPT-host invocation/writeback remain unverified.
+
+
+- **Latest integrated code checkpoint (2026-10-17):** `5ffedd908c1fdda2ed32d83c5ba316b94ccea86e` passed exact-head CI run `39069265060`: 479 Python tests (1 skipped), 4 Node tests, write audit 158/0, whole-log temporal audit PASS, memory validation PASS and project/stack validation PASS.
+- A live task-start smoke exposed and then motivated a fix to the adaptive-parameter call contract; regression test now passes. Smoke on the final code SHA is pending checkpoint refresh. Approved semantic memory remains unavailable.
