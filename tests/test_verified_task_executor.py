@@ -216,7 +216,16 @@ class VerifiedTaskExecutorTests(unittest.TestCase):
         self.assertTrue(all(check["passed"] for check in result["acceptance_checks"]))
         artifact = json.loads((workspace / "artifacts" / "real-source-check.json").read_text(encoding="utf-8"))
         self.assertEqual(artifact["basis_event_id"], source_event_id)
-        self.assertIn(source_event_id, result["capture"]["related_event_ids"])
+        captured_records = [
+            json.loads(line)
+            for line in event_log.read_text(encoding="utf-8").splitlines()
+        ]
+        captured_event = next(
+            item for item in captured_records
+            if item.get("event_id") == result["capture"]["event_id"]
+        )
+        self.assertIn(source_event_id, captured_event["related_event_ids"])
+        self.assertEqual(captured_event["status"], "observed")
         # The real source log is copied for retrieval and remains byte-identical.
         self.assertEqual(experience_log.read_bytes(), source_events.read_bytes())
         self.assertFalse(result["semantic_memory_promoted"])
