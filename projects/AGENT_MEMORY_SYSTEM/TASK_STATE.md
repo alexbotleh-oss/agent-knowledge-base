@@ -833,3 +833,11 @@ P2 is not yet declared ready: this test mocks the final verified restore packet,
 - **Текущий следующий шаг:** Повторить live restore/task-start smoke после синхронизации checkpoint; подтвердить результат READY_FOR_REVIEW или PARTIAL без блокировки, затем зафиксировать фактический результат.
 - **Блокеры / решение пользователя:** Не изменять main, не объединять и не закрывать PR, не создавать новые инструменты или PR без доказанной необходимости; архив и браузерное расширение остаются отложенными.
 - **Последнее событие:** Smoke run 39023599367 подтвердил VERIFIED_SESSION_RESTORE_PASS, но task-start вернул CONTEXT_OR_RETRIEVAL_BLOCKED: active_goal/next_step остались UNKNOWN, а канонический реестр одобренной семантической памяти отсутствует. Проверка выявила, что runtime extractor ищет явные метки в хвостовом checkpoint, которых там не было; не угадывать цель, добавить явные поля.
+
+
+## Latest live smoke result — 2026-10-17
+
+- GitHub Actions run 39023790479 passed on branch-tip efc7096a411f6ade91b4ce7cc1462e8d0d12589a.
+- Verified restore passed; task-start returned READY_FOR_REVIEW with RESTORED_PACKET. Cluster readiness is PARTIAL because approved semantic memory is UNAVAILABLE. No writes, planning authorization or execution occurred.
+- CONTINUITY_CHECKPOINT.json records code HEAD ebed5f048188b1f057f1c40a00ca148acd087b6 and exact CI run 39023539993, plus the live smoke result.
+- This verifies the repository CLI path in GitHub Actions, not automatic invocation inside ChatGPT. The missing approved semantic-memory registry remains open; do not fabricate records or resume the deferred archive transfer.
