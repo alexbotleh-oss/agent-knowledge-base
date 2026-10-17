@@ -80,3 +80,12 @@ No merge was performed and `main` was not changed. Approved semantic-memory regi
 - Exact code/test HEAD `c09e5a5d72f345fc534289981c9b12d971946c74` passed CI run [#39072044539](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/39072044539): **506 Python tests, 1 skipped; 4 Node tests; strict write audit 162 mutation sites / 0 unclassified; memory/event-log/project validation passed.**
 - Restore/task-start smoke correctly deferred on that run because the checkpoint still records the prior code HEAD; this run is not a fresh smoke PASS. The next checkpoint refresh must cite this exact code SHA and CI run before the metadata-descendant smoke is accepted.
 - The source snapshot remains the byte-exact archive of record; the staged payload is decoded JSON and is not claimed to preserve whitespace/formatting byte-for-byte. Duplicate-key and non-standard-number cases now fail closed rather than silently changing semantics.
+
+
+## Source-stability guards for read-only preflight — 2026-10-18
+
+- Both `tools/audit_chat_export_archive.py` and `tools/audit_chat_attachment_references.py` now re-hash the source after scanning. If the final digest differs from the initial digest, or the source becomes unreadable, the audit returns `FAIL` instead of attaching results to a stale source hash.
+- Added one synthetic regression test to each audit suite to verify fail-closed behavior on digest drift.
+- Exact code/test HEAD `7417eb95fc1996e6eddfa43ee6c7505bb387060e` passed CI run [#39072317737](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/39072317737): **508 Python tests, 1 skipped; 4 Node tests; strict write audit 162 mutation sites / 0 unclassified; memory/event-log/project validation passed.**
+- Restore/task-start smoke deferred because the checkpoint still recorded the previous code SHA. Refresh the checkpoint to this exact code/test/report HEAD and CI run before accepting the next metadata-descendant smoke.
+- Scope limit: the before/after digest check detects persistent source changes during the scan; it is not a filesystem snapshot and cannot prove that a source was not modified and restored between the two hashes. The importer itself stages from its verified immutable snapshot. The native archive is still required for real completeness and attachment reconciliation.
