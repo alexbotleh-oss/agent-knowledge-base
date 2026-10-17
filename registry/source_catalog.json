@@ -1,0 +1,63 @@
+{
+  "schema_version": "memory-source-catalog-v1",
+  "catalog_id": "agent-knowledge-base-local-sources-v1",
+  "catalog_scope": "current repository checkout only",
+  "sources": [
+    {
+      "source_id": "canonical-memory-and-source-stores",
+      "root": ".",
+      "expected_path": "memory_records.jsonl",
+      "source_types": ["semantic_memory", "source_registry", "correction_registry", "derived_index"],
+      "formats": ["jsonl", "json", "md"],
+      "capabilities": ["approved_records", "source_provenance", "revision_history", "correction_overlay", "multidimensional_index"],
+      "priority": 10,
+      "accessible": true
+    },
+    {
+      "source_id": "agent-memory-project-state",
+      "root": "../projects/AGENT_MEMORY_SYSTEM",
+      "expected_path": "TASK_STATE.md",
+      "source_types": ["project_memory", "task_state"],
+      "formats": ["md", "jsonl", "json"],
+      "project_ids": ["AGENT_MEMORY_SYSTEM"],
+      "capabilities": ["task_state", "handoff", "event_log", "decisions", "lessons"],
+      "priority": 10,
+      "accessible": true
+    },
+    {
+      "source_id": "shared-core-protocols",
+      "root": "../core",
+      "expected_path": "universal_instructions.md",
+      "source_types": ["protocol", "documentation"],
+      "formats": ["md"],
+      "capabilities": ["guardrails", "workflow", "architecture"],
+      "priority": 20,
+      "accessible": true
+    },
+    {
+      "source_id": "memory-tool-implementations",
+      "root": "../tools",
+      "expected_path": "memory_aware_session_restore.py",
+      "source_types": ["tool_source"],
+      "formats": ["py"],
+      "capabilities": ["retrieval", "ingestion", "indexing", "restore"],
+      "priority": 30,
+      "accessible": true
+    },
+    {
+      "source_id": "memory-regression-tests",
+      "root": "../tests",
+      "expected_path": "test_memory_aware_session_restore.py",
+      "source_types": ["test_suite"],
+      "formats": ["py", "json"],
+      "capabilities": ["regression_tests", "integration_tests"],
+      "priority": 40,
+      "accessible": true
+    }
+  ],
+  "limitations": [
+    "This catalog describes only the checked-out repository tree.",
+    "Runtime-only files, remote branches, external archives, connected apps, and device storage are not included.",
+    "The source profiles are routing hints, not proof that every expected data file exists."
+  ]
+}
