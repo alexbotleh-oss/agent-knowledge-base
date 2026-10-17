@@ -1,5 +1,7 @@
 # Canonical source registry
 
+The local source-location catalog is `registry/source_catalog.json`. It routes fallback discovery across known local roots; it is not the canonical source-message registry and does not claim to enumerate remote branches, external archives, connected apps, or device storage.
+
 `source_records.jsonl` is the shared, append-only registry for source-message metadata. The file is created only by an explicit `tools/source_evidence_registry.py --apply` operation.
 
 - It stores source locators, source and parser hashes, source-message timestamps, message/node relationships and attachment-presence metadata.
