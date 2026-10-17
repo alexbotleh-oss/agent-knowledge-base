@@ -107,6 +107,7 @@ class ProjectAttachmentLibraryTests(unittest.TestCase):
         (self.library_root / "objects.jsonl").write_text("{broken\n", encoding="utf-8")
         with self.assertRaisesRegex(ValueError, "corrupt library object registry"):
             self.register()
+        self.assertFalse((self.library_root / "objects").exists())
 
 
 if __name__ == "__main__":
