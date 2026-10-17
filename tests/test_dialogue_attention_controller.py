@@ -162,6 +162,21 @@ class DialogueAttentionControllerTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "conflicting turn_id T-CONFLICT"):
             controller.project_state(events)
 
+    def test_classified_turn_requires_nonempty_task_and_checkpoint_identifiers(self):
+        for attention in (
+            {"turn_id": "", "active_task_id": "TASK-A", "active_checkpoint_id": "CKPT-A"},
+            {"turn_id": "T-MISSING-TASK", "active_task_id": "", "active_checkpoint_id": "CKPT-A"},
+            {"turn_id": "T-MISSING-CHECKPOINT", "active_task_id": "TASK-A", "active_checkpoint_id": ""},
+        ):
+            event = {
+                "event_id": "EVT-MALFORMED-" + str(len(attention.get("turn_id", ""))),
+                "type": "attention_turn_classified",
+                "attention": attention,
+            }
+            with self.subTest(attention=attention):
+                with self.assertRaisesRegex(ValueError, "missing turn/task/checkpoint identifier"):
+                    controller.project_state([event])
+
     def test_return_replay_rejects_child_and_checkpoint_mismatch(self):
         opened = {
             "event_id": "EVT-OPEN-RETURN-CHECK",
