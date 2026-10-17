@@ -952,3 +952,11 @@ PR #28 and PR #30 remain Draft/open/unmerged. No merge or change to `main` is au
 The applicability verifier now rejects non-string/blank signed `result` claims before collecting outcomes, avoiding an unhandled `TypeError` for a validly signed but malformed dict/list value. Regression coverage exercises a signed dict result and requires safe rejection. Exact code/test head `2516faf2f005bfb2bc28941d3ccef668b0fd033b` is included in successful CI [38994383051](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38994383051): 400 Python tests passed, 1 skipped; 4 Node tests passed; memory validation PASS. Pytest-based stack checks and HTML/PWA/JS lint/test/build remain skipped due missing tooling/setup.
 
 **Next:** audit guarded parent return and malformed/corrupt event handling for concrete fail-open paths. Production trust root, real archive acceptance, and automatic ChatGPT cross-chat startup/capture remain unverified. PR #30 remains Draft/open/unmerged; do not merge or change `main` without explicit user approval.
+
+
+## Return point — trusted check-result reuse regression (2026-10-17)
+
+- Fixed malformed `evidence_refs` handling in `tools/check_reuse_policy.py`; a reusable PASS now requires a non-empty list of non-empty strings.
+- Regression: `tests/test_check_reuse_policy.py::test_malformed_evidence_refs_cannot_reuse_signed_pass`.
+- Code/test HEAD `785c9a7ccfc4e2ec4f5c3ca525df7198b51ea626`; exact commit-associated GitHub Actions run [38999688578](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38999688578) completed SUCCESS. Static/documentation checks and synthetic tests do not establish production trust-root acceptance.
+- Next: continue source-led review of check-result receipt validation and guarded parent return; preserve PR #30 Draft/open/unmerged and do not change `main`.
