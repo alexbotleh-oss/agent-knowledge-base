@@ -7,7 +7,8 @@ const MAX_TEXT_CHARS = 1_000_000;
 const TERMINAL = new Set(["CLOSED_DELIVERED", "CLOSED_FAILED", "CLOSED_ABANDONED"]);
 const EVENT_TYPES = new Set([
   "WORK_STARTED", "PROGRESS", "ARTIFACT_CREATED", "REPORT_PREPARED",
-  "RESPONSE_SUBMITTED", "DELIVERY_ACKNOWLEDGED", "TURN_FAILED", "TURN_ABANDONED"
+  "RESPONSE_SUBMITTED", "DELIVERY_ACKNOWLEDGED", "TURN_FAILED", "TURN_ABANDONED",
+  "ATTACHMENT_LINKED"
 ]);
 
 let dbPromise;
@@ -41,6 +42,15 @@ function transition(turn, event) {
     case "WORK_STARTED": turn.state = "IN_PROGRESS"; break;
     case "PROGRESS": break;
     case "ARTIFACT_CREATED": turn.artifacts.push(event.artifact || {}); break;
+    case "ATTACHMENT_LINKED": {
+      const ref = globalThis.RimaDialogueWindowCore.validateAttachmentRef(event.attachment, turn.turn_id);
+      if (turn.conversation_id !== ref.conversation_id) throw new Error("attachment_conversation_mismatch");
+      if (!Array.isArray(turn.attachments)) turn.attachments = [];
+      const existing = turn.attachments.find(item => item.attachment_id === ref.attachment_id);
+      if (existing && stableJson(existing) !== stableJson(ref)) throw new Error("attachment_id_collision");
+      if (!existing) turn.attachments.push(ref);
+      break;
+    }
     case "REPORT_PREPARED": turn.state = "REPORT_PREPARED_UNCONFIRMED"; turn.report = event.report || {}; break;
     case "RESPONSE_SUBMITTED": turn.state = "RESPONSE_SUBMITTED_UNCONFIRMED"; turn.response_submission = event.submission || {}; break;
     case "DELIVERY_ACKNOWLEDGED": turn.state = "CLOSED_DELIVERED"; turn.delivery = event.delivery || {}; break;
@@ -161,7 +171,7 @@ async function appendEvent(turnId, eventType, fields = {}, eventId) {
       }
       throw new Error("event_id_collision_with_different_content");
     }
-    if (TERMINAL.has(turn.state)) throw new Error("turn_already_terminal");
+    if (TERMINAL.has(turn.state) && eventType !== "ATTACHMENT_LINKED") throw new Error("turn_already_terminal");
     transition(turn, event);
     store.put(turn);
     return { status: "APPENDED", turn };
@@ -244,19 +254,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         const turnId = message.turn_id;
         if (typeof turnId !== "string" || !turnId) throw new Error("invalid_attachment_link_payload");
         const ref = globalThis.RimaDialogueWindowCore.validateAttachmentRef(message.attachment, turnId);
-        const result = await withTurn(turnId, (turn, store) => {
-          if (turn.conversation_id !== ref.conversation_id) throw new Error("attachment_conversation_mismatch");
-          if (!Array.isArray(turn.attachments)) turn.attachments = [];
-          const existing = turn.attachments.find(item => item.attachment_id === ref.attachment_id);
-          if (existing) {
-            if (stableJson(existing) !== stableJson(ref)) throw new Error("attachment_id_collision");
-            return { status: "ALREADY_LINKED", turn };
-          }
-          turn.attachments.push(ref);
-          store.put(turn);
-          return { status: "LINKED", turn };
-        });
-        return result;
+        const result = await appendEvent(
+          turnId, "ATTACHMENT_LINKED", { attachment: ref },
+          turnId + ":ATTACHMENT_LINKED:" + ref.attachment_id
+        );
+        return {
+          status: result.status === "ALREADY_RECORDED" ? "ALREADY_LINKED" : "LINKED",
+          turn: result.turn
+        };
       }
       case "EXPORT_LEDGER": {
         if (!fromExtension) throw new Error("export_requires_extension_popup");
