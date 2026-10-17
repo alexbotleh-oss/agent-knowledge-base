@@ -228,7 +228,7 @@ class BranchResultRegistryTests(unittest.TestCase):
                 }],
             }
             with path.open("a", encoding="utf-8") as stream:
-                stream.write(json.dumps(invalid_later_event) + "\\n")
+                stream.write(json.dumps(invalid_later_event) + "\n")
             before = path.read_bytes()
 
             from branch_result_registry import acknowledge_result
