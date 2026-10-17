@@ -14,6 +14,7 @@ import argparse
 import hashlib
 import json
 import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -30,12 +31,22 @@ from experience_outcome_capture import capture_verified_experience_candidate
 
 MAX_TIMEOUT_SECONDS = 300
 MAX_OUTPUT_BYTES = 1_000_000
+TOKEN_RE = re.compile(r"[^\\W_]+", re.UNICODE)
+STOP_WORDS = {"and", "the", "for", "with", "from", "that", "this", "into", "when", "after", "before", "then", "prior", "experience", "identified", "run", "verify", "verified", "result", "task", "action", "fix", "fixed"}
 ARTIFACT_CHECK_TYPES = {"file_contains", "file_sha256", "json_field_equals"}
 ALLOWED_CHECK_TYPES = ARTIFACT_CHECK_TYPES | {"command_exit_code"}
 
 
 def _sha(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
+
+
+def _tokens(value: str) -> set[str]:
+    return {
+        token.casefold()
+        for token in TOKEN_RE.findall(value)
+        if len(token) >= 3 and token.casefold() not in STOP_WORDS
+    }
 
 
 def _inside(root: Path, value: Path, label: str) -> tuple[Path | None, str | None]:
@@ -250,6 +261,12 @@ def run_reviewed_action(
         if error:
             return {"status": "BLOCKED_PATH", "path": str(log), "reason": error, "writes_performed": False}
         resolved_experience_logs.append(path)
+    resolved_lesson_logs = []
+    for log in (lesson_logs or []):
+        path, error = _inside(root, Path(log), "lesson_log")
+        if error:
+            return {"status": "BLOCKED_PATH", "path": str(log), "reason": error, "writes_performed": False}
+        resolved_lesson_logs.append(path)
     if not resolved["action_cwd"].is_dir():
         return {"status": "BLOCKED_ACTION_CWD_NOT_DIRECTORY", "writes_performed": False}
     if not resolved["task_state"].is_file() or not resolved["handoff"].is_file():
@@ -266,7 +283,7 @@ def run_reviewed_action(
             experience_logs=resolved_experience_logs or [resolved["event_log"]],
             current_project_id=project_id,
             evidence_root=root,
-            lesson_logs=[Path(item) for item in (lesson_logs or [])],
+            lesson_logs=resolved_lesson_logs,
         )
     except Exception as exc:
         return {"status": "BLOCKED_EXPERIENCE_RETRIEVAL_ERROR", "reason": f"{type(exc).__name__}: {exc}", "writes_performed": False}
@@ -300,6 +317,23 @@ def run_reviewed_action(
     source_event = next((item for item in source_events if item.get("event_id") == reviewed_experience_event_id), None)
     if source_event is None or source_event.get("project_id") != project_id:
         return {"status": "BLOCKED_EXPERIENCE_SCOPE_MISMATCH", "writes_performed": False}
+    source_text_parts = []
+    for field in ("summary", "facts", "hypotheses", "action_taken", "outcome", "tags", "tool_tags", "language_tags"):
+        value = source_event.get(field)
+        if isinstance(value, str):
+            source_text_parts.append(value)
+        elif isinstance(value, list):
+            source_text_parts.extend(item for item in value if isinstance(item, str))
+    source_tokens = _tokens(" ".join(source_text_parts))
+    rationale_tokens = _tokens(action_rationale)
+    overlap_tokens = sorted(source_tokens & rationale_tokens)
+    if len(overlap_tokens) < 2:
+        return {
+            "status": "BLOCKED_EXPERIENCE_NOT_LINKED_TO_ACTION",
+            "reason": "The action rationale must share at least two meaningful terms with the retrieved experience; this is a lexical link check, not semantic proof.",
+            "overlap_tokens": overlap_tokens,
+            "writes_performed": False,
+        }
 
     protected_paths = {
         resolved["task_state"], resolved["handoff"], resolved["event_log"], *source_logs
@@ -378,6 +412,7 @@ def run_reviewed_action(
             "event_id": reviewed_experience_event_id,
             "source_event_sha256": _sha(json.dumps(source_event, ensure_ascii=False, sort_keys=True).encode("utf-8")),
             "summary": candidate.get("summary", candidate.get("title", "")),
+            "action_rationale_overlap_tokens": overlap_tokens,
         },
         "action": {
             "rationale": action_rationale,
