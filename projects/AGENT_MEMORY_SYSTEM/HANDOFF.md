@@ -751,3 +751,14 @@ Important remaining gap: real ingestion + promotion is tested, but the same test
 - This protocol work is on a separate branch `memory/in-chat-writeback-cycle-20261017`, based on `integration/memory-core-clean-20261015`. No merge; `main` unchanged.
 - Next: open a separate draft PR, inspect exact-head CI, then continue using pre-action and pre-response memory writes on subsequent meaningful turns.
 - Completeness: PARTIAL.
+
+
+## Result update 2026-10-17 — protocol PR and CI verified
+
+- Separate Draft PR #32 opened: https://github.com/alexbotleh-oss/agent-knowledge-base/pull/32
+- Exact PR head at opening: `dbc0802db700bb7597792fba118006d2b03db691`.
+- CI run [39003376335](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/39003376335) PASS: 296 Python tests, 4 Node tests, memory validation PASS, 127 mutation sites / 0 unclassified.
+- Durable request and result records exist in `projects/AGENT_MEMORY_SYSTEM/TURN_JOURNAL.jsonl`. The request record explicitly says its pre-action recording was retrospective because preliminary context retrieval had already started.
+- Next operational rule: for the next meaningful user turn, create REQUEST_RECEIVED before task actions and RESULT_RECORDED before the answer. Do not treat documentation/CI as proof that the platform performs this automatically.
+- Browser extension remains separately preserved in Draft PR #31. No PR merged; main unchanged.
+- Status: protocol documented and CI-validated; ongoing behavioral compliance remains to be demonstrated turn by turn.
