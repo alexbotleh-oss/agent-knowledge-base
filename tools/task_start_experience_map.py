@@ -143,6 +143,7 @@ def build_task_start_experience_map(
     current_markers: dict[str, Any] | None = None,
     judgments: list[dict[str, Any]] | None = None,
     judgment_verifier=None,
+    session_packet: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Restore the task, inspect the return stack, and retrieve bounded experience candidates."""
     task_state, handoff, event_log = Path(task_state), Path(handoff), Path(event_log)
@@ -153,6 +154,7 @@ def build_task_start_experience_map(
         lesson_logs=[Path(p) for p in (lesson_logs or [])],
         current_markers=current_markers, judgments=judgments,
         judgment_verifier=judgment_verifier,
+        session_packet=session_packet,
     )
     attention_path = Path(attention_log) if attention_log else (
         Path(__file__).resolve().parents[1] / "projects" / "AGENT_MEMORY_SYSTEM" / "events.jsonl"
