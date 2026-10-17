@@ -19,7 +19,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlparse
 
-from project_attachment_library import register_attachment
+from project_attachment_library import PROJECT_RE, register_attachment
 
 MAX_ATTACHMENT_BYTES = 25 * 1024 * 1024
 MAX_ID_CHARS = 256
@@ -45,6 +45,9 @@ def _json_bytes(value: object) -> bytes:
 
 
 def make_handler(library_root: Path, token: str, allowed_origins: set[str], allowed_projects: set[str]):
+    if not allowed_projects or any(not PROJECT_RE.fullmatch(project) for project in allowed_projects):
+        raise ValueError("an explicit allowlist of valid project IDs is required")
+
     class Handler(BaseHTTPRequestHandler):
         server_version = "RimaAttachmentAdapter/1.0"
         sys_version = ""
@@ -190,6 +193,8 @@ def main() -> int:
         parser.error("at least one exact --allow-origin is required")
     if not args.allow_project:
         parser.error("at least one explicit --allow-project is required")
+    if any(not PROJECT_RE.fullmatch(project) for project in args.allow_project):
+        parser.error("--allow-project values must be valid project IDs")
     library_root = Path(args.library_root).expanduser().resolve()
     library_root.mkdir(parents=True, exist_ok=True)
     server = ThreadingHTTPServer((args.host, args.port),
