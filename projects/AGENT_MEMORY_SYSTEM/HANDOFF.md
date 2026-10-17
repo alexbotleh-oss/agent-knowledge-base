@@ -765,3 +765,16 @@ Important remaining gap: real ingestion + promotion is tested, but the same test
 - Not yet implemented/verified: automatic ChatGPT upload capture, platform project-library integration, trusted client invocation before model work, persistent cross-device journal access and end-to-end restore in a new chat.
 - Next: after this metadata update, verify the new branch HEAD and its CI; then design/implement the smallest trusted client adapter path for receiving a message + attachment, storing its library ref, appending the dialogue ledger, and restoring both windows at chat start.
 - Completeness: PARTIAL.
+
+
+## Handoff — browser rolling-context implementation (2026-10-17)
+
+- Active priority remains short-term dialogue memory and project-library attachment references.
+- Candidate PR [#31](https://github.com/alexbotleh-oss/agent-knowledge-base/pull/31), branch `feature/dialogue-stm-source-references-20261017`, stacked on PR #27's `integration/memory-core-clean-20261015`. Do not merge; PR #27/#30 remain open/unmerged and `main` is unchanged.
+- Core code: `tools/dialogue_window.py`, `tools/project_attachment_library.py` with `resolve_attachment()`; browser core `clients/chatgpt-web-extension/dialogue_window_core.js`; local turn capture in `clients/chatgpt-web-extension/background.js`; popup action copies global/current-chat windows on explicit click.
+- The extension's current window builder uses durable `received_sequence` for new turns and timestamp fallback for old turns; project assignment remains UNKNOWN rather than inferred from conversation ID.
+- Verified code+protocol HEAD `789f81a31b80cf4e14422a77b1179835fd80c99d`; exact-head CI [39001799801](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/39001799801) PASS: 312 Python tests, 11 Node tests, write audit 136/0, memory validation PASS, project/stack validation PASS.
+- The browser popup only copies a recovery context when clicked; it does not silently modify/send messages. Attachment-only capture and bridge from browser upload to the private library are not implemented. Real-device Yandex Browser Android acceptance and new-chat restore remain unverified.
+- Earlier failures were diagnosed and fixed: strict mutation audit classification; invalid regex in popup path parser; missing pending-turn ID in the formatter. Do not repeat those investigations unless new evidence appears.
+- Next: verify exact latest metadata HEAD and CI, then implement a small authenticated attachment bridge with explicit project binding and acceptance tests. Avoid mixing this work with PR #27's semantic-memory pipeline or PR #30's attention-return controller until this memory layer is validated.
+- Completeness: PARTIAL.
