@@ -814,14 +814,18 @@ def run_minimal_agent_loop(
     current_markers: dict[str, Any] | None = None,
     judgments: list[dict[str, Any]] | None = None,
     judgment_verifier: Callable[[dict[str, Any], dict[str, Any]], Any] | None = None,
+    session_packet: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """Restore first, then search explicitly supplied event logs (and lesson files) for candidates.
+    """Restore once, then search supplied logs and assess candidates conservatively.
 
-    Lesson files and judgments are optional. The applicability evaluator only
-    narrows what retrieved memory may justify; it never grants planning.
+    A caller may inject a packet already produced by memory_aware_session_restore;
+    this avoids a second restore while retaining its semantic-memory result.
     """
-    packet = build_session_packet(task_state, handoff, event_log)
-    context = extract_semantic_context(packet)
+    packet = session_packet if isinstance(session_packet, dict) else build_session_packet(task_state, handoff, event_log)
+    context_packet = dict(packet)
+    if "task_restore_status" in packet:
+        context_packet["status"] = packet.get("task_restore_status", "UNKNOWN")
+    context = extract_semantic_context(context_packet)
     trust = authorize_next_step(context)
     query_parts = [user_request.strip(), context.get("active_goal", "UNKNOWN")]
     blockers = context.get("blockers", [])
@@ -971,6 +975,8 @@ def run_minimal_agent_loop(
         "loop_version": "0.1",
         "status": "READY_FOR_REVIEW" if candidates_reviewable else "CONTEXT_OR_RETRIEVAL_BLOCKED",
         "restore_packet_status": packet.get("status", "UNKNOWN"),
+        "task_restore_status": context_packet.get("status", "UNKNOWN"),
+        "semantic_memory": packet.get("semantic_memory", {"status": "NOT_REQUESTED", "coverage_status": "UNKNOWN", "records": []}),
         "context": context,
         "trust_gate": trust,
         "checkpoint_currentness_gate": currentness_gate,
