@@ -10,7 +10,6 @@ import argparse
 import hashlib
 import json
 import sqlite3
-import sys
 from pathlib import Path
 from typing import Any
 
@@ -37,7 +36,7 @@ def verify_import(output: Path, archive_id: str, source_sha256: str | None = Non
     conn: sqlite3.Connection | None = None
     archive = None
     try:
-        conn = sqlite3.connect(f"file:{database.as_posix()}?mode=ro", uri=True)
+        conn = sqlite3.connect(f"{database.as_uri()}?mode=ro", uri=True)
         candidates = conn.execute(
             """SELECT archive_id,source_sha256,snapshot_path,source_bytes,status,
                       next_ordinal,committed_conversations,last_error,next_byte_offset,
@@ -89,9 +88,6 @@ def verify_import(output: Path, archive_id: str, source_sha256: str | None = Non
         first_mismatches: list[dict[str, Any]] = []
         next_staged = rows.fetchone()
         staged_ordinals_seen: list[int] = []
-        last_expected_locator: str | None = None
-        last_expected_offset = 0
-
         with stream:
             for ordinal, conversation, end_offset in iter_json_array(stream):
                 source_count += 1
@@ -99,9 +95,6 @@ def verify_import(output: Path, archive_id: str, source_sha256: str | None = Non
                 expected_locator = f"{archive_id}/{digest}/{expected_id}"
                 expected_payload = json.dumps(conversation, ensure_ascii=False, separators=(",", ":"))
                 expected_payload_hash = hashlib.sha256(expected_payload.encode("utf-8")).hexdigest()
-                last_expected_locator = expected_locator
-                last_expected_offset = end_offset
-
                 while next_staged is not None and int(next_staged[3]) < ordinal:
                     mismatch_count += 1
                     if len(first_mismatches) < 10:
@@ -111,7 +104,16 @@ def verify_import(output: Path, archive_id: str, source_sha256: str | None = Non
                         })
                     next_staged = rows.fetchone()
 
-                if next_staged is None or int(next_staged[3]) > ordinal:
+                if next_staged is None:
+                    # A missing suffix is expected for an interrupted/failed import.
+                    # A complete import claiming RAW_COMPLETE must contain every source row.
+                    if status == "RAW_COMPLETE":
+                        mismatch_count += 1
+                        if len(first_mismatches) < 10:
+                            first_mismatches.append({"kind": "MISSING_STAGED_ORDINAL", "source_ordinal": ordinal})
+                    continue
+                if int(next_staged[3]) > ordinal:
+                    # A gap before a later staged row is corruption, not a resumable prefix.
                     mismatch_count += 1
                     if len(first_mismatches) < 10:
                         first_mismatches.append({"kind": "MISSING_STAGED_ORDINAL", "source_ordinal": ordinal})
