@@ -111,6 +111,17 @@ class TrustedReceiptVerifierTests(unittest.TestCase):
         wrong = verify_signed_receipt(receipt, claim, keyring_path=self.keyring, expected_keyring_sha256="0" * 64, now=self.now)
         self.assertEqual(wrong["status"], "BLOCKED_TRUST_ROOT_MISMATCH")
 
+    def test_extra_signed_claim_fields_are_rejected(self):
+        expected = {"check_key": "CHECK-1", "input_fingerprint": "a" * 64, "result_status": "PASS"}
+        receipt = self._receipt({**expected, "authorization_scope": "unexpected"}, "check_result")
+        result = verify_signed_receipt(
+            receipt, expected, keyring_path=self.keyring,
+            expected_keyring_sha256=self.keyring_sha, now=self.now,
+        )
+        self.assertEqual(result["status"], "CLAIM_MISMATCH")
+        self.assertEqual(result["claim_field"], "authorization_scope")
+        self.assertFalse(result["verified"])
+
     def test_check_result_receipt_requires_expiry(self):
         claim = {"check_key": "CHECK-1", "input_fingerprint": "a" * 64, "result_status": "PASS"}
         receipt = self._receipt(claim, "check_result")
