@@ -51,6 +51,6 @@ Relevant options:
 
 - The entry point is local CLI code and must be invoked by a host; GitHub Actions runs repository validation but does not invoke it for each ChatGPT turn.
 - The turn-lifecycle HTTP adapter still needs a trusted client/host that can call it. This ChatGPT conversation does not directly call the user's local loopback service.
-- Adaptive source discovery currently covers configured local roots only. Remote branch/revision search, external archives, connected apps and device storage are not yet adapters in the discovery catalog.
+- Adaptive source discovery covers configured local roots and the explicit known GitHub refs/paths in registry/remote_source_catalog.json. It does not enumerate every branch, inspect arbitrary remote paths, or search Git history beyond configured refs. External archives, connected apps and device storage still need adapters.
 - Approved-memory retrieval remains exact multidimensional filtering plus lexical substring matching; experience retrieval is bounded lexical search, not a unified embedding/graph search.
 - Raw archive import and completeness reconciliation remain deferred until the recovery and task-start cluster is proven.
