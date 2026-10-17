@@ -35,28 +35,17 @@ def _sha(data: bytes) -> str:
 
 @contextlib.contextmanager
 def _lock(path: Path):
+    """Use the same fail-closed exclusive lock file as canonical journal writers."""
     path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("a+b") as stream:
-        if os.name == "nt":
-            import msvcrt
-            stream.seek(0, os.SEEK_END)
-            if stream.tell() == 0:
-                stream.write(b"0")
-                stream.flush()
-            stream.seek(0)
-            msvcrt.locking(stream.fileno(), msvcrt.LK_LOCK, 1)
-            try:
-                yield
-            finally:
-                stream.seek(0)
-                msvcrt.locking(stream.fileno(), msvcrt.LK_UNLCK, 1)
-        else:
-            import fcntl
-            fcntl.flock(stream.fileno(), fcntl.LOCK_EX)
-            try:
-                yield
-            finally:
-                fcntl.flock(stream.fileno(), fcntl.LOCK_UN)
+    fd = os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as stream:
+            stream.write(json.dumps({"pid": os.getpid(), "started_at": datetime.now().astimezone().isoformat()}))
+            stream.flush()
+            os.fsync(stream.fileno())
+        yield
+    finally:
+        path.unlink(missing_ok=True)
 
 
 def _read_events(path: Path) -> list[dict[str, Any]]:
@@ -205,7 +194,7 @@ def capture_verified_experience_candidate(
     }
 
     try:
-        with _lock(target.with_name(target.name + ".capture.lock")):
+        with _lock(target.with_name(target.name + ".lock")):
             rows = _read_events(target)
             for existing in rows:
                 if existing.get("event_id") == event_id:
@@ -235,6 +224,8 @@ def capture_verified_experience_candidate(
                 stream.write(_canonical(record) + b"\n")
                 stream.flush()
                 os.fsync(stream.fileno())
+    except FileExistsError:
+        return {"status": "BLOCKED_EVENT_LOG_LOCKED", "writes_performed": False}
     except (OSError, ValueError) as exc:
         return {"status": "BLOCKED_EVENT_LOG_INVALID_OR_UNWRITABLE", "reason": str(exc), "writes_performed": False}
 
@@ -360,7 +351,7 @@ def append_observed_failure_event(
         "capture_identity_sha256": identity_sha,
     }
     try:
-        with _lock(target.with_name(target.name + ".capture.lock")):
+        with _lock(target.with_name(target.name + ".lock")):
             rows = _read_events(target)
             for existing in rows:
                 if existing.get("event_id") == event_id:
@@ -386,6 +377,8 @@ def append_observed_failure_event(
                 stream.write(_canonical(record) + b"\n")
                 stream.flush()
                 os.fsync(stream.fileno())
+    except FileExistsError:
+        return {"status": "BLOCKED_EVENT_LOG_LOCKED", "writes_performed": False}
     except (OSError, ValueError) as exc:
         return {"status": "BLOCKED_EVENT_LOG_INVALID_OR_UNWRITABLE", "reason": str(exc), "writes_performed": False}
     return {
