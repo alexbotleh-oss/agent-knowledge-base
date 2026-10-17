@@ -3,35 +3,42 @@
 Updated: 2026-10-17
 
 ## Active goal
-Clean and reconcile the existing `agent-knowledge-base` repository so that equivalent facts have one canonical record, unique evidence is retained, chronology is never invented, and project boundaries remain explicit.
+Reconcile the existing memory records in `agent-knowledge-base`: one canonical record for a shared lesson, project-specific source evidence retained, no invented chronology, and no unsupported merging of distinct incidents.
 
-## Verified repository baseline
-- Repository: `alexbotleh-oss/agent-knowledge-base`.
-- Active work branch: `export/cross-project-experience-rollup-20261012`.
-- Baseline HEAD before this cleanup: `d5e92ec9d32a3c78dccd0f2afa0dc381afc584f2`.
-- PR #22 is open, Draft and unmerged. GitHub Actions run #39023049644 passed on that exact baseline SHA.
-- `main` has not been changed; no PR has been merged.
-- The PR currently has 134 changed paths and is not scope-clean. Detailed project histories under B77_HTML_PWA, CARD111, ORGANISM and RECIPE_MANAGER must not be silently treated as in-scope memory-system content.
+## Live baseline
+- Branch: `export/cross-project-experience-rollup-20261012`.
+- Last verified HEAD before this consolidation: `fe88a27cb8e1aeda3baf90207aaf9fd4531a0ef9`.
+- PR #22: open / Draft / unmerged; 135 changed paths before this commit.
+- Exact-head CI passed for `fe88a27cb8e1aeda3baf90207aaf9fd4531a0ef9` in run #39024118077.
+- `main` was not changed; no PR was merged.
 
 ## Canonical source map
-- `core/agent_bootstrap.md` — mandatory entry point and source map.
-- `projects/AGENT_MEMORY_SYSTEM/TASK_STATE.md` — detailed chronological checkpoints and evidence trail.
-- `projects/AGENT_MEMORY_SYSTEM/EVENT_LOG.md` / `events.jsonl` — event history; append-only corrections preserve prior claims.
-- `projects/AGENT_MEMORY_SYSTEM/DECISIONS.md` — accepted decisions and explicit scope boundaries.
-- `projects/AGENT_MEMORY_SYSTEM/LESSONS.md` — transferable lessons.
-- This file is only the compact operational handoff. Do not copy the entire checkpoint history here again.
+- `core/agent_bootstrap.md`: required entry point and source map.
+- `projects/AGENT_MEMORY_SYSTEM/TASK_STATE.md`: detailed checkpoint chronology and evidence trail.
+- `projects/AGENT_MEMORY_SYSTEM/EVENT_LOG.md` / `events.jsonl`: event chronology and corrections.
+- `projects/AGENT_MEMORY_SYSTEM/DECISIONS.md`: accepted decisions and scope.
+- `projects/AGENT_MEMORY_SYSTEM/LESSONS.md`: memory-system lessons.
+- This file is the concise operational handoff; do not duplicate the entire checkpoint history here.
 
-## Current findings
-- The previous `TASK_STATE.md` and `HANDOFF.md` both held long checkpoint sequences for the same work (409 lines and 370 lines respectively). This handoff has been reduced to a current resume pointer; the detailed chronology remains in TASK_STATE and old handoff versions remain in Git history.
-- A bounded audit of 8 available structured JSONL files found no missing time fields and no duplicate normalized summaries within each file. This is not a repository-wide semantic deduplication result.
-- No timestamp may be invented. A record with no traceable time is not a confirmed historical event. If a fully evidenced duplicate exists, remove the untimed copy from the canonical set and keep one canonical record with provenance. If equivalence is uncertain, do not delete automatically.
-- Similar text is candidate-generation evidence, not proof of the same incident. Preserve separate episodes when source, outcome or causal context differs.
+## Completed in the latest bounded pass
+- Added the canonical bootstrap entry point and linked it from README.
+- Reduced the active handoff from a second long history log to a concise resume pointer.
+- Consolidated the shared verification-stages lesson into `G-LESSON-001`, with evidence refs from RECIPE_MANAGER, CARD111 and ORGANISM.
+- Removed standalone structured duplicates `L-CARD111-002` and `L-ORGANISM-003`; their project Markdown indexes now point to G-LESSON-001 and retain distinct source events and unresolved incident causes.
+- Earlier exact-head CI passed for the bootstrap/handoff cleanup. CI for the new lesson-consolidation commit remains to be checked.
+
+## Governing rules
+- No missing event time is filled from import/review time, file timestamps or guessed version order.
+- Exact, evidenced duplicate → one canonical active record; preserve source provenance and auditability.
+- Similar wording only generates candidates. Preserve separate incidents when source, outcome or causal context differs.
+- A shared lesson's validation status does not prove every referenced project's implementation/runtime is verified.
+- PR #22 remains Draft/open/unmerged; do not merge or change `main` without explicit permission.
 
 ## Immediate next actions
-1. Read back the changed files and verify the commit.
-2. Check GitHub Actions against the exact new HEAD.
-3. Refresh PR #22 metadata/body from live data; do not repeat stale counts or stale HEAD.
-4. Continue source-backed semantic reconciliation and scope cleanup. Preserve unique evidence and do not merge PR #22 or change `main` without explicit permission.
+1. Read back all changed records and project pointers; verify the superseded IDs are absent from active structured lesson files and the canonical record links all source events.
+2. Check CI on the exact new HEAD.
+3. Update PR #22's description with exact live HEAD, changed-path count and CI result.
+4. Continue one evidence-backed duplicate cluster at a time; keep the PR scope issue and archive coverage explicitly PARTIAL.
 
 ## Status
-Cleanup is in progress, not complete. Exact duplicate history has been reduced in the active handoff surface and a canonical bootstrap entry point is being established. Full semantic reconciliation, archive coverage and PR scope correction remain PARTIAL.
+One cross-project lesson cluster has been consolidated and read-back/CI are pending for that new commit. Repository-wide semantic deduplication and PR scope cleanup are **not complete**.

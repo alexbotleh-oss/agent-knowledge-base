@@ -416,3 +416,11 @@ Tests added for first pass, completed replay, and a changed source under the sam
 - **Bootstrap gap:** `core/agent_bootstrap.md` did not exist in the branch's `core/` directory. A canonical entry-point/source map is added in this cleanup commit and linked from README.
 - **Still unresolved:** PR #22 currently contains detailed histories for separate projects and is not scope-clean; the branch has 134 changed paths. Do not merge or modify `main`. Semantic source reconciliation and scope separation remain incomplete.
 - **Next:** read back all three changed files; check exact-head CI; refresh PR #22's description using current metadata; then continue duplicate reconciliation by source evidence, never by timestamp guessing or text similarity alone.
+
+## Cross-project lesson consolidation — 2026-10-17
+
+- **Canonical record:** enriched `lessons/global/records.jsonl:G-LESSON-001` using evidence from RECIPE_MANAGER, CARD111 and ORGANISM. It now covers separate verification stages: syntax/lint, build/package, publication/deployment, install, runtime/network, visual interaction and regression.
+- **Duplicate disposition:** removed the standalone structured lesson records `L-CARD111-002` and `L-ORGANISM-003` from their project `lessons.jsonl` files. Their project indexes now point to G-LESSON-001 and preserve the distinct project symptoms and source event IDs. The canonical record lists both old IDs in `supersedes`; the old versions remain recoverable in Git history.
+- **Evidence and uncertainty:** CARD111 stale Pages UI and ORGANISM OAuth white screen remain distinct incidents. Their exact root causes are not merged or guessed. Global lesson status is validated/high as a shared process rule, not as proof that either app's runtime was verified.
+- **Validation boundary:** prior exact-head CI passed for `fe88a27cb8e1aeda3baf90207aaf9fd4531a0ef9` in run #39024118077. This new consolidation commit requires its own read-back and exact-head CI check.
+- **Next:** compare other cross-file lesson candidates only when their source evidence supports the same rule; do not merge low-similarity candidates. Keep PR #22 Draft/open/unmerged and preserve project boundaries.
