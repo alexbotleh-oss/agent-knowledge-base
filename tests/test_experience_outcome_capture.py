@@ -110,12 +110,12 @@ class ExperienceOutcomeCaptureTests(unittest.TestCase):
                 "event_time": "2026-10-17T12:00:00+00:00",
                 "time_precision": "exact",
                 "relations": [{"type": "followed_by", "event_id": "EVT-EARLIER"}],
-            }) + "\\n" + json.dumps({
+            }) + "\n" + json.dumps({
                 "event_id": "EVT-EARLIER",
                 "event_time": "2026-10-17T10:00:00+00:00",
                 "time_precision": "exact",
                 "relations": [],
-            }) + "\\n",
+            }) + "\n",
             encoding="utf-8",
         )
 
@@ -124,7 +124,7 @@ class ExperienceOutcomeCaptureTests(unittest.TestCase):
             root = Path(temp)
             evidence = root / "artifacts" / "check-output.txt"
             evidence.parent.mkdir(parents=True)
-            evidence.write_text("TEST_RESULT=PASS\\n", encoding="utf-8")
+            evidence.write_text("TEST_RESULT=PASS\n", encoding="utf-8")
             event_log = root / "projects" / "TEST" / "events.jsonl"
             self._write_invalid_temporal_log(event_log)
             before = event_log.read_bytes()
@@ -141,7 +141,7 @@ class ExperienceOutcomeCaptureTests(unittest.TestCase):
             root = Path(temp)
             evidence = root / "artifacts" / "failure-report.txt"
             evidence.parent.mkdir(parents=True)
-            evidence.write_text("TEST_RESULT=FAIL\\n", encoding="utf-8")
+            evidence.write_text("TEST_RESULT=FAIL\n", encoding="utf-8")
             event_log = root / "projects" / "TEST" / "events.jsonl"
             self._write_invalid_temporal_log(event_log)
             before = event_log.read_bytes()
