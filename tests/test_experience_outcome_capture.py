@@ -7,7 +7,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
 
-from experience_outcome_capture import capture_verified_experience_candidate
+from experience_outcome_capture import append_observed_failure_event, capture_verified_experience_candidate
 from minimal_agent_loop import run_minimal_agent_loop
 from agent_memory_cycle import run_cycle
 
@@ -99,6 +99,70 @@ class ExperienceOutcomeCaptureTests(unittest.TestCase):
             )
             self.assertFalse(result["execution_performed"])
             self.assertFalse(result["writes_performed"])
+
+
+    def _write_invalid_temporal_log(self, event_log):
+        event_log.parent.mkdir(parents=True, exist_ok=True)
+        import json
+        event_log.write_text(
+            json.dumps({
+                "event_id": "EVT-LATER",
+                "event_time": "2026-10-17T12:00:00+00:00",
+                "time_precision": "exact",
+                "relations": [{"type": "followed_by", "event_id": "EVT-EARLIER"}],
+            }) + "\\n" + json.dumps({
+                "event_id": "EVT-EARLIER",
+                "event_time": "2026-10-17T10:00:00+00:00",
+                "time_precision": "exact",
+                "relations": [],
+            }) + "\\n",
+            encoding="utf-8",
+        )
+
+    def test_candidate_capture_blocks_when_existing_temporal_relations_are_invalid(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            evidence = root / "artifacts" / "check-output.txt"
+            evidence.parent.mkdir(parents=True)
+            evidence.write_text("TEST_RESULT=PASS\\n", encoding="utf-8")
+            event_log = root / "projects" / "TEST" / "events.jsonl"
+            self._write_invalid_temporal_log(event_log)
+            before = event_log.read_bytes()
+
+            result = self._capture(root, event_log, evidence)
+
+            self.assertEqual(result["status"], "BLOCKED_EVENT_RELATION_VALIDATION")
+            self.assertEqual(result["validation"]["status"], "REJECTED")
+            self.assertFalse(result["writes_performed"])
+            self.assertEqual(event_log.read_bytes(), before)
+
+    def test_failure_capture_blocks_when_existing_temporal_relations_are_invalid(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            evidence = root / "artifacts" / "failure-report.txt"
+            evidence.parent.mkdir(parents=True)
+            evidence.write_text("TEST_RESULT=FAIL\\n", encoding="utf-8")
+            event_log = root / "projects" / "TEST" / "events.jsonl"
+            self._write_invalid_temporal_log(event_log)
+            before = event_log.read_bytes()
+
+            result = append_observed_failure_event(
+                event_log,
+                evidence_root=root,
+                project_id="TEST",
+                task_id="TASK-FAIL-001",
+                request_summary="service worker cache restore",
+                action_taken="attempted a cache-key change",
+                acceptance_criterion="the latest app shell is restored",
+                evidence_file=evidence,
+                observed_outcome="The acceptance check failed",
+                related_event_ids=["EVT-LATER"],
+            )
+
+            self.assertEqual(result["status"], "BLOCKED_EVENT_RELATION_VALIDATION")
+            self.assertEqual(result["validation"]["status"], "REJECTED")
+            self.assertFalse(result["writes_performed"])
+            self.assertEqual(event_log.read_bytes(), before)
 
     def test_relative_paths_are_resolved_inside_declared_root(self):
         with tempfile.TemporaryDirectory() as temp:
