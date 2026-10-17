@@ -135,6 +135,12 @@ def verify_signed_receipt(
     claim = receipt.get("claim")
     if not isinstance(claim, dict) or not isinstance(expected_claim, dict) or not expected_claim:
         return {"status": "INVALID_RECEIPT_CLAIM", "verified": False}
+    # A trusted receipt must describe exactly the claim requested by the caller.
+    # Checking only expected keys would accept a signed claim with additional,
+    # potentially conflicting fields and weaken the exact-binding contract.
+    unexpected = sorted(set(claim) - set(expected_claim))
+    if unexpected:
+        return {"status": "CLAIM_MISMATCH", "verified": False, "claim_field": unexpected[0]}
     for key, expected in expected_claim.items():
         if key not in claim or canonical_json(claim[key]) != canonical_json(expected):
             return {"status": "CLAIM_MISMATCH", "verified": False, "claim_field": key}
