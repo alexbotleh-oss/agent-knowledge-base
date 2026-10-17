@@ -136,22 +136,27 @@ def make_handler(library_root: Path, token: str, allowed_origins: set[str], allo
                 media_type = self.headers.get("Content-Type", "application/octet-stream").split(";", 1)[0].strip()
                 if not media_type or len(media_type) > 128:
                     raise ValueError("invalid Content-Type")
-                with tempfile.NamedTemporaryFile(prefix=".rima-attachment-", dir=library_root, delete=False) as temp:
-                    temp_path = Path(temp.name)
-                    remaining = length
-                    while remaining:
-                        chunk = self.rfile.read(min(1024 * 1024, remaining))
-                        if not chunk:
-                            raise ValueError("request body ended before Content-Length")
-                        temp.write(chunk)
-                        remaining -= len(chunk)
-                    temp.flush()
-                    os.fsync(temp.fileno())
-                result = register_attachment(
-                    temp_path, library_root, project_id=project_id,
-                    conversation_id=conversation_id, source_message_id=source_message_id,
-                    original_name=filename, media_type=media_type,
-                )
+                temp_path = None
+                try:
+                    with tempfile.NamedTemporaryFile(prefix=".rima-attachment-", dir=library_root, delete=False) as temp:
+                        temp_path = Path(temp.name)
+                        remaining = length
+                        while remaining:
+                            chunk = self.rfile.read(min(1024 * 1024, remaining))
+                            if not chunk:
+                                raise ValueError("request body ended before Content-Length")
+                            temp.write(chunk)
+                            remaining -= len(chunk)
+                        temp.flush()
+                        os.fsync(temp.fileno())
+                    result = register_attachment(
+                        temp_path, library_root, project_id=project_id,
+                        conversation_id=conversation_id, source_message_id=source_message_id,
+                        original_name=filename, media_type=media_type,
+                    )
+                finally:
+                    if temp_path is not None:
+                        temp_path.unlink(missing_ok=True)
                 result.pop("storage_locator", None)
                 result.update({
                     "project_id": project_id,
