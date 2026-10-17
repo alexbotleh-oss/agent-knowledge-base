@@ -92,7 +92,9 @@ def _build_unlocked(source: Path, output: Path, archive_id: str) -> dict:
                 "attachment_count": len(attachments) if isinstance(attachments, list) else None,
                 "attachment_payloads_inspected": False if has_attachments else None,
             })
-    records.sort(key=lambda x: (x["event_time_unix"] is None, x["event_time_unix"] or 0, x["source_locator"]))
+    # Python sorting is stable: equal timestamps retain original export/mapping order.
+    # A source locator is an identity, not a chronology signal, so never use it as a tie-breaker.
+    records.sort(key=lambda x: (x["event_time_unix"] is None, x["event_time_unix"] or 0))
     output.mkdir(parents=True, exist_ok=True)
     # Versioned immutable generations prevent a crash between record and manifest
     # publication from making the old manifest point at newly replaced records.
