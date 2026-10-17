@@ -8,6 +8,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
 
 from verified_task_executor import run_reviewed_action
+from minimal_agent_loop import run_minimal_agent_loop
 
 
 class VerifiedTaskExecutorTests(unittest.TestCase):
@@ -123,6 +124,24 @@ class VerifiedTaskExecutorTests(unittest.TestCase):
         self.assertIn("EVT-EXP-001", failure["related_event_ids"])
         self.assertEqual(failure["status"], "observed")
         self.assertFalse(any(item.get("type") == "test" for item in events))
+        next_start = run_minimal_agent_loop(
+            self.task_state,
+            self.handoff,
+            self.event_log,
+            "service worker cache restore",
+            experience_logs=[self.experience_log, self.event_log],
+            current_project_id="TEST",
+            evidence_root=self.root,
+        )
+        failed_ids = {
+            item.get("event_id")
+            for item in next_start.get("retrieval", {}).get("candidates", [])
+        }
+        self.assertIn(result["failure_event"]["event_id"], failed_ids)
+        self.assertEqual(
+            next_start["adaptive_task_flow"]["mode"],
+            "DEEP_ANALYSIS_BEFORE_RETRY",
+        )
 
     def test_unretrieved_experience_blocks_action(self):
         result = self._run(execute=True, event_id="EVT-DOES-NOT-EXIST")
