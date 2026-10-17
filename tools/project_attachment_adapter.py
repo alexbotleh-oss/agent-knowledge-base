@@ -23,7 +23,7 @@ from project_attachment_library import PROJECT_RE, register_attachment
 
 MAX_ATTACHMENT_BYTES = 25 * 1024 * 1024
 MAX_ID_CHARS = 256
-FILENAME_RE = re.compile(r"[^A-Za-z0-9._ -]+")
+FILENAME_RE = re.compile(r"[\\x00-\\x1f\\x7f<>:\"|?*]+")
 
 
 def _required(value: str | None, field: str, limit: int = MAX_ID_CHARS) -> str:
@@ -34,6 +34,8 @@ def _required(value: str | None, field: str, limit: int = MAX_ID_CHARS) -> str:
 
 def _safe_filename(value: str | None) -> str:
     value = unquote(_required(value, "X-Rima-Filename", 1024)).replace("\\", "/").split("/")[-1]
+    if len(value) > 255:
+        raise ValueError("attachment filename exceeds 255 characters")
     value = FILENAME_RE.sub("_", value).strip(" .")
     if not value or value in {".", ".."}:
         raise ValueError("invalid attachment filename")
