@@ -138,6 +138,44 @@ class MemoryAwareRestoreTests(unittest.TestCase):
         self.assertFalse(discovery["writes_performed"])
         self.assertEqual(packet["semantic_memory"]["status"], "PARTIAL_NO_MATCH")
 
+    def test_adaptive_catalog_finds_stable_identity_elsewhere(self):
+        source_root = self.root / "catalog-source"
+        (source_root / "nested").mkdir(parents=True)
+        identity = "SRC-ADAPTIVE-RESTORE-20261017"
+        (source_root / "nested" / "record.json").write_text(
+            json.dumps({"source_record_id": identity}), encoding="utf-8"
+        )
+        catalog_path = self.root / "source_catalog.json"
+        catalog_path.write_text(json.dumps({
+            "sources": [{
+                "source_id": "temporary-source",
+                "root": "catalog-source",
+                "expected_path": "expected.json",
+                "formats": ["json"],
+                "priority": 1,
+            }]
+        }), encoding="utf-8")
+        no_match = {
+            "status": "PARTIAL_NO_MATCH", "coverage_status": "PARTIAL",
+            "records": [], "warnings": ["No match in the current partial index."],
+        }
+        with mock.patch.object(restore, "build_verified_session_packet", return_value=dict(self.base_packet)), \
+             mock.patch.object(restore, "retrieve_approved_memory", return_value=no_match):
+            packet = restore.build_memory_aware_packet(
+                Path("projects/AGENT_MEMORY_SYSTEM/TASK_STATE.md"),
+                Path("projects/AGENT_MEMORY_SYSTEM/HANDOFF.md"),
+                Path("projects/AGENT_MEMORY_SYSTEM/events.jsonl"),
+                "alexbotleh-oss/agent-knowledge-base",
+                task_id=identity,
+                registry_path=self.registry, index_root=self.index_root,
+                source_catalog_path=catalog_path,
+            )
+        discovery = packet["semantic_memory"]["relocation_discovery"]
+        self.assertEqual(discovery["status"], "VERIFIED_MATCH_FOUND")
+        self.assertFalse(discovery["writes_performed"])
+        self.assertFalse(discovery["automatic_relocation_performed"])
+        self.assertEqual(packet["semantic_memory"]["status"], "PARTIAL_NO_MATCH")
+
     def test_mismatched_project_scope_blocks_memory_retrieval(self):
         base = dict(self.base_packet)
         base["project_scope"] = dict(self.base_packet["project_scope"], event_log_project_id="CARD111")
