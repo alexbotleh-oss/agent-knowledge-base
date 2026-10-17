@@ -4,11 +4,13 @@ import tempfile
 import unittest
 import warnings
 import zipfile
+from unittest.mock import patch
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
 
+import audit_chat_attachment_references as attachment_audit_module
 from audit_chat_attachment_references import audit_references
 
 
@@ -96,6 +98,18 @@ class AuditChatAttachmentReferencesTests(unittest.TestCase):
 
             self.assertEqual(result["status"], "FAIL")
             self.assertEqual(result["reason"], "SOURCE_SCAN_FAILED")
+            self.assertFalse(result["raw_payloads_modified"])
+
+    def test_source_digest_change_during_scan_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            source = Path(tmp) / "conversations.json"
+            source.write_text('[{"id":"c1","title":"plain conversation"}]', encoding="utf-8")
+            initial_digest = __import__("hashlib").sha256(source.read_bytes()).hexdigest()
+            with patch.object(attachment_audit_module, "sha256_file",
+                              side_effect=[initial_digest, "f" * 64]):
+                result = audit_references(source)
+            self.assertEqual(result["status"], "FAIL")
+            self.assertEqual(result["reason"], "SOURCE_CHANGED_DURING_SCAN")
             self.assertFalse(result["raw_payloads_modified"])
 
     def test_no_candidate_references_is_not_claimed_as_proof_of_no_attachments(self):
