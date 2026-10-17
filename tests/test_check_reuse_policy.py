@@ -81,6 +81,27 @@ class CheckReusePolicyTests(unittest.TestCase):
         self.assertEqual(result["action"], "REVIEW_PRIOR_RESULT")
         self.assertEqual(result["receipt_verification_status"], "INVALID_RECEIPT_SIGNATURE")
 
+    def test_malformed_evidence_refs_cannot_reuse_signed_pass(self):
+        record_check_result(
+            self.log, self.check, self.sources, self.candidates,
+            result_status="PASS", evidence_refs=["tests/test_trigger.py#case-1"],
+            summary="Trigger condition was verified", recorded_by="CI run 123",
+            signed_receipt={"receipt_id": "RECEIPT-1", "signature": {"algorithm": "Ed25519", "value": "test"}},
+        )
+        event = json.loads(self.log.read_text(encoding="utf-8"))
+        event["check_result"]["evidence_refs"] = [123]
+        self.log.write_text(json.dumps(event) + "\n", encoding="utf-8")
+
+        def permissive_test_double(receipt, claim):
+            return {"verified": True, "receipt_id": receipt["receipt_id"]}
+
+        result = evaluate_check_reuse(
+            self.log, self.check, self.sources, self.candidates,
+            receipt_verifier=permissive_test_double,
+        )
+        self.assertEqual(result["status"], "RECHECK_PRIOR_RESULT_NOT_REUSABLE")
+        self.assertEqual(result["action"], "RUN_CHECK")
+
     def test_changed_source_hash_forces_recheck(self):
         record_check_result(
             self.log, self.check, self.sources, self.candidates,
