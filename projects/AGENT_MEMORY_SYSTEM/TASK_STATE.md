@@ -801,3 +801,14 @@ P2 is not yet declared ready: this test mocks the final verified restore packet,
 - **Deferred:** production archive transfer/completeness and browser-extension integration remain paused until the retrieval/restore and runtime boundary are coherent.
 - **Next action:** check live final HEAD/CI; then add explicit catalog branch-head drift/conflicting-revision reporting and assess a supported host invocation path without activating the deferred extension. Do not merge PRs or edit main.
 - **Status:** remote source-type routing implemented and narrowly tested; local CLI cluster remains unverified end-to-end inside live ChatGPT.
+
+
+## Active checkpoint — full PR inventory and temporal-validator reconciliation (2026-10-17)
+
+- **Active goal:** audit PR #1–#38 as one system, identify duplicate implementations and conflicting records, and consolidate existing mechanisms without creating another PR or tool.
+- **Completed:** live PR/base/HEAD/CI inventory; updated the existing cluster integration audit; compared changed-path overlap and selected source blobs; traced the #36 task-start call graph; identified divergent event/lesson IDs in parallel RECIPE_MANAGER branches; verified the current #37 restore checkpoint is stale relative to its code.
+- **PR #38 repair:** existing branch now contains merge commit 258b11610bd57d8c4b1ff051a36b74dd75c741b6, with current PR #37 HEAD 429d939ee0d2225d673dea709b12fd25f8fc9c8e as a parent. It preserves event 006 and appends the correction as event 007; 32 event records have 32 unique IDs. The missing validator import was added. No new PR, force-push, merge, close or deletion was performed.
+- **Verification:** exact-head CI for 258b11610bd57d8c4b1ff051a36b74dd75c741b6 is not available yet; both workflow-run and check-run queries returned zero. The old failure on 9c52cefed05f3cabac6df04ae927d8a3a5a87027 must not be attributed to the repaired HEAD, but neither may the repair be called PASS. A local clone/test attempt was blocked by DNS resolution failure.
+- **Checkpoint boundary:** CONTINUITY_CHECKPOINT.json still records code HEAD 1fd9c91ae8bb8662a3cb1a1cea3d63452064fc40 and CI run 38852493391. Do not rewrite it to an unverified SHA/run. The configured verified restore path is expected to fail closed on current source-code drift until exact-head validation and a matching checkpoint update are available.
+- **Next action:** obtain exact-head CI for PR #38; inspect the validator's real test result; then refresh CONTINUITY_CHECKPOINT.json and re-run the configured restore path. After that, exercise the #36 task-start entrypoint with the same packet and keep the host/runtime boundary explicit.
+- **Safety:** main remains unchanged. All PRs remain open/unmerged; no branch was deleted or force-updated. Archive transfer and browser-extension integration remain deferred.
