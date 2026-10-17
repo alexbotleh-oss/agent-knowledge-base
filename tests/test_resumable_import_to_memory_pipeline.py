@@ -195,9 +195,10 @@ class ResumableImportToMemoryPipelineTests(unittest.TestCase):
             self.assertEqual(restored["records"][0]["revision_id"], "REV-E2E-001")
             self.assertTrue(restored["records"][0]["provenance"])
             source_rows = [json.loads(line) for line in source_registry.read_text(encoding="utf-8").splitlines()]
-            self.assertEqual(len(source_rows), 1)
-            self.assertNotIn("text", source_rows[0])
-            self.assertEqual(source_rows[0]["source_snapshot_sha256"], imported["source_sha256"])
+            self.assertEqual(len(source_rows), 2)  # user and assistant message nodes
+            for source_row in source_rows:
+                self.assertNotIn("text", source_row)
+                self.assertEqual(source_row["source_snapshot_sha256"], imported["source_sha256"])
 
 
 if __name__ == "__main__":
