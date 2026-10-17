@@ -774,3 +774,14 @@ Important remaining gap: real ingestion + promotion is tested, but the same test
 - New evidence of memory non-application: `EVT-AGMS-20261017-002` pointed `followed_by` to earlier `EVT-AGMS-20261017-001`, despite existing lesson `L-AGMS-20261013-002`. Original row retained; `EVT-AGMS-20261017-003` adds a correction overlay. Pre-write validator remains unimplemented.
 - Exact-head CI passed for prior audit checkpoint `f4d874c7a9bc3e81c5ebe29f5609d4b1c2055acd`, run [39016798651](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/39016798651). The current follow-up commit must be rechecked for exact-head CI.
 - Next: implement/test temporal-relation pre-write validation, then establish one task-start packet contract and reconcile the approved-memory, candidate/applicability, attention/return and writeback paths. Keep #35 Draft/open/unmerged; no main edits. Browser extension and large archive transfer remain deferred.
+
+## Current return point — unified task-start cluster (2026-10-17)
+
+- PR #36: https://github.com/alexbotleh-oss/agent-knowledge-base/pull/36; branch feature/unified-task-start-cluster-20261017; Draft/open/unmerged, stacked on #35/#34/#27. Do not merge; main unchanged.
+- New entrypoint: tools/agent_memory_cycle.py. With --repository it invokes memory_aware_session_restore once and passes that packet into task_start_experience_map/minimal_agent_loop. Without --repository it explicitly reports semantic-memory integration NOT_CONFIGURED.
+- Integrated components: applicability_evaluator, decision_frontier, trusted_receipt_verifier, dialogue_attention_controller, check_reuse_policy, task_start_experience_map, agent_memory_cycle, branch_result_registry signed acknowledgement contract. Tests cover their existing contracts plus packet reuse without duplicate restore and task ID recovery.
+- Code checkpoint 9f89d5f2156ac34c862875f76bfcdab046c49454 passed exact-head CI run 39018028508: 429 Python tests, 1 skipped; write audit 143/0. Final documentation/checkpoint commits need exact-head CI recheck.
+- Readiness: cluster_readiness is separate from legacy status and uses PARTIAL for missing integration configuration; planning/execution remain unauthorized.
+- Known gaps: automatic ChatGPT startup and host bridge remain absent; remote GitHub branch/revision discovery is next; source catalog remains local-only; positive applicability needs an externally pinned keyring; archive import/complete reconciliation remains deferred.
+- Next: check final exact-head CI, then add read-only remote GitHub ref discovery with branch HEAD/blob SHA provenance, stale-ref/permission/coverage handling and conflict tests.
+- No destructive changes, no history rewrite, no main edits, no PR merges.
