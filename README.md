@@ -1,5 +1,7 @@
 # agent-knowledge-base
 
+**Start here:** [Canonical agent bootstrap](core/agent_bootstrap.md) — required source map and recovery order.
+
 Общая база опыта и протокол непрерывной контекстно-целевой работы агента ChatGPT между чатами и проектами.
 
 **Границы названий:** этот репозиторий называется `agent-knowledge-base`. ORGANISM и другие пользовательские проекты ведутся как отдельные проектные цепочки внутри общей системы памяти; они не являются альтернативными названиями репозитория. Все изменения инфраструктуры памяти и универсальных протоколов относятся к `agent-knowledge-base`. См. [`core/repository_scope.md`](core/repository_scope.md).
