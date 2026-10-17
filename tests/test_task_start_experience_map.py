@@ -497,6 +497,33 @@ class TaskStartExperienceMapTests(unittest.TestCase):
     def test_task_id_is_recovered_from_canonical_task_state_heading(self):
         self.assertEqual(task_start_module._infer_task_id(self.task), "TASK-PARENT")
 
+    def test_agent_memory_cycle_composes_memory_restore_and_experience_without_duplicate_restore(self):
+        from restore_session_packet import build_session_packet
+        packet = build_session_packet(self.task, self.handoff, self.events)
+        packet["task_restore_status"] = packet["status"]
+        packet["semantic_memory"] = {
+            "status": "AVAILABLE", "coverage_status": "COMPLETE",
+            "records": [{"memory_id": "MEM-CLUSTER-1", "revision_id": "r1"}],
+            "writes_performed": False,
+        }
+        packet["status"] = "RESTORED_PACKET_WITH_SEMANTIC_MEMORY"
+        with patch("agent_memory_cycle.build_memory_aware_packet", return_value=packet) as memory_restore, \
+             patch("minimal_agent_loop.build_session_packet", side_effect=AssertionError("duplicate restore")):
+            result = run_cycle(
+                self.task, self.handoff, self.events, self.attention, "Investigate cache recovery",
+                experience_logs=[self.events, self.experience], lesson_logs=[self.lessons],
+                active_task_id="TASK-PARENT", active_checkpoint_id="CKPT-PARENT",
+                current_project_id="TEST", repository="example/agent-knowledge-base",
+            )
+        self.assertEqual(memory_restore.call_count, 1)
+        self.assertEqual(result["semantic_memory_integration"]["status"], "CONFIGURED")
+        self.assertEqual(
+            result["task_start"]["task_restore"]["semantic_memory"]["records"][0]["memory_id"],
+            "MEM-CLUSTER-1",
+        )
+        self.assertEqual(result["task_start"]["task_restore"]["task_restore_status"], "RESTORED_PACKET")
+        self.assertFalse(result["task_start"]["decision_policy"]["planning_authorized"])
+
     def test_no_attention_journal_is_reported_without_inventing_a_branch(self):
         result = build_task_start_experience_map(
             self.task, self.handoff, self.events, "cache recovery",
