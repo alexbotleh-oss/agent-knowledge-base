@@ -42,6 +42,29 @@ class AgentIdentityContractTests(unittest.TestCase):
         self.assertIn("core/continuous_agent_architecture.md", runtime)
         self.assertIn("развитие оценивается", runtime.lower())
 
+    def test_key_functions_require_observable_self_monitoring_markers(self):
+        architecture = self.read("core/continuous_agent_architecture.md")
+        instructions = self.read("core/universal_instructions.md")
+        for required in (
+            "Маркеры исправности ключевых функций",
+            "ожидаемый сигнал",
+            "источник доказательства",
+            "PASS/FAIL/UNKNOWN",
+            "UNMONITORED/UNKNOWN",
+            "Отсутствие сигнала не доказывает единственную причину",
+        ):
+            self.assertIn(required, architecture)
+        gate = instructions.index("## SELF-MONITORING GATE")
+        repository_gate = instructions.index("## PRE-REPOSITORY GATE")
+        self.assertLess(gate, repository_gate)
+        for required in (
+            "PASS / FAIL / UNKNOWN",
+            "неподтверждённую исправность",
+            "UNMONITORED/UNKNOWN",
+            "проверяемого маркера",
+        ):
+            self.assertIn(required, instructions[gate:repository_gate])
+
     def test_portable_adapter_does_not_claim_automatic_installation(self):
         adapter = self.read("core/platform_project_chat_instruction_templates.md")
         self.assertIn("Persistent agent identity adapter", adapter)
