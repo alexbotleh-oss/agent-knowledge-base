@@ -69,7 +69,18 @@ def iter_json_array(stream: BinaryIO, chunk_size: int = 65536, *, start_offset: 
     """
     import codecs
 
-    decoder = json.JSONDecoder()
+    def reject_duplicate_keys(pairs):
+        result = {}
+        for key, value in pairs:
+            if key in result:
+                raise ValueError(f"Duplicate JSON object key: {key!r}")
+            result[key] = value
+        return result
+
+    # Duplicate object keys are ambiguous and would be silently lost when the
+    # decoded object is serialized into staging. Fail closed; the immutable
+    # source snapshot remains available for forensic review.
+    decoder = json.JSONDecoder(object_pairs_hook=reject_duplicate_keys)
     utf8 = codecs.getincrementaldecoder("utf-8")()
     buffer = ""
     pos = 0
@@ -167,7 +178,8 @@ def conversation_id(item: dict[str, Any], ordinal: int) -> tuple[str, str]:
 def open_conversation_stream(snapshot: Path):
     if snapshot.suffix.lower() == ".zip":
         archive = zipfile.ZipFile(snapshot, "r")
-        names = [name for name in archive.namelist() if Path(name).name == "conversations.json"]
+        names = [info.filename for info in archive.infolist()
+                 if not info.is_dir() and Path(info.filename).name == "conversations.json"]
         if len(names) != 1:
             archive.close()
             raise ValueError(f"Expected exactly one conversations.json in ZIP; found {len(names)}")
