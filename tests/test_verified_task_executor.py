@@ -117,10 +117,12 @@ class VerifiedTaskExecutorTests(unittest.TestCase):
         )
         self.assertEqual(result["status"], "ACTION_OR_ACCEPTANCE_CHECK_FAILED")
         self.assertEqual(result["verification_status"], "FAIL")
-        self.assertFalse(any(
-            json.loads(line).get("type") == "test"
-            for line in self.event_log.read_text(encoding="utf-8").splitlines()
-        ))
+        self.assertEqual(result["failure_event"]["status"], "FAILURE_EVENT_RECORDED")
+        events = [json.loads(line) for line in self.event_log.read_text(encoding="utf-8").splitlines()]
+        failure = next(item for item in events if item.get("type") == "failed_attempt")
+        self.assertIn("EVT-EXP-001", failure["related_event_ids"])
+        self.assertEqual(failure["status"], "observed")
+        self.assertFalse(any(item.get("type") == "test" for item in events))
 
     def test_unretrieved_experience_blocks_action(self):
         result = self._run(execute=True, event_id="EVT-DOES-NOT-EXIST")
