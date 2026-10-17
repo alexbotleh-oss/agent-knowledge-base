@@ -297,6 +297,16 @@ def run_reviewed_action(
             "loop_status": loop_result.get("status"),
             "writes_performed": False,
         }
+    trust_gate = loop_result.get("trust_gate")
+    trust_gate_status = trust_gate.get("status") if isinstance(trust_gate, dict) else None
+    if trust_gate_status != "AUTHORIZED_FOR_PLANNING":
+        return {
+            "status": "BLOCKED_CONTEXT_TRUST_GATE",
+            "trust_gate": trust_gate,
+            "reason": "The restored task context must pass its existing trust gate before this explicitly approved action can be considered.",
+            "writes_performed": False,
+            "execution_performed": False,
+        }
     route = loop_result.get("adaptive_task_flow")
     route_mode = route.get("mode") if isinstance(route, dict) else None
     if route_mode not in {"APPLY_RELEVANT_EXPERIENCE", "REVIEW_EXPERIENCE_CANDIDATES"}:
@@ -365,6 +375,7 @@ def run_reviewed_action(
             "status": "PLAN_READY_REQUIRES_EXPLICIT_EXECUTE",
             "retrieved_event_id": reviewed_experience_event_id,
             "route_mode": route_mode,
+            "trust_gate_status": trust_gate_status,
             "action_rationale": action_rationale,
             "action_argv": action_argv,
             "acceptance_checks": acceptance_checks,
@@ -422,6 +433,10 @@ def run_reviewed_action(
         "task_id": task_id,
         "project_id": project_id,
         "request": request,
+        "context_trust_gate": {
+            "status": trust_gate_status,
+            "reason": trust_gate.get("reason") if isinstance(trust_gate, dict) else "UNKNOWN",
+        },
         "task_route": {
             "mode": route_mode,
             "reason": route.get("reason") if isinstance(route, dict) else "UNKNOWN",
@@ -530,6 +545,7 @@ def run_reviewed_action(
         "status": status,
         "retrieved_experience_event_id": reviewed_experience_event_id,
         "route_mode": route_mode,
+        "trust_gate_status": trust_gate_status,
         "action_status": action_status,
         "return_code": return_code,
         "acceptance_checks": checks,
