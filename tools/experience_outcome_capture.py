@@ -365,7 +365,7 @@ def append_observed_failure_event(
                     return {"status": "BLOCKED_EVENT_ID_CONFLICT", "event_id": event_id, "writes_performed": False}
             target.parent.mkdir(parents=True, exist_ok=True)
             with target.open("ab") as stream:
-                stream.write(_canonical(record) + b"\\n")
+                stream.write(_canonical(record) + b"\n")
                 stream.flush()
                 os.fsync(stream.fileno())
     except (OSError, ValueError) as exc:
