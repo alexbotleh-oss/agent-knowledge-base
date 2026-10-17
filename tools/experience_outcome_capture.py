@@ -20,6 +20,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from event_relation_validator import validate_event_append
+
 ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]{2,191}$")
 
 
@@ -220,6 +222,14 @@ def capture_verified_experience_candidate(
                         "event_id": event_id,
                         "writes_performed": False,
                     }
+            relation_validation = validate_event_append(record, rows)
+            if relation_validation.get("status") != "PASS":
+                return {
+                    "status": "BLOCKED_EVENT_RELATION_VALIDATION",
+                    "event_id": event_id,
+                    "validation": relation_validation,
+                    "writes_performed": False,
+                }
             target.parent.mkdir(parents=True, exist_ok=True)
             with target.open("ab") as stream:
                 stream.write(_canonical(record) + b"\n")
@@ -363,6 +373,14 @@ def append_observed_failure_event(
                             "writes_performed": False,
                         }
                     return {"status": "BLOCKED_EVENT_ID_CONFLICT", "event_id": event_id, "writes_performed": False}
+            relation_validation = validate_event_append(record, rows)
+            if relation_validation.get("status") != "PASS":
+                return {
+                    "status": "BLOCKED_EVENT_RELATION_VALIDATION",
+                    "event_id": event_id,
+                    "validation": relation_validation,
+                    "writes_performed": False,
+                }
             target.parent.mkdir(parents=True, exist_ok=True)
             with target.open("ab") as stream:
                 stream.write(_canonical(record) + b"\n")
