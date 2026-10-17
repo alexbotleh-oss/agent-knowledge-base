@@ -240,6 +240,14 @@ class DialogueAttentionControllerTests(unittest.TestCase):
             controller.inspect(self.log)
         self.assertEqual(self.log.read_bytes(), before)
 
+    def test_empty_event_id_fails_closed_without_modifying_journal(self):
+        self.log.parent.mkdir(parents=True)
+        self.log.write_text(json.dumps({"event_id": "  ", "type": "unknown"}) + "\\n", encoding="utf-8")
+        before = self.log.read_bytes()
+        with self.assertRaisesRegex(ValueError, "non-empty event_id required"):
+            controller.inspect(self.log)
+        self.assertEqual(self.log.read_bytes(), before)
+
     def test_malformed_branch_frame_fails_closed_without_key_error(self):
         self.log.parent.mkdir(parents=True)
         event = {
