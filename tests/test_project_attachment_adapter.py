@@ -24,7 +24,7 @@ class ProjectAttachmentAdapterTests(unittest.TestCase):
         self.root.mkdir()
         self.server = ThreadingHTTPServer(
             ("127.0.0.1", 0),
-            adapter.make_handler(self.root, self.TOKEN, {self.ORIGIN}),
+            adapter.make_handler(self.root, self.TOKEN, {self.ORIGIN}, {"AGENT_MEMORY_SYSTEM"}),
         )
         self.server.daemon_threads = True
         self.thread = threading.Thread(target=self.server.serve_forever, daemon=True)
@@ -113,7 +113,14 @@ class ProjectAttachmentAdapterTests(unittest.TestCase):
 
     def test_invalid_project_is_rejected_without_storing_object(self):
         status, _, body = self.upload(project="../escape")
+        self.assertEqual(status, 403)
+        self.assertEqual(body["error"], "project_not_allowed")
+        self.assertFalse((self.root / "objects").exists())
+
+    def test_empty_attachment_is_rejected(self):
+        status, _, body = self.upload(body=b"")
         self.assertEqual(status, 400)
+        self.assertEqual(body["error"], "empty_attachment")
         self.assertFalse((self.root / "objects").exists())
 
     def test_untrusted_origin_does_not_receive_cors_permission(self):
