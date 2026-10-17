@@ -1,0 +1,89 @@
+{
+  "schema_version": "github-remote-source-catalog-v1",
+  "catalog_id": "agent-knowledge-base-known-refs-v1",
+  "repository": "alexbotleh-oss/agent-knowledge-base",
+  "purpose": "Explicit allowlist of known refs and source paths for bounded remote discovery. This is not an exhaustive inventory of every branch or external archive.",
+  "known_refs": [
+    {
+      "ref": "main",
+      "priority": 1,
+      "reason": "canonical base branch"
+    },
+    {
+      "ref": "integration/memory-core-clean-20261015",
+      "priority": 2,
+      "reason": "current clean integration lineage"
+    },
+    {
+      "ref": "feature/relocation-aware-memory-discovery-20261017",
+      "priority": 3,
+      "reason": "relocation-aware source discovery PR"
+    },
+    {
+      "ref": "feature/capability-aware-retrieval-planner-20261017",
+      "priority": 4,
+      "reason": "capability-aware source search PR"
+    },
+    {
+      "ref": "feature/unified-task-start-cluster-20261017",
+      "priority": 5,
+      "reason": "unified task-start cluster PR"
+    },
+    {
+      "ref": "fix/identity-continuity-contract-20261017",
+      "priority": 6,
+      "reason": "separate identity/bootstrap contract PR"
+    },
+    {
+      "ref": "umc03/verifier-positive-path-20261016",
+      "priority": 7,
+      "reason": "applicability verifier PR"
+    },
+    {
+      "ref": "umc02/attention-return-controller-20261016",
+      "priority": 8,
+      "reason": "attention/return controller PR"
+    },
+    {
+      "ref": "feature/dialogue-stm-source-references-20261017",
+      "priority": 9,
+      "reason": "rolling dialogue/archive adapter PR"
+    },
+    {
+      "ref": "memory/in-chat-writeback-cycle-20261017",
+      "priority": 10,
+      "reason": "in-chat writeback protocol PR"
+    }
+  ],
+  "sources": [
+    {
+      "source_id": "agent-bootstrap-contract",
+      "expected_path": "core/agent_bootstrap.md",
+      "expected_blob_sha": "170972deabf4ccbd072a38c1400eac490c4da348",
+      "candidate_paths": [],
+      "purpose": "Find the exact bootstrap source known to exist on PR #33 while checking the current integration refs first."
+    },
+    {
+      "source_id": "semantic-memory-registry",
+      "expected_path": "registry/memory_records.jsonl",
+      "candidate_paths": [],
+      "purpose": "Search the same canonical semantic-memory registry path across known refs using a stable memory/source identity or expected hash."
+    },
+    {
+      "source_id": "project-event-history",
+      "expected_path": "projects/AGENT_MEMORY_SYSTEM/events.jsonl",
+      "candidate_paths": [
+        "projects/AGENT_MEMORY_SYSTEM/EVENT_LOG.md"
+      ],
+      "purpose": "Search event identity across known refs; text-only matches remain unverified candidates."
+    }
+  ],
+  "limits": {
+    "max_refs_default": 20,
+    "max_files_default": 200,
+    "branch_heads_rechecked_after_verified_match": true,
+    "remote_search_scope": "Only refs and paths listed or explicitly supplied at invocation",
+    "no_global_absence_claim": true,
+    "writes_performed": false
+  }
+}
