@@ -293,6 +293,10 @@ def make_applicability_verifier(
             ):
                 continue
             result_claim = claim.get("result")
+            # A valid signature does not make a malformed claim well-typed.
+            # Reject non-string outcomes before collecting them into a set below.
+            if not isinstance(result_claim, str) or not result_claim.strip():
+                return None
             expected = {**identity, "result": result_claim}
             check = verify_signed_receipt(
                 receipt, expected, keyring_path=Path(keyring_path),
