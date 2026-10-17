@@ -20,6 +20,7 @@ from task_start_experience_map import build_task_start_experience_map
 from memory_aware_session_restore import build_memory_aware_packet
 from canonical_memory_index import DEFAULT_INDEX_ROOT, DEFAULT_REGISTRY
 from trusted_receipt_verifier import verify_signed_receipt
+from adaptive_task_flow import route_after_attempt
 
 
 def _current_branch_result_ready(
@@ -137,6 +138,7 @@ def run_cycle(
     source_catalog_path: Path | None = None,
     prior_failed_attempts: int = 0,
     risk_level: str = "normal",
+    attempt_result_status: str | None = None,
 ) -> dict[str, Any]:
     """Build one composed cycle; optionally perform a guarded explicit parent return.
 
@@ -266,6 +268,15 @@ def run_cycle(
                         attention = inspect_attention(attention_log)
                         task_start = build_start(parent_task_id, parent.get("checkpoint_id"))
 
+    attempt_outcome_route = (
+        route_after_attempt(
+            attempt_result_status,
+            prior_failed_attempts=prior_failed_attempts,
+            risk_level=risk_level,
+        )
+        if isinstance(attempt_result_status, str) and attempt_result_status.strip()
+        else None
+    )
     blocked_return = return_result is not None and return_result.get("status") not in {
         "RETURNED", "ALREADY_RETURNED"
     }
@@ -315,6 +326,7 @@ def run_cycle(
         "attention": attention,
         "branch_reconciliation": reconciliation,
         "parent_return": return_result,
+        "attempt_outcome_route": attempt_outcome_route,
         "check_reuse": task_start.get("experience_map", {}).get("check_reuse_policy"),
         "writes_performed": bool(return_result and return_result.get("writes_performed")),
         "capability_boundary": {
@@ -342,6 +354,7 @@ def main(argv=None) -> int:
     parser.add_argument("--limit", type=int, default=10)
     parser.add_argument("--prior-failed-attempts", type=int, default=0)
     parser.add_argument("--risk-level", choices=("low", "normal", "high", "critical"), default="normal")
+    parser.add_argument("--attempt-result-status", choices=("FAIL", "FAILED", "ERROR", "REGRESSION", "NOT_SOLVED", "SUCCESS", "SOLVED", "VERIFIED_SUCCESS", "VERIFIED_SOLVED", "PASS", "BLOCKED", "UNAVAILABLE", "CANNOT_PROCEED", "UNKNOWN"), help="explicit observed outcome of the last attempt; routes the next step without executing it")
     parser.add_argument("--return-turn-id")
     parser.add_argument("--parent-task-id")
     parser.add_argument("--repository", help="GitHub owner/repository; enables live revision verification and approved-memory retrieval")
@@ -364,6 +377,7 @@ def main(argv=None) -> int:
         source_catalog_path=args.source_catalog,
         prior_failed_attempts=args.prior_failed_attempts,
         risk_level=args.risk_level,
+        attempt_result_status=args.attempt_result_status,
     )
     print(json.dumps(result, ensure_ascii=False, indent=2))
     return 0 if result.get("status") == "READY" else 2
