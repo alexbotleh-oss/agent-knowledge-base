@@ -163,13 +163,13 @@ class VerifiedTaskExecutorTests(unittest.TestCase):
         experience_log.parent.mkdir(parents=True)
         experience_log.write_bytes(source_events.read_bytes())
         task_state.write_text(
-            "# TASK_STATE\\n"
-            "- **Активная задача в текущей сессии:** task-start cluster verification\\n"
-            "- **Последнее событие:** EVT-AGMS-CURRENT-001\\n",
+            "# TASK_STATE\n"
+            "- **Активная задача в текущей сессии:** task-start cluster verification\n"
+            "- **Последнее событие:** EVT-AGMS-CURRENT-001\n",
             encoding="utf-8",
         )
         handoff.write_text(
-            "# HANDOFF\\n- **Следующий шаг:** verify task-start artifact using retrieved experience\\n",
+            "# HANDOFF\n- **Следующий шаг:** verify task-start artifact using retrieved experience\n",
             encoding="utf-8",
         )
         event_log.write_text(json.dumps({
@@ -178,7 +178,7 @@ class VerifiedTaskExecutorTests(unittest.TestCase):
             "type": "checkpoint",
             "summary": "Current task-start cluster verification checkpoint",
             "status": "observed",
-        }) + "\\n", encoding="utf-8")
+        }) + "\n", encoding="utf-8")
 
         artifact_script = (
             "from pathlib import Path; import json; "
