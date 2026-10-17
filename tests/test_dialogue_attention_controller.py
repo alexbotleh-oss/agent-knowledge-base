@@ -162,6 +162,44 @@ class DialogueAttentionControllerTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "conflicting turn_id T-CONFLICT"):
             controller.project_state(events)
 
+    def test_return_replay_rejects_child_and_checkpoint_mismatch(self):
+        opened = {
+            "event_id": "EVT-OPEN-RETURN-CHECK",
+            "type": "attention_branch_opened",
+            "attention": {
+                "turn_id": "T-OPEN-RETURN-CHECK",
+                "branch_id": "BR-RETURN-CHECK",
+                "classification": "SIDE_BRANCH",
+                "parent": {"task_id": "TASK-PARENT", "checkpoint_id": "CKPT-PARENT"},
+                "child": {"task_id": "TASK-CHILD", "checkpoint_id": "CKPT-CHILD"},
+            },
+        }
+        wrong_child = {
+            "event_id": "EVT-RETURN-WRONG-CHILD",
+            "type": "attention_returned",
+            "attention": {
+                "turn_id": "T-RETURN-WRONG-CHILD",
+                "branch_id": "BR-RETURN-CHECK",
+                "parent_task_id": "TASK-PARENT",
+                "parent_checkpoint_id": "CKPT-PARENT",
+                "child_task_id": "TASK-OTHER",
+            },
+        }
+        with self.assertRaisesRegex(ValueError, "child task mismatch"):
+            controller.project_state([opened, wrong_child])
+
+        wrong_checkpoint = {
+            **wrong_child,
+            "event_id": "EVT-RETURN-WRONG-CHECKPOINT",
+            "attention": {
+                **wrong_child["attention"],
+                "parent_checkpoint_id": "CKPT-STALE",
+                "child_task_id": "TASK-CHILD",
+            },
+        }
+        with self.assertRaisesRegex(ValueError, "parent checkpoint mismatch"):
+            controller.project_state([opened, wrong_checkpoint])
+
     def test_bad_journal_fails_closed(self):
         self.log.parent.mkdir(parents=True)
         self.log.write_text("{broken json\n", encoding="utf-8")
