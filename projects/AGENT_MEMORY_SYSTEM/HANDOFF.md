@@ -826,3 +826,6 @@ Important remaining gap: real ingestion + promotion is tested, but the same test
 - PR #38 is still Draft/open/unmerged and now has a synchronized base, unique event IDs and the missing validator import. The current journal preserves EVT-AGMS-20261017-006 and appends the correction as EVT-AGMS-20261017-007.
 - Exact-head CI success does not prove live restore or automatic ChatGPT invocation. Neither verified_session_restore nor agent_memory_cycle has been executed from this ChatGPT environment. Keep live end-to-end status NOT RUN.
 - Next: run verified_session_restore against the current branch tip, confirm only allowlisted metadata files differ from the verified code HEAD, then run agent_memory_cycle with --repository. Do not merge PR #38 or any other PR without explicit approval.
+
+
+- **Metadata-tip CI:** current metadata-only branch tip 4dec7ba980f64172bc44a7719d19abd660e01a71 also passed run 39022983191 (446 Python tests, 1 skipped; 4 Node tests; write audit 143/0; memory and project/stack validation PASS). The continuity checkpoint intentionally retains code HEAD 3de7a25d4248ed7612807ee7faf800b1c5d0240f and its exact code-head run 39022902051; the later tip changes only allowlisted checkpoint/task/handoff metadata.
