@@ -201,6 +201,89 @@ def register_attachment(
     }
 
 
+def resolve_attachment(
+    library_root: Path | str = DEFAULT_LIBRARY_ROOT,
+    *,
+    attachment_id: str,
+    library_ref: str | None = None,
+) -> dict[str, Any]:
+    """Resolve a registered occurrence to its private object after scope/hash checks."""
+    root = Path(library_root).expanduser().resolve()
+    attachment_id = _required(attachment_id, "attachment_id")
+    refs_path = root / "references.jsonl"
+    if not refs_path.is_file():
+        return {"status": "UNAVAILABLE", "reason": "attachment reference registry is missing"}
+    occurrence = None
+    for number, line in enumerate(refs_path.read_text(encoding="utf-8").splitlines(), 1):
+        try:
+            row = json.loads(line)
+        except json.JSONDecodeError as exc:
+            raise ValueError(f"corrupt attachment reference registry at line {number}") from exc
+        if not isinstance(row, dict):
+            raise ValueError(f"invalid attachment reference registry at line {number}")
+        if row.get("attachment_id") == attachment_id:
+            if occurrence is not None and occurrence != row:
+                raise ValueError(f"duplicate attachment_id conflict: {attachment_id}")
+            occurrence = row
+    if occurrence is None:
+        return {"status": "UNAVAILABLE", "reason": "attachment reference was not found",
+                "attachment_id": attachment_id}
+    resolved_ref = occurrence.get("library_ref")
+    if library_ref is not None and library_ref != resolved_ref:
+        raise ValueError("attachment_id/library_ref mismatch")
+    project_id = occurrence.get("project_id")
+    if not isinstance(project_id, str) or not PROJECT_RE.fullmatch(project_id):
+        raise ValueError("attachment reference has invalid project scope")
+
+    object_path = root / "objects.jsonl"
+    if not object_path.is_file():
+        return {"status": "UNAVAILABLE", "reason": "library object registry is missing",
+                "attachment_id": attachment_id, "library_ref": resolved_ref}
+    obj = None
+    for number, line in enumerate(object_path.read_text(encoding="utf-8").splitlines(), 1):
+        try:
+            row = json.loads(line)
+        except json.JSONDecodeError as exc:
+            raise ValueError(f"corrupt library object registry at line {number}") from exc
+        if not isinstance(row, dict):
+            raise ValueError(f"invalid library object registry at line {number}")
+        if row.get("library_ref") == resolved_ref:
+            if obj is not None and obj != row:
+                raise ValueError(f"duplicate library_ref conflict: {resolved_ref}")
+            obj = row
+    if obj is None:
+        return {"status": "UNAVAILABLE", "reason": "library object record was not found",
+                "attachment_id": attachment_id, "library_ref": resolved_ref}
+    if obj.get("project_id") != project_id or obj.get("sha256") != occurrence.get("sha256"):
+        raise ValueError("attachment reference does not match object project/hash")
+    expected_ref = f"project-library://{project_id}/objects/sha256/{obj['sha256']}"
+    if resolved_ref != expected_ref:
+        raise ValueError("library_ref does not match canonical project/hash identity")
+    relative = obj.get("relative_path")
+    if not isinstance(relative, str) or not relative:
+        raise ValueError("library object has no relative storage path")
+    candidate = (root / relative).resolve()
+    if root not in candidate.parents:
+        raise ValueError("library object path escapes the private library root")
+    if not candidate.is_file():
+        return {"status": "UNAVAILABLE", "reason": "library object bytes are missing",
+                "attachment_id": attachment_id, "library_ref": resolved_ref}
+    actual_hash = sha256_file(candidate)
+    if actual_hash != obj["sha256"]:
+        raise ValueError("library object hash mismatch; refusing to return corrupted bytes")
+    return {
+        "status": "AVAILABLE",
+        "attachment_id": attachment_id,
+        "project_id": project_id,
+        "conversation_id": occurrence.get("conversation_id"),
+        "source_message_id": occurrence.get("source_message_id"),
+        "library_ref": resolved_ref,
+        "sha256": actual_hash,
+        "size_bytes": candidate.stat().st_size,
+        "storage_locator": str(candidate),
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("source_path")
