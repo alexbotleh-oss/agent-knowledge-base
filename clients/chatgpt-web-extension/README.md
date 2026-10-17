@@ -8,7 +8,7 @@ This is a host-specific prototype for the ChatGPT web interface. It stores turn 
 - Stores the exact incoming text, the immediately previous assistant message, conversation/task identifiers, the prior checkpoint reference (currently UNKNOWN/null unless supplied by a future integration), and timestamps.
 - Tracks work start, the last assistant message count, and the final assistant response when the DOM observer can confidently identify a new completed response.
 - Shows incomplete turns and builds two rolling context windows from locally captured turns: the last five completed pairs globally and the last five completed pairs for the active ChatGPT conversation.
-- Lets the user explicitly copy a compact recovery context from the popup. Overlapping pairs are included once and labeled with both window memberships.
+- Lets the user explicitly copy a compact recovery context or insert it into an empty active ChatGPT composer. Overlapping pairs are included once and labeled with both window memberships. Insertion does not submit the message and refuses to overwrite an existing draft.
 - Allows an explicit JSONL export.
 - If registration fails, the recognized text send is blocked and the input remains in the composer.
 - No background upload, analytics, or external network requests are implemented.
@@ -54,6 +54,6 @@ Before relying on this prototype on a real device, run every applicable item in 
 
 ## Recovery workflow
 
-Open the extension popup → use “Скопировать контекст диалога” to copy the two rolling windows for the active conversation → paste that context into the new/current ChatGPT chat when continuity is needed. For an interrupted turn, inspect the incomplete turn and copy its recovery prompt separately. The window context is copied only after an explicit click; it is not injected into or sent with the user's message automatically.
+Open the extension popup → use “Вставить контекст в пустое поле текущего чата” to insert the two rolling windows into an empty composer, or use “Скопировать контекст диалога” and paste manually. Review the inserted context and press Send yourself; the extension never submits it automatically and refuses to overwrite an existing draft. For an interrupted turn, inspect the incomplete turn and copy its recovery prompt separately. For every meaningful work step, the model can cross-check these windows only if the context is actually present in the conversation/request; this browser prototype does not silently inject context into every future model call.
 
 Do not infer that an incomplete turn means no work occurred. Correlate the journal with Git changes, checkpoint records, CI, and any available artifacts. Do not delete suspected partial files automatically.
