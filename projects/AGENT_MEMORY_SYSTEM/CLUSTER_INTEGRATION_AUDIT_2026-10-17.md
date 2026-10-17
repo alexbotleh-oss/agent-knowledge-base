@@ -15,8 +15,8 @@ This is a repository/branch inspection, not a claim that the current ChatGPT ses
 - main: a0c12ba849a3416f50e1289d8f0dd20844e1e51f.
 - PR #27 integration branch: integration/memory-core-clean-20261015, HEAD 9eb2ab86fb3cc99791c8803b5ac3564ce9b63b19, Draft/open/unmerged.
 - PR #34: relocation-aware discovery, HEAD 2d661ee60da6981ad3d8ad150b7f86f0a5ae0cb7, Draft/open/unmerged, based on #27.
-- PR #35: capability-aware local source search, HEAD c979abd99f0e525a94cbe31ea74bc3f9cc496e86, Draft/open/unmerged, based on #34.
-- Exact-head CI for #35: run 39015228626 — SUCCESS; 315 Python tests (1 skipped), 4 Node tests, write-contract audit 127 mutation sites / 0 unclassified, memory/stack validation passed.
+- PR #35: capability-aware local source search and cluster audit, at the verified audit checkpoint HEAD f4d874c7a9bc3e81c5ebe29f5609d4b1c2055acd, Draft/open/unmerged, based on #34.
+- Exact-head CI for audit checkpoint f4d874c7a9bc3e81c5ebe29f5609d4b1c2055acd: run 39016798651 — SUCCESS; both memory-protocol/record validation and knowledge-base/stack validation passed. Earlier code checkpoint c979abd99f0e525a94cbe31ea74bc3f9cc496e86 passed run 39015228626 with 315 Python tests (1 skipped), 4 Node tests, write-contract audit 127 mutation sites / 0 unclassified.
 - More than 30 PRs are open. Many are historical project-memory transfers; they are not automatically components of the current runtime. Do not bulk-merge them or treat open as integrated.
 
 Relevant parallel drafts checked:
@@ -183,6 +183,15 @@ The cluster is not accepted merely because every module imports or CI passes. Ac
 - partial failure stays PARTIAL/BLOCKED rather than false PASS/COMPLETE;
 - the next process can resume from the stored state;
 - the user-visible report is derived from verified outcomes, not only from the plan or a prior summary.
+
+## 8. Audit self-check: documented lesson not applied to a new event
+
+Direct inspection of `projects/AGENT_MEMORY_SYSTEM/events.jsonl` found that `EVT-AGMS-20261017-002` was appended after `EVT-AGMS-20261017-001`, yet its relation pointed backward using `followed_by`. The repository already contains lesson `L-AGMS-20261013-002` and prior correction events explaining this exact relation-direction failure.
+
+- **Observed:** the new event violated an existing documented rule.
+- **Correction:** the original event was left unchanged; `EVT-AGMS-20261017-003` was appended with an `edge_corrections` overlay changing the interpreted relation to `preceded_by`.
+- **System implication:** this is direct evidence that a stored lesson did not reliably influence the next write. A pre-write temporal-relation validator and regression test are still missing. The current architecture audit can identify imports and declared paths, but does not check semantic consistency of event relations.
+- **Status:** source discrepancy confirmed and corrected append-only; prevention is not implemented.
 
 ## Current status
 

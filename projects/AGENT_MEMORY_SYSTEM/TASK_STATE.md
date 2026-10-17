@@ -754,3 +754,13 @@ P2 is not yet declared ready: this test mocks the final verified restore packet,
 - **Verified base CI:** PR #35 code HEAD c979abd99f0e525a94cbe31ea74bc3f9cc496e86 passed run 39015228626 (315 Python tests, 1 skipped; 4 Node tests; write audit 127/0). The new audit/checkpoint commits need their own exact-head CI confirmation.
 - **Next action:** reconcile PR #33 bootstrap/identity, PR #32 writeback and current #27 runtime contracts; define one task-start orchestration contract and one turn/event/message journal contract; then selectively integrate #28/#30/#31 only after matching interfaces and re-running tests on current head.
 - **Status:** audit recorded; unified cluster remains PARTIAL, not end-to-end accepted.
+
+
+## Active checkpoint — audit call-graph and memory-application regression (2026-10-17)
+
+- **Goal remains:** connect existing memory/continuity mechanisms into one verifiable cluster adapted to the current ChatGPT + GitHub connector workflow; do not restart archive transfer or browser-extension integration.
+- **Call-graph finding:** PR #30 `agent_memory_cycle.run_cycle()` calls task-start experience mapping, attention inspection, branch-return reconciliation and guarded explicit parent return. Its task-start map calls `minimal_agent_loop`, attention inspection and check-reuse policy. Neither path calls approved semantic-memory restore, applicability evaluation, or decision-frontier reduction. It is therefore a candidate subcycle, not the unified task-start entrypoint.
+- **Behavioral regression:** `EVT-AGMS-20261017-002` contained a reversed `followed_by` edge despite an existing lesson against this exact mistake. `EVT-AGMS-20261017-003` now corrects interpretation via append-only overlay. This is evidence that documentation alone did not prevent recurrence.
+- **Current PR chain:** #35 remains Draft/open/unmerged on #34/#27; no merge and no main edits. Exact-head CI for audit checkpoint `f4d874c7a9bc3e81c5ebe29f5609d4b1c2055acd` passed run [39016798651](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/39016798651). The correction/checkpoint commit following that checkpoint requires its own exact-head CI result.
+- **Next action:** implement and test a pre-write temporal relation validator, then define the unified task-start packet contract so approved-memory retrieval, experience candidates, applicability/frontier and attention/return can be composed without duplicating authority.
+- **Status:** audit source review expanded; relation corrected append-only; prevention and unified runtime remain unimplemented.
