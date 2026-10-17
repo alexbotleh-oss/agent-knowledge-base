@@ -61,13 +61,17 @@
       "expected_path": "core/agent_bootstrap.md",
       "expected_blob_sha": "170972deabf4ccbd072a38c1400eac490c4da348",
       "candidate_paths": [],
-      "purpose": "Find the exact bootstrap source known to exist on PR #33 while checking the current integration refs first."
+      "purpose": "Find the exact bootstrap source known to exist on PR #33 while checking the current integration refs first.",
+      "source_type": "protocol",
+      "priority": 30
     },
     {
       "source_id": "semantic-memory-registry",
       "expected_path": "registry/memory_records.jsonl",
       "candidate_paths": [],
-      "purpose": "Search the same canonical semantic-memory registry path across known refs using a stable memory/source identity or expected hash."
+      "purpose": "Search the same canonical semantic-memory registry path across known refs using a stable memory/source identity or expected hash.",
+      "source_type": "semantic_memory",
+      "priority": 10
     },
     {
       "source_id": "project-event-history",
@@ -75,7 +79,9 @@
       "candidate_paths": [
         "projects/AGENT_MEMORY_SYSTEM/EVENT_LOG.md"
       ],
-      "purpose": "Search event identity across known refs; text-only matches remain unverified candidates."
+      "purpose": "Search event identity across known refs; text-only matches remain unverified candidates.",
+      "source_type": "event_history",
+      "priority": 20
     }
   ],
   "limits": {
