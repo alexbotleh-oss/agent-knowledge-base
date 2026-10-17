@@ -144,3 +144,15 @@ Direct read-back of PR #21's legacy `lessons.jsonl` and `LESSONS.md` exposed two
 - [x] Confirmed the latest observed PR head at this checkpoint was `a801eeb324e1f480c246fcb5418b33351a3c5dbf`; GitHub Actions run #38366773680 passed on that exact SHA: https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38366773680.
 - [ ] Semantic, message-by-message reconciliation of all claims and missing binary/source artifacts remains incomplete. File read-back and successful CI do not prove historical completeness.
 - PR #22 remains Draft/open/unmerged. Do not merge without explicit user permission.
+
+ 
+## Current structured-record reconciliation — 2026-10-17
+
+This is a new read-back checkpoint; the historical counts above are retained as historical observations and are superseded for current totals by this section.
+
+- Read the four project event journals from this branch again: RECIPE_MANAGER = 25 records; B77_HTML_PWA = 22; CARD111 = 16; ORGANISM = 7. Total = **70 structured events**.
+- All 70 JSONL lines parse successfully. Every project journal has unique event IDs, and no event ID is duplicated across the four project journals.
+- The current CARD111 count is 16, not 15, because the existing journal includes `EVT-CARD111-20261013-001`, recording the six selected source conversations and their index. This record was already present; this checkpoint did not add or re-import it.
+- Structured lesson files remain: CARD111 = 6, ORGANISM = 5, global = 5, total = **16**. RECIPE_MANAGER intentionally retains its Markdown lesson index rather than a parallel `lessons.jsonl`.
+- This verifies parseability and ID uniqueness only. It does not prove full semantic reconciliation, completeness of all chats, attachment-byte coverage, or completeness of the 2026-10-05/07 export relative to later development. The archive remains a 37-conversation / 10,034-message-ID snapshot ending 2026-10-07 UTC; the separate historical count of 74 remains a different, unresolved snapshot/scope claim.
+- No raw archive was re-imported. No source PR was merged, closed, deleted, or force-updated. PR #22 remains open/Draft/unmerged.

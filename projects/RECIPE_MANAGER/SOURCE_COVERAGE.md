@@ -62,3 +62,10 @@ A later primary-source reconciliation added `EVT-RM-20261001-005`, the N99 HTML-
 
 
 The restored `EVT-20261012-007` is placed after `EVT-20261012-006` in the RECIPE_MANAGER event chain. Its candidate lesson is now represented in `LESSONS.md` as `L-RM-010`, retaining the legacy source-branch ID `LESSON-RM-010` in provenance. No `lessons.jsonl` was created because the consolidated project deliberately uses the Markdown lesson index until source-aligned structured mappings are available.
+
+ 
+## Current cross-project event-count reconciliation — 2026-10-17
+
+A fresh read-back of the current consolidation branch found 25 RECIPE_MANAGER, 22 B77_HTML_PWA, 16 CARD111, and 7 ORGANISM event records: **70 structured events**, all parseable with unique IDs both within each project journal and across the four journals. The earlier total of 69 reflected a CARD111 count of 15 before the already-present `EVT-CARD111-20261013-001` source-index event was included in the current journal. No event was added during this check.
+
+Structured lessons remain 16 across global (5), CARD111 (6), and ORGANISM (5). RECIPE_MANAGER's Markdown lesson index remains canonical; no parallel `lessons.jsonl` was introduced. These are structural counts only. Source coverage and complete semantic reconciliation remain **PARTIAL**.
