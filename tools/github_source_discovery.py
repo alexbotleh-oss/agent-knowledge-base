@@ -217,6 +217,8 @@ def discover_github_source(
             incomplete_reasons.append("FILE_LIMIT_REACHED")
             break
         paths_attempted.append({"ref": resolved["ref"], "commit_sha": resolved["commit_sha"], "path": path})
+        if resolved["ref"] not in searched_refs:
+            searched_refs.append(resolved["ref"])
         try:
             file = _read_file(repository, resolved["commit_sha"], path, fetch_json)
         except Exception as exc:
@@ -226,8 +228,6 @@ def discover_github_source(
             incomplete_reasons.append(f"FILE_UNAVAILABLE:{resolved['ref']}:{path}:{kind}")
             continue
         read_count += 1
-        if resolved["ref"] not in searched_refs:
-            searched_refs.append(resolved["ref"])
         verified = False
         match_kind = None
         matched_field = None
@@ -251,6 +251,42 @@ def discover_github_source(
             "verified_identity": verified,
         })
         if verified:
+            if resolved["ref_kind"] == "branch":
+                try:
+                    live_ref = _resolve_ref(repository, resolved["ref"], fetch_json)
+                except Exception as exc:
+                    incomplete_reasons.append(
+                        f"REF_RECHECK_FAILED:{resolved['ref']}:{_api_error_kind(exc)}"
+                    )
+                    result["ref_stable_at_return"] = False
+                    matches.append(result)
+                    return {
+                        "schema_version": SCHEMA_VERSION, "status": "SEARCH_INCOMPLETE",
+                        "matches": matches, "candidates": candidates,
+                        "coverage": {
+                            "requested_refs": refs, "searched_refs": searched_refs,
+                            "paths_attempted": paths_attempted, "files_read": read_count,
+                            "incomplete_reasons": incomplete_reasons,
+                        },
+                        "writes_performed": False, "automatic_relocation_performed": False,
+                        "scope_note": "Identity was found at an exact commit, but the branch could not be revalidated after the read.",
+                    }
+                if live_ref["commit_sha"] != resolved["commit_sha"]:
+                    incomplete_reasons.append(f"REF_MOVED_DURING_SEARCH:{resolved['ref']}")
+                    result["ref_stable_at_return"] = False
+                    matches.append(result)
+                    return {
+                        "schema_version": SCHEMA_VERSION, "status": "SEARCH_INCOMPLETE",
+                        "matches": matches, "candidates": candidates,
+                        "coverage": {
+                            "requested_refs": refs, "searched_refs": searched_refs,
+                            "paths_attempted": paths_attempted, "files_read": read_count,
+                            "incomplete_reasons": incomplete_reasons,
+                        },
+                        "writes_performed": False, "automatic_relocation_performed": False,
+                        "scope_note": "Identity was found at an exact historical commit, but the branch moved during discovery.",
+                    }
+            result["ref_stable_at_return"] = True
             matches.append(result)
             if resolved["ref"] == expected_ref and path == expected_path:
                 status = "FOUND_AT_EXPECTED_PATH"
@@ -271,8 +307,8 @@ def discover_github_source(
             candidates.append(result)
 
     status = (
-        "CANDIDATES_UNVERIFIED" if candidates else
         "SEARCH_INCOMPLETE" if incomplete_reasons else
+        "CANDIDATES_UNVERIFIED" if candidates else
         "NOT_FOUND_WITHIN_SEARCH_SCOPE"
     )
     return {
