@@ -7,9 +7,11 @@ from typing import Any, Callable
 from canonical_memory_index import DEFAULT_INDEX_ROOT, DEFAULT_REGISTRY, check_index_freshness
 from relocation_aware_discovery import discover
 from adaptive_source_search import build_plan as build_adaptive_search_plan, execute_search as execute_adaptive_search
+from github_source_discovery import discover_github_source
 from verified_session_restore import build_verified_session_packet, request_json
 
 DEFAULT_SOURCE_CATALOG = Path(__file__).resolve().parents[1] / "registry" / "source_catalog.json"
+DEFAULT_REMOTE_SOURCE_CATALOG = Path(__file__).resolve().parents[1] / "registry" / "remote_source_catalog.json"
 
 def _canonical(value: Any) -> bytes:
     return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
