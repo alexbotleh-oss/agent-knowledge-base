@@ -77,7 +77,7 @@ def build_plan(sources: list[dict], request: dict) -> dict:
         return {"status": "INVALID_INPUT", "plan_version": PLAN_VERSION, "tiers": [],
                 "reason": "at least one source profile is required", "writes_performed": False}
     if not isinstance(request, dict):
-        return {"status": "INVALID_INPUT", "plan_version": PLAN_VERSION, "tiers:": [],
+        return {"status": "INVALID_INPUT", "plan_version": PLAN_VERSION, "tiers": [],
                 "reason": "request must be an object", "writes_performed": False}
     if not any(request.get(k) for k in ("identity", "expected_sha256", "query")):
         return {"status": "INVALID_INPUT", "plan_version": PLAN_VERSION, "tiers": [],
