@@ -41,6 +41,7 @@ CONTRACTS = {
     "tools/turn_lifecycle_ledger.py": "protected local append-only turn journal: advisory lock, fsync, exact-input hash, explicit lifecycle states, fail-closed corrupt journal; workspace artifact scan is read-only and ownership remains UNKNOWN",
     "tools/turn_lifecycle_adapter.py": "authenticated local HTTP adapter: request/response socket writes are protocol output, while all durable state changes delegate to the protected turn lifecycle ledger; loopback by default, bearer auth, body/origin validation",
     "tools/project_attachment_library.py": "private local attachment library: project-scoped content-addressed objects, SHA-256 verification, atomic first-write, OS advisory lock, fsynced append-only object/reference registries, exact replay/conflict guards; no payloads in public repo",
+    "tools/project_attachment_adapter.py": "authenticated loopback-only HTTP attachment intake: exact origin allowlist, bearer auth, explicit project/conversation/message provenance, bounded raw-body reads, temporary staging file cleaned after registration, delegates durable object/index writes to private project attachment library, never returns attachment bytes",
 }
 DEFAULT_MUTATING_SUFFIXES = (".md", ".jsonl", ".json", ".sqlite", ".db")
 
