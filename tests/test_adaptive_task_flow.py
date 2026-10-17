@@ -116,8 +116,8 @@ class AdaptiveTaskFlowTests(unittest.TestCase):
             task.write_text("# TASK_STATE\n- **Активная задача в текущей сессии:** staging snapshot\n", encoding="utf-8")
             handoff.write_text("# HANDOFF\n- **Следующий шаг:** inspect staging\n", encoding="utf-8")
             events.write_text(
-                '{"event_id":"EVT-CORR-1","type":"correction","project_id":"TEST","summary":"cache recovery index pointer correction","status":"verified"}\\n'
-                '{"event_id":"EVT-CORR-2","type":"correction","project_id":"TEST","summary":"cache recovery index pointer correction retry","status":"verified"}\\n',
+                '{"event_id":"EVT-CORR-1","type":"correction","project_id":"TEST","summary":"cache recovery index pointer correction","status":"verified"}\n'
+                '{"event_id":"EVT-CORR-2","type":"correction","project_id":"TEST","summary":"cache recovery index pointer correction retry","status":"verified"}\n',
                 encoding="utf-8",
             )
             result = run_minimal_agent_loop(
