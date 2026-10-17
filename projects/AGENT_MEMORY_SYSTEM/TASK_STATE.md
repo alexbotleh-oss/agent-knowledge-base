@@ -722,3 +722,45 @@ P2 is not yet declared ready: this test mocks the final verified restore packet,
 - **Relation to the startup report:** the local resumable runner, durable pipeline coordinator, synthetic ingestion→promotion/index→verified-restore test, and crash/replay tests already exist on this integration branch. This fix tightens ledger identity validation; it does not establish completeness of the user's real archive.
 - **Still blocked/unverified:** the two files attached at this session start do not contain a raw conversation archive suitable for production acceptance. Real archive completeness, attachment payload coverage and full chronological reconciliation remain PARTIAL/UNKNOWN until tested against the actual immutable source snapshot.
 - **PR safety:** PR #27 remains Draft/open/unmerged against `main`; no merge or `main` change.
+
+
+## Active checkpoint — capability-aware retrieval and architecture discovery (2026-10-17)
+
+- **Current goal:** make the agent independently recover the real memory/tool layout, select suitable sources by known capabilities, search alternatives when an expected location misses, preserve identity/provenance, and distinguish code presence from actual runtime use.
+- **Current branch/PR:** feature/capability-aware-retrieval-planner-20261017, PR #35, Draft/open/unmerged; stacked on PR #34, which is stacked on PR #27. Do not merge or modify main.
+- **Implemented on this branch:** tools/adaptive_source_search.py; registry/source_catalog.json; tools/audit_memory_architecture.py; core/memory_system_component_map.md; tests for tier ordering, unknown metadata fallback, read-only architecture audit, and adaptive restore fallback. tools/memory_aware_session_restore.py now calls adaptive local discovery after PARTIAL_NO_MATCH when the catalog is available.
+- **Verified narrow scenario:** test_adaptive_catalog_finds_stable_identity_elsewhere checks that a stable ID found away from the expected path is returned as a verified discovery result without relocation or semantic promotion.
+- **CI evidence:** exact code HEAD 5fe1b6d52c9dfadd84dbf269299ea5ae248f679f passed GitHub Actions run 39015104957. Subsequent documentation/checkpoint commits require final-head CI verification; fetch live branch and PR metadata before continuing.
+- **Repository structure recovered:** immutable source/staging and intake; metadata-only source registry; separately approved semantic-memory registry; correction overlay; derived multidimensional index; task/session restore; broader coordinator that composes ingestion, promotion, index refresh and restore when explicitly invoked. The archive temporal index is a separate read-only evidence-search tool.
+- **Known gaps:** local source catalog only; no remote GitHub branch/revision adapter yet; no connected-app/device/archive adapters; adaptive planner only runs when restore is invoked and a partial-index no-match occurs; ChatGPT session-start execution is not automatic; lexical/exact retrieval is not semantic embedding ranking.
+- **Path discrepancy:** core/agent_bootstrap.md was not found on main, integration/memory-core-clean-20261015, or the current feature branch. The README points to core/universal_instructions.md and core/agent_runtime_protocol.md. Do not invent a replacement until the expected bootstrap contract and other sources are checked.
+- **Deferred parent task:** complete archive transfer/reconciliation remains deferred until recovery and knowledge application improve; do not restart a broad archive import as a side effect of this work.
+- **Next action:** verify exact latest HEAD and CI, then implement a read-only GitHub branch/revision source adapter with branch SHA/blob SHA provenance and tests for missing expected path, stale refs, partial access, and conflicting revisions.
+- **Status:** local fallback integration implemented and narrowly tested; full live-session behavior unverified.
+
+
+## Active checkpoint — full cluster integration audit (2026-10-17)
+
+- **Active goal:** determine which existing memory/continuity tools can be connected into one working cluster, what must be adapted to the current ChatGPT + GitHub connection method, and what is still missing. This audit does not restart the deferred large archive transfer.
+- **Current branch:** feature/capability-aware-retrieval-planner-20261017, PR #35, Draft/open/unmerged; stacked on #34, then #27. main remains a0c12ba849a3416f50e1289d8f0dd20844e1e51f and is unchanged.
+- **Audit report:** projects/AGENT_MEMORY_SYSTEM/CLUSTER_INTEGRATION_AUDIT_2026-10-17.md; linked from README. Findings are revision-scoped.
+- **Strongest existing cluster:** source import/staging → metadata-only source registry → separately approved semantic-memory promotion → canonical index → memory-aware restore. Synthetic E2E coverage exists. This is a connected data pipeline, not a full autonomous dialogue runtime.
+- **Parallel task-start paths:** restore_session_packet/minimal_agent_loop and verified_session_restore/memory_aware_session_restore are separate; the attention/task-start/branch-return cycle is on PR #30; applicability/decision frontier is on PR #28. A single outer orchestrator is not yet verified.
+- **Instruction branch correction:** core/agent_bootstrap.md exists on PR #33 branch fix/identity-continuity-contract-20261017 (HEAD 82ce508c6b77f6060e4674ecfe24830b61eb27c6; CI run 39012907765 SUCCESS), but not on main or current #27/#34/#35 stack. Do not recreate it on #35; reconcile the branch and replace the branch-pinned global-instruction URL after stable integration.
+- **Writeback/communication gap:** PR #32 protocol is not automatic platform behavior. turn_lifecycle_adapter requires a trusted local client; the current ChatGPT + GitHub connector can inspect/write repo files and validate CI but cannot run arbitrary checkout Python in this chat. There is no confirmed live host bridge that calls pre-action/post-action persistence automatically.
+- **Journal contract gap:** project events.jsonl, local turn_lifecycle_ledger, PR #32 TURN_JOURNAL and the proposed private dialogue-message ledger need distinct responsibilities and stable cross-references. Do not let the same event become several competing authorities.
+- **Adaptive search gap:** the engine supports source type/format/capability/size filters, but the current memory-aware restore caller passes only project ID, identity and query. Remote branch/revision search is not implemented.
+- **Parallel PR state:** #28/#29/#30/#31/#32/#33 are open drafts with different base revisions. #31 browser-extension integration remains deferred. No bulk merge or main change.
+- **Verified base CI:** PR #35 code HEAD c979abd99f0e525a94cbe31ea74bc3f9cc496e86 passed run 39015228626 (315 Python tests, 1 skipped; 4 Node tests; write audit 127/0). The new audit/checkpoint commits need their own exact-head CI confirmation.
+- **Next action:** reconcile PR #33 bootstrap/identity, PR #32 writeback and current #27 runtime contracts; define one task-start orchestration contract and one turn/event/message journal contract; then selectively integrate #28/#30/#31 only after matching interfaces and re-running tests on current head.
+- **Status:** audit recorded; unified cluster remains PARTIAL, not end-to-end accepted.
+
+
+## Active checkpoint — audit call-graph and memory-application regression (2026-10-17)
+
+- **Goal remains:** connect existing memory/continuity mechanisms into one verifiable cluster adapted to the current ChatGPT + GitHub connector workflow; do not restart archive transfer or browser-extension integration.
+- **Call-graph finding:** PR #30 `agent_memory_cycle.run_cycle()` calls task-start experience mapping, attention inspection, branch-return reconciliation and guarded explicit parent return. Its task-start map calls `minimal_agent_loop`, attention inspection and check-reuse policy. Neither path calls approved semantic-memory restore, applicability evaluation, or decision-frontier reduction. It is therefore a candidate subcycle, not the unified task-start entrypoint.
+- **Behavioral regression:** `EVT-AGMS-20261017-002` contained a reversed `followed_by` edge despite an existing lesson against this exact mistake. `EVT-AGMS-20261017-003` now corrects interpretation via append-only overlay. This is evidence that documentation alone did not prevent recurrence.
+- **Current PR chain:** #35 remains Draft/open/unmerged on #34/#27; no merge and no main edits. Exact-head CI for audit checkpoint `f4d874c7a9bc3e81c5ebe29f5609d4b1c2055acd` passed run [39016798651](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/39016798651). The correction/checkpoint commit following that checkpoint requires its own exact-head CI result.
+- **Next action:** implement and test a pre-write temporal relation validator, then define the unified task-start packet contract so approved-memory retrieval, experience candidates, applicability/frontier and attention/return can be composed without duplicating authority.
+- **Status:** audit source review expanded; relation corrected append-only; prevention and unified runtime remain unimplemented.

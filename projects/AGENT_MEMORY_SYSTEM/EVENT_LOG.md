@@ -68,3 +68,37 @@
 - **Статус записи:** документы записаны через GitHub Contents API; обязательная проверка чтением после записи и CI относятся к отдельному этапу и не подразумеваются самим фактом записи.
 - **Ограничение:** зафиксирована архитектура и рабочая инструкция; код реализации, автоматический планировщик/стек и поведенческие тесты не добавлены.
 - **Следующий шаг:** выполнить read-back всех изменённых файлов и проверить CI на точном конечном HEAD.
+
+
+## 2026-10-17 — EVT-AGMS-20261017-001: карта памяти и адаптивный локальный поиск
+
+- **Источник:** текущая работа в PR #35; commit 5fe1b6d52c9dfadd84dbf269299ea5ae248f679f; exact-head CI [#39015104957](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/39015104957).
+- **Подтверждено:** добавлен read-only аудит прямых импортов инструментов и объявленных путей хранения; создан локальный registry/source_catalog.json; адаптивный поиск подключён к tools/memory_aware_session_restore.py при PARTIAL_NO_MATCH; добавлен регрессионный тест обнаружения стабильного ID в альтернативном локальном расположении.
+- **Ограничения:** локальный поиск работает только по явно описанным корням текущего checkout. Он не ищет автоматически в удалённых ветках, внешних архивах, подключённых приложениях и на устройствах. Код не запускается автоматически при каждом старте ChatGPT.
+- **Расхождение пути:** core/agent_bootstrap.md отсутствует в проверенных деревьях main, integration/memory-core-clean-20261015 и текущей feature-ветки. В README каноническими точками входа указаны core/universal_instructions.md и core/agent_runtime_protocol.md. Не создавать файл-замену без проверки предназначенного контракта и других источников.
+- **Следующий шаг:** проверить CI конечного HEAD; затем добавить read-only адаптер GitHub для поиска ожидаемого файла по веткам/ревизиям с сохранением branch SHA и blob SHA, включая тесты неполного доступа, stale ref и конфликтующих версий.
+- **Статус:** локальная интеграция реализована и узко проверена; сквозное поведение в живой сессии ChatGPT не подтверждено. PR #35 остаётся Draft/open/unmerged; main не менялся.
+
+
+## 2026-10-17 — EVT-AGMS-20261017-002: аудит связности кластера
+
+- **Артефакт:** projects/AGENT_MEMORY_SYSTEM/CLUSTER_INTEGRATION_AUDIT_2026-10-17.md.
+- **Подтверждено:** data pipeline source ingestion → approved semantic-memory promotion → canonical index → memory-aware restore уже связан и имеет синтетические E2E-тесты. Но task-start/experience retrieval разветвлён между restore_session_packet/minimal_agent_loop и verified_session_restore/memory_aware_session_restore; attention/return, applicability/decision frontier, writeback и bootstrap-инструкции находятся в отдельных незлитых PR.
+- **Исправление предыдущего вывода:** core/agent_bootstrap.md найден в PR #33 branch fix/identity-continuity-contract-20261017, HEAD 82ce508c6b77f6060e4674ecfe24830b61eb27c6; exact-head CI run 39012907765 SUCCESS. Он отсутствует в main и текущей #27/#34/#35 цепочке, поэтому это проблема интеграции веток, а не глобально потерянный файл.
+- **Главный runtime-разрыв:** GitHub connector читает/пишет файлы и проверяет CI, но не запускает произвольный Python checkout внутри текущего чата. turn_lifecycle_adapter требует отдельного доверенного клиента и не наблюдает ChatGPT сам.
+- **Согласование контрактов:** PR #32 TURN_JOURNAL, turn_lifecycle_ledger, проектный events.jsonl и проектируемый private message ledger должны получить чёткие непересекающиеся роли и стабильные ссылки. Не допускать несколько независимых источников истины для одного события.
+- **Поиск:** adaptive_source_search подключён к memory_aware_session_restore, но сейчас передаются только project ID, identity и query; source_type, format, required_capabilities и size_bytes не передаются, поэтому capability-aware ranking в интегрированном пути неполный.
+- **Доказательство базового состояния:** HEAD PR #35 c979abd99f0e525a94cbe31ea74bc3f9cc496e86, CI run 39015228626 SUCCESS: 315 Python tests (1 skipped), 4 Node tests, write audit 127/0. Последующие audit commits требуют новой проверки exact-head CI.
+- **Следующий шаг:** согласовать PR #33 identity/bootstrap, PR #32 writeback и current #27 runtime protocol; определить единую точку входа task-start и роли журналов; затем выборочно интегрировать #28/#30/#31 по текущему контракту. Не выполнять bulk merge.
+- **Ограничения:** PR #35 Draft/open/unmerged; main не менялся. Browser-extension integration и массовый перенос архива остаются отложенными.
+
+
+## 2026-10-17 — EVT-AGMS-20261017-003: исправление направления ребра в аудите кластера
+
+- **Источник:** прямая проверка `projects/AGENT_MEMORY_SYSTEM/events.jsonl`; урок `L-AGMS-20261013-002`; commit `724cb13253e2695e1469d0dc902389c18105dd93`.
+- **Наблюдение:** `EVT-AGMS-20261017-002` был добавлен после `EVT-AGMS-20261017-001`, но ссылался на него через `followed_by`, то есть с неверным направлением.
+- **Важно для аудита системы:** правило уже существовало в памяти, но не предотвратило повторение. Это прямое свидетельство разрыва между сохранённым знанием и фактическим применением.
+- **Коррекция:** исходная запись не переписывалась; в `events.jsonl` добавлен `EVT-AGMS-20261017-003` с append-only `edge_corrections` overlay, меняющим интерпретацию на `preceded_by`.
+- **Не решено:** автоматическая проверка направления temporal relations до записи и регрессионный тест. Исправление последствия не равно предотвращению повторения.
+- **Следующий шаг:** реализовать pre-write validator и проверить его на старых и новых event records.
+- **Статус:** ошибка исправлена в интерпретации; prevention mechanism отсутствует.

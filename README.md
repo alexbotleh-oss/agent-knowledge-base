@@ -15,6 +15,9 @@
 ## Основные протоколы
 - [`core/continuous_agent_architecture.md`](core/continuous_agent_architecture.md) — целевая архитектура памяти, навыков, окружения, планирования, контроля отклонений и мультимодальной проверки.
 - [`core/source_ingestion_protocol.md`](core/source_ingestion_protocol.md) — безопасный приём источников и аудит полноты.
+- [`core/memory_system_component_map.md`](core/memory_system_component_map.md) — фактическая карта компонентов памяти, хранилищ, связей и непокрытых интеграций.
+- `tools/audit_memory_architecture.py` — read-only аудит зависимостей инструментов, объявленных путей хранения и отсутствующих ожидаемых источников.
+- [Полный аудит интеграции кластера](projects/AGENT_MEMORY_SYSTEM/CLUSTER_INTEGRATION_AUDIT_2026-10-17.md) — инвентаризация механизмов, параллельных PR, разрывов интеграции и плана сборки единой цепочки.
 - [`core/agent_runtime_protocol.md`](core/agent_runtime_protocol.md) — рабочий цикл непрерывной задачи.
 
 ## Назначение
