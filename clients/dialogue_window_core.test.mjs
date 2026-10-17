@@ -81,6 +81,29 @@ test("recovery context includes stable attachment refs but never storage payload
   assert.doesNotMatch(prompt, /storage_locator|private\/path|file bytes must not leak/);
 });
 
+test("attachment reference validation enforces source, project, hash and references-only shape", () => {
+  const sha = "b".repeat(64);
+  const ref = {
+    attachment_id: "ATT-2",
+    project_id: "AGENT_MEMORY_SYSTEM",
+    conversation_id: "chat-A",
+    source_message_id: "T-1",
+    library_ref: "project-library://AGENT_MEMORY_SYSTEM/objects/sha256/" + sha,
+    sha256: sha,
+    size_bytes: 24,
+    access_status: "AVAILABLE",
+    original_name: "Отчёт.pdf",
+    media_type: "application/pdf"
+  };
+  const safe = core.validateAttachmentRef(ref, "T-1");
+  assert.equal(safe.library_ref, ref.library_ref);
+  assert.equal("payload" in safe, false);
+  assert.throws(() => core.validateAttachmentRef({ ...ref, payload: "bytes" }, "T-1"), /unknown field/);
+  assert.throws(() => core.validateAttachmentRef({ ...ref, source_message_id: "T-2" }, "T-1"), /source turn mismatch/);
+  assert.throws(() => core.validateAttachmentRef({ ...ref, project_id: "OTHER_PROJECT" }, "T-1"), /project\/hash mismatch/);
+  assert.throws(() => core.validateAttachmentRef({ ...ref, sha256: "c".repeat(64) }, "T-1"), /project\/hash mismatch/);
+});
+
 test("durable receive sequence wins over tied timestamps", () => {
   const first = turn(1, "chat-A", { received_at: "2026-10-17T00:00:00.000Z", received_sequence: 2 });
   const second = turn(2, "chat-A", { received_at: "2026-10-17T00:00:00.000Z", received_sequence: 1 });
