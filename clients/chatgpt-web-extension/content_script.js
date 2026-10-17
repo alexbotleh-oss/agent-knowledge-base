@@ -242,6 +242,44 @@
     }
   }
 
+  chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (sender?.id !== chrome.runtime.id || message?.action !== "INSERT_DIALOGUE_CONTEXT") return false;
+    const text = message.text;
+    if (typeof text !== "string" || !text.trim() || text.length > MAX_TEXT_CHARS) {
+      sendResponse({ status: "ERROR", error: "invalid_dialogue_context" });
+      return false;
+    }
+    const input = composer();
+    if (!input) {
+      sendResponse({ status: "ERROR", error: "composer_not_found" });
+      return false;
+    }
+    if (composerText(input)) {
+      sendResponse({ status: "ERROR", error: "composer_not_empty; existing draft was preserved" });
+      return false;
+    }
+    try {
+      input.focus();
+      if (typeof input.value === "string") {
+        const descriptor = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(input), "value");
+        if (descriptor?.set) descriptor.set.call(input, text);
+        else input.value = text;
+        input.dispatchEvent(new InputEvent("input", { bubbles: true, inputType: "insertText", data: text }));
+      } else {
+        let inserted = false;
+        try { inserted = document.execCommand("insertText", false, text); } catch {}
+        if (!inserted) {
+          input.textContent = text;
+          input.dispatchEvent(new InputEvent("input", { bubbles: true, inputType: "insertText", data: text }));
+        }
+      }
+      sendResponse({ status: "INSERTED", characters: text.length, submitted: false });
+    } catch (error) {
+      sendResponse({ status: "ERROR", error: "context_insert_failed:" + String(error?.message || error) });
+    }
+    return false;
+  });
+
   const observer = new MutationObserver(() => scheduleResponseCheck());
   observer.observe(document.documentElement, { childList: true, subtree: true, characterData: true });
   void recoverActiveTurn().then(turn => { if (turn) scheduleResponseCheck(); });
