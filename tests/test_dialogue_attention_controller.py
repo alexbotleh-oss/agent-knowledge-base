@@ -136,6 +136,32 @@ class DialogueAttentionControllerTests(unittest.TestCase):
         event = controller.read_events(self.log)[0]
         self.assertEqual(event["status"], "unknown")
 
+    def test_conflicting_turn_id_replay_fails_closed(self):
+        events = [
+            {
+                "event_id": "EVT-TURN-A",
+                "type": "attention_turn_classified",
+                "attention": {
+                    "turn_id": "T-CONFLICT",
+                    "active_task_id": "TASK-A",
+                    "active_checkpoint_id": "CKPT-A",
+                    "classification": "CONTINUATION",
+                },
+            },
+            {
+                "event_id": "EVT-TURN-B",
+                "type": "attention_turn_classified",
+                "attention": {
+                    "turn_id": "T-CONFLICT",
+                    "active_task_id": "TASK-B",
+                    "active_checkpoint_id": "CKPT-B",
+                    "classification": "CONTINUATION",
+                },
+            },
+        ]
+        with self.assertRaisesRegex(ValueError, "conflicting turn_id T-CONFLICT"):
+            controller.project_state(events)
+
     def test_bad_journal_fails_closed(self):
         self.log.parent.mkdir(parents=True)
         self.log.write_text("{broken json\n", encoding="utf-8")
