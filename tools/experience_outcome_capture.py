@@ -175,7 +175,7 @@ def capture_verified_experience_candidate(
         "temporal_basis": "artifact_timestamp",
         "type": "test",
         "summary": f"Verified outcome candidate for {request_summary.strip()}",
-        "status": "verified",
+        "status": "observed",
         "facts": [
             f"Acceptance criterion: {acceptance_criterion.strip()}",
             f"Evidence marker was found exactly in {relative_evidence}",
