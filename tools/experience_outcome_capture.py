@@ -118,6 +118,8 @@ def capture_verified_experience_candidate(
 
     root = Path(evidence_root).resolve()
     evidence_path = Path(evidence_file)
+    if not evidence_path.is_absolute():
+        evidence_path = root / evidence_path
     if evidence_path.is_symlink():
         return {"status": "BLOCKED_EVIDENCE_SYMLINK", "writes_performed": False}
     resolved_evidence = evidence_path.resolve()
@@ -138,6 +140,8 @@ def capture_verified_experience_candidate(
         }
 
     target = Path(event_log)
+    if not target.is_absolute():
+        target = root / target
     if target.is_symlink():
         return {"status": "BLOCKED_EVENT_LOG_SYMLINK", "writes_performed": False}
     target = target.resolve()
