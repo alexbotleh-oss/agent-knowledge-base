@@ -23,8 +23,9 @@ function activeConversationId() {
       const url = tabs?.[0]?.url || "";
       try {
         const parsed = new URL(url);
-        const match = parsed.pathname.match(/\\/c\\/([^/?#]+)/);
-        resolve(match ? match[1] : null);
+        const segments = parsed.pathname.split("/");
+        const cIndex = segments.indexOf("c");
+        resolve(cIndex >= 0 && segments[cIndex + 1] ? segments[cIndex + 1] : null);
       } catch {
         resolve(null);
       }
