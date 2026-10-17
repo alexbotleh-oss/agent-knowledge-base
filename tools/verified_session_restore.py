@@ -29,7 +29,7 @@ METADATA_ONLY_PATHS = {
 }
 
 EVENT_RECORD_PATH_RE = re.compile(
-    r"^projects/AGENT_MEMORY_SYSTEM/events/EVT-AGMS-[0-9]{8}-[0-9]{3}-[A-Z0-9_-]+\\.md$"
+    r"^projects/AGENT_MEMORY_SYSTEM/events/EVT-AGMS-[0-9]{8}-[0-9]{3}-[A-Z0-9_-]+\.md$"
 )
 
 
