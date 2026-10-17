@@ -855,3 +855,15 @@ The no-repeat check fingerprint now binds the current request and relevant seman
 - **PR safety:** PR #30 remains OPEN / DRAFT / UNMERGED; base `audit/agent-memory-e2e-20261016`, not `main`. No merge or `main` change is authorized.
 - **Trust limitations:** no production trust root/keyring has been configured and owner-approved; generated-key tests remain synthetic. Real archive import and automatic ChatGPT cross-chat startup/capture remain unverified.
 - **Next action:** continue source-led audit of receipt claim typing, trust-boundary failure behavior and guarded parent-return path; add focused regressions only for concrete source-supported invariants. Preserve fail-closed behavior and do not invent a production trust root.
+
+
+## Verified checkpoint — malformed signed applicability result type (2026-10-17)
+
+- **Source-backed defect:** `tools/trusted_receipt_verifier.py::make_applicability_verifier` collected signed result claims into a Python set without checking their type. A correctly signed claim with a dict/list result could raise `TypeError` instead of failing closed.
+- **Fix:** reject applicability receipt results unless they are non-empty strings before signature verification/result aggregation. This does not make a signature alone authoritative; the external pinned keyring and identity/source/basis bindings remain required.
+- **Regression:** `tests/test_trusted_receipt_verifier.py::test_applicability_callback_binds_candidate_record_and_basis_file` now also checks a correctly signed dict-valued result and requires a safe `None` result rather than an exception.
+- **Exact branch code/test head:** `2516faf2f005bfb2bc28941d3ccef668b0fd033b` on `umc02/attention-return-controller-20261016`. CI [run 38994383051](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38994383051) completed SUCCESS for the PR merge checkout including this exact head: Python unittest **400 passed, 1 skipped**; 4 Node tests passed; memory validation PASS.
+- **CI limits:** pytest-based stack checks skipped because pytest is not installed; HTML/PWA and JS lint/test/build skipped because package/test setup is absent. These paths are not verified by this run.
+- **Trust/production boundary:** no production trust root/keyring has been configured and owner-approved; generated-key tests are synthetic. Real complete archive import and automatic ChatGPT cross-chat startup/capture remain unverified.
+- **PR safety:** PR #30 remains OPEN / DRAFT / UNMERGED; base `audit/agent-memory-e2e-20261016`, not `main`. No merge or `main` change is authorized.
+- **Next action:** continue auditing guarded parent return and malformed/corrupt event handling for concrete fail-open paths, with focused regressions and exact-head CI. Preserve append-only history and do not invent a production trust root.
