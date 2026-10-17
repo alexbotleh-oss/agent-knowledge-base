@@ -109,6 +109,17 @@ class TrustedReceiptVerifierTests(unittest.TestCase):
         wrong = verify_signed_receipt(receipt, claim, keyring_path=self.keyring, expected_keyring_sha256="0" * 64, now=self.now)
         self.assertEqual(wrong["status"], "BLOCKED_TRUST_ROOT_MISMATCH")
 
+    def test_check_result_receipt_requires_expiry(self):
+        claim = {"check_key": "CHECK-1", "input_fingerprint": "a" * 64, "result_status": "PASS"}
+        receipt = self._receipt(claim, "check_result")
+        receipt = self._sign(receipt)
+        result = verify_signed_receipt(
+            receipt, claim, keyring_path=self.keyring,
+            expected_keyring_sha256=self.keyring_sha, now=self.now,
+        )
+        self.assertEqual(result["status"], "RECEIPT_EXPIRED_OR_INVALID")
+        self.assertFalse(result["verified"])
+
     def test_expiry_must_follow_issue_time_even_with_clock_skew(self):
         claim = {"check_key": "CHECK-1", "input_fingerprint": "a" * 64, "result_status": "PASS"}
         receipt = self._receipt(claim, "check_result")
