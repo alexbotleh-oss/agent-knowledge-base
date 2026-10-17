@@ -837,3 +837,11 @@ Important remaining gap: real ingestion + promotion is tested, but the same test
 - **Текущий следующий шаг:** Повторить live restore/task-start smoke на текущем PR #38 branch; подтвердить READY_FOR_REVIEW или PARTIAL без блокировки, затем записать результат.
 - **Блокеры / решение пользователя:** Не изменять main, не объединять и не закрывать PR, не создавать новые инструменты или PR без доказанной необходимости; архив и браузерное расширение остаются отложенными.
 - **Последнее событие:** Run 39023599367 подтвердил VERIFIED_SESSION_RESTORE_PASS, но task-start был заблокирован из-за UNKNOWN в семантическом контексте и отсутствующего канонического memory registry. Последний контекстный checkpoint теперь содержит явные machine-readable labels для goal, next step, constraints и last event.
+
+
+## Latest live smoke result — 2026-10-17
+
+- GitHub Actions run 39023790479 passed on branch-tip efc7096a411f6ade91b4ce7cc1462e8d0d12589a.
+- Verified restore passed; task-start returned READY_FOR_REVIEW with RESTORED_PACKET. Cluster readiness is PARTIAL because approved semantic memory is UNAVAILABLE. No writes, planning authorization or execution occurred.
+- CONTINUITY_CHECKPOINT.json records code HEAD ebed5f048188b1f057f1c40a00ca148acd087b6 and exact CI run 39023539993, plus the live smoke result.
+- The repository CLI path is verified in GitHub Actions; automatic ChatGPT-host invocation remains unverified. Continue the PR #1–#38 audit. Do not invent approved memory records or resume the deferred archive transfer.
