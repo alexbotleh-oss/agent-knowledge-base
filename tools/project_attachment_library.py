@@ -35,6 +35,19 @@ def sha256_file(path: Path) -> str:
     return digest.hexdigest()
 
 
+def _preflight_registry(path: Path, label: str) -> None:
+    """Validate existing registry bytes before creating or copying any library object."""
+    if not path.exists():
+        return
+    for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+        try:
+            row = json.loads(line)
+        except json.JSONDecodeError as exc:
+            raise ValueError(f"corrupt {label} at line {number}") from exc
+        if not isinstance(row, dict):
+            raise ValueError(f"invalid {label} record at line {number}")
+
+
 def _append_idempotent(path: Path, record: dict[str, Any], key: str) -> str:
     """Append one JSONL record; exact replay is idempotent, changed identity conflicts."""
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -101,6 +114,10 @@ def register_attachment(
     if not source.is_file():
         raise ValueError("source attachment is missing or is not a regular file")
 
+    # Fail closed before any library object is copied if either append-only index
+    # is already corrupt.
+    _preflight_registry(root / "objects.jsonl", "library object registry")
+    _preflight_registry(root / "references.jsonl", "attachment reference registry")
     digest = sha256_file(source)
     # Object paths are hash-only: a renamed file or a different extension must
     # not create a second physical copy for identical bytes.
