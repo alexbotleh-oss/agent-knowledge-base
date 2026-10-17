@@ -811,7 +811,7 @@ Important remaining gap: real ingestion + promotion is tested, but the same test
 
 ## Current return point — full PR audit and PR #38 reconciliation (2026-10-17)
 
-- Continue from PR #38 HEAD 258b11610bd57d8c4b1ff051a36b74dd75c741b6; base branch is PR #37's feature/remote-github-source-discovery-20261017, currently at 429d939ee0d2225d673dea709b12fd25f8fc9c8e. The merge commit preserves both histories and the corrected branch compares as 7 commits ahead / 0 behind across five intended paths.
+- Continue from the PR #38 branch after merge commit 258b11610bd57d8c4b1ff051a36b74dd75c741b6; base branch is PR #37's feature/remote-github-source-discovery-20261017, at checkpoint HEAD 429d939ee0d2225d673dea709b12fd25f8fc9c8e. The merge commit preserves both histories. At the later state checkpoint, PR #38 HEAD was e951cc2785023b1d50064377a5499baefb628e2d and the diff was 11 commits ahead / 0 behind across nine paths: five code/event files and four audit/state documents.
 - Event history now retains PR #37's EVT-AGMS-20261017-006 and appends the PR #38 temporal-relation correction as EVT-AGMS-20261017-007. Read-back verified 32 JSONL records and 32 unique event IDs.
 - The missing validate_event_append import in dialogue_attention_controller.py is fixed on the existing PR branch. No new PR was created and main was not changed.
 - Exact-head CI for 258b11610bd57d8c4b1ff051a36b74dd75c741b6 has not run or is not visible through the connected GitHub actions; no check-runs were returned. Local clone failed on DNS. Keep status UNVERIFIED, not PASS.
