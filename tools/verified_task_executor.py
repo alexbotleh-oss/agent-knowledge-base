@@ -27,7 +27,7 @@ if str(TOOLS_DIR) not in sys.path:
     sys.path.insert(0, str(TOOLS_DIR))
 
 from minimal_agent_loop import run_minimal_agent_loop
-from experience_outcome_capture import capture_verified_experience_candidate
+from experience_outcome_capture import append_observed_failure_event, capture_verified_experience_candidate
 
 MAX_TIMEOUT_SECONDS = 300
 MAX_OUTPUT_BYTES = 1_000_000
@@ -450,6 +450,33 @@ def run_reviewed_action(
             "writes_performed": False,
         }
     if verification_status != "PASS":
+        event_log_relative = resolved["event_log"].relative_to(root).as_posix()
+        event_log_was_modified_by_action = any(
+            item.get("path") == event_log_relative or "error" in item
+            for item in protected_source_changes
+        )
+        failure_event = (
+            {
+                "status": "BLOCKED_EVENT_LOG_CHANGED_DURING_ACTION",
+                "writes_performed": False,
+            }
+            if event_log_was_modified_by_action
+            else append_observed_failure_event(
+                resolved["event_log"],
+                evidence_root=root,
+                project_id=project_id,
+                task_id=task_id,
+                request_summary=request,
+                action_taken=" ".join(action_argv),
+                acceptance_criterion=acceptance_criterion,
+                evidence_file=resolved["evidence_report"],
+                observed_outcome=(
+                    f"Action status {action_status}; return code {return_code}; "
+                    f"acceptance verification {verification_status}"
+                ),
+                related_event_ids=[reviewed_experience_event_id],
+            )
+        )
         return {
             "status": "ACTION_OR_ACCEPTANCE_CHECK_FAILED",
             "action_status": action_status,
@@ -457,6 +484,7 @@ def run_reviewed_action(
             "verification_status": verification_status,
             "checks": checks,
             "protected_source_changes": protected_source_changes,
+            "failure_event": failure_event,
             "evidence_report": resolved["evidence_report"].relative_to(root).as_posix(),
             "evidence_sha256": _sha(report_bytes),
             "execution_performed": True,
