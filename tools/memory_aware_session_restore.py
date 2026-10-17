@@ -162,7 +162,13 @@ def build_memory_aware_packet(task_state:Path,handoff:Path,event_log:Path,reposi
                         normalized_sources.append(item)
                     for stable_hint in (task_id, context_id):
                         if stable_hint:
-                            request = {"identity": stable_hint, "project_id": projects[0]}
+                            request = {
+                                "identity": stable_hint,
+                                "project_id": projects[0],
+                                "source_type": "semantic_memory",
+                                "format": "jsonl",
+                                "required_capabilities": ["approved_records", "source_provenance"],
+                            }
                             if query:
                                 request["query"] = query
                             plan = build_adaptive_search_plan(normalized_sources, request)
@@ -173,7 +179,13 @@ def build_memory_aware_packet(task_state:Path,handoff:Path,event_log:Path,reposi
                                 "result": result,
                             })
                     if query and not any((task_id, context_id)):
-                        request = {"query": query, "project_id": projects[0]}
+                        request = {
+                            "query": query,
+                            "project_id": projects[0],
+                            "source_type": "semantic_memory",
+                            "format": "jsonl",
+                            "required_capabilities": ["approved_records", "source_provenance"],
+                        }
                         plan = build_adaptive_search_plan(normalized_sources, request)
                         result = execute_adaptive_search(plan, request, expected_relative)
                         searches.append({
