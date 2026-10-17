@@ -776,3 +776,14 @@ P2 is not yet declared ready: this test mocks the final verified restore packet,
 - **Known gaps:** no automatic ChatGPT session-start invocation; no callable host bridge to local turn-lifecycle adapter; remote GitHub branch/revision source discovery not implemented; external archives/connectors/device storage not in catalog; positive applicability remains fail-closed without externally pinned trusted keyring; archive transfer remains deferred.
 - **Next action:** verify final-head CI after documentation/checkpoint updates; then implement read-only GitHub branch/revision discovery preserving branch HEAD SHA and file blob SHA, access/coverage and conflicting revisions.
 - **Status:** local task-start composition is implemented and narrowly CI-tested; live ChatGPT end-to-end behavior is not confirmed.
+
+## Active checkpoint — remote source discovery integration (2026-10-17)
+
+- **Current goal:** make the existing task-start cluster recover sources from known alternate GitHub refs when the expected local location misses, preserving identity and provenance without automatic relocation or memory promotion.
+- **Current PR:** #37, Draft/open/unmerged, branch feature/remote-github-source-discovery-20261017, stacked on #36 → #35 → #34 → #27. main unchanged.
+- **Implemented:** tools/github_source_discovery.py; registry/remote_source_catalog.json; remote fallback in tools/memory_aware_session_restore.py after PARTIAL_NO_MATCH and only when no verified local identity match exists.
+- **Search contract:** expected path across refs first; configured alternate paths after; exact commit SHA, blob SHA, content SHA-256 and size retained; structured identity/hash required for verified match; prose mention is unverified; branch head is rechecked; access errors, stale refs and incomplete coverage remain SEARCH_INCOMPLETE.
+- **Code checkpoint evidence:** 0ada1a3db718ad09a050206cd1767681507bc1fe passed exact-head CI run 39018573896: 436 Python tests, 1 skipped; strict write audit 143/0. Documentation/event checkpoint commits require final-head CI verification.
+- **Known limits:** remote catalog only covers listed refs and paths; no global branch enumeration or Git-history scan; external archive, connectors and device storage are not connected; ChatGPT does not automatically invoke the local CLI; host bridge is not implemented.
+- **Next action:** verify final exact-head CI, then add catalog-head drift checks and expand source adapters only after the live host invocation path is defined.
+- **Status:** bounded remote fallback implemented and narrowly tested; end-to-end live ChatGPT behavior unverified.
