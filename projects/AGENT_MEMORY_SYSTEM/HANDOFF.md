@@ -752,3 +752,219 @@ Important remaining gap: real ingestion + promotion is tested, but the same test
 **Traceability matrix:** `projects/AGENT_MEMORY_SYSTEM/CAPABILITY_TRACEABILITY_MATRIX_2026-10-16.md` is now created and maps each planned capability to specification, code, tests, revision-scoped CI, status, and residual gap.
 
 **Next action:** implement CAP-02/UMC-02 — a runtime attention controller and causal return stack — then connect it to task-time experience retrieval. Do not restart the archive audit or re-run completed CI unless inputs/revision change or a new contradiction appears.
+
+
+## Current handoff — UMC-02 attention/return controller (2026-10-16)
+
+**Active goal:** connect separate memory tools into one working agent mechanism. Immediate milestone is CAP-02/UMC-02 runtime attention control; next is task-start staged experience retrieval. Do not restart the completed end-to-end audit unless a new contradiction appears.
+
+**Implementation:** branch `umc02/attention-return-controller-20261016`, draft PR #30 (https://github.com/alexbotleh-oss/agent-knowledge-base/pull/30), based on audit branch `audit/agent-memory-e2e-20261016` / PR #29. `main` is untouched. Both PRs remain draft/unmerged.
+
+**New files:** `tools/dialogue_attention_controller.py`, `tests/test_dialogue_attention_controller.py`. The controller proposes a turn class, writes to the canonical AGENT_MEMORY_SYSTEM event log, rebuilds active state and nested causal return stack from the log, requires explicit child task/checkpoint IDs for switches, preserves deferred ideas without activating them, and returns in LIFO order. It uses stable event IDs and the canonical journal lock-file convention.
+
+**Acceptance boundary:** local explicit-call primitive only. It does not observe ChatGPT automatically, authenticate supplied task IDs, update TASK_STATE/HANDOFF, or call staged experience retrieval. Lexical matches are suggestions, not proof of intent; ambiguous turns are retained as unknown. A stale lock requires manual recovery after checking that no writer is active. Exact-head CI must be checked before calling this implementation verified.
+
+**Next action:** check CI for the exact current PR #30 head, correct any failures, then implement a task-start composition entry point that restores the task/checkpoint, retrieves staged current-project experience and relevant failures/decisions, carries provenance/conflicts/unknowns, and uses the attention stack to prevent side branches from displacing the parent goal. Keep PRs draft and do not change `main` without explicit user approval.
+
+
+## Updated handoff — task-start experience map (2026-10-16)
+
+The immediate UMC-02 gap now has a first connected local path. PR #30 / branch `umc02/attention-return-controller-20261016` adds both `tools/dialogue_attention_controller.py` and `tools/task_start_experience_map.py`, with focused tests. The second tool composes `run_minimal_agent_loop` (restore + context/trust gate + bounded lexical retrieval) with the attention/return stack and source-hash/event-ID-bound candidate expansion. It groups current-project candidates separately from cross-project exclusions and unknown scope. It remains read-only and never treats a candidate as an accepted lesson.
+
+**Verified evidence so far:** controller-only exact-head CI run [38900377700](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38900377700) passed on code/test HEAD `e7f9b2e111f5166c43e918603bc8961382a371a7` (305 Python tests, 1 skipped; workflow validation steps passed). The task-start composition and tests passed exact-head CI run [38900653824](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38900653824) on HEAD `6823caad51f66a1a9e4e73200f867c42f9420f2e` (307 Python tests, 1 skipped; workflow validation steps passed). Subsequent task-ID inference and documentation/test-diagnostic changes still require exact-head CI before the current revision can be called verified.
+
+**Remaining:** staged S1/S2 retrieval and decision-frontier integration; full canonical graph/semantic retrieval; automatic ChatGPT capture/startup; automatic TASK_STATE/HANDOFF reconciliation on return; real archive acceptance. Do not confuse successful synthetic integration with production readiness. PR #30 remains draft/unmerged and `main` is untouched.
+
+**Next action:** confirm CI on the exact current code head, then connect the separate staged retrieval/evaluator path only after checking its branch-specific status and trust boundary. Test exclusions, conflicts, unknowns, provenance preservation, changed-source detection, and restart/return/no-repeat behavior. Keep PR #30 draft and do not merge without explicit user approval.
+
+
+## Updated handoff — staged retrieval and decision frontier connected (2026-10-16)
+
+The local task-start composition now connects UMC-02 attention/return with UMC-03 staged lesson retrieval and the read-only decision frontier. PR #30 branch `umc02/attention-return-controller-20261016` contains `tools/dialogue_attention_controller.py`, `tools/task_start_experience_map.py`, the updated `tools/minimal_agent_loop.py`, `tools/applicability_evaluator.py`, `tools/decision_frontier.py`, and their tests. S1 uses explicit same-project marker overlap; S2 is the same-project lexical fallback; S3 cross-project retrieval remains deferred. The frontier preserves KEEP_FOR_RATIONALE_REVIEW / EXCLUDE / HOLD / CONFLICT / OUT_OF_SCOPE and proposes the next discriminating information check without granting planning or execution permission.
+
+**Provenance of integration:** UMC-03 source files were copied from PR #28 branch `umc03/verifier-positive-path-20261016` at exact blob SHAs: minimal loop `5e0f5b6626c1d8c2fe5006a2559c3ab79d87eee0`; evaluator `2c271c3e4859014c64b1a75b04185a45e4135cb2`; frontier `eced52b37478301725cc1246fdca0a8b03037c97`. PR #28 remains open/draft/unmerged, so the two branches now contain overlapping implementation history. Consolidate the duplicate work before merging either branch; do not silently merge PR #28.
+
+**Validation:** exact code/test HEAD `e15efb0083c69a85de66aee1171a5e17c83cb027` passed CI [38901329090](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38901329090): 357 Python tests (1 skipped), 4 Node tests, write audit 134/0, validation steps PASS.
+
+**Remaining acceptance gaps:** no production trusted verifier/trust root; positive-path verifier tests use test doubles; real lesson-marker coverage unproven; no bounded planning consumer; no automatic ChatGPT capture/startup; no automatic TASK_STATE/HANDOFF update on return; retrieval is not complete semantic/graph traversal; production archive completeness remains PARTIAL/UNKNOWN.
+
+**Next action:** add integrated tests for source mutation between retrieval and review, duplicate IDs/provenance gaps, cross-project exclusion, conflicts, unknown criteria, nested return after process restart and no-repeat. Then design a production verifier trust root. Keep PR #30 draft/unmerged and `main` untouched.
+
+
+## Updated handoff — provenance/replay regression results (2026-10-16)
+
+The integrated path now has targeted fail-closed regression tests for source mutation after retrieval, duplicate candidate identities, fresh-process stack restore and return-event replay. Exact code/test HEAD `1fa6079379feb19afb4d39b7d77e39f0a4ac2d79` passed CI [38901785446](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38901785446): 362 Python tests (1 skipped), 4 Node tests, strict write audit 134 mutation sites / 0 unclassified, memory and project validation PASS.
+
+**What this proves:** these synthetic test paths behave as specified at that revision. It does not prove real archive completeness, automatic client capture/startup, production trusted applicability verification, or full canonical graph search. Positive applicability remains gated by an injected verifier callback and no production trust root is configured.
+
+**Next action:** add integrated task-start tests for cross-project exclusions, conflicts and unknown criteria; exercise the no-repeat policy through the whole task-start/branch-return flow; then design the production verifier trust boundary separately. PR #28 and PR #30 both remain draft/unmerged and contain overlapping UMC-03 source history that must be consolidated before merge.
+
+
+## Updated handoff — task-start scope/conflict checks (2026-10-16)
+
+The integrated task-start wrapper now exercises cross-project/global exclusion and conflicting lesson recommendations. Same-project lessons with insufficient evidence remain HOLD; conflicts surface as CONFLICT and the next check is RECONCILE_CONFLICT. Exact code/test HEAD `0cc63385747561eea01cdc52d65cae6bbe291cc4` passed CI [38902032991](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38902032991): 364 Python tests (1 skipped), 4 Node tests, write audit 134/0, memory/project validation PASS.
+
+**Next action:** test no-repeat across the complete task-start, branch-result and parent-return workflow, including unchanged evidence and previously completed checks. Then design the production trusted verifier/trust root. Keep PR #30 draft/unmerged and do not change `main`.
+
+
+## Updated handoff — source-bound check reuse (2026-10-16)
+
+The task-start path now includes a read-only no-repeat decision backed by a write-once/check-replay-safe event recorder. A check is reusable only when the stable check key, current input fingerprint, relevant source hashes and candidate fingerprints match and the recorded PASS has evidence references. If inputs change, it returns RECHECK_INPUTS_CHANGED; missing/malformed hashes or corrupt journals fail closed. The result is explicitly recorded evidence, not independently authenticated truth.
+
+Exact code/test HEAD `842088a1c3210e716318f830c687f76e9af58878` passed CI [38902588618](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38902588618): 373 Python tests (1 skipped), 4 Node tests, write audit 140/0, memory/project validation PASS.
+
+**Next action:** connect check reuse to child-result publication and parent-task reconciliation so completed checks are not repeated across branch return, then design the production trusted verifier. PR #30 remains draft/unmerged; PR #28 remains separately draft/unmerged; consolidate overlapping UMC-03 source history before any merge.
+
+
+## Updated handoff — relevant-input no-repeat fingerprint (2026-10-16)
+
+The no-repeat policy now uses a semantic task-context fingerprint plus line-level candidate hashes instead of blindly hashing all task-state files. This avoids repeating an unchanged check after unrelated checkpoint notes or events, while changed requests/goals/check specifications/candidate records force recheck. If retrieval is truncated, whole-source hashes remain part of the fingerprint. Source changes between retrieval and review block candidate use. A recorded PASS still requires evidence refs and is not independently authenticated.
+
+Exact code/test HEAD `2e0135175421cb99ab2b7325018b0bb648f5a1e0` passed CI [38902931125](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38902931125): 373 Python tests (1 skipped), 4 Node tests, write audit 140/0, memory/project validation PASS.
+
+**Next action:** connect check reuse with branch-result acknowledgement, guarded parent TASK_STATE projection and attention-stack return without bypassing the existing trust gate. PR #30 remains draft/unmerged; PR #28 remains separately draft/unmerged; consolidate duplicated UMC-03 source history before merge.
+
+## Updated handoff — unified local cycle (2026-10-16)
+
+Use `tools/agent_memory_cycle.py` as the current single entry point for the connected local path. It composes task-start retrieval and no-repeat, source/applicability review, canonical attention projection, branch-result/acknowledgement reconciliation and explicit parent return. Return fails closed unless the current child result exists, its latest owner acknowledgement is accepted, the parent checkpoint is projected and the reconciliation report is consistent. After return, the task-start map is rebuilt and the exact prior check can be reused when its relevant inputs are unchanged.
+
+Exact code/test HEAD `2e47f8e596de7c3329dea73dea6845d7a0276d2d` passed CI [38903772855](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38903772855): 377 Python tests (1 skipped), 4 Node tests, write audit 140/0, memory/project validation PASS.
+
+**Boundary:** explicit local invocation only; no automatic ChatGPT capture/startup, no production trusted applicability verifier, and no autonomous execution. The synthetic parent checkpoint was already projected; the orchestrator does not bypass `guarded_task_state_update.py`. PR #30 remains draft/unmerged, PR #28 remains separate draft/unmerged; consolidate duplicate UMC-03 history before any merge.
+
+## Updated handoff — RIMA identity continuity (2026-10-16)
+
+The user assigned the continuous agent the name **РИМА — Развивающаяся Интеллектуальная Модель Агента** and specified feminine grammatical gender. This is an accepted project identity, not merely a label for the current chat.
+
+- Append-only event `EVT-AGMS-20261016-009` records before-state, user action/source, and after-state in `events.jsonl`; the human-readable event log mirrors it.
+- Accepted decision: `DEC-AGMS-20261016-001`.
+- Current-state projection: `PROJECT_STATE.md`; task continuity checkpoint: `TASK_STATE.md`.
+- On future restore, retrieve the accepted identity and its originating event from persistent memory. Do not infer cross-chat/runtime availability from the fact that it is recorded here.
+- **Verification boundary:** read-back confirms the event record; exact-head CI and automatic startup/context injection must be checked separately. PR #30 remains Draft/open/unmerged; do not merge without explicit user approval.
+
+## Handoff — archive idempotency side branch (2026-10-16)
+
+The user requested a practical check that archive export skips existing records and writes missing ones. The writer was adjusted and regression tests now cover:
+
+1. Partial registry: one existing record is skipped and one missing record is appended.
+2. Changed source snapshot with one changed message and one unchanged message: only the changed logical record is appended as a new revision; the unchanged one is skipped.
+3. Different raw snapshot hash caused only by JSON formatting: all logical records are skipped and registry bytes remain unchanged.
+
+Exact code/test HEAD 4a257c059c1b716145e0f6311f9f7a6b8095db9f passed CI 38907787412: 388 Python tests (1 skipped), write audit 143/0, memory/project validation PASS.
+
+**Important limitation:** this is synthetic CI validation, not a real import of the user's full ChatGPT export. Do not report the personal archive as exported or complete. The current chat has not supplied a complete raw export payload to this runner. When a real source file is available, capture its SHA-256 and counts, run the importer, then compare before/after counts and confirm only missing logical records were appended.
+
+**Parent task return point:** close the production trust boundary for signed applicability/check receipts, route parent return through the guarded cycle, and preserve PR #30 as Draft/open/unmerged. main remains unchanged.
+
+
+## Follow-up — reconcile owner acknowledgement and branch-return status (2026-10-16)
+
+Read-back found that the capability matrix still claimed owner identity/reference could not be authenticated by the acknowledgement primitive. That claim was stale: PR #30 now accepts signed `owner_acknowledgement` receipts bound to the exact child result, child branch, parent task/checkpoint, decision and owner reference; the return controller re-verifies the receipt against an externally pinned keyring. A separate regression ensures that a signed acknowledgement for an older result cannot authorize a newer result. Unsigned and tampered receipts are covered by tests.
+
+The source comment indentation in `tools/agent_memory_cycle.py` is now corrected in the branch. The matrix CAP-15 row and its current-follow-up note were updated, and `CONTINUITY_CHECKPOINT.json` now records this discrepancy and the validation boundary.
+
+**Validation boundary:** the last recorded full code CI remains historical: code HEAD `4a257c059c1b716145e0f6311f9f7a6b8095db9f`, run [38907787412](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38907787412), 388 Python tests (1 skipped), write audit 143/0, memory/project validation PASS. Available workflow lookup did not establish a full run on the latest code/test head after the signed-owner-ack and stale-ack changes. Do not represent that older CI as validation of the latest code.
+
+**Remaining:** obtain exact-head full CI; configure a production trusted owner key and pinned keyring; test idempotent import against the actual complete archive; reconcile duplicate UMC-03 source history between PR #28 and PR #30. PR #30 remains Draft/open/unmerged. Do not merge or change `main` without explicit user approval.
+
+
+## Validation update — PR #30 merge candidate (2026-10-16)
+
+A follow-up read of workflow job logs found that run [38956581475](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38956581475) completed successfully on pull-request merge checkout `25a2a5c6f3265b8d78b3641190d8e6eb385e38f4`, which merges PR #30 head `a12d6f60dac306e58a912c2a25644873c53bb5e7` into base `57aa847f0f0104625d6cb6104111c4ee66a9b0cd`. The job ran `python -m unittest discover`: **396 tests, 1 skipped**; Node SDK tests: **4 passed**; strict write audit: **143 mutation sites, 0 unclassified**; memory and knowledge-base validation passed.
+
+Scope qualification: this validates the PR merge candidate including the current branch head, not a standalone checkout of the branch tip. Generic stack validation still skipped pytest-based tests because pytest was not installed, and HTML/PWA/JS lint/test/build checks were skipped because the repository has no package/test setup for those stacks. Do not describe those skipped checks as passed.
+
+The continuity checkpoint has been updated with the exact merge checkout, run URL, counts and scope. Production trusted owner key/keyring and real complete archive import remain open; PR #30 remains Draft/open/unmerged.
+
+
+## Follow-up — bind restored local memory to live branch (2026-10-16)
+
+A code-path audit found a continuity-integrity gap: `verified_session_restore.py` independently checked the live branch/CI but then built the packet from caller-supplied local files without proving those bytes came from the selected branch. This could combine current remote revision evidence with stale local `TASK_STATE.md`, `HANDOFF.md` or `events.jsonl`.
+
+**Fixes:** the verifier now compares Git blob IDs for all three local restore sources with the selected live branch through the GitHub Contents API. Missing local files, unavailable/invalid remote source evidence, or any source blob mismatch blocks packet creation. Regression test `test_local_source_drift_blocks_restore` confirms stale local state yields `REVISION_CHECK_BLOCKED` with no writes. The traceability matrix is now included in the explicit metadata-only allowlist, so a documentation-only update does not look like source-code drift.
+
+**Validation:** run [38957806991](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38957806991) passed on pull-request merge checkout `46483fd`, which includes code head `27004c4ae60e7086dc07d851817284e41c980fec`. Python unittest suite: **397 tests, 1 skipped**; Node tests: **4 passed**; write audit: **143 mutation sites / 0 unclassified**; memory and knowledge-base validation PASS. Generic pytest and HTML/PWA/JS stack checks remain skipped because tooling/setup is absent.
+
+The continuity checkpoint now records code head `27004c4ae60e7086dc07d851817284e41c980fec` and run 38957806991. Subsequent metadata-only descendants must still pass the live compare allowlist, and the local source files must match the live branch blobs before restore is accepted.
+
+**Remaining:** validate the live restore entry point against the updated branch; configure a production trust root; test the real complete archive; reconcile UMC-03 overlap between PR #28 and #30. PR #30 remains Draft/open/unmerged; `main` is unchanged.
+
+
+## UMC-03 overlap audit — preserve the newer safeguards (2026-10-16)
+
+A direct source comparison of PR #28 (`b6d32a3c36aa5df8079f63aad20fd41a8f56c512`) and PR #30 found:
+
+- `tools/applicability_evaluator.py` and `tests/test_applicability_evaluator.py` are byte-identical across both branches.
+- PR #30's `tools/minimal_agent_loop.py` adds environment-based verifier construction via `make_applicability_verifier_from_env`; the matching test checks that the configured factory is used. PR #28's copy does not include this integration.
+- PR #30's `tools/decision_frontier.py` and its tests add duplicate-candidate identity handling: preserve every source occurrence, classify ambiguous duplicate IDs as HOLD, and require explicit resolution before a direction can be used. PR #28's implementation collapses candidates through a dictionary comprehension, silently overwriting duplicate keys and losing source provenance.
+- PR #30's frontier/loop test files contain the corresponding extra regression coverage.
+
+**Consolidation guidance:** treat PR #30's duplicate-source safeguard and environment-verifier integration as necessary deltas to preserve. The identical evaluator files need one canonical implementation after branch history is reconciled; do not blindly cherry-pick the whole file set or delete PR #28 history. This is a source-level comparison, not a merge or an integration test of the combined branch.
+
+PR #28 and PR #30 remain Draft/open/unmerged. No merge or change to `main` is authorized.
+
+## Handoff — RIMA continuity and trusted-evidence work (2026-10-17)
+
+- **Identity:** Р.И.М.А. / Рима; stable agreed agent name/role across chats and projects. Feminine grammatical gender in Russian. Project identity and active task must remain separate from agent identity.
+- **Active goal:** improve the continuous memory system itself in `alexbotleh-oss/agent-knowledge-base`; do not switch to ORGANISM/CARD111 application development.
+- **Branch/PR:** `umc02/attention-return-controller-20261016`; PR #30 remains Draft/open/unmerged; do not merge or change `main` without explicit approval.
+- **Recent verified changes:** identity and anti-degradation contract added to `core/continuous_agent_architecture.md` §11, runtime requirement added to `core/agent_runtime_protocol.md`, and reusable adapter added to `core/platform_project_chat_instruction_templates.md`. Read-back confirmed all three. Decision `DEC-AGMS-20261017-001` is in `DECISIONS.md`.
+- **CI evidence:** workflow run [38966741608](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38966741608) is completed/success for commit `688aa217050cf8d76a9e262d6755fef0b0cb6b03`. This does not cover later metadata writes unless a new run confirms them.
+- **Next action:** inspect signed check-result reuse and trust binding, identify one concrete security/correctness gap, add a focused regression test and validate exact code HEAD. Do not fabricate/configure production signing trust without an externally managed keyring and owner-approved trust-root hash.
+- **Known gaps:** no production trust root configured; generated-key tests are synthetic; real archive end-to-end acceptance and universal ChatGPT cross-chat startup/capture remain unverified.
+
+
+
+## Verified checkpoint — receipt expiry ordering (2026-10-17)
+
+- **Exact branch head:** `0cb8d21f14d0416aa166e066258dbe3062579f0c` on `umc02/attention-return-controller-20261016`; PR #30 is OPEN / DRAFT / UNMERGED. Its current base is `audit/agent-memory-e2e-20261016` at `57aa847f0f0104625d6cb6104111c4ee66a9b0cd`, not `main`. Do not merge or change `main` without explicit approval.
+- **Code invariant:** `tools/trusted_receipt_verifier.py` rejects a signed receipt when `expires_at <= issued_at`, even if both timestamps are individually within clock-skew allowances.
+- **Regression test:** `test_expiry_must_follow_issue_time_even_with_clock_skew` creates and signs the inconsistent receipt; exact-head CI log confirms this test ran and passed.
+- **Exact-head CI:** [run 38967851214](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38967851214), commit `0cb8d21f14d0416aa166e066258dbe3062579f0c`, conclusion SUCCESS. Python unittest: **398 passed, 1 skipped**; Node tests: **4 passed**; strict write audit: **143 mutation sites, 0 unclassified**; memory validation PASS. Pytest-based stack checks were skipped because pytest is absent; HTML/PWA/JS lint/test/build were skipped because package/test setup is absent.
+- **What remains unproven:** production trust root/keyring is not configured; test keys are synthetic; real complete archive import and automatic ChatGPT cross-chat capture/startup remain unverified.
+- **Next action:** inspect the signed check-result reuse and trust-binding path for a concrete gap, add one focused regression only when the invariant is supported by source, and validate the new exact head. Preserve fail-closed behavior; do not invent or embed a production signing key.
+
+
+## Verified checkpoint — required expiry for reusable check receipts (2026-10-17)
+
+- **Exact branch HEAD:** `c8147aa8367b2396d38a93342f34cde674a02703` on `umc02/attention-return-controller-20261016`; PR #30 remains OPEN / DRAFT / UNMERGED. Its base is `audit/agent-memory-e2e-20261016`, not `main`. Do not merge or change `main` without explicit user approval.
+- **Code invariant:** `tools/trusted_receipt_verifier.py` now requires `expires_at` for `receipt_type == "check_result"`. Existing checks still validate expiry syntax, that it follows issue time, and that it has not expired. A missing expiry must fail closed rather than allow a signed PASS to be reused indefinitely.
+- **Regression coverage:** `tests/test_trusted_receipt_verifier.py` helper now adds an expiry to valid check-result fixtures; its dedicated missing-expiry case removes the field and re-signs the receipt. `tests/test_agent_memory_cycle.py`'s ordinary signed-check fixture also supplies expiry. Fixture cleanup imports `timedelta` explicitly.
+- **Exact-head CI:** [run 38993344250](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38993344250), exact commit `c8147aa8367b2396d38a93342f34cde674a02703`, completed SUCCESS. Python unittest: **399 passed, 1 skipped**; Node tests: **4 passed**; memory validation PASS.
+- **CI limits:** pytest-based stack tests skipped because pytest is not installed; HTML/PWA and JS lint/test/build skipped because the repository lacks the needed package/test setup. CI success is not proof that those skipped paths work.
+- **Still unproven:** no production trust root/keyring has been configured and owner-approved; generated-key tests are synthetic. Real complete archive import and automatic cross-chat ChatGPT startup/capture remain unverified.
+- **Next action:** continue source-led review of trusted check-result reuse and claim binding; make only a concrete, source-supported change with a focused regression and exact-head CI. Then update this checkpoint from verified evidence. Do not invent a production trust root.
+
+
+## Verified checkpoint — exact signed-claim binding (2026-10-17)
+
+- **Code change:** `tools/trusted_receipt_verifier.py` now rejects a signed receipt when its `claim` contains fields outside the caller's exact expected claim. This closes a source-confirmed mismatch: previously every expected field was compared, but additional signed fields were ignored. The signature still protects integrity of the whole receipt; the verifier now also enforces the exact claim schema at this boundary.
+- **Regression:** `tests/test_trusted_receipt_verifier.py::test_extra_signed_claim_fields_are_rejected` signs a check-result claim containing an unexpected `authorization_scope` field and confirms verification fails with `CLAIM_MISMATCH`.
+- **Exact code/test HEAD:** `bcd311e5cf322f536316fc22980ca17c46da8063` on `umc02/attention-return-controller-20261016`. CI [run 38993811049](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38993811049) completed SUCCESS on this exact SHA: Python unittest **400 passed, 1 skipped**; Node tests **4 passed**; memory validation PASS.
+- **CI limits:** pytest-based stack tests skipped because pytest is not installed; HTML/PWA and JS lint/test/build skipped because package/test setup is missing. These paths are not verified by this run.
+- **PR safety:** PR #30 remains OPEN / DRAFT / UNMERGED; base `audit/agent-memory-e2e-20261016`, not `main`. No merge or `main` change is authorized.
+- **Trust limitations:** no production trust root/keyring has been configured and owner-approved; generated-key tests remain synthetic. Real archive import and automatic ChatGPT cross-chat startup/capture remain unverified.
+- **Next action:** continue source-led audit of receipt claim typing, trust-boundary failure behavior and guarded parent-return path; add focused regressions only for concrete source-supported invariants. Preserve fail-closed behavior and do not invent a production trust root.
+
+
+## Verified checkpoint — malformed signed applicability result type (2026-10-17)
+
+The applicability verifier now rejects non-string/blank signed `result` claims before collecting outcomes, avoiding an unhandled `TypeError` for a validly signed but malformed dict/list value. Regression coverage exercises a signed dict result and requires safe rejection. Exact code/test head `2516faf2f005bfb2bc28941d3ccef668b0fd033b` is included in successful CI [38994383051](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38994383051): 400 Python tests passed, 1 skipped; 4 Node tests passed; memory validation PASS. Pytest-based stack checks and HTML/PWA/JS lint/test/build remain skipped due missing tooling/setup.
+
+**Next:** audit guarded parent return and malformed/corrupt event handling for concrete fail-open paths. Production trust root, real archive acceptance, and automatic ChatGPT cross-chat startup/capture remain unverified. PR #30 remains Draft/open/unmerged; do not merge or change `main` without explicit user approval.
+
+
+## Return point — trusted check-result reuse regression (2026-10-17)
+
+- Fixed malformed `evidence_refs` handling in `tools/check_reuse_policy.py`; a reusable PASS now requires a non-empty list of non-empty strings.
+- Regression: `tests/test_check_reuse_policy.py::test_malformed_evidence_refs_cannot_reuse_signed_pass`.
+- Code/test HEAD `785c9a7ccfc4e2ec4f5c3ca525df7198b51ea626`; exact commit-associated GitHub Actions run [38999688578](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38999688578) completed SUCCESS. Static/documentation checks and synthetic tests do not establish production trust-root acceptance.
+- Next: continue source-led review of check-result receipt validation and guarded parent return; preserve PR #30 Draft/open/unmerged and do not change `main`.
+
+
+## Return point — parent-return precommit race closed (2026-10-17)
+
+- Parent-return commit now revalidates the live reconciliation, top stack frame and newest signed/accepted child result under the shared journal lock.
+- Regression `tests/test_agent_memory_cycle.py::test_return_rechecks_newest_child_result_under_journal_lock` injects a newer unacknowledged result between preflight and commit and confirms no return event is appended.
+- Exact code/test HEAD `1d4e493edd748e0be48827373a33a641d4299f6b`; CI [38999847841](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38999847841) completed SUCCESS.
+- Scope limit: external writers that bypass the shared lock remain outside this guard. PR #30 stays Draft/open/unmerged; do not change `main`.

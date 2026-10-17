@@ -9,6 +9,7 @@ new code CI result.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import re
 import urllib.error
@@ -26,6 +27,7 @@ METADATA_ONLY_PATHS = {
     "projects/AGENT_MEMORY_SYSTEM/TASK_STATE.md",
     "projects/AGENT_MEMORY_SYSTEM/HANDOFF.md",
     "projects/AGENT_MEMORY_SYSTEM/events.jsonl",
+    "projects/AGENT_MEMORY_SYSTEM/CAPABILITY_TRACEABILITY_MATRIX_2026-10-16.md",
 }
 
 
@@ -53,6 +55,73 @@ def _sha(value: Any, field: str) -> str:
     if not isinstance(value, str) or not SHA_RE.fullmatch(value):
         raise RemoteEvidenceError(f"API/checkpoint field {field} is not a full 40-character SHA")
     return value.lower()
+
+
+def _git_blob_sha(raw: bytes) -> str:
+    """Return Git's SHA-1 blob ID for exact local file bytes."""
+    header = b"blob " + str(len(raw)).encode("ascii") + bytes([0])
+    return hashlib.sha1(header + raw).hexdigest()
+
+
+def _verify_local_sources(
+    project_dir: Path,
+    repository: str,
+    ref: str,
+    *,
+    fetch_json: Callable[[str], dict[str, Any]],
+) -> dict[str, Any]:
+    """Require local restore inputs to match the selected live branch blobs."""
+    project_dir = Path(project_dir)
+    encoded_ref = urllib.parse.quote(ref, safe="")
+    prefix = f"{API_ROOT}/repos/{repository}/contents"
+    filenames = ("TASK_STATE.md", "HANDOFF.md", "events.jsonl")
+    mismatches = []
+    for filename in filenames:
+        local_path = project_dir / filename
+        relative_path = f"projects/{project_dir.name}/{filename}"
+        if not local_path.is_file():
+            return {
+                "status": "LOCAL_SOURCE_UNAVAILABLE",
+                "missing_path": str(local_path),
+                "writes_performed": False,
+            }
+        url = f"{prefix}/{urllib.parse.quote(relative_path, safe='/')}?ref={encoded_ref}"
+        try:
+            remote = fetch_json(url)
+        except RemoteEvidenceError as exc:
+            return {
+                "status": "REMOTE_SOURCE_UNAVAILABLE",
+                "path": relative_path,
+                "reason": str(exc),
+                "writes_performed": False,
+            }
+        remote_sha = remote.get("sha")
+        if not isinstance(remote_sha, str) or not re.fullmatch(r"[0-9a-fA-F]{40}", remote_sha):
+            return {
+                "status": "REMOTE_SOURCE_INVALID",
+                "path": relative_path,
+                "reason": "GitHub contents response has no valid blob SHA.",
+                "writes_performed": False,
+            }
+        local_sha = _git_blob_sha(local_path.read_bytes())
+        if local_sha.lower() != remote_sha.lower():
+            mismatches.append({
+                "path": relative_path,
+                "local_blob_sha": local_sha,
+                "remote_blob_sha": remote_sha.lower(),
+            })
+    if mismatches:
+        return {
+            "status": "LOCAL_SOURCE_DRIFT",
+            "mismatches": mismatches,
+            "reason": "Local TASK_STATE/HANDOFF/event-log bytes do not match the selected live branch.",
+            "writes_performed": False,
+        }
+    return {
+        "status": "LOCAL_SOURCES_MATCH_LIVE_BRANCH",
+        "verified_paths": [f"projects/{project_dir.name}/{name}" for name in filenames],
+        "writes_performed": False,
+    }
 
 
 def verify_remote_revision(
@@ -148,13 +217,28 @@ def verify_remote_revision(
             }
         revision_status = "REMOTE_VERIFIED_METADATA_ONLY_AHEAD"
 
+    source_evidence = _verify_local_sources(
+        Path(project_dir), repository, selected_ref, fetch_json=fetch_json
+    )
+    if source_evidence.get("status") != "LOCAL_SOURCES_MATCH_LIVE_BRANCH":
+        return {
+            "status": source_evidence.get("status", "REMOTE_SOURCE_UNAVAILABLE"),
+            "repository": repository, "ref": selected_ref,
+            "live_branch_head": live_sha, "recorded_code_head": recorded_sha,
+            "recorded_ci_run_id": str(run_id), "ci_head_sha": run_sha,
+            "ci_status": run_data.get("status"), "ci_conclusion": run_data.get("conclusion"),
+            "compare_status": compare_status, "changed_paths": changed_paths,
+            "source_evidence": source_evidence, "writes_performed": False,
+        }
+
     return {
         "status": revision_status, "repository": repository, "ref": selected_ref,
         "live_branch_head": live_sha, "recorded_code_head": recorded_sha,
         "recorded_ci_run_id": str(run_id), "ci_head_sha": run_sha,
         "ci_status": run_data.get("status"), "ci_conclusion": run_data.get("conclusion"),
         "compare_status": compare_status, "changed_paths": changed_paths,
-        "unexpected_changed_paths": [], "writes_performed": False,
+        "unexpected_changed_paths": [], "source_evidence": source_evidence,
+        "writes_performed": False,
     }
 
 
@@ -172,9 +256,10 @@ def build_verified_session_packet(
             },
             "writes_performed": False,
         }
-    if remote["status"] == "CODE_REVISION_DRIFT":
+    if remote["status"] not in {"REMOTE_VERIFIED_EXACT_CODE_HEAD", "REMOTE_VERIFIED_METADATA_ONLY_AHEAD"}:
         return {
-            "status": "REVISION_CHECK_BLOCKED", "reason": remote["reason"],
+            "status": "REVISION_CHECK_BLOCKED",
+            "reason": remote.get("reason", f"Remote revision/source verification blocked: {remote['status']}"),
             "repository_revision_evidence": remote, "writes_performed": False,
         }
 

@@ -208,3 +208,36 @@ PR #22 с cross-chat memory export остаётся отдельным draft и 
 - Не подтверждено: полнота реального архива; заполненность production canonical registries; automatic ChatGPT startup/message capture; runtime attention/return controller; production applicability verifier; полноценный retrieval по всему графу памяти; runtime skill executor/environment discovery/VLM acceptance.
 - Обнаружено: статусы в нескольких документах отстают от реализации; нужен единый traceability ledger и явные superseding updates.
 - Единая матрица трассировки создана: `projects/AGENT_MEMORY_SYSTEM/CAPABILITY_TRACEABILITY_MATRIX_2026-10-16.md`. Следующий шаг — реализовать CAP-02/UMC-02: runtime-контроллер внимания и причинный стек возврата; затем подключить task-time experience map.
+
+
+## 12. Implementation update after the audited revision — 2026-10-16
+
+The earlier sections above remain a snapshot of the exact revisions named in section 3. The following changes occurred later on separate draft branch `umc02/attention-return-controller-20261016`, PR #30 (base `audit/agent-memory-e2e-20261016` / PR #29); they must not be read as already merged into PR #27 or `main`.
+
+- UMC-02 now has an executable local attention/return controller and task-start composition. The controller reconstructs a persistent nested return stack from the canonical AGENT_MEMORY_SYSTEM event log, and return replay is idempotent.
+- UMC-03 S1/S2 retrieval, applicability evaluator and decision frontier from PR #28 were copied into PR #30 with exact blob provenance recorded in TASK_STATE/HANDOFF. PR #28 remains separately open/draft/unmerged, so duplicate branch history must be consolidated before merging either PR.
+- The task-start path now composes restore, attention, event/lesson retrieval, applicability/frontier review, source hash/event-ID revalidation and source-bound no-repeat check reuse. Duplicate candidate IDs remain HOLD with all source locators; source mutation blocks candidate expansion; cross-project/global lessons remain OUT_OF_SCOPE; conflicting judgments surface as CONFLICT.
+- A completed check is reused only when check identity, relevant source hashes and candidate fingerprints match exactly and evidence refs are present. Changed inputs require recheck; missing/malformed inputs and invalid journals fail closed. A recorded PASS is not independently authenticated and does not grant planning/execution permission.
+- Exact code/test HEAD `842088a1c3210e716318f830c687f76e9af58878` passed CI [38902588618](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38902588618): 373 Python tests (1 skipped), 4 Node tests, write audit 140 mutation sites / 0 unclassified, memory/project validation PASS.
+
+These are synthetic repository tests. They do not prove complete real-archive ingestion, automatic ChatGPT capture/new-chat startup, production trusted applicability verification, a production planning consumer, or automatic TASK_STATE/HANDOFF reconciliation on return.
+
+
+## 13. No-repeat and source-fingerprint update — 2026-10-16
+
+After the UMC-02/UMC-03 integration above, PR #30 added a source-bound check-reuse ledger and refined the fingerprint so unrelated checkpoint metadata does not cause unnecessary repeated work. The current task-start map records and evaluates verification_check_completed events in the existing AGENT_MEMORY_SYSTEM event log; it does not create a second authoritative database.
+
+- A prior PASS is reusable only when the stable check key, next-check specification, relevant semantic task context, candidate identities and source-line hashes match and evidence references are present. Changed candidate/context inputs force a rerun. If retrieval is truncated, whole-source hashes are included to guard against unseen candidates.
+- Event/lesson source lines are revalidated after retrieval. Source mutation blocks review and check reuse; duplicate IDs remain HOLD with all source locators.
+- Exact code/test HEAD `2e0135175421cb99ab2b7325018b0bb648f5a1e0` passed CI [38902931125](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38902931125): 373 Python tests (1 skipped), 4 Node tests, write audit 140/0, memory/project validation PASS.
+- The result remains PARTIAL: recorded check results are not independently authenticated; production applicability verifier/trust root, full child-result/parent-state/return reconciliation, automatic ChatGPT capture/startup, full semantic graph retrieval and real archive acceptance remain open. PR #30 is still draft/unmerged; no changes to main.
+
+## 13. Unified memory-cycle entry point — 2026-10-16
+
+The separate task-start, attention controller, child-result registry and return reconciliation now have a single local orchestration entry point: `tools/agent_memory_cycle.py`.
+
+It composes task-start experience retrieval, attention-stack inspection, read-only branch-result reconciliation, exact current-branch result/accepted-acknowledgement checks and (when explicitly requested) parent return. It refuses the return if reconciliation is inconsistent, the parent ID does not match the top frame, the matching child result is missing, or the latest acknowledgement for that result is not accepted. After a successful return it rebuilds the task-start experience map so the returned state and no-repeat decision are visible in the same output. Replaying the same return turn is idempotent.
+
+Exact code/test HEAD `2e47f8e596de7c3329dea73dea6845d7a0276d2d` passed CI [38903772855](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38903772855): 377 Python tests (1 skipped), 4 Node tests, strict write audit 140/0, memory/project validation PASS.
+
+This establishes a tested synthetic repository path, not an automatically running production agent. The caller must still provide paths and explicit task context; the guarded parent checkpoint is represented as already projected; production applicability trust, real archive acceptance and automatic ChatGPT capture/startup remain open. No planning permission is granted by a successful cycle.

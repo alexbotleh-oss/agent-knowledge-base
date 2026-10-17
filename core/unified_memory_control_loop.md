@@ -346,3 +346,114 @@ The acceptance matrix above is scoped to this integration branch's HEAD. Do not 
 Older sections labelled as audits of earlier commits are historical snapshots. Their statements that promotion, canonical index or semantic restore did not exist were true at those audited revisions and are superseded for current code status by the implementation updates below and by `projects/AGENT_MEMORY_SYSTEM/END_TO_END_MEMORY_AGENT_AUDIT_2026-10-16.md`. Keep the old audit chronology; do not silently rewrite it.
 
 For the current integration branch, the synthetic ingestion → promotion/index → memory-aware restore path is covered by `tests/test_memory_pipeline_real_ingestion.py`. Exact code HEAD `0f2c76f1b79d1c73aa89eed0f3e98830658c338d` passed CI run [38862706088](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38862706088); metadata HEAD `d3f9c610b7865793960dc652c2ccccc88afef732` passed run [38864512026](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38864512026). Neither result proves production archive completeness or automatic ChatGPT startup.
+
+
+## 13. UMC-02 executable attention/return primitive — partial
+
+Implemented in tools/dialogue_attention_controller.py with tests in tests/test_dialogue_attention_controller.py. This section supersedes the earlier statement that no executable attention/return primitive existed, but it does not mark UMC-02 end-to-end complete.
+
+- The classifier proposes one of: CONTINUATION, CORRECTION, SIDE_BRANCH, DEFERRED_IDEA, NEW_TASK, PRIORITY_CHANGE, RETURN_TO_PARENT, or AMBIGUOUS. It uses deterministic lexical rules, not a semantic model. An ambiguous turn remains unknown and asks for confirmation; a lexical match is a suggestion, not independent proof of intent.
+- The controller appends attention events to the canonical projects/AGENT_MEMORY_SYSTEM/events.jsonl. The active attention state and causal return stack are projections rebuilt from the event log; there is no separate authoritative stack database.
+- A branch switch requires explicit child task/checkpoint IDs. It records the parent task/checkpoint, child task/checkpoint and return condition. Nested branches return in LIFO order; a mismatched parent is rejected. Deferred ideas are recorded but do not switch tasks or enter the return stack.
+- Stable event IDs make identical retries idempotent. A shared .lock file serializes this writer with the branch-result writer that uses the same canonical journal convention. A leftover lock is not removed automatically; verify no writer is active before manual recovery.
+- CLI examples:
+  - python3 tools/dialogue_attention_controller.py classify --turn-id T-001 --text "Кстати, проверь отдельный вопрос" --task-id TASK-PARENT --checkpoint-id CKPT-PARENT --child-task-id TASK-SIDE --child-checkpoint-id CKPT-SIDE
+  - python3 tools/dialogue_attention_controller.py inspect
+  - python3 tools/dialogue_attention_controller.py return --turn-id T-002 --parent-task-id TASK-PARENT
+
+Acceptance boundary: this is a local repository primitive invoked explicitly by a caller. It does not capture ChatGPT turns automatically, authenticate caller-supplied task IDs, update the project TASK_STATE/HANDOFF projection, or run on every new chat. Its lexical classifier needs broader adversarial/ambiguous-language testing. It is not yet wired into task-time staged experience retrieval or the PR #28 UMC-03 decision frontier. Therefore CAP-02/UMC-02 remains IMPLEMENTED_PARTIAL, not PASS.
+
+Next integration gate: add a task-start entry point that restores the current task/checkpoint, invokes staged experience retrieval, returns a compact evidence/provenance-bound experience map, and includes the attention stack's deferred/side-branch state without promoting uncertain lessons. Test the combined path after a process restart, including branch return and no-repeat checks. Keep automatic ChatGPT capture as a separate client acceptance gate.
+
+
+## 14. Task-start experience map composition — partial
+
+Implemented in tools/task_start_experience_map.py with tests in tests/test_task_start_experience_map.py. This supersedes the previous section's statement that the task-start composition entry point remained to be created.
+
+- The entry point composes the existing restore → context/trust review → bounded experience retrieval path from tools/minimal_agent_loop.py with the persistent attention/return projection from tools/dialogue_attention_controller.py.
+- It groups candidates by current-project match, cross-project mismatch and unknown scope. For each candidate it re-reads the exact source file only when its captured SHA-256 still matches, then verifies that the cited line still contains the expected event_id before exposing action_taken/outcome/hypotheses/relations as experience details.
+- It includes the current attention stack, deferred ideas and task-state alignment so a parent task remains visible while a side branch is active. A mismatch is reported, not silently reconciled.
+- The result is read-only. Candidate transfer remains UNASSESSED; planning authorization and execution remain false. A matching source hash establishes byte identity, not truth or applicability.
+
+**Acceptance boundary:** this is an explicitly invoked local composition path, not automatic new-chat startup. Retrieval is bounded lexical overlap over caller-supplied event logs, not full canonical-memory graph traversal, embedding-based ranking, or the staged S1/S2 + decision frontier implementation in separate PR #28. The controller does not update TASK_STATE/HANDOFF when a branch returns. CAP-02 and CAP-11 remain IMPLEMENTED_PARTIAL.
+
+**Next gate:** integrate staged retrieval and decision-frontier review without confusing a lexical candidate with an applicable lesson; preserve provenance and exclusions; test current-project and cross-project cases, conflicts, unknowns, duplicate source IDs, source mutation between lookup and review, and restart/return/no-repeat behavior. Then separately test the real client capture/startup boundary.
+
+
+## 15. UMC-03 staged retrieval and decision frontier connected to task start — partial
+
+The task-start composition now calls the staged lesson retrieval and read-only evaluator/frontier path from tools/minimal_agent_loop.py. The evaluator and reducer source were copied from the separately open PR #28 implementation; source blob SHAs are recorded in TASK_STATE/HANDOFF to preserve lineage. PR #28 remains separate and unmerged; consolidate the duplicate branch history before any merge.
+
+- S1 retrieves same-project lesson candidates by explicit structured marker overlap (problem types, tools, languages, environments). Markers must be present in a valid explicit experience-markers JSON block or supplied JSON object; prose is not used to infer marker values.
+- If S1 does not find a verifier-backed APPLICABLE lesson, S2 performs same-project lexical fallback. S1/S2 are retrieval stages, not proof of applicability. S3 cross-project retrieval remains deferred.
+- tools/applicability_evaluator.py keeps permissive judgments UNKNOWN unless a trusted verifier callback supplies a receipt bound to candidate, criterion, result, basis reference and source digest. The production trusted verifier/trust root is not configured; current positive-path tests use injected test doubles only.
+- tools/decision_frontier.py returns KEEP_FOR_RATIONALE_REVIEW, EXCLUDE, HOLD, CONFLICT and OUT_OF_SCOPE with provenance and one next discriminating information check. KEEP is permitted only when the evaluator put that exact candidate in usable_as_rationale. The frontier never grants planning or execution permission.
+- tools/task_start_experience_map.py now exposes S1/S2 stage reports, lesson candidates, applicability assessments, the decision frontier and its next discriminating check alongside event-history candidates and the attention return stack.
+
+Acceptance boundary: the integrated path is read-only and explicitly invoked. It does not execute the suggested check, does not automatically start on a new ChatGPT chat, and does not establish real lesson-marker coverage or production trusted applicability verification. A candidate can be surfaced as a possible path while remaining HOLD/INSUFFICIENT_DATA; it is never silently promoted. UMC-02/UMC-03/CAP-11/12/13 remain IMPLEMENTED_PARTIAL.
+
+Next validation gate: add combined-path regressions for duplicate candidate IDs across sources, candidate/source provenance gaps, source mutation between retrieval and review, cross-project exclusion, conflicts, unknown criteria, nested return after process restart, and no-repeat handling. Then implement or explicitly reject a production trusted-verifier design; do not treat a test callback as production trust.
+
+
+## 16. Combined-path provenance and replay hardening — partial
+
+The connected task-start path now has additional regression coverage for two failure modes that can make an apparently valid memory result unsafe:
+
+- Duplicate candidate identities across supplied source logs no longer silently overwrite one another in the decision frontier. Each source locator is preserved; every duplicate is classified HOLD and the next check is RESOLVE_DUPLICATE_CANDIDATE_ID, even if the evaluator report contains a positive outcome label.
+- Event candidate details are not expanded when the source file changes between retrieval and review. The map reports SOURCE_CHANGED_AFTER_RETRIEVAL and omits the source-derived experience details.
+- A fresh Python process can rebuild the open attention/return stack from the canonical event log.
+- Replaying a successful parent-return event with the same turn ID returns ALREADY_RETURNED without appending a second event or popping another stack frame.
+
+Exact code/test HEAD 1fa6079379feb19afb4d39b7d77e39f0a4ac2d79 passed GitHub Actions run 38901785446: 362 Python tests (1 skipped), 4 Node tests, strict write audit 134 mutation sites / 0 unclassified; memory and project validation passed.
+
+Remaining acceptance work: run cross-project exclusion, conflict and unknown-criteria cases through the full task-start wrapper (not only the underlying evaluator/frontier unit tests); test no-repeat across the complete workflow; validate the production trust boundary; and accept the real archive/client path. These results do not establish automatic ChatGPT capture or production applicability verification.
+
+
+## 17. Full task-start scope/conflict checks — partial
+
+The task-start wrapper now has end-to-end synthetic tests for same-project lesson candidates remaining HOLD when evidence is insufficient, cross-project/global lessons remaining OUT_OF_SCOPE, and incompatible lesson judgments surfacing as CONFLICT with a RECONCILE_CONFLICT next check. These checks run through the combined restore → event/lesson retrieval → applicability evaluator → decision frontier path, rather than testing the evaluator alone.
+
+Exact code/test HEAD 0cc63385747561eea01cdc52d65cae6bbe291cc4 passed CI run 38902032991: 364 Python tests (1 skipped), 4 Node tests, write audit 134 mutation sites / 0 unclassified, memory/project validation PASS.
+
+Remaining next gate: test no-repeat across the complete task-start/branch-result/parent-return workflow, including unchanged evidence and already completed checks; then design the production trusted verifier/trust root. This is still a synthetic repository acceptance path, not automatic ChatGPT runtime integration.
+
+
+## 18. Source-bound no-repeat check reuse — partial
+
+Implemented in tools/check_reuse_policy.py and integrated into tools/task_start_experience_map.py. The policy computes a stable check key and an input fingerprint from the next discriminating check, relevant task/restore and retrieval source hashes, and candidate identities/source hashes. It records check results as append-only verification_check_completed events in the existing canonical AGENT_MEMORY_SYSTEM event log, using the same lock file as the attention controller.
+
+- A prior PASS is reusable only when the check key and full input fingerprint match and evidence_refs are present. The task-start map then reports REUSE_RECORDED_PASS / DO_NOT_REPEAT_CHECK and sets repeat_check=false.
+- Changed source hashes or candidate fingerprints produce RECHECK_INPUTS_CHANGED. Missing/invalid source hashes do not permit reuse. PASS without evidence references is rejected. Non-PASS results are never reused as success. Conflicting prior results fail closed.
+- The writer uses stable event identity, append-only persistence, fsync, lock contention handling and replay/conflict checks. Reuse evidence is stored in the canonical AGENT_MEMORY_SYSTEM event log; no second authoritative check database is introduced.
+- A recorded PASS is not independently authenticated. The policy prevents accidental repetition when recorded inputs/evidence match; it does not itself prove that the check was executed correctly or grant planning/execution permission.
+
+Exact code/test HEAD 842088a1c3210e716318f830c687f76e9af58878 passed CI run 38902588618: 373 Python tests (1 skipped), 4 Node tests, strict write audit 140 mutation sites / 0 unclassified, memory/project validation PASS.
+
+Remaining gap: no-repeat is connected to the task-start experience map, but is not yet orchestrated across the complete child-result → parent reconciliation → return workflow. Production identity/authentication for recorded_by and the production applicability verifier remain separate open trust-boundary tasks.
+
+
+## 19. Relevant-input fingerprints and no-repeat stability — partial
+
+The check-reuse fingerprint was refined so unrelated checkpoint metadata or unrelated events do not force an identical check to rerun. It includes the current user request and relevant semantic task context (active goal, project, scope, constraints, blockers, acceptance criteria), the next discriminating check specification, and per-record candidate fingerprints. If retrieval is truncated by its candidate limit, the whole retrieval-source hashes are included as a conservative guard against unseen candidates.
+
+- Event and lesson candidates are revalidated against the captured source-file SHA-256 and exact source-line identity before review. Their line-level SHA-256 is used in the no-repeat fingerprint; any source mutation after retrieval blocks review and check reuse.
+- A new matching candidate changes the candidate set and fingerprint. A changed candidate record changes its line fingerprint. A changed task goal/request/check specification changes the semantic fingerprint. Unrelated notes and unrelated appended events do not invalidate a completed check when the reviewed inputs remain identical.
+- Exact code/test HEAD 2e0135175421cb99ab2b7325018b0bb648f5a1e0 passed CI run 38902931125: 373 Python tests (1 skipped), 4 Node tests, strict write audit 140 mutation sites / 0 unclassified, memory/project validation PASS.
+
+Remaining gap: this is no-repeat within the task-start/check path. Branch-result acknowledgement, guarded parent TASK_STATE projection and return-stack reconciliation are not yet one automatic transaction. The recorded PASS is not independently authenticated; production trusted verification remains open.
+
+## 20. Unified local memory cycle — partial implementation
+
+`tools/agent_memory_cycle.py` is the single local entry point composing the previously separate tools:
+1. Build the task-start experience map: restore, attention projection, event/lesson retrieval, source revalidation, applicability/frontier review and no-repeat evaluation.
+2. Inspect the canonical attention/return stack.
+3. Reconcile published child results, owner acknowledgements and projected parent checkpoints from the canonical AGENT_MEMORY_SYSTEM event log.
+4. If an explicit return is requested, verify that the top stack frame matches the requested parent, the current branch has a corresponding child result, the owner explicitly accepted it, and the reconciliation report is CONSISTENT.
+5. Only then append the parent-return event; afterward rebuild the task-start map against the post-return state.
+6. Preserve idempotency: replaying the same return turn ID is a no-op success and does not append another event.
+
+Integration tests cover a complete synthetic path (open side branch → publish child result → explicit acceptance → parent checkpoint projection → record a check result → run the unified cycle → return to parent → reuse the exact check without repeating it), plus fail-closed behavior when the branch result is missing and idempotent return replay.
+
+Exact code/test HEAD `2e47f8e596de7c3329dea73dea6845d7a0276d2d` passed CI run [38903772855](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38903772855): 377 Python tests (1 skipped), 4 Node tests, write audit 140 mutation sites / 0 unclassified; memory and project validation PASS.
+
+**Boundary:** this is a local explicit-invocation coordinator, not a background service or automatic ChatGPT observer. It requires supplied file paths and explicit caller context; the task-state checkpoint in the synthetic test represents a previously guarded parent projection. Production trusted applicability verification, full real-archive acceptance, automatic client capture/startup and a planning/execution consumer remain open. The coordinator never grants planning permission.
