@@ -899,3 +899,14 @@ The no-repeat check fingerprint now binds the current request and relevant seman
 - **Exact code/test HEAD:** `785c9a7ccfc4e2ec4f5c3ca525df7198b51ea626`. GitHub Actions run [38999688578](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38999688578) completed SUCCESS for this PR code/test checkpoint. No test count is claimed here because the run summary exposed only job-level validation steps.
 - **Limit:** this is a local fail-closed regression and synthetic test coverage, not production trusted-key acceptance. The externally pinned production trust root remains unconfigured.
 - **PR safety:** PR #30 remains Draft/open/unmerged, base `audit/agent-memory-e2e-20261016`; no merge or `main` change.
+
+
+## Guarded parent-return race fix — revalidate before commit under the journal lock (2026-10-17)
+
+- **Source-backed gap:** the unified cycle validated reconciliation and the latest acknowledged child result before calling the journal writer. Another writer could append a newer child result between preflight and return commit, making the earlier acknowledgement stale.
+- **Correction:** `tools/dialogue_attention_controller.py::_return_to_parent_unchecked` accepts an internal precommit guard and executes it while holding the shared journal lock. `tools/agent_memory_cycle.py` rechecks live reconciliation, attention-stack top, parent task/checkpoint and the newest child-result acknowledgement immediately before appending the return event. Guard errors/blocks fail closed; idempotent replay remains a no-write success.
+- **Regression:** `tests/test_agent_memory_cycle.py::test_return_rechecks_newest_child_result_under_journal_lock` injects a newer unacknowledged result after initial preflight and verifies that no `attention_returned` event is written.
+- **Read-back:** modified controller, cycle and test were fetched from the branch; guard wiring and regression case were confirmed present.
+- **Exact code/test HEAD:** `1d4e493edd748e0be48827373a33a641d4299f6b`. GitHub Actions run [38999847841](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38999847841) completed SUCCESS.
+- **Boundary:** this closes the identified race for writers participating in the shared journal-lock protocol. It does not protect against arbitrary external writers that bypass the protocol or establish production trust-root acceptance.
+- **PR safety:** PR #30 remains Draft/open/unmerged, base `audit/agent-memory-e2e-20261016`; no merge or `main` change.
