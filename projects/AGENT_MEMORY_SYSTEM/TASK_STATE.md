@@ -722,3 +722,26 @@ P2 is not yet declared ready: this test mocks the final verified restore packet,
 - **Relation to the startup report:** the local resumable runner, durable pipeline coordinator, synthetic ingestion→promotion/index→verified-restore test, and crash/replay tests already exist on this integration branch. This fix tightens ledger identity validation; it does not establish completeness of the user's real archive.
 - **Still blocked/unverified:** the two files attached at this session start do not contain a raw conversation archive suitable for production acceptance. Real archive completeness, attachment payload coverage and full chronological reconciliation remain PARTIAL/UNKNOWN until tested against the actual immutable source snapshot.
 - **PR safety:** PR #27 remains Draft/open/unmerged against `main`; no merge or `main` change.
+
+
+## Checkpoint 2026-10-17 — device-independent in-chat memory writeback
+
+- **User correction / priority:** Do not tie current memory behavior to a browser extension, phone, or future app. Rima must learn to use memory with tools available in the current environment now.
+- **Required turn cycle:** (1) record the user's intent and known starting state before substantial task actions; (2) perform actions and preserve significant results/evidence; (3) before replying, record actual outcomes, decisions, failures, incomplete work and the next continuation point; (4) produce the report from the verified record.
+- **Honesty deviation on this turn:** initial context/file retrieval began before the request was written to the durable repository journal. This is explicitly recorded in `projects/AGENT_MEMORY_SYSTEM/TURN_JOURNAL.jsonl` as retrospective, not misrepresented as compliant.
+- **New protocol:** `core/in_chat_memory_writeback_protocol.md`; universal mandatory gate added to `core/universal_instructions.md`.
+- **Browser extension preserved separately:** existing implementation remains in Draft PR #31, branch `feature/dialogue-stm-source-references-20261017`, targeting `integration/memory-core-clean-20261015`. It contains rolling dialogue windows, explicit context insertion and manual attachment-reference import. It is a future adapter, not a prerequisite for the current cycle; live-device operation remains unverified.
+- **This protocol change is separate from PR #31** so that the browser prototype is preserved without making device-specific code part of the immediate workflow. No PR is merged and `main` is unchanged.
+- **Next:** finish the durable result record for this turn, open a separate draft PR for the protocol, and verify its exact-head CI. Then use the same pre-action/post-action pattern for subsequent meaningful turns.
+- **Status:** PARTIAL / active.
+
+
+## Result update 2026-10-17 — protocol PR and CI verified
+
+- Separate Draft PR #32 opened: https://github.com/alexbotleh-oss/agent-knowledge-base/pull/32
+- Exact PR head at opening: `dbc0802db700bb7597792fba118006d2b03db691`.
+- CI run [39003376335](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/39003376335) PASS: 296 Python tests, 4 Node tests, memory validation PASS, 127 mutation sites / 0 unclassified.
+- Durable request and result records exist in `projects/AGENT_MEMORY_SYSTEM/TURN_JOURNAL.jsonl`. The request record explicitly says its pre-action recording was retrospective because preliminary context retrieval had already started.
+- Next operational rule: for the next meaningful user turn, create REQUEST_RECEIVED before task actions and RESULT_RECORDED before the answer. Do not treat documentation/CI as proof that the platform performs this automatically.
+- Browser extension remains separately preserved in Draft PR #31. No PR merged; main unchanged.
+- Status: protocol documented and CI-validated; ongoing behavioral compliance remains to be demonstrated turn by turn.
