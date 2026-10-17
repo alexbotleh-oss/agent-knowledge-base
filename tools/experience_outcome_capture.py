@@ -187,11 +187,9 @@ def capture_verified_experience_candidate(
             "source_created_at": "unknown",
         }],
         "related_event_ids": identity["related_event_ids"],
-        "relations": [
-            {"type": "verified_by", "event_id": event_id, "basis": "evidence"}
-        ],
+        "relations": [],
         "next_action": "Review applicability and provenance before treating this candidate as guidance",
-        "confidence": "high",
+        "confidence": "medium",
         "notes": (
             "Experience candidate only; not an approved lesson and not promoted to semantic memory. "
             "The capture tool checked the exact marker's presence and evidence hash; it did not "
@@ -205,7 +203,7 @@ def capture_verified_experience_candidate(
             rows = _read_events(target)
             for existing in rows:
                 if existing.get("event_id") == event_id:
-                    if _canonical(existing) == _canonical(record):
+                    if existing.get("capture_identity_sha256") == record["capture_identity_sha256"]:
                         return {
                             "status": "ALREADY_CAPTURED",
                             "event_id": event_id,
