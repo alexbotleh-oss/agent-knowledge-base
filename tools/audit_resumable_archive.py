@@ -131,18 +131,34 @@ def _audit_staging(
     if coverage.get("conversation_count") != len(imported_payloads):
         errors.append("staging conversation_count differs from imported conversation count")
 
-    payloads_by_id: dict[str, dict[str, Any]] = {}
     expected_messages: dict[tuple[str, str], tuple[dict[str, Any], dict[str, Any]]] = {}
+    expected_order: list[tuple[str, str]] = []
+    expected_times: dict[tuple[str, str], Any] = {}
     for ordinal, payload in enumerate(imported_payloads):
         cid, _method = conversation_id(payload, ordinal)
-        payloads_by_id[cid] = payload
         mapping = payload.get("mapping") or {}
         if not isinstance(mapping, dict):
             continue
         for node_id, node in mapping.items():
             if not isinstance(node, dict) or not isinstance(node.get("message"), dict):
                 continue
-            expected_messages[(cid, str(node_id))] = (payload, node)
+            key = (cid, str(node_id))
+            expected_messages[key] = (payload, node)
+            expected_order.append(key)
+            created = node["message"].get("create_time")
+            expected_times[key] = created if isinstance(created, (int, float)) else None
+
+    # Match the staging contract: known timestamps first, stable source order for ties,
+    # then unknown timestamps in their original relative order.
+    expected_order.sort(
+        key=lambda key: (expected_times[key] is None, expected_times[key] or 0)
+    )
+    observed_order = [
+        (record.get("conversation_id"), record.get("source_node_id"))
+        for record in records
+    ]
+    if observed_order != expected_order:
+        errors.append("staged record order differs from stable timestamp/source order")
 
     seen_record_ids: set[str] = set()
     seen_locators: set[str] = set()
