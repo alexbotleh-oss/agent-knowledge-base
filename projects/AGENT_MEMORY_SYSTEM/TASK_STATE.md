@@ -711,3 +711,14 @@ P2 is not yet declared ready: this test mocks the final verified restore packet,
 - `tests/test_memory_pipeline_real_ingestion.py` uses the real source-ingestion runner, coordinator promotion/index and real memory-aware restore. It asserts retrieval of `MEM-REAL-INGEST-1`, revision `REV-REAL-1`, and non-empty provenance in scope `AGENT_MEMORY_SYSTEM` / `TASK-REAL` / `CTX-REAL`.
 - This supersedes the earlier statement that the combined test still mocked restore or remained to be created. Earlier entries are retained as chronology, not current status.
 - Still open: synchronize the other continuity files and verify metadata-only descendant CI. Production archive completeness remains unverified. PR #27 remains Draft/open/unmerged; `main` unchanged.
+
+
+## Import continuity follow-up — reject mixed run identity in a valid hash chain (2026-10-17)
+
+- **Source-backed gap:** `tools/source_ingestion_runner.py::_load_events` checked sequence, previous-event links and each event hash, while `run_ingestion` checked the snapshot's source identity. It did not require every event in one run ledger to retain the same `run_id`, `batch_id` and `source_identity`. A semantically mixed ledger could be re-hashed into a valid chain and pass the former integrity checks.
+- **Correction:** ledger loading now requires non-empty run/batch IDs and a source-identity object on every event, and rejects any change from the first event's identity before the runner can mutate the source registry.
+- **Regression:** `tests/test_source_ingestion_runner.py::test_rechained_ledger_with_mixed_run_identity_blocks_before_registry_write` changes a run ID, recomputes a valid hash chain, and verifies the import blocks before registry mutation. The fixture's newline encoding was corrected and read back.
+- **Exact code/test HEAD:** `c8ab59e0dee73c18a82f679dec69ea04f4c5f727`; GitHub Actions run [38999722539](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38999722539) completed SUCCESS. This workflow exposes protocol/record validation and knowledge-base/stack validation; no unreported unit-test count is asserted.
+- **Relation to the startup report:** the local resumable runner, durable pipeline coordinator, synthetic ingestion→promotion/index→verified-restore test, and crash/replay tests already exist on this integration branch. This fix tightens ledger identity validation; it does not establish completeness of the user's real archive.
+- **Still blocked/unverified:** the two files attached at this session start do not contain a raw conversation archive suitable for production acceptance. Real archive completeness, attachment payload coverage and full chronological reconciliation remain PARTIAL/UNKNOWN until tested against the actual immutable source snapshot.
+- **PR safety:** PR #27 remains Draft/open/unmerged against `main`; no merge or `main` change.
