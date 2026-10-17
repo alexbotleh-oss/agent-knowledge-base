@@ -114,7 +114,7 @@ async function registerTurn(payload, sender) {
           const priorSequences = allRequest.result
             .map(item => item.received_sequence)
             .filter(Number.isInteger);
-          const receivedSequence = priorSequences.length ? Math.max(...priorSequences) + 1 : 1;
+          const receivedSequence = priorSequences.reduce((max, value) => Math.max(max, value), 0) + 1;
           const received = makeEvent(turn_id, "TURN_RECEIVED", {
             task_id, user_text, previous_checkpoint, user_text_sha256: userTextSha256,
             previous_assistant_message
