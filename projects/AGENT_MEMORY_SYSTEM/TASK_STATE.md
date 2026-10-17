@@ -833,3 +833,14 @@ The no-repeat check fingerprint now binds the current request and relevant seman
 - CI limitations remain: pytest stack checks and HTML/PWA/JS lint/test/build were skipped because the required tooling/setup is absent. Production trust root and real archive acceptance remain unverified.
 - PR #30 remains Draft/open/unmerged; its current base is `audit/agent-memory-e2e-20261016`, not `main`. No merge or main-branch change is authorized.
 - Next action: source-led audit of signed check-result reuse/trust binding; add a regression only for a concrete supported invariant, then run exact-head CI.
+
+
+## Verified checkpoint — required expiry for reusable check receipts (2026-10-17)
+
+- **Exact branch HEAD:** `c8147aa8367b2396d38a93342f34cde674a02703` on `umc02/attention-return-controller-20261016`; PR #30 remains OPEN / DRAFT / UNMERGED. Its base is `audit/agent-memory-e2e-20261016`, not `main`. Do not merge or change `main` without explicit user approval.
+- **Code invariant:** `tools/trusted_receipt_verifier.py` now requires `expires_at` for `receipt_type == "check_result"`. Existing checks still validate expiry syntax, that it follows issue time, and that it has not expired. A missing expiry must fail closed rather than allow a signed PASS to be reused indefinitely.
+- **Regression coverage:** `tests/test_trusted_receipt_verifier.py` helper now adds an expiry to valid check-result fixtures; its dedicated missing-expiry case removes the field and re-signs the receipt. `tests/test_agent_memory_cycle.py`'s ordinary signed-check fixture also supplies expiry. Fixture cleanup imports `timedelta` explicitly.
+- **Exact-head CI:** [run 38993344250](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38993344250), exact commit `c8147aa8367b2396d38a93342f34cde674a02703`, completed SUCCESS. Python unittest: **399 passed, 1 skipped**; Node tests: **4 passed**; memory validation PASS.
+- **CI limits:** pytest-based stack tests skipped because pytest is not installed; HTML/PWA and JS lint/test/build skipped because the repository lacks the needed package/test setup. CI success is not proof that those skipped paths work.
+- **Still unproven:** no production trust root/keyring has been configured and owner-approved; generated-key tests are synthetic. Real complete archive import and automatic cross-chat ChatGPT startup/capture remain unverified.
+- **Next action:** continue source-led review of trusted check-result reuse and claim binding; make only a concrete, source-supported change with a focused regression and exact-head CI. Then update this checkpoint from verified evidence. Do not invent a production trust root.
