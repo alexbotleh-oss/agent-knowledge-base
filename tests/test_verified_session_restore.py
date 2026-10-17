@@ -75,6 +75,24 @@ class VerifiedSessionRestoreTests(unittest.TestCase):
         self.assertEqual(packet["remote_repository_evidence"]["status"], "REMOTE_VERIFIED_METADATA_ONLY_AHEAD")
         self.assertFalse(packet["writes_performed"])
 
+    def test_well_formed_event_records_are_metadata_only_but_unrelated_files_are_not(self):
+        compare_url = f"{self.base_url}/compare/{RECORDED}...{LIVE}"
+        event_path = (
+            "projects/AGENT_MEMORY_SYSTEM/events/"
+            "EVT-AGMS-20261017-015-PRE_ACTION.md"
+        )
+        self.responses[compare_url]["files"] = [{"filename": event_path}]
+        evidence = verify_remote_revision(self.project, REPO, fetch_json=self.fake_fetch)
+        self.assertEqual(evidence["status"], "REMOTE_VERIFIED_METADATA_ONLY_AHEAD")
+        self.assertEqual(evidence["changed_paths"], [event_path])
+        self.assertEqual(evidence["unexpected_changed_paths"], [])
+
+        unrelated_path = "projects/AGENT_MEMORY_SYSTEM/events/README.md"
+        self.responses[compare_url]["files"] = [{"filename": unrelated_path}]
+        evidence = verify_remote_revision(self.project, REPO, fetch_json=self.fake_fetch)
+        self.assertEqual(evidence["status"], "CODE_REVISION_DRIFT")
+        self.assertEqual(evidence["unexpected_changed_paths"], [unrelated_path])
+
     def test_exact_code_head_is_verified(self):
         self.responses[f"{self.base_url}/branches/{BRANCH_API}"] = {"commit": {"sha": RECORDED}}
         self.responses[f"{self.base_url}/compare/{RECORDED}...{RECORDED}"] = {
