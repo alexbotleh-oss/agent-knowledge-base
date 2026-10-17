@@ -1,5 +1,6 @@
 import json
 import sys
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
@@ -186,31 +187,45 @@ class VerifiedTaskExecutorTests(unittest.TestCase):
             "json.dumps({'status':'PASS','basis_event_id':'EVT-AGMS-20261017-004'}), "
             "encoding='utf-8')"
         )
-        result = run_reviewed_action(
-            workspace_root=workspace,
-            task_state=task_state,
-            handoff=handoff,
-            event_log=event_log,
-            experience_logs=[experience_log],
-            request="task-start cluster verified restore candidates",
-            project_id="AGENT_MEMORY_SYSTEM",
-            task_id="TASK-REAL-SOURCE-SMOKE-001",
-            reviewed_experience_event_id=source_event_id,
-            action_rationale="Prior experience integrated task-start cluster and verified restore; run focused artifact verification.",
-            action_argv=[sys.executable, "-c", artifact_script],
-            action_cwd=workspace,
-            acceptance_criterion="The artifact passes and records the exact reviewed source event",
-            acceptance_checks=[
+        action_spec = workspace / "action-spec.json"
+        action_spec.write_text(json.dumps({
+            "argv": [sys.executable, "-c", artifact_script],
+            "cwd": ".",
+            "acceptance_criterion": "The artifact passes and records the exact reviewed source event",
+            "acceptance_checks": [
                 {"type": "command_exit_code", "expected": 0},
                 {"type": "json_field_equals", "path": "artifacts/real-source-check.json", "field": "status", "expected": "PASS"},
                 {"type": "json_field_equals", "path": "artifacts/real-source-check.json", "field": "basis_event_id", "expected": source_event_id},
             ],
-            evidence_report=Path("artifacts/real-source-evidence.json"),
-            observed_outcome="Controlled artifact verification passed using a real AGENT_MEMORY_SYSTEM source event",
-            execute=True,
-            timeout_seconds=10,
-            risk_level="low",
+            "evidence_report": "artifacts/real-source-evidence.json",
+            "observed_outcome": "Controlled artifact verification passed using a real AGENT_MEMORY_SYSTEM source event",
+        }), encoding="utf-8")
+        completed = subprocess.run(
+            [
+                sys.executable,
+                str(ROOT / "tools" / "verified_task_executor.py"),
+                "--workspace-root", str(workspace),
+                "--task-state", "projects/AGENT_MEMORY_SYSTEM/TASK_STATE.md",
+                "--handoff", "projects/AGENT_MEMORY_SYSTEM/HANDOFF.md",
+                "--event-log", "projects/AGENT_MEMORY_SYSTEM/events.jsonl",
+                "--experience-log", "experience/events.jsonl",
+                "--request", "task-start cluster verified restore candidates",
+                "--project-id", "AGENT_MEMORY_SYSTEM",
+                "--task-id", "TASK-REAL-SOURCE-SMOKE-001",
+                "--reviewed-experience-event-id", source_event_id,
+                "--action-rationale", "Prior experience integrated task-start cluster and verified restore; run focused artifact verification.",
+                "--action-spec", str(action_spec),
+                "--risk-level", "low",
+                "--timeout-seconds", "10",
+                "--execute",
+            ],
+            cwd=ROOT,
+            text=True,
+            capture_output=True,
+            check=False,
         )
+        self.assertEqual(completed.returncode, 0, completed.stderr + "\\n" + completed.stdout)
+        result = json.loads(completed.stdout)
         self.assertEqual(result["status"], "VERIFIED_ACTION_AND_CAPTURED", result)
         self.assertEqual(result["retrieved_experience_event_id"], source_event_id)
         self.assertTrue(all(check["passed"] for check in result["acceptance_checks"]))
