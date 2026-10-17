@@ -216,6 +216,59 @@ class VerifyResumableChatImportTests(unittest.TestCase):
             self.assertEqual(state[0], "FAILED")
             self.assertEqual(count, 0)
 
+    def test_zip_with_multiple_conversations_json_members_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            source = root / "ambiguous-export.zip"
+            payload = json.dumps(sample_conversations(1), ensure_ascii=False)
+            with zipfile.ZipFile(source, "w") as archive:
+                archive.writestr("account/conversations.json", payload)
+                archive.writestr("backup/conversations.json", payload)
+            out = root / "state"
+
+            with self.assertRaisesRegex(ValueError, "Expected exactly one conversations.json"):
+                import_export(source, out, "VERIFY-AMBIGUOUS-ZIP", batch_size=2)
+
+            conn = sqlite3.connect(out / "import.sqlite3")
+            try:
+                state = conn.execute(
+                    "SELECT status FROM imports WHERE archive_id=?",
+                    ("VERIFY-AMBIGUOUS-ZIP",),
+                ).fetchone()
+                count = conn.execute(
+                    "SELECT COUNT(*) FROM raw_conversations WHERE archive_id=?",
+                    ("VERIFY-AMBIGUOUS-ZIP",),
+                ).fetchone()[0]
+            finally:
+                conn.close()
+            self.assertEqual(state[0], "FAILED")
+            self.assertEqual(count, 0)
+
+    def test_corrupt_zip_fails_closed_without_staging_records(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            source = root / "corrupt-export.zip"
+            source.write_bytes(b"PK\\x03\\x04not-a-valid-zip-central-directory")
+            out = root / "state"
+
+            with self.assertRaises(zipfile.BadZipFile):
+                import_export(source, out, "VERIFY-CORRUPT-ZIP", batch_size=2)
+
+            conn = sqlite3.connect(out / "import.sqlite3")
+            try:
+                state = conn.execute(
+                    "SELECT status FROM imports WHERE archive_id=?",
+                    ("VERIFY-CORRUPT-ZIP",),
+                ).fetchone()
+                count = conn.execute(
+                    "SELECT COUNT(*) FROM raw_conversations WHERE archive_id=?",
+                    ("VERIFY-CORRUPT-ZIP",),
+                ).fetchone()[0]
+            finally:
+                conn.close()
+            self.assertEqual(state[0], "FAILED")
+            self.assertEqual(count, 0)
+
     def test_empty_export_is_a_valid_complete_source(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
