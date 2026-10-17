@@ -147,12 +147,20 @@ def register_attachment(
         "relative_path": object_rel.as_posix(),
         "sha256": digest,
         "size_bytes": destination.stat().st_size,
-        "original_name": original_name or source.name,
-        "media_type": media_type,
         "registered_at": dt.datetime.now(dt.timezone.utc).isoformat(),
     }
+    object_registry = root / "objects.jsonl"
+    if object_registry.exists():
+        for number, line in enumerate(object_registry.read_text(encoding="utf-8").splitlines(), 1):
+            try:
+                prior_object = json.loads(line)
+            except json.JSONDecodeError as exc:
+                raise ValueError(f"corrupt library object registry at line {number}") from exc
+            if prior_object.get("library_ref") == library_ref:
+                object_record["registered_at"] = prior_object.get("registered_at")
+                break
     object_registry_status = _append_idempotent(
-        root / "objects.jsonl", object_record, "library_ref"
+        object_registry, object_record, "library_ref"
     )
 
     reference_seed = "\0".join((project_id, conversation_id, source_message_id, digest))
@@ -165,6 +173,8 @@ def register_attachment(
         "source_message_id": source_message_id,
         "library_ref": library_ref,
         "sha256": digest,
+        "original_name": original_name or source.name,
+        "media_type": media_type,
         "registered_at": dt.datetime.now(dt.timezone.utc).isoformat(),
     }
     # Stable IDs must remain idempotent even when replayed later; retain original registration time.
