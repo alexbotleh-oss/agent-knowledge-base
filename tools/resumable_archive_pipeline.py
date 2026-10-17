@@ -8,13 +8,12 @@ refresh are deliberately outside this pipeline.
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 from pathlib import Path
 from typing import Any
 
 from archive_registry_staging import build as build_staging
-from resumable_chat_import import import_export
+from resumable_chat_import import import_export, sha256_file
 from source_ingestion_runner import run_ingestion
 
 
@@ -49,7 +48,7 @@ def run_archive_pipeline(
             "status": "RAW_IMPORT_FAILED",
             "archive_id": archive_id,
             "error": str(exc),
-            "writes_performed": True,
+            "raw_import_attempted": True,
             "downstream_started": False,
             "downstream": "not started because raw import failed",
         }
@@ -73,7 +72,7 @@ def run_archive_pipeline(
             "error": "raw importer snapshot path is missing",
             "downstream_started": False,
         }
-    actual_hash = hashlib.sha256(snapshot_path.read_bytes()).hexdigest()
+    actual_hash = sha256_file(snapshot_path)
     if actual_hash != expected_hash:
         return {
             "status": "SNAPSHOT_VERIFICATION_FAILED",
