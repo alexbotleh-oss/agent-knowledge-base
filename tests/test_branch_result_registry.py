@@ -213,6 +213,35 @@ class BranchResultRegistryTests(unittest.TestCase):
             self.assertEqual(json.loads(stdout.getvalue())["status"], "ACKNOWLEDGED")
 
 
+    def test_acknowledgement_rejects_existing_temporal_relation_error_without_append(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "events.jsonl"
+            published = publish_result(path, sample_result())
+            invalid_later_event = {
+                "event_id": "EVT-BAD-TEMPORAL-EDGE",
+                "event_time": "unknown",
+                "time_precision": "unknown",
+                "relations": [{
+                    "type": "followed_by",
+                    "event_id": published["event_id"],
+                    "basis": "regression fixture: later record points backward",
+                }],
+            }
+            with path.open("a", encoding="utf-8") as stream:
+                stream.write(json.dumps(invalid_later_event) + "\n")
+            before = path.read_bytes()
+
+            from branch_result_registry import acknowledge_result
+            response = acknowledge_result(
+                path, published["event_id"], "accepted",
+                "owner-ref-temporal-regression", "2026-10-14T11:00:00Z",
+            )
+
+            self.assertEqual(response["status"], "BLOCKED_EVENT_RELATION_VALIDATION")
+            self.assertFalse(response["writes_performed"])
+            self.assertEqual(path.read_bytes(), before)
+
+
 
 if __name__ == "__main__":
     unittest.main()
