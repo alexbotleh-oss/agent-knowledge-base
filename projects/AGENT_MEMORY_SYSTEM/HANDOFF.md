@@ -739,3 +739,17 @@ Important remaining gap: real ingestion + promotion is tested, but the same test
 - Exact code/test HEAD `c8ab59e0dee73c18a82f679dec69ea04f4c5f727`; CI run [38999722539](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38999722539) completed SUCCESS for this checkpoint.
 - The importer has synthetic end-to-end and crash/replay coverage; production archive completeness is still not established. The attached startup files contain no raw archive for that acceptance test.
 - Next: preserve the raw source, establish its immutable hash and coverage manifest, run the import/resume/dedup/chronology checks against that exact snapshot, and report unresolved attachments/tail gaps. PR #27 remains Draft/open/unmerged; do not change `main`.
+
+
+## Current return point — capability-aware retrieval (2026-10-17)
+
+- PR #35: https://github.com/alexbotleh-oss/agent-knowledge-base/pull/35, branch feature/capability-aware-retrieval-planner-20261017, Draft/open/unmerged; base is PR #34 branch feature/relocation-aware-memory-discovery-20261017. PR #34 remains Draft/open/unmerged on PR #27's integration branch. main is unchanged.
+- New source catalog: registry/source_catalog.json. It describes only the current checkout's registry, AGENT_MEMORY_SYSTEM project state, core, tools and tests.
+- New tools: tools/adaptive_source_search.py (preferred/fallback/emergency local search tiers) and tools/audit_memory_architecture.py (read-only import graph, declared storage paths, expected-location checks).
+- Integration: tools/memory_aware_session_restore.py uses the catalog-aware adaptive search when approved memory retrieval returns PARTIAL_NO_MATCH and the catalog is available. Discovery remains read-only and candidates are not promoted.
+- Architecture map: core/memory_system_component_map.md, linked from README.md. It distinguishes source registry, semantic-memory registry, correction overlay, derived index, archive temporal index, ingestion runner, pipeline coordinator and session restore.
+- CI: code HEAD 5fe1b6d52c9dfadd84dbf269299ea5ae248f679f passed run 39015104957. Later documentation/checkpoint changes have their own workflow runs; check the live final HEAD and CI before making a new status claim.
+- Confirmed path discrepancy: core/agent_bootstrap.md is absent from main, integration/memory-core-clean-20261015 and the current feature branch; branch-name search for bootstrap returned no matches. README points to core/universal_instructions.md and core/agent_runtime_protocol.md. Do not create a replacement without checking the intended contract and other source locations.
+- Remaining: the catalog covers local checkout only; remote GitHub branch/revision, external archive, connector and device adapters are not implemented. ChatGPT does not automatically execute repository tools at session start. End-to-end live-session behavior is unverified.
+- Next action: read the live PR/branch HEAD and exact-head CI, then implement a read-only GitHub source adapter that searches the expected path first and expands to known alternate branches/revisions, retaining branch SHA, blob SHA, access/coverage status and version conflicts.
+- Deferred: large archive transfer/reconciliation remains paused until retrieval/context recovery improves. No merge or main changes without explicit permission.
