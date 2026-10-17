@@ -26,6 +26,7 @@ CONTRACTS = {
     "tools/branch_result_registry.py": "events.jsonl result/ack append: schema validation, stable ID, replay/conflict handling, journal lock, atomic replace",
     "tools/archive_registry_staging.py": "archive staging: source hash and deterministic records; output staging only; snapshot manifest write requires review",
     "tools/resumable_chat_import.py": "resumable import: immutable source snapshot and SQLite batch/transaction persistence; verify restart/replay contract",
+    "tools/verify_resumable_chat_import.py": "read-only raw import audit: opens SQLite in mode=ro; executes SELECT queries only; validates immutable snapshot and staged payload hashes; never repairs or promotes memory",
     "tools/validate_memory.py": "validation/reporting: inspect output paths and distinguish report writes from canonical state",
     "tools/reconcile_branch_returns.py": "reconciliation report: derived/read-only report contract; must not mutate canonical task state",
     "tools/archive_temporal_index.py": "derived temporal index: rebuildability and source provenance required",
