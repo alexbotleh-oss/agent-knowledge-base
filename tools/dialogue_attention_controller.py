@@ -137,8 +137,12 @@ def project_state(events: list[dict[str, Any]]) -> dict[str, Any]:
         data = event.get("attention") if isinstance(event.get("attention"), dict) else {}
         if kind == "attention_turn_classified":
             turn_id = data.get("turn_id")
-            if not isinstance(turn_id, str):
-                raise ValueError(f"attention event {event['event_id']} missing turn_id")
+            required_fields = ("turn_id", "active_task_id", "active_checkpoint_id")
+            if any(not isinstance(data.get(key), str) or not data.get(key).strip()
+                   for key in required_fields):
+                raise ValueError(
+                    f"attention event {event['event_id']} missing turn/task/checkpoint identifier"
+                )
             previous = turn_records.get(turn_id)
             if previous is not None and _canonical(previous) != _canonical(data):
                 raise ValueError(f"conflicting turn_id {turn_id} at event {event['event_id']}")
