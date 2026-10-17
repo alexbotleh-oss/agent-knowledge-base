@@ -1,0 +1,10 @@
+# EVT-AGMS-20261017-003 — PRE_ACTION
+
+- Status: **RECORDED BEFORE REPOSITORY INSPECTION; prior context lookup preceded this write and is disclosed**.
+- User request: “Понял) занимайся дальше” — continue the existing work without asking for a new plan or restarting investigation.
+- Active goal: establish a practical device-independent per-turn memory cycle PRE_ACTION → EXECUTE → POST_ACTION → REPORT, then return to completing the already-existing resumable archive importer.
+- Current supplied checkpoint: branch `feature/dialogue-stm-source-references-20261017`; latest previously recorded commit `546509d1bcadf714c0d1cf91505f021dd03cf868`; PR #31 remains deferred browser-extension prototype; PR #32 concerns device-independent in-chat memory writeback. Previous POST_ACTION explicitly says PR #32 exact head and CI were not established.
+- Constraints: do not use browser/device integration or phone tests; do not merge any PR; do not modify main; preserve existing runner and tests; do not repeat prior report-agent investigation absent contradictory evidence; separate confirmed state from unknown; no claims of global cross-chat STM without evidence.
+- Plan: (1) fetch live PR #32 and identify exact head/base/status; (2) inspect CI for exact head and branch head; (3) read PR-specific protocol/code/tests and identify smallest safe implementation gap; (4) make a targeted change on the existing feature branch only if supported by code/tests; (5) run available targeted tests/CI and read back changes; (6) persist POST_ACTION before replying; (7) if the per-turn cycle is verified, proceed to the source ingestion runner's missing raw-text persistence and downstream promotion stages.
+- Expected evidence: current PR/head/status, exact-head CI state, code/test evidence for the memory cycle, and a verified next step. If the connector cannot reveal live PR head or a workflow result, record UNKNOWN rather than infer.
+- Prior-context caveat: personal-context lookup was performed before this PRE_ACTION due to tool-ordering, so strict “before any tool action” compliance was again not met. This entry does not conceal the violation.
