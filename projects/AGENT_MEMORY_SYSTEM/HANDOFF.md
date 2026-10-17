@@ -817,3 +817,12 @@ Important remaining gap: real ingestion + promotion is tested, but the same test
 - Exact-head CI for 258b11610bd57d8c4b1ff051a36b74dd75c741b6 has not run or is not visible through the connected GitHub actions; no check-runs were returned. Local clone failed on DNS. Keep status UNVERIFIED, not PASS.
 - Do not merge PR #38. First obtain exact-head CI, then update the continuity checkpoint to a genuinely verified SHA/run pair and confirm the configured verified-session restore no longer reports code drift.
 - Broader findings and the PR #1–#38 inventory are in CLUSTER_INTEGRATION_AUDIT_2026-10-17.md. The highest-risk unresolved areas are parallel project-memory ID collisions, stale checkpoint evidence, journal ownership across the turn lifecycle stores, bootstrap/global-project instruction integration, and the absence of an actual ChatGPT host bridge.
+
+
+## Current return point — exact-head validation and checkpoint refresh (2026-10-17)
+
+- Verified code HEAD: 3de7a25d4248ed7612807ee7faf800b1c5d0240f; exact-head CI run 39022902051 SUCCESS (446 Python tests, 1 skipped; 4 Node tests; write audit 143/0; memory validation and project/stack validation PASS).
+- CONTINUITY_CHECKPOINT.json now records this SHA/run pair. Checkpoint metadata commit: 7ef98e6a75aedcb85f3f57a4f5db9879145a2a91; it is metadata-only, not a code HEAD.
+- PR #38 is still Draft/open/unmerged and now has a synchronized base, unique event IDs and the missing validator import. The current journal preserves EVT-AGMS-20261017-006 and appends the correction as EVT-AGMS-20261017-007.
+- Exact-head CI success does not prove live restore or automatic ChatGPT invocation. Neither verified_session_restore nor agent_memory_cycle has been executed from this ChatGPT environment. Keep live end-to-end status NOT RUN.
+- Next: run verified_session_restore against the current branch tip, confirm only allowlisted metadata files differ from the verified code HEAD, then run agent_memory_cycle with --repository. Do not merge PR #38 or any other PR without explicit approval.
