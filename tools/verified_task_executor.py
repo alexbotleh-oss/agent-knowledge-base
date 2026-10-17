@@ -288,9 +288,31 @@ def run_reviewed_action(
         events = _read_jsonl(resolved["event_log"])
     except (OSError, UnicodeDecodeError, ValueError, json.JSONDecodeError) as exc:
         return {"status": "BLOCKED_EVENT_LOG_INVALID", "reason": str(exc), "writes_performed": False}
-    source_event = next((item for item in events if item.get("event_id") == reviewed_experience_event_id), None)
+    source_events = list(events)
+    source_logs = resolved_experience_logs or [resolved["event_log"]]
+    try:
+        for source_log in source_logs:
+            if source_log == resolved["event_log"]:
+                continue
+            source_events.extend(_read_jsonl(source_log))
+    except (OSError, UnicodeDecodeError, ValueError, json.JSONDecodeError) as exc:
+        return {"status": "BLOCKED_EXPERIENCE_LOG_INVALID", "reason": str(exc), "writes_performed": False}
+    source_event = next((item for item in source_events if item.get("event_id") == reviewed_experience_event_id), None)
     if source_event is None or source_event.get("project_id") != project_id:
         return {"status": "BLOCKED_EXPERIENCE_SCOPE_MISMATCH", "writes_performed": False}
+
+    protected_paths = {
+        resolved["task_state"], resolved["handoff"], resolved["event_log"], *source_logs
+    }
+    if resolved["evidence_report"] in protected_paths:
+        return {"status": "BLOCKED_EVIDENCE_REPORT_OVERWRITES_PROTECTED_SOURCE", "writes_performed": False}
+    protected_hashes = {}
+    try:
+        for protected_path in protected_paths:
+            if protected_path.is_file():
+                protected_hashes[str(protected_path)] = _sha(protected_path.read_bytes())
+    except OSError as exc:
+        return {"status": "BLOCKED_PROTECTED_SOURCE_UNREADABLE", "reason": str(exc), "writes_performed": False}
     if not execute:
         return {
             "status": "PLAN_READY_REQUIRES_EXPLICIT_EXECUTE",
@@ -332,8 +354,21 @@ def run_reviewed_action(
         stdout, stderr, truncated, return_code = b"", str(exc).encode("utf-8", errors="replace"), False, None
         action_status = "LAUNCH_FAILED"
     finished = datetime.now().astimezone().isoformat()
+    protected_source_changes = []
+    try:
+        for protected_path in protected_paths:
+            before = protected_hashes.get(str(protected_path))
+            after = _sha(protected_path.read_bytes()) if protected_path.is_file() else None
+            if before != after:
+                protected_source_changes.append({
+                    "path": str(protected_path.relative_to(root)),
+                    "before_sha256": before,
+                    "after_sha256": after,
+                })
+    except OSError as exc:
+        protected_source_changes.append({"error": f"{type(exc).__name__}: {exc}"})
     checks, checks_passed = _evaluate_checks(root, acceptance_checks, return_code if return_code is not None else -999)
-    verification_status = "PASS" if action_status == "COMPLETED" and checks_passed else "FAIL"
+    verification_status = "PASS" if action_status == "COMPLETED" and checks_passed and not protected_source_changes else "FAIL"
     report = {
         "report_version": "1",
         "task_id": task_id,
@@ -363,6 +398,7 @@ def run_reviewed_action(
             "checks": checks,
             "status": verification_status,
             "independent_artifact_check_required": True,
+            "protected_source_changes": protected_source_changes,
         },
         "VERIFICATION_STATUS": verification_status,
         "semantic_memory_promoted": False,
