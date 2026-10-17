@@ -1,0 +1,71 @@
+{
+  "memory_id": "MEM-EXAMPLE-001",
+  "record_type": "negative_experience",
+  "project_ids": [
+    "PROJECT_ID"
+  ],
+  "task_ids": [
+    "TASK_ID"
+  ],
+  "context_ids": [
+    "CTX_ID"
+  ],
+  "title": "Пример записи; заменить реальными данными",
+  "summary": "Демонстрационный пример структуры, не факт проекта",
+  "tags": [
+    "example",
+    "replace-before-use"
+  ],
+  "sign": "negative",
+  "decision_status": "not_applicable",
+  "evidence_status": "unknown",
+  "lifecycle_status": "candidate",
+  "event_time": "unknown",
+  "source_time": "unknown",
+  "recorded_at": "ISO-8601",
+  "time_precision": "unknown",
+  "provenance": [
+    {
+      "archive_id": "ARCHIVE_ID",
+      "conversation_id": "CONVERSATION_ID",
+      "message_id": "MESSAGE_ID-or-null",
+      "source_node_id": "NODE_ID-or-null",
+      "source_locator": "stable locator",
+      "content_hash": "sha256-or-null",
+      "evidence_role": "supports",
+      "status": "unknown"
+    }
+  ],
+  "relations": [
+    {
+      "type": "derived_from",
+      "target_id": "SOURCE_RECORD_ID",
+      "basis": "unknown",
+      "confidence": "low",
+      "status": "candidate"
+    }
+  ],
+  "incident_ids": [],
+  "revision": {
+    "revision_id": "REV-001",
+    "revision_of": null,
+    "reason": "initial candidate",
+    "supersedes": null
+  },
+  "classification": {
+    "method": "manual|rule|model",
+    "confidence": "low",
+    "review_status": "pending"
+  },
+  "content": {
+    "observed_problem": "unknown",
+    "action_taken": "unknown",
+    "outcome": "unknown",
+    "root_cause": "unknown",
+    "failed_attempts": [],
+    "effective_approach": "pending",
+    "prevention_rule": "pending"
+  },
+  "coverage_status": "partial",
+  "notes": "Template only; never treat placeholder values as real evidence"
+}
