@@ -265,6 +265,29 @@ def run_cycle(
     blocked_return = return_result is not None and return_result.get("status") not in {
         "RETURNED", "ALREADY_RETURNED"
     }
+    memory_section = task_start.get("task_restore", {}).get("semantic_memory", {})
+    task_start_status = task_start.get("status", "UNKNOWN")
+    cluster_issues = []
+    if not (isinstance(repository, str) and repository.strip()):
+        cluster_issues.append("LIVE_REPOSITORY_AND_APPROVED_MEMORY_NOT_CONFIGURED")
+    if task_start_status != "READY_FOR_REVIEW":
+        cluster_issues.append("TASK_START_NOT_READY_FOR_REVIEW:" + str(task_start_status))
+    if attention.get("status") != "OK":
+        cluster_issues.append("ATTENTION_STATE_NOT_VERIFIED")
+    if reconciliation.get("status") != "CONSISTENT":
+        cluster_issues.append("BRANCH_RECONCILIATION_NOT_CONSISTENT")
+    if isinstance(repository, str) and repository.strip():
+        if task_start.get("task_restore", {}).get("task_restore_status") not in {"RESTORED_PACKET", "PARTIAL"}:
+            cluster_issues.append("VERIFIED_TASK_RESTORE_NOT_COMPLETE")
+        if not isinstance(memory_section, dict) or memory_section.get("status") not in {
+            "AVAILABLE", "PARTIAL", "PARTIAL_NO_MATCH"
+        }:
+            cluster_issues.append("APPROVED_MEMORY_NOT_AVAILABLE_OR_COMPLETE")
+    cluster_readiness_status = (
+        "BLOCKED" if blocked_return or task_start_status == "CONTEXT_OR_RETRIEVAL_BLOCKED"
+        else "READY_FOR_REVIEW" if not cluster_issues
+        else "PARTIAL"
+    )
     return {
         "schema_version": "1.0",
         "status": "BLOCKED" if blocked_return else "READY",
@@ -273,9 +296,17 @@ def run_cycle(
             "status": "CONFIGURED" if isinstance(repository, str) and repository.strip() else "NOT_CONFIGURED",
             "repository": repository.strip() if isinstance(repository, str) and repository.strip() else None,
             "packet_status": task_start.get("task_restore", {}).get("status", "UNKNOWN"),
+            "approved_memory_status": memory_section.get("status", "UNKNOWN") if isinstance(memory_section, dict) else "UNKNOWN",
             "note": "CONFIGURED means the verified memory-aware restore was invoked; it does not imply approved memory was available or planning was authorized."
                 if isinstance(repository, str) and repository.strip()
                 else "Legacy local task-start path only; approved semantic-memory retrieval and live repository verification were not invoked.",
+        },
+        "cluster_readiness": {
+            "status": cluster_readiness_status,
+            "issues": cluster_issues,
+            "planning_authorized": False,
+            "execution_performed": False,
+            "note": "READY_FOR_REVIEW means the configured read-only cluster produced a reviewable packet; it never authorizes planning or action execution.",
         },
         "attention": attention,
         "branch_reconciliation": reconciliation,
