@@ -22,6 +22,8 @@ SHA_RE = re.compile(r"^[0-9a-fA-F]{40}$")
 IDENTITY_FIELDS = {
     "memory_id", "source_record_id", "source_id", "event_id", "record_id",
     "conversation_id", "message_id", "source_node_id", "archive_id",
+    "task_id", "context_id", "checkpoint_id", "parent_task_id", "child_branch_id",
+    "turn_id", "branch_id",
 }
 
 
@@ -109,13 +111,28 @@ def _identity_matches(raw: bytes, identity: str) -> tuple[bool, str | None]:
                 candidates.append(json.loads(line))
             except json.JSONDecodeError:
                 continue
+    def visit(item: Any) -> tuple[bool, str | None]:
+        if isinstance(item, dict):
+            for field, value in item.items():
+                if field in IDENTITY_FIELDS and isinstance(value, str) and value == identity:
+                    return True, field
+                if field in {"related_event_ids", "task_ids", "context_ids", "checkpoint_ids"}:
+                    if isinstance(value, list) and identity in value:
+                        return True, field
+                found, matched = visit(value)
+                if found:
+                    return found, matched
+        elif isinstance(item, list):
+            for child in item:
+                found, matched = visit(child)
+                if found:
+                    return found, matched
+        return False, None
+
     for item in candidates:
-        if not isinstance(item, dict):
-            continue
-        for field in IDENTITY_FIELDS:
-            value = item.get(field)
-            if isinstance(value, str) and value == identity:
-                return True, field
+        found, matched_field = visit(item)
+        if found:
+            return True, matched_field
     return False, None
 
 
