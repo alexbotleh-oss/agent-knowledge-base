@@ -795,3 +795,15 @@ P2 is not yet declared ready: this test mocks the final verified restore packet,
 - **Not complete:** live Yandex Browser Android acceptance; bridge startup on the user's device; actual localhost CORS/file transfer there; automatic capture of the original ChatGPT composer file; automatic injection of context into model requests; cross-device sync; full archive import. Do not describe these as implemented.
 - **Next action:** treat CI as code-level PASS, then conduct or prepare the real-device checklist. If no access to the user's device is available, report those checks as BLOCKED/UNKNOWN and do not claim a live test. Keep PR #31 Draft/open/unmerged; PR #27/#30 and `main` remain untouched.
 - **Status:** PARTIAL / active.
+
+
+## Checkpoint 2026-10-17 — explicit composer insertion and latest CI
+
+- **Verified HEAD before this checkpoint:** `efd671b67e1fd3d9c6b7034aee721154dd5457da`.
+- **Exact-head CI PASS:** [run 39002425902](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/39002425902) — 323 Python tests passed; 13 Node tests passed; strict write audit 144/0 unclassified; memory validation and project/stack validation PASS.
+- Added an explicit popup action to insert the generated rolling context into an **empty** composer in the active ChatGPT tab. It refuses to overwrite an existing draft and does not submit the message. Copy-to-clipboard remains available.
+- Added contract tests for explicit non-submitting insertion and draft preservation; updated README and acceptance checklist.
+- This reduces manual copy/paste friction but does not equal automatic injection: the user must click the button and then explicitly send the context. The model can only cross-check the cross-chat windows if the context is present in the actual conversation/request.
+- The private attachment bridge remains a manual second selection and explicit source-turn link; automatic capture of ChatGPT's original file upload remains unimplemented.
+- **Next:** verify exact HEAD/CI after this checkpoint write, then prepare/execute the real-device acceptance checklist. Do not mark live browser or localhost bridge tests PASS without observed device results. PR #31 stays Draft/open/unmerged; PR #27/#30 and `main` unchanged.
+- **Status:** PARTIAL / active.
