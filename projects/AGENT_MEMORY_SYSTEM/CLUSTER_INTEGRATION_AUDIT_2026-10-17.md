@@ -61,6 +61,14 @@ Several valid but distinct paths currently coexist:
 
 Main integration defect: these are not one task-start path. minimal_agent_loop and memory_aware_session_restore use different retrieval inputs and have different outputs. The current adaptive fallback is connected only to memory_aware_session_restore, not to the candidate-retrieval/applicability path. The task-start/attention cycle is on another branch. The system can therefore recover one kind of context without invoking the other.
 
+Direct call-graph check against the exact PR #30 source (HEAD 85137d13c40777ef9f48cf305a0811c1e26cb3f1) makes the boundary more specific:
+- `agent_memory_cycle.run_cycle()` calls `build_task_start_experience_map()`, attention inspection, branch-return reconciliation, and (only on an explicit return request) the guarded parent-return path.
+- `build_task_start_experience_map()` calls `run_minimal_agent_loop()`, attention inspection, and `evaluate_check_reuse()`; its candidate expansion verifies source file hashes and record IDs.
+- Neither function calls `build_memory_aware_packet()` / `retrieve_approved_memory()`, `applicability_evaluator.evaluate_applicability()`, or `decision_frontier.reduce_decision_frontier()`. The trusted receipt verifier is used for signed parent-return acknowledgement, not as the missing applicability-verification bridge.
+- Therefore the name/comment “single local entry point for the current connected memory cycle” is accurate only for the attention + event/lesson-candidate + branch-return subcycle. It is not yet the unified task-start orchestrator described above. This is a source-inspected call-graph finding, not an inference from filenames or CI.
+
+Integration implication: do not simply port PR #30 as the cluster entry point. First define the shared packet contract and adapt this cycle to accept/return the verified restore packet and candidate assessments, then call the applicability evaluator and decision frontier exactly once. Keep branch-return authorization as a separate optional operation so it cannot accidentally authorize use of a memory candidate.
+
 Recommended composition contract: one outer task-start orchestrator should:
 1. restore the authoritative task/checkpoint and verify live source freshness;
 2. retrieve approved semantic memories;
