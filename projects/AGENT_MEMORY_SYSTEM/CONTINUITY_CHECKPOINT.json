@@ -82,7 +82,8 @@
     "Added read-only tools/audit_chat_export_archive.py and six synthetic tests for ZIP member inventory, duplicate paths, missing conversations.json, CRC corruption, non-ZIP input, and missing source. Exact-head CI run 39071127180 passed on 47c337be6ab867c08bc297786a1e34e22b7e1a4d: 496 Python tests (1 skipped), 4 Node tests, strict write audit 162/0; a subsequent report-only descendant exact-head run 39071199096 also passed the same suite.",
     "Refreshed CONTINUITY_CHECKPOINT.json to exact code/test HEAD 0c54aed38f36dc1a0da5b5be91ffa2df4baa000e and exact-head CI run 39071199096, then verified the metadata-descendant restore/task-start smoke in run 39071258756: VERIFIED_SESSION_RESTORE_PASS, TASK_START_CLUSTER_PASS, READY_FOR_REVIEW, RESTORED_PACKET; readiness PARTIAL because approved semantic memory remains UNAVAILABLE. No writes, planning authorization, or execution occurred.",
     "Added conservative tools/audit_chat_attachment_references.py and six tests. It preserves candidate reference values with conversation ID/ordinal/JSON Pointer, accepts only exact archive-member path matches, and explicitly leaves heuristic candidates unresolved/ambiguous without rewriting raw payloads. Exact-head CI run 39071406666 passed on report-bearing HEAD 74e8ef7712be75a59b2afa6681291d8094ef7508: 502 Python tests (1 skipped), 4 Node tests, write audit 162/0, memory/event-log/project validation PASS.",
-    "Refreshed the continuity checkpoint to exact code/test/report HEAD 74e8ef7712be75a59b2afa6681291d8094ef7508 and CI run 39071406666; verified the metadata-descendant restore/task-start smoke in run 39071453729: VERIFIED_SESSION_RESTORE_PASS, TASK_START_CLUSTER_PASS, READY_FOR_REVIEW, RESTORED_PACKET; readiness PARTIAL because approved semantic memory remains UNAVAILABLE. No writes, planning authorization, or execution occurred."
+    "Refreshed the continuity checkpoint to exact code/test/report HEAD 74e8ef7712be75a59b2afa6681291d8094ef7508 and CI run 39071406666; verified the metadata-descendant restore/task-start smoke in run 39071453729: VERIFIED_SESSION_RESTORE_PASS, TASK_START_CLUSTER_PASS, READY_FOR_REVIEW, RESTORED_PACKET; readiness PARTIAL because approved semantic memory remains UNAVAILABLE. No writes, planning authorization, or execution occurred.",
+    "Repeated the exact-code CI and metadata-descendant smoke after the attachment-reference audit: code HEAD 74e8ef7712be75a59b2afa6681291d8094ef7508 / CI run 39071406666 passed 502 Python tests (1 skipped), 4 Node tests, write audit 162/0; metadata-descendant smoke run 39071511010 passed VERIFIED_SESSION_RESTORE_PASS and TASK_START_CLUSTER_PASS. Readiness remains PARTIAL because approved semantic memory is unavailable."
   ],
   "confirmed_open": [
     {
@@ -155,13 +156,13 @@
     "semantic_memory_registry_tests": 12,
     "canonical_index_tests": 10,
     "memory_aware_restore_tests": 9,
-    "note": "Exact code/test/report HEAD 74e8ef7712be75a59b2afa6681291d8094ef7508 passed CI run 39071406666: 502 Python tests (1 skipped), 4 Node tests, strict write audit 162 mutation sites / 0 unclassified, memory/event-log/project validation PASS. Metadata-only descendant 6c1d612ac4bd3be76e8e78e735f1954406d33da3 passed restore/task-start smoke in run 39071453729: VERIFIED_SESSION_RESTORE_PASS and TASK_START_CLUSTER_PASS; task READY_FOR_REVIEW, restore RESTORED_PACKET, readiness PARTIAL because approved semantic memory remains UNAVAILABLE. No writes, planning authorization or execution occurred. This verifies the repository CLI path in GitHub Actions, not automatic invocation inside ChatGPT. Native archive completeness and attachment mapping remain unverified.",
+    "note": "Exact code/test/report HEAD 74e8ef7712be75a59b2afa6681291d8094ef7508 passed CI run 39071406666: 502 Python tests (1 skipped), 4 Node tests, strict write audit 162 mutation sites / 0 unclassified, memory/event-log/project validation PASS. Metadata-only descendant 6c1d612ac4bd3be76e8e78e735f1954406d33da3 passed restore/task-start smoke in run 39071511010: VERIFIED_SESSION_RESTORE_PASS and TASK_START_CLUSTER_PASS; task READY_FOR_REVIEW, restore RESTORED_PACKET, readiness PARTIAL because approved semantic memory remains UNAVAILABLE. No writes, planning authorization or execution occurred. This verifies the repository CLI path in GitHub Actions, not automatic invocation inside ChatGPT. Native archive completeness and attachment mapping remain unverified.",
     "edge_correction_registry_tests": 8,
     "correction_index_integration_tests": 2,
     "extension_js_syntax": "PASS_STATIC_ONLY",
     "live_restore_smoke_head": "6c1d612ac4bd3be76e8e78e735f1954406d33da3",
-    "live_restore_smoke_run_id": 39071453729,
-    "live_restore_smoke_url": "https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/39071453729",
+    "live_restore_smoke_run_id": 39071511010,
+    "live_restore_smoke_url": "https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/39071511010",
     "live_restore_smoke_conclusion": "success",
     "live_restore_status": "PASS",
     "task_restore_status": "RESTORED_PACKET",
@@ -172,8 +173,8 @@
     "execution_performed": false,
     "writes_performed": false,
     "latest_restore_task_start_smoke_status": "PASS",
-    "latest_restore_task_start_smoke_run_id": 39071453729,
-    "latest_restore_task_start_smoke_url": "https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/39071453729"
+    "latest_restore_task_start_smoke_run_id": 39071511010,
+    "latest_restore_task_start_smoke_url": "https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/39071511010"
   },
   "historical_repository_state": {
     "last_verified_code_head": "e30450a5ed516ab1f76f65c3c7874cdd2b951c40",
@@ -193,7 +194,7 @@
     "latest_verified_code_head": "Exact code/test/report HEAD 74e8ef7712be75a59b2afa6681291d8094ef7508 passed exact-head CI run 39071406666: 502 Python tests (1 skipped), 4 Node tests, write audit 162/0, memory and project validation PASS. Smoke step deferred pending checkpoint refresh; do not treat it as a fresh restore/task-start PASS.",
     "metadata_revision": "The Git commit containing the current checkpoint/task/handoff/event metadata is authoritative for metadata revision; it is intentionally not embedded as a self-referential SHA.",
     "chronology_rule": "Historical source checkpoint, previous verified code states, current code SHA/CI and subsequent metadata commit remain separate facts.",
-    "live_restore_verification": "PASS in GitHub Actions run 39071453729 on metadata-only branch tip 6c1d612ac4bd3be76e8e78e735f1954406d33da3, against exact code HEAD 74e8ef7712be75a59b2afa6681291d8094ef7508 and CI run 39071406666: VERIFIED_SESSION_RESTORE_PASS; TASK_START_CLUSTER_PASS; task READY_FOR_REVIEW; restore RESTORED_PACKET; readiness PARTIAL because approved semantic memory is UNAVAILABLE. No writes, planning authorization or execution occurred. This verifies the repository CLI path, not automatic ChatGPT-host invocation."
+    "live_restore_verification": "PASS in GitHub Actions run 39071511010 on metadata-only branch tip 6c1d612ac4bd3be76e8e78e735f1954406d33da3, against exact code HEAD 74e8ef7712be75a59b2afa6681291d8094ef7508 and CI run 39071406666: VERIFIED_SESSION_RESTORE_PASS; TASK_START_CLUSTER_PASS; task READY_FOR_REVIEW; restore RESTORED_PACKET; readiness PARTIAL because approved semantic memory is UNAVAILABLE. No writes, planning authorization or execution occurred. This verifies the repository CLI path, not automatic ChatGPT-host invocation."
   },
   "prior_verified_code_states": [
     {
