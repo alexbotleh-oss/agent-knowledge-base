@@ -22,7 +22,7 @@ A failed lookup at an expected address is a location discrepancy, not proof that
 
 Evidence strength, from strongest to weakest:
 1. Exact byte hash bound to the expected source snapshot.
-2. Stable unique source/record ID with consistent provenance.
+2. Stable unique source/record ID present in its declared identity field, with consistent provenance; a textual mention alone is only a candidate.
 3. Exact composite identity (for example archive + conversation + message ID).
 4. Exact textual match with corroborating metadata.
 5. Lexical or semantic similarity alone.
