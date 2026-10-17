@@ -162,6 +162,14 @@ class ResumableImportToMemoryPipelineTests(unittest.TestCase):
             event_log = project / "events.jsonl"
             event_log.write_text("", encoding="utf-8")
             code_sha = "a" * 40
+            (project / "CONTINUITY_CHECKPOINT.json").write_bytes(canonical({
+                "branch": "integration/memory-core-clean-20261015",
+                "repository_state": {
+                    "last_verified_code_head": code_sha,
+                    "exact_head_ci_run_id": 7,
+                    "exact_head_ci_conclusion": "success",
+                },
+            }))
 
             def fake_fetch(url):
                 if "/branches/" in url:
