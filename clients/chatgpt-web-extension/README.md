@@ -31,7 +31,7 @@ The popup can explicitly import a file into the private project library and link
    ```sh
    python3 -c "import secrets; print(secrets.token_urlsafe(32))" > rima-attachment-token.txt
    chmod 600 rima-attachment-token.txt
-   python3 tools/project_attachment_adapter.py --token-file rima-attachment-token.txt --allow-origin chrome-extension://YOUR_EXTENSION_ID
+   python3 tools/project_attachment_adapter.py --token-file rima-attachment-token.txt --allow-origin chrome-extension://YOUR_EXTENSION_ID --allow-project AGENT_MEMORY_SYSTEM
    ```
 2. Open the extension popup. Copy the exact extension origin shown there into `--allow-origin` (restart the bridge if it changes). Enter the explicit project ID and the same token in the popup, then save settings.
 3. Open the ChatGPT conversation containing the already-sent message, open the popup, select the exact source turn and reselect the same file from device storage. Choose **Сохранить вложение в библиотеку**.
