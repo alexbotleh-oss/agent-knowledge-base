@@ -61,6 +61,11 @@ class VerifiedSessionRestoreTests(unittest.TestCase):
         return self.responses[url]
 
     def test_metadata_only_descendant_is_verified_and_restore_includes_live_head(self):
+        self.responses[f"{self.base_url}/compare/{RECORDED}...{LIVE}"]["files"] = [
+            {"filename": "projects/AGENT_MEMORY_SYSTEM/HANDOFF.md"},
+            {"filename": "projects/AGENT_MEMORY_SYSTEM/PROJECT_STATE.md"},
+            {"filename": "projects/AGENT_MEMORY_SYSTEM/CLUSTER_INTEGRATION_AUDIT_2026-10-17.md"},
+        ]
         evidence = verify_remote_revision(self.project, REPO, fetch_json=self.fake_fetch)
         self.assertEqual(evidence["status"], "REMOTE_VERIFIED_METADATA_ONLY_AHEAD")
         self.assertEqual(evidence["live_branch_head"], LIVE)

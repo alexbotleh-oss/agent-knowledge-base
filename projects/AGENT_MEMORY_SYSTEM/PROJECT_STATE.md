@@ -2,8 +2,8 @@
 
 - **Canonical project ID:** AGENT_MEMORY_SYSTEM.
 - **Repository:** `alexbotleh-oss/agent-knowledge-base`.
-- **Updated:** 2026-10-13; confidence: partial.
-- **Current task:** AGMS-2026-10-13-01; see `TASK_STATE.md` and `HANDOFF.md`.
+- **Updated:** 2026-10-17; confidence: partial.
+- **Current task:** full PR #1–#38 integration audit and reconciliation; see the latest checkpoint in `TASK_STATE.md` and `HANDOFF.md`.
 - **Goal:** improve the memory system itself—source ingestion, provenance, chronology, context recovery, conflict/duplicate handling, linked registry, verification and cross-chat continuity.
 - **Scope boundary:** do not transfer full histories of CARD111, ORGANISM, RECIPE_MANAGER or B77_HTML_PWA into this memory-system task. Keep only evidence that directly explains memory architecture, scope/context-transfer failures or transferable lessons. These remain distinct project chains.
 - **Current design direction:** immutable RAW snapshots; explicit inventory; extracted source records; candidate vs canonical memory; stable IDs and locators; separate event/source/recorded times; evidence and lifecycle statuses; append-only revisions; reversible imports; bidirectional temporal retrieval; source-to-memory coverage and recurrence audits.
@@ -27,3 +27,11 @@
 - Read-back confirmed the instruction file and both references are present on the working branch.
 - **Implementation boundary:** this is an actionable behavioral instruction plus runtime reference. It does not implement the branch registry, automated cross-chat retrieval/result delivery, acknowledgement tracking, or derived-state updates. Do not claim those mechanisms are automatic.
 - **Next:** run/check CI for the exact latest HEAD and record the result. Keep PR #22 Draft/open/unmerged; do not change `main`.
+
+
+- **Current integration checkpoint (2026-10-17):** PR #27 → #34 → #35 → #36 → #37 remains the code lineage. PR #38 has been synchronized onto the current #37 base through merge commit 258b11610bd57d8c4b1ff051a36b74dd75c741b6, but exact-head CI is pending/unavailable; do not merge or claim validation.
+- **Current integrity boundary:** the canonical event journal preserves unique IDs in the repaired #38 branch; the previous conflicting event ID was resolved append-only as EVT-AGMS-20261017-007. The continuity checkpoint remains stale until a matching code SHA and successful CI run are observed.
+
+
+- **Verified continuation (2026-10-17):** PR #38 code HEAD `4a2ee4499e11b8ff8fb02292d1320ad8b20e2160` passed exact-head CI run `39068720335`; metadata-only descendant smoke passed in run `39068855181`. Task-start is `READY_FOR_REVIEW`, restore `RESTORED_PACKET`, cluster readiness `PARTIAL` because approved semantic memory is unavailable. No automatic ChatGPT-host bridge is verified.
+- **Writer integration risk:** PR #39's outcome-capture paths use a different lock protocol/path from the three canonical event writers in PR #38. Fix and test the shared journal lock before stacking the branches and validating the combined system.

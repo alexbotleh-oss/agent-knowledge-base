@@ -17,6 +17,7 @@ from pathlib import Path
 from typing import Any
 
 from trusted_receipt_verifier import make_check_receipt_verifier_from_env
+from event_relation_validator import validate_event_append
 
 DEFAULT_LOG = Path(__file__).resolve().parents[1] / "projects" / "AGENT_MEMORY_SYSTEM" / "events.jsonl"
 RESULTS = {"PASS", "FAIL", "BLOCKED", "UNKNOWN"}
@@ -318,6 +319,14 @@ def record_check_result(
             if _canonical(prior_compare) == _canonical(event_compare):
                 return {"status": "ALREADY_RECORDED", "event_id": event["event_id"], "writes_performed": False}
             return {"status": "CONFLICT", "event_id": event["event_id"], "writes_performed": False}
+        relation_validation = validate_event_append(event, events)
+        if relation_validation.get("status") != "PASS":
+            return {
+                "status": "BLOCKED_EVENT_RELATION_VALIDATION",
+                "event_id": event["event_id"],
+                "relation_validation": relation_validation,
+                "writes_performed": False,
+            }
         with path.open("a", encoding="utf-8", newline="\n") as stream:
             stream.write(_canonical(event) + "\n")
             stream.flush()
