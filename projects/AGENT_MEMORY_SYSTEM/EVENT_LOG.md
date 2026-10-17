@@ -112,3 +112,14 @@
 - **Ограничения доверия:** позитивная применимость остаётся fail-closed, если отсутствует доверенный verifier с внешне закреплённым keyring hash. Конфигурация репозитория означает запуск проверки, а не гарантию, что approved memory найдена.
 - **Следующий шаг:** проверить exact-head CI финального документационного checkpoint; затем реализовать read-only GitHub branch/revision adapter с branch HEAD SHA, file blob SHA, статусом доступа/покрытия и конфликтами версий.
 - **Статус:** узкая интеграция подтверждена CI; сквозное поведение в живой сессии ChatGPT не подтверждено. PR #36 Draft/open/unmerged, stacked on #35/#34/#27; main не менялся.
+
+## 2026-10-17 — EVT-AGMS-20261017-005: удалённый GitHub source discovery
+
+- **Источник:** PR #37; code checkpoint 0ada1a3db718ad09a050206cd1767681507bc1fe; exact-head CI [#39018573896](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/39018573896).
+- **Подтверждено:** добавлен tools/github_source_discovery.py и registry/remote_source_catalog.json. Поиск сначала проверяет ожидаемый путь по заданным refs, затем известные альтернативные пути; возвращает branch ref/commit SHA/blob SHA/content SHA-256/size и статус покрытия.
+- **Идентичность:** exact hash или структурированное поле ID считаются подтверждением; текстовое упоминание остаётся кандидатом. При недоступности источника, частичном покрытии или движении branch HEAD статус SEARCH_INCOMPLETE, а не глобальное отсутствие.
+- **Интеграция:** memory_aware_session_restore вызывает remote discovery после локального поиска, если approved-memory retrieval вернул PARTIAL_NO_MATCH и не найден подтверждённый локальный identity. Remote result не переносится и не становится approved memory автоматически.
+- **Проверки:** 436 Python tests, 1 skipped; strict write audit 143/0.
+- **Ограничения:** remote catalog содержит только известные refs/paths, не все ветки; внешние архивы, connectors, device storage и автоматический ChatGPT host bridge не подключены.
+- **Следующий шаг:** проверить exact-head CI финального документационного checkpoint; затем добавить контроль drift между каталогом и текущими branch heads, после чего спроектировать/проверить реальный host adapter для вызова локального кластера.
+- **Статус:** remote fallback реализован и узко проверен CI; сквозной live ChatGPT runtime не подтверждён. PR #37 Draft/open/unmerged; main не изменён.
