@@ -14,6 +14,48 @@ function ask(payload) {
     resolve(response);
   }));
 }
+const memoryStatusNode = document.getElementById("memory-status");
+function activeConversationId() {
+  return new Promise((resolve, reject) => {
+    chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
+      const error = chrome.runtime.lastError;
+      if (error) return reject(new Error(error.message));
+      const url = tabs?.[0]?.url || "";
+      try {
+        const parsed = new URL(url);
+        const match = parsed.pathname.match(/\\/c\\/([^/?#]+)/);
+        resolve(match ? match[1] : null);
+      } catch {
+        resolve(null);
+      }
+    });
+  });
+}
+async function copyDialogueMemory() {
+  memoryStatusNode.textContent = "Читаю локальные пары диалога…";
+  try {
+    const currentConversationId = await activeConversationId();
+    const result = await ask({ action: "LIST_DIALOGUE_WINDOWS", current_conversation_id: currentConversationId });
+    const packet = result.packet;
+    const context = globalThis.RimaDialogueWindowCore?.formatRecoveryContext(packet);
+    if (typeof context !== "string" || !context) throw new Error("dialogue_context_unavailable");
+    try {
+      await navigator.clipboard.writeText(context);
+    } catch {
+      const area = document.createElement("textarea");
+      area.value = context;
+      document.body.append(area);
+      area.focus();
+      area.select();
+      throw new Error("clipboard_blocked; context selected for manual copy");
+    }
+    memoryStatusNode.textContent = "Скопировано: " + packet.global_recent_pairs.length +
+      " глобальных пар, " + packet.current_chat_recent_pairs.length + " пар текущего чата. Покрытие: " + packet.status + ".";
+  } catch (error) {
+    memoryStatusNode.textContent = "Контекст не скопирован: " + String(error.message || error);
+  }
+}
+
 function resumeText(turn) {
   return [
     "Восстанови незавершённый ход по сохранённым данным.",
@@ -69,6 +111,7 @@ async function refresh() {
   }
 }
 document.getElementById("refresh").addEventListener("click", () => void refresh());
+document.getElementById("copy-memory").addEventListener("click", () => void copyDialogueMemory());
 document.getElementById("export").addEventListener("click", async () => {
   try {
     const result = await ask({ action: "EXPORT_LEDGER" });
