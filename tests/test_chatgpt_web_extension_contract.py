@@ -41,6 +41,15 @@ class ChatGPTWebExtensionContractTests(unittest.TestCase):
         self.assertIn("Скопировать запрос восстановления", popup)
         self.assertIn("createObjectURL", popup)
 
+    def test_dialogue_context_insertion_is_explicit_non_submitting_and_preserves_drafts(self):
+        popup = (EXT / "popup.js").read_text(encoding="utf-8")
+        content = (EXT / "content_script.js").read_text(encoding="utf-8")
+        self.assertIn('action: "INSERT_DIALOGUE_CONTEXT"', popup)
+        self.assertIn('document.getElementById("insert-memory")', popup)
+        self.assertIn('composer_not_empty; existing draft was preserved', content)
+        self.assertIn('submitted: false', content)
+        self.assertIn('if (composerText(input))', content)
+
     def test_attachment_popup_requires_explicit_project_and_links_reference_only(self):
         popup = (EXT / "popup.js").read_text(encoding="utf-8")
         background = (EXT / "background.js").read_text(encoding="utf-8")
