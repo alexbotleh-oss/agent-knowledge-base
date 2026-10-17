@@ -1,5 +1,6 @@
 import hashlib
 import json
+import sqlite3
 import sys
 import tempfile
 import unittest
@@ -12,6 +13,7 @@ if str(TOOLS) not in sys.path:
 
 from adapt_archive_staging_to_intake import adapt_archive_staging_to_intake
 from archive_registry_staging import build
+from resumable_chat_import import import_export
 from plan_memory_intake import build_route_plan
 from source_evidence_registry import append_source_records
 from validate_memory import validate_intake_manifest
@@ -68,6 +70,57 @@ class SourceIngestionRoundtripTests(unittest.TestCase):
         adapted = adapt_archive_staging_to_intake(self.staging / "archive_snapshot.json", self.intake_root)
         self.assertIn(adapted["status"], {"ADAPTED", "ALREADY_ADAPTED"})
         return Path(adapted["manifest_path"]), result
+
+    def test_idless_duplicate_conversations_keep_importer_ordinals_in_staging(self):
+        self._write_export("synthetic identical ID-less conversation")
+        payload = json.loads(self.source.read_text(encoding="utf-8"))
+        del payload[0]["id"]
+        payload.append(json.loads(json.dumps(payload[0], ensure_ascii=False)))
+        self.source.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
+
+        imported = import_export(
+            self.source, self.root / "resumable-import",
+            "ARCHIVE-IDLESS-TEST", batch_size=1,
+        )
+        self.assertEqual(imported["status"], "RAW_COMPLETE")
+        self.assertEqual(imported["committed_conversations"], 2)
+        conn = sqlite3.connect(imported["database_path"])
+        try:
+            imported_ids = [
+                row[0] for row in conn.execute(
+                    "SELECT source_conversation_id FROM raw_conversations "
+                    "WHERE archive_id=? AND source_sha256=? ORDER BY source_ordinal",
+                    ("ARCHIVE-IDLESS-TEST", imported["source_sha256"]),
+                ).fetchall()
+            ]
+        finally:
+            conn.close()
+        self.assertEqual(len(set(imported_ids)), 2)
+
+        staged = build(self.source, self.staging, archive_id="ARCHIVE-IDLESS-TEST")
+        self.assertEqual(staged["coverage"]["conversation_count"], 2)
+        self.assertEqual(staged["coverage"]["source_record_count"], 4)
+        records_path = self.staging / staged["records_file"]
+        staged_rows = [
+            json.loads(line)
+            for line in records_path.read_text(encoding="utf-8").splitlines()
+        ]
+        self.assertEqual({row["conversation_id"] for row in staged_rows}, set(imported_ids))
+        self.assertEqual(len({row["source_locator"] for row in staged_rows}), 4)
+        self.assertEqual(len({row["source_record_id"] for row in staged_rows}), 4)
+
+        adapted = adapt_archive_staging_to_intake(
+            self.staging / "archive_snapshot.json", self.intake_root
+        )
+        manifest_path = Path(adapted["manifest_path"])
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        artifact = manifest["artifacts"][0]
+        sanitized_rows = [
+            json.loads(line)
+            for line in (manifest_path.parent / artifact["path"]).read_text(encoding="utf-8").splitlines()
+        ]
+        self.assertEqual({row["conversation_id"] for row in sanitized_rows}, set(imported_ids))
+        self.assertEqual(len({row["source_record_id"] for row in sanitized_rows}), 4)
 
     def test_adapter_emits_valid_project_neutral_metadata_only_batch(self):
         manifest_path, staged = self._stage_and_adapt("synthetic private message text")
