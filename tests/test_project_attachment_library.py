@@ -42,7 +42,7 @@ class ProjectAttachmentLibraryTests(unittest.TestCase):
         self.assertEqual(first["sha256"], second["sha256"])
         self.assertEqual(len(self.rows(self.library_root / "objects.jsonl")), 1)
         self.assertEqual(len(self.rows(self.library_root / "references.jsonl")), 1)
-        stored = self.library_root / "objects" / "AGENT_MEMORY_SYSTEM" / first["sha256"][:2] / f'{first["sha256"]}.txt'
+        stored = self.library_root / "objects" / "AGENT_MEMORY_SYSTEM" / first["sha256"][:2] / first["sha256"]
         self.assertTrue(stored.is_file())
         self.assertEqual(stored.read_bytes(), self.source.read_bytes())
 
