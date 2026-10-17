@@ -232,23 +232,101 @@ def build_memory_aware_packet(task_state:Path,handoff:Path,event_log:Path,reposi
                 item.get("coverage_status") != "COMPLETE_WITHIN_CONFIGURED_BOUNDS"
                 for item in searches if "coverage_status" in item
             )
+            remote_searches = []
+            remote_catalog_error = None
+            remote_catalog_path = DEFAULT_REMOTE_SOURCE_CATALOG
+            if repository and (task_id or context_id or query):
+                try:
+                    remote_catalog_bytes = remote_catalog_path.read_bytes()
+                    remote_catalog = json.loads(remote_catalog_bytes.decode("utf-8"))
+                    if remote_catalog_path.read_bytes() != remote_catalog_bytes:
+                        raise ValueError("remote source catalog changed during read")
+                    if not isinstance(remote_catalog, dict) or remote_catalog.get("schema_version") != "github-remote-source-catalog-v1":
+                        raise ValueError("unsupported remote source catalog schema")
+                    source_specs = remote_catalog.get("sources")
+                    known_refs = remote_catalog.get("known_refs")
+                    if not isinstance(source_specs, list) or not isinstance(known_refs, list):
+                        raise ValueError("remote catalog must contain sources and known_refs arrays")
+                    primary_source = next(
+                        (item for item in source_specs if isinstance(item, dict) and item.get("source_id") == "semantic-memory-registry"),
+                        None,
+                    )
+                    if not isinstance(primary_source, dict) or not isinstance(primary_source.get("expected_path"), str):
+                        raise ValueError("semantic-memory-registry source profile is missing")
+                    refs = [
+                        item.get("ref") for item in known_refs
+                        if isinstance(item, dict) and isinstance(item.get("ref"), str)
+                    ]
+                    preferred_ref = ref or packet.get("remote_repository_evidence", {}).get("ref")
+                    if isinstance(preferred_ref, str) and preferred_ref:
+                        refs = [preferred_ref] + [item for item in refs if item != preferred_ref]
+                    candidate_paths = []
+                    for spec in source_specs:
+                        if not isinstance(spec, dict):
+                            continue
+                        path_value = spec.get("expected_path")
+                        if isinstance(path_value, str) and path_value != primary_source["expected_path"] and path_value not in candidate_paths:
+                            candidate_paths.append(path_value)
+                        aliases = spec.get("candidate_paths", [])
+                        if isinstance(aliases, list):
+                            for alias in aliases:
+                                if isinstance(alias, str) and alias != primary_source["expected_path"] and alias not in candidate_paths:
+                                    candidate_paths.append(alias)
+                    stable_hints = [item for item in (task_id, context_id) if isinstance(item, str) and item.strip()]
+                    if not stable_hints and query:
+                        stable_hints = [None]
+                    for stable_hint in stable_hints:
+                        remote_result = discover_github_source(
+                            repository,
+                            primary_source["expected_path"],
+                            refs,
+                            identity=stable_hint,
+                            query=query,
+                            candidate_paths=candidate_paths,
+                            fetch_json=fetch_json,
+                        )
+                        remote_searches.append({
+                            "search_key": {"identity": stable_hint, "query": query},
+                            "result": remote_result,
+                        })
+                        if remote_result.get("status") in {"FOUND_AT_EXPECTED_PATH", "FOUND_ELSEWHERE_IDENTITY_MATCH"}:
+                            break
+                except (OSError, UnicodeDecodeError, json.JSONDecodeError, ValueError) as exc:
+                    remote_catalog_error = str(exc)
+
+            remote_results = [
+                item.get("result") for item in remote_searches
+                if isinstance(item.get("result"), dict)
+            ]
+            remote_verified = any(
+                item.get("status") in {"FOUND_AT_EXPECTED_PATH", "FOUND_ELSEWHERE_IDENTITY_MATCH"}
+                for item in remote_results
+            )
+            remote_candidates = any(item.get("status") == "CANDIDATES_UNVERIFIED" for item in remote_results)
+            remote_incomplete = bool(remote_catalog_error) or any(
+                item.get("status") in {"SEARCH_INCOMPLETE", "INVALID_INPUT", "INVALID_CATALOG"}
+                for item in remote_results
+            )
             discovery_status = (
-                "VERIFIED_MATCH_FOUND" if verified else
-                "CANDIDATES_FOUND" if candidates_found else
-                "SEARCH_INCOMPLETE" if incomplete else
+                "VERIFIED_MATCH_FOUND" if verified or remote_verified else
+                "CANDIDATES_FOUND" if candidates_found or remote_candidates else
+                "SEARCH_INCOMPLETE" if incomplete or remote_incomplete else
                 "NO_CANDIDATES_WITHIN_CONFIGURED_SCOPE"
-            ) if searches or catalog_error else "NOT_RUN_NO_SEARCH_KEY"
+            ) if searches or catalog_error or remote_searches or remote_catalog_error else "NOT_RUN_NO_SEARCH_KEY"
             memory["relocation_discovery"] = {
                 "status": discovery_status,
                 "catalog_path": str(catalog_path) if catalog_path is not None else None,
                 "catalog_error": catalog_error,
                 "searches": searches,
+                "remote_catalog_path": str(remote_catalog_path) if repository else None,
+                "remote_catalog_error": remote_catalog_error,
+                "remote_searches": remote_searches,
                 "writes_performed": False,
                 "automatic_relocation_performed": False,
-                "note": "Discovery candidates are not approved semantic memory. Verify identity, provenance, project scope, and intended canonical location before repairing pointers or promoting records. A no-match applies only to configured local sources and scan bounds.",
+                "note": "Discovery candidates are not approved semantic memory. Verify identity, provenance, project scope, and intended canonical location before repairing pointers or promoting records. A no-match applies only to configured local roots, remote refs and candidate paths; it is not global absence.",
             }
             memory.setdefault("warnings", []).append(
-                "A partial-index no-match triggered read-only discovery. When the source catalog is available, known-compatible locations are searched before unknown or conflicting ones; this still does not search remote branches, external archives, connected apps, or device storage."
+                "A partial-index no-match triggered read-only discovery across configured local roots and, when a repository is supplied, the explicitly catalogued GitHub refs/paths. External archives, connected apps and device storage remain outside this search."
             )
     packet["semantic_memory"]=memory
     if packet.get("status")=="PARTIAL":
