@@ -88,6 +88,11 @@ class ProjectAttachmentAdapterTests(unittest.TestCase):
         self.assertEqual(status, 201)
         attachment = result["attachment"]
         self.assertEqual(attachment["access_status"], "AVAILABLE")
+        self.assertEqual(attachment["project_id"], "AGENT_MEMORY_SYSTEM")
+        self.assertEqual(attachment["conversation_id"], "CHAT-1")
+        self.assertEqual(attachment["source_message_id"], "MSG-1")
+        self.assertEqual(attachment["original_name"], "private report.txt")
+        self.assertEqual(attachment["media_type"], "text/plain")
         self.assertTrue(attachment["library_ref"].startswith("project-library://AGENT_MEMORY_SYSTEM/"))
         self.assertNotIn("storage_locator", attachment)
         serialized = json.dumps(result)
