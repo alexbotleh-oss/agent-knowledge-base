@@ -93,6 +93,18 @@ def _load_events(path: Path) -> list[dict[str, Any]]:
             raise ValueError(f"run event ledger has invalid JSON at line {number}") from exc
         if not isinstance(event, dict) or event.get("sequence") != number:
             raise ValueError(f"run event ledger sequence is invalid at line {number}")
+        if (
+            not isinstance(event.get("run_id"), str) or not event["run_id"]
+            or not isinstance(event.get("batch_id"), str) or not event["batch_id"]
+            or not isinstance(event.get("source_identity"), dict)
+        ):
+            raise ValueError(f"run event ledger identity is invalid at line {number}")
+        if events and (
+            event.get("run_id") != events[0].get("run_id")
+            or event.get("batch_id") != events[0].get("batch_id")
+            or event.get("source_identity") != events[0].get("source_identity")
+        ):
+            raise ValueError(f"run event ledger identity mismatch at line {number}")
         if event.get("previous_event_sha256") != previous:
             raise ValueError(f"run event ledger hash-chain link is invalid at line {number}")
         digest = event.get("event_sha256")
