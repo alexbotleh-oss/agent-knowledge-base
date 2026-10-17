@@ -123,7 +123,11 @@ class MemoryAwareRestoreTests(unittest.TestCase):
             "records": [], "warnings": ["No match in the current partial index."],
         }
         with mock.patch.object(restore, "build_verified_session_packet", return_value=dict(self.base_packet)), \
-             mock.patch.object(restore, "retrieve_approved_memory", return_value=no_match):
+             mock.patch.object(restore, "retrieve_approved_memory", return_value=no_match), \
+             mock.patch.object(restore, "discover_github_source", return_value={
+                 "status": "NOT_FOUND_WITHIN_SEARCH_SCOPE", "matches": [], "candidates": [],
+                 "coverage": {"incomplete_reasons": []}, "writes_performed": False,
+             }):
             packet = restore.build_memory_aware_packet(
                 Path("projects/AGENT_MEMORY_SYSTEM/TASK_STATE.md"),
                 Path("projects/AGENT_MEMORY_SYSTEM/HANDOFF.md"),
@@ -175,6 +179,43 @@ class MemoryAwareRestoreTests(unittest.TestCase):
         self.assertFalse(discovery["writes_performed"])
         self.assertFalse(discovery["automatic_relocation_performed"])
         self.assertEqual(packet["semantic_memory"]["status"], "PARTIAL_NO_MATCH")
+
+    def test_remote_discovery_is_attempted_after_local_identity_miss_without_promoting_memory(self):
+        identity = "MEM-REMOTE-RESTORE-20261017"
+        no_match = {
+            "status": "PARTIAL_NO_MATCH", "coverage_status": "PARTIAL",
+            "records": [], "warnings": ["No match in the current partial index."],
+        }
+        remote_match = {
+            "status": "FOUND_ELSEWHERE_IDENTITY_MATCH",
+            "matches": [{
+                "ref": "fix/identity-continuity-contract-20261017",
+                "commit_sha": "a" * 40,
+                "path": "registry/memory_records.jsonl",
+                "blob_sha": "b" * 40,
+                "content_sha256": "c" * 64,
+                "verified_identity": True,
+            }],
+            "candidates": [], "coverage": {"incomplete_reasons": []},
+            "writes_performed": False, "automatic_relocation_performed": False,
+        }
+        with mock.patch.object(restore, "build_verified_session_packet", return_value=dict(self.base_packet)), \
+             mock.patch.object(restore, "retrieve_approved_memory", return_value=no_match), \
+             mock.patch.object(restore, "discover_github_source", return_value=remote_match) as remote_search:
+            packet = restore.build_memory_aware_packet(
+                Path("projects/AGENT_MEMORY_SYSTEM/TASK_STATE.md"),
+                Path("projects/AGENT_MEMORY_SYSTEM/HANDOFF.md"),
+                Path("projects/AGENT_MEMORY_SYSTEM/events.jsonl"),
+                "alexbotleh-oss/agent-knowledge-base",
+                task_id=identity, registry_path=self.registry, index_root=self.index_root,
+            )
+        discovery = packet["semantic_memory"]["relocation_discovery"]
+        self.assertEqual(discovery["status"], "VERIFIED_MATCH_FOUND")
+        self.assertEqual(discovery["remote_searches"][0]["result"]["status"], "FOUND_ELSEWHERE_IDENTITY_MATCH")
+        self.assertEqual(remote_search.call_count, 1)
+        self.assertEqual(packet["semantic_memory"]["status"], "PARTIAL_NO_MATCH")
+        self.assertFalse(discovery["writes_performed"])
+        self.assertFalse(discovery["automatic_relocation_performed"])
 
     def test_mismatched_project_scope_blocks_memory_retrieval(self):
         base = dict(self.base_packet)
