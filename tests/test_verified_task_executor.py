@@ -140,6 +140,87 @@ class VerifiedTaskExecutorTests(unittest.TestCase):
         self.assertIn("EVT-EXP-001", persisted["related_event_ids"])
         self.assertFalse(first_run["semantic_memory_promoted"])
 
+    def test_real_agent_memory_event_drives_isolated_controlled_action(self):
+        # Use a real, already-recorded AGENT_MEMORY_SYSTEM event as the
+        # retrieved source, while isolating all writes in a temporary workspace.
+        source_events = ROOT / "projects" / "AGENT_MEMORY_SYSTEM" / "events.jsonl"
+        source_records = [
+            json.loads(line)
+            for line in source_events.read_text(encoding="utf-8").splitlines()
+        ]
+        source_event_id = "EVT-AGMS-20261017-004"
+        source_event = next(item for item in source_records if item.get("event_id") == source_event_id)
+        self.assertEqual(source_event["project_id"], "AGENT_MEMORY_SYSTEM")
+
+        workspace = self.root / "real-source-run"
+        project = workspace / "projects" / "AGENT_MEMORY_SYSTEM"
+        project.mkdir(parents=True)
+        (workspace / "artifacts").mkdir()
+        task_state = project / "TASK_STATE.md"
+        handoff = project / "HANDOFF.md"
+        event_log = project / "events.jsonl"
+        experience_log = workspace / "experience" / "events.jsonl"
+        experience_log.parent.mkdir(parents=True)
+        experience_log.write_bytes(source_events.read_bytes())
+        task_state.write_text(
+            "# TASK_STATE\\n"
+            "- **Активная задача в текущей сессии:** task-start cluster verification\\n"
+            "- **Последнее событие:** EVT-AGMS-CURRENT-001\\n",
+            encoding="utf-8",
+        )
+        handoff.write_text(
+            "# HANDOFF\\n- **Следующий шаг:** verify task-start artifact using retrieved experience\\n",
+            encoding="utf-8",
+        )
+        event_log.write_text(json.dumps({
+            "event_id": "EVT-AGMS-CURRENT-001",
+            "project_id": "AGENT_MEMORY_SYSTEM",
+            "type": "checkpoint",
+            "summary": "Current task-start cluster verification checkpoint",
+            "status": "observed",
+        }) + "\\n", encoding="utf-8")
+
+        artifact_script = (
+            "from pathlib import Path; import json; "
+            "Path('artifacts/real-source-check.json').write_text("
+            "json.dumps({'status':'PASS','basis_event_id':'EVT-AGMS-20261017-004'}), "
+            "encoding='utf-8')"
+        )
+        result = run_reviewed_action(
+            workspace_root=workspace,
+            task_state=task_state,
+            handoff=handoff,
+            event_log=event_log,
+            experience_logs=[experience_log],
+            request="task-start cluster verified restore candidates",
+            project_id="AGENT_MEMORY_SYSTEM",
+            task_id="TASK-REAL-SOURCE-SMOKE-001",
+            reviewed_experience_event_id=source_event_id,
+            action_rationale="Prior experience integrated task-start cluster and verified restore; run focused artifact verification.",
+            action_argv=[sys.executable, "-c", artifact_script],
+            action_cwd=workspace,
+            acceptance_criterion="The artifact passes and records the exact reviewed source event",
+            acceptance_checks=[
+                {"type": "command_exit_code", "expected": 0},
+                {"type": "json_field_equals", "path": "artifacts/real-source-check.json", "field": "status", "expected": "PASS"},
+                {"type": "json_field_equals", "path": "artifacts/real-source-check.json", "field": "basis_event_id", "expected": source_event_id},
+            ],
+            evidence_report=Path("artifacts/real-source-evidence.json"),
+            observed_outcome="Controlled artifact verification passed using a real AGENT_MEMORY_SYSTEM source event",
+            execute=True,
+            timeout_seconds=10,
+            risk_level="low",
+        )
+        self.assertEqual(result["status"], "VERIFIED_ACTION_AND_CAPTURED", result)
+        self.assertEqual(result["retrieved_experience_event_id"], source_event_id)
+        self.assertTrue(all(check["passed"] for check in result["acceptance_checks"]))
+        artifact = json.loads((workspace / "artifacts" / "real-source-check.json").read_text(encoding="utf-8"))
+        self.assertEqual(artifact["basis_event_id"], source_event_id)
+        self.assertIn(source_event_id, result["capture"]["related_event_ids"])
+        # The real source log is copied for retrieval and remains byte-identical.
+        self.assertEqual(experience_log.read_bytes(), source_events.read_bytes())
+        self.assertFalse(result["semantic_memory_promoted"])
+
     def test_failed_independent_check_does_not_capture_outcome(self):
         result = self._run(
             execute=True,
