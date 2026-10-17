@@ -91,7 +91,7 @@ def _scan_python(path: Path, repo_root: Path, tools_root: Path, known_modules: s
                 env[name] = repo_root.resolve()
                 continue
             resolved = _resolve_static_path(value, repo_root, env)
-            if resolved is not None and (
+            if resolved is not None and "://" not in resolved and (
                 any(hint in name.upper() for hint in PATH_NAME_HINTS)
                 or name.upper().startswith("DEFAULT_")
             ):
