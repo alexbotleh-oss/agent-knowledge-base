@@ -51,7 +51,11 @@ def select_initial_route(
     exp_status, lesson_status = _status(experience_status), _status(lesson_status)
     mem_status = _status(semantic_memory_status)
     incomplete_statuses = {"BLOCKED", "UNAVAILABLE", "STALE", "INVALID", "UNKNOWN", "NOT_REQUESTED"}
-    search_incomplete = exp_status in incomplete_statuses or lesson_status in incomplete_statuses
+    search_incomplete = (
+        exp_status in incomplete_statuses
+        or lesson_status in incomplete_statuses
+        or mem_status in incomplete_statuses
+    )
 
     if risk in {"high", "critical"}:
         mode = "DEEP_ANALYSIS_BEFORE_EXECUTION"
@@ -84,7 +88,7 @@ def select_initial_route(
             "event_status": exp_status,
             "lesson_status": lesson_status,
             "semantic_memory_status": mem_status,
-            "search_incomplete": search_incomplete or mem_status in incomplete_statuses,
+            "search_incomplete": search_incomplete,
             "absence_proven": (
                 exp_status in {"NO_MATCHES", "NO_MATCH"}
                 and lesson_status in {"NO_MATCHES", "NO_MATCH"}
