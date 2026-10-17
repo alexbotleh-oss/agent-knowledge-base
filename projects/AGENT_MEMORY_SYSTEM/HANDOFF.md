@@ -731,3 +731,11 @@ Important remaining gap: real ingestion + promotion is tested, but the same test
 - Earlier handoff entries saying the combined test mocked restore or remained to be created are historical records superseded by this section; they are not current status.
 - **Still not proven:** completeness of any production archive or full chat history; the fixture is synthetic and coverage remains partial. Production acceptance is a separate gate.
 - **Next:** verify the final metadata-only branch HEAD and its CI; preserve PR #27 as Draft/open/unmerged and do not change `main`.
+
+
+## Return point — import ledger identity guard (2026-10-17)
+
+- `tools/source_ingestion_runner.py` now rejects a validly re-hashed ledger if any event changes the run ID, batch ID or source identity. Regression: `tests/test_source_ingestion_runner.py::test_rechained_ledger_with_mixed_run_identity_blocks_before_registry_write`.
+- Exact code/test HEAD `c8ab59e0dee73c18a82f679dec69ea04f4c5f727`; CI run [38999722539](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38999722539) completed SUCCESS for this checkpoint.
+- The importer has synthetic end-to-end and crash/replay coverage; production archive completeness is still not established. The attached startup files contain no raw archive for that acceptance test.
+- Next: preserve the raw source, establish its immutable hash and coverage manifest, run the import/resume/dedup/chronology checks against that exact snapshot, and report unresolved attachments/tail gaps. PR #27 remains Draft/open/unmerged; do not change `main`.
