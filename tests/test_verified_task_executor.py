@@ -41,7 +41,7 @@ class VerifiedTaskExecutorTests(unittest.TestCase):
         self.experience_log.write_text(json.dumps({
             "event_id": "EVT-EXP-001",
             "project_id": "TEST",
-            "type": "test_result",
+            "type": "regression",
             "summary": "Service worker cache restore regression fixed by changing cache key",
             "status": "observed",
             "facts": ["A stale cache key restored an outdated app shell"],
