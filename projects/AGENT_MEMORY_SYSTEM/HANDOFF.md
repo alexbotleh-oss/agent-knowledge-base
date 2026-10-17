@@ -805,3 +805,16 @@ Important remaining gap: real ingestion + promotion is tested, but the same test
 - Real-device checklist: `clients/chatgpt-web-extension/ACCEPTANCE_CHECKLIST.md`. Live Yandex Browser Android, local bridge startup, localhost CORS/file transfer, full archive import, automatic original-file capture, automatic context injection and cross-device sync remain unverified.
 - Next action: confirm CI after the checkpoint/handoff commits, then provide/execute the real-device acceptance steps. If device execution is unavailable, keep those items BLOCKED/UNKNOWN; do not claim acceptance. Do not merge PR #31 without explicit approval.
 - Completeness: PARTIAL.
+
+
+## Handoff — explicit composer insertion checkpoint (2026-10-17)
+
+- Active goal: rolling short-term dialogue memory + project-library references, with mandatory cross-checks at meaningful work boundaries.
+- Candidate PR #31 / branch `feature/dialogue-stm-source-references-20261017`, base `integration/memory-core-clean-20261015`, Draft/open/unmerged. PR #27/#30 and `main` unchanged.
+- Exact code/protocol HEAD before this checkpoint write: `efd671b67e1fd3d9c6b7034aee721154dd5457da`; CI [39002425902](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/39002425902) PASS: 323 Python tests, 13 Node tests, strict audit 144/0 unclassified, memory/project validation PASS.
+- The popup now offers both copy and **explicit insert into empty active ChatGPT composer**. It preserves an existing draft and does not send the message. The user must review and send it; automatic per-request injection is not implemented.
+- The popup also supports manual re-selection/upload of a previously attached file to the authenticated loopback library bridge, with explicit project ID and source turn. It stores only validated references on the turn. Automatic capture of the original ChatGPT file remains unimplemented.
+- Universal/runtime protocols require rolling-window cross-checks before/after meaningful work and explicit PARTIAL/UNKNOWN when the windows are not actually available.
+- Real-device acceptance checklist: `clients/chatgpt-web-extension/ACCEPTANCE_CHECKLIST.md`. Still unverified: installed Yandex Browser Android behavior, running the local Python bridge on-device, localhost CORS/upload, persistence after browser restart, new-chat context insertion, and complete archive import.
+- Next: verify CI for the new checkpoint commits; then execute or request the device acceptance steps without claiming results that are not observed. Do not merge PR #31 without explicit approval.
+- Completeness: PARTIAL.
