@@ -1,3 +1,5 @@
+importScripts("dialogue_window_core.js");
+
 const DB_NAME = "chat-turn-continuity";
 const DB_VERSION = 1;
 const STORE = "turns";
@@ -187,7 +189,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   const fromChat = isChatPage(sender?.url || "");
   const fromExtension = (sender?.url || "").startsWith(chrome.runtime.getURL(""));
   const action = message?.action;
-  if (["REGISTER_TURN", "RECORD_EVENT", "ASSISTANT_RENDERED", "LIST_INCOMPLETE", "INSPECT_TURN"].includes(action) && !fromChat && !fromExtension) {
+  if (["REGISTER_TURN", "RECORD_EVENT", "ASSISTANT_RENDERED", "LIST_INCOMPLETE", "INSPECT_TURN", "LIST_DIALOGUE_WINDOWS"].includes(action) && !fromChat && !fromExtension) {
     sendResponse({ status: "ERROR", error: "untrusted_sender" });
     return false;
   }
@@ -213,6 +215,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         const turn = all.find(t => t.turn_id === message.turn_id);
         if (!turn) throw new Error("turn_not_found");
         return { status: "OK", turn };
+      }
+      case "LIST_DIALOGUE_WINDOWS": {
+        const all = await listTurns();
+        const currentConversationId = message.current_conversation_id == null ? null : message.current_conversation_id;
+        const packet = globalThis.RimaDialogueWindowCore.buildDialogueWindows(all, currentConversationId, 5);
+        return { status: "OK", packet };
       }
       case "EXPORT_LEDGER": {
         if (!fromExtension) throw new Error("export_requires_extension_popup");
