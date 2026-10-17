@@ -144,6 +144,8 @@ def build_task_start_experience_map(
     judgments: list[dict[str, Any]] | None = None,
     judgment_verifier=None,
     session_packet: dict[str, Any] | None = None,
+    prior_failed_attempts: int = 0,
+    risk_level: str = "normal",
 ) -> dict[str, Any]:
     """Restore the task, inspect the return stack, and retrieve bounded experience candidates."""
     task_state, handoff, event_log = Path(task_state), Path(handoff), Path(event_log)
@@ -155,6 +157,8 @@ def build_task_start_experience_map(
         current_markers=current_markers, judgments=judgments,
         judgment_verifier=judgment_verifier,
         session_packet=session_packet,
+        prior_failed_attempts=prior_failed_attempts,
+        risk_level=risk_level,
     )
     attention_path = Path(attention_log) if attention_log else (
         Path(__file__).resolve().parents[1] / "projects" / "AGENT_MEMORY_SYSTEM" / "events.jsonl"
@@ -351,6 +355,7 @@ def build_task_start_experience_map(
             "deferred_ideas": attention.get("deferred_ideas", []),
             "open_branch_count": attention.get("open_branch_count", 0),
         },
+        "adaptive_task_flow": loop.get("adaptive_task_flow", {"status": "NOT_AVAILABLE", "mode": "STOP_AND_RECONCILE"}),
         "experience_map": {
             "retrieval_status": raw_retrieval.get("status", "UNKNOWN") if isinstance(raw_retrieval, dict) else "UNKNOWN",
             "method": "bounded lexical overlap over explicitly supplied event logs; no semantic/graph ranking",
@@ -402,6 +407,8 @@ def main(argv=None) -> int:
     parser.add_argument("--task-id")
     parser.add_argument("--checkpoint-id")
     parser.add_argument("--limit", type=int, default=10)
+    parser.add_argument("--prior-failed-attempts", type=int, default=0)
+    parser.add_argument("--risk-level", choices=("low", "normal", "high", "critical"), default="normal")
     parser.add_argument("--project-id")
     parser.add_argument("--evidence-root", type=Path)
     parser.add_argument("--lesson-log", action="append", default=[], type=Path)
@@ -421,6 +428,7 @@ def main(argv=None) -> int:
         active_checkpoint_id=args.checkpoint_id, limit=args.limit,
         current_project_id=args.project_id, evidence_root=args.evidence_root,
         lesson_logs=args.lesson_log, judgments=judgments,
+        prior_failed_attempts=args.prior_failed_attempts, risk_level=args.risk_level,
     )
     print(json.dumps(result, ensure_ascii=False, indent=2))
     return 0 if result["status"] == "READY_FOR_REVIEW" else 2

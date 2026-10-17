@@ -135,6 +135,8 @@ def run_cycle(
     memory_registry_path: Path = DEFAULT_REGISTRY,
     memory_index_root: Path = DEFAULT_INDEX_ROOT,
     source_catalog_path: Path | None = None,
+    prior_failed_attempts: int = 0,
+    risk_level: str = "normal",
 ) -> dict[str, Any]:
     """Build one composed cycle; optionally perform a guarded explicit parent return.
 
@@ -158,6 +160,8 @@ def run_cycle(
                 query=semantic_memory_query or user_request,
                 registry_path=Path(memory_registry_path), index_root=Path(memory_index_root),
                 source_catalog_path=Path(source_catalog_path) if source_catalog_path else None,
+                prior_failed_attempts=prior_failed_attempts,
+                risk_level=risk_level,
             )
         return build_task_start_experience_map(
             task_state, handoff, project_event_log, user_request,
@@ -336,6 +340,8 @@ def main(argv=None) -> int:
     parser.add_argument("--active-checkpoint-id")
     parser.add_argument("--project-id")
     parser.add_argument("--limit", type=int, default=10)
+    parser.add_argument("--prior-failed-attempts", type=int, default=0)
+    parser.add_argument("--risk-level", choices=("low", "normal", "high", "critical"), default="normal")
     parser.add_argument("--return-turn-id")
     parser.add_argument("--parent-task-id")
     parser.add_argument("--repository", help="GitHub owner/repository; enables live revision verification and approved-memory retrieval")
@@ -356,6 +362,8 @@ def main(argv=None) -> int:
         semantic_memory_query=args.memory_query,
         memory_registry_path=args.memory_registry, memory_index_root=args.memory_index_root,
         source_catalog_path=args.source_catalog,
+        prior_failed_attempts=args.prior_failed_attempts,
+        risk_level=args.risk_level,
     )
     print(json.dumps(result, ensure_ascii=False, indent=2))
     return 0 if result.get("status") == "READY" else 2
