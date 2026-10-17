@@ -913,3 +913,13 @@ PR #28 and PR #30 remain Draft/open/unmerged. No merge or change to `main` is au
 - **Next action:** inspect signed check-result reuse and trust binding, identify one concrete security/correctness gap, add a focused regression test and validate exact code HEAD. Do not fabricate/configure production signing trust without an externally managed keyring and owner-approved trust-root hash.
 - **Known gaps:** no production trust root configured; generated-key tests are synthetic; real archive end-to-end acceptance and universal ChatGPT cross-chat startup/capture remain unverified.
 
+
+
+## Verified checkpoint — receipt expiry ordering (2026-10-17)
+
+- **Exact branch head:** `0cb8d21f14d0416aa166e066258dbe3062579f0c` on `umc02/attention-return-controller-20261016`; PR #30 is OPEN / DRAFT / UNMERGED. Its current base is `audit/agent-memory-e2e-20261016` at `57aa847f0f0104625d6cb6104111c4ee66a9b0cd`, not `main`. Do not merge or change `main` without explicit approval.
+- **Code invariant:** `tools/trusted_receipt_verifier.py` rejects a signed receipt when `expires_at <= issued_at`, even if both timestamps are individually within clock-skew allowances.
+- **Regression test:** `test_expiry_must_follow_issue_time_even_with_clock_skew` creates and signs the inconsistent receipt; exact-head CI log confirms this test ran and passed.
+- **Exact-head CI:** [run 38967851214](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38967851214), commit `0cb8d21f14d0416aa166e066258dbe3062579f0c`, conclusion SUCCESS. Python unittest: **398 passed, 1 skipped**; Node tests: **4 passed**; strict write audit: **143 mutation sites, 0 unclassified**; memory validation PASS. Pytest-based stack checks were skipped because pytest is absent; HTML/PWA/JS lint/test/build were skipped because package/test setup is absent.
+- **What remains unproven:** production trust root/keyring is not configured; test keys are synthetic; real complete archive import and automatic ChatGPT cross-chat capture/startup remain unverified.
+- **Next action:** inspect the signed check-result reuse and trust-binding path for a concrete gap, add one focused regression only when the invariant is supported by source, and validate the new exact head. Preserve fail-closed behavior; do not invent or embed a production signing key.
