@@ -27,13 +27,25 @@ def sample_conversation(text="original source text", *, attachment=False):
         "mapping": {
             "NODE-AUDIT-USER": {
                 "parent": None,
-                "children": [],
+                "children": ["NODE-AUDIT-ASSISTANT"],
                 "message": {
                     "id": "MSG-AUDIT-USER",
                     "create_time": 1790000000,
                     "author": {"role": "user"},
                     "content": {"content_type": "text", "parts": [text]},
                     "metadata": metadata,
+                },
+            },
+            # Equal timestamp and lexically earlier ID: stable source order must win.
+            "NODE-AUDIT-ASSISTANT": {
+                "parent": "NODE-AUDIT-USER",
+                "children": [],
+                "message": {
+                    "id": "MSG-AUDIT-ASSISTANT",
+                    "create_time": 1790000000,
+                    "author": {"role": "assistant"},
+                    "content": {"content_type": "text", "parts": ["synthetic response"]},
+                    "metadata": {},
                 },
             }
         },
@@ -92,6 +104,50 @@ class ResumableArchiveAuditTests(unittest.TestCase):
             self.assertEqual(failed["integrity_status"], "FAIL", failed)
             self.assertTrue(any("staged records SHA-256" in error for error in failed["errors"]))
             self.assertEqual(records_path.read_bytes(), original_records + b" ")
+
+    def test_audit_detects_staging_order_drift_even_when_manifest_hash_is_updated(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            source = root / "conversations.json"
+            source.write_text(json.dumps([sample_conversation()]), encoding="utf-8")
+            import_dir = root / "import"
+            imported = import_export(source, import_dir, "ARCHIVE-ORDER-AUDIT", batch_size=1)
+            staging_root = root / "staging"
+            build_staging(Path(imported["snapshot_path"]), staging_root, "ARCHIVE-ORDER-AUDIT")
+            manifest_path = staging_root / "archive_snapshot.json"
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            records_path = staging_root / manifest["records_file"]
+            rows = [
+                json.loads(line)
+                for line in records_path.read_text(encoding="utf-8").splitlines()
+            ]
+            self.assertEqual(
+                [row["source_node_id"] for row in rows],
+                ["NODE-AUDIT-USER", "NODE-AUDIT-ASSISTANT"],
+            )
+
+            reordered = list(reversed(rows))
+            artifact_bytes = "".join(
+                json.dumps(row, ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n"
+                for row in reordered
+            ).encode("utf-8")
+            records_path.write_bytes(artifact_bytes)
+            manifest["records_sha256"] = hashlib.sha256(artifact_bytes).hexdigest()
+            manifest_path.write_text(
+                json.dumps(manifest, ensure_ascii=False, indent=2) + "\n",
+                encoding="utf-8",
+            )
+
+            report = audit_archive(
+                import_dir, "ARCHIVE-ORDER-AUDIT",
+                source_sha256=imported["source_sha256"],
+                staging_manifest=manifest_path,
+            )
+            self.assertEqual(report["integrity_status"], "FAIL", report)
+            self.assertTrue(
+                any("stable timestamp/source order" in error for error in report["errors"]),
+                report["errors"],
+            )
 
     def test_payload_hash_mismatch_is_detected_without_repairing_database(self):
         with tempfile.TemporaryDirectory() as tmp:
