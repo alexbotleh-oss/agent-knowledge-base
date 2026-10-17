@@ -16,6 +16,12 @@ button{border:1px solid #aaa;border-radius:7px;background:#f8f9fa;padding:8px 10
 <h1>Незавершённые ходы</h1>
 <p class="muted">Локальный журнал браузера. Тексты не отправляются на внешний сервер.</p>
 <div id="status">Читаю журнал…</div>
+<section class="card">
+  <strong>Краткосрочная память диалога</strong>
+  <p class="muted">Последние пять пар глобально и последние пять пар текущего чата. Контекст копируется только по нажатию; он не отправляется автоматически.</p>
+  <div id="memory-status" class="muted">Готовлю окна…</div>
+  <button id="copy-memory">Скопировать контекст диалога</button>
+</section>
 <div id="turns"></div>
 <button id="refresh">Обновить</button>
 <button id="export">Экспорт журнала JSONL</button>
