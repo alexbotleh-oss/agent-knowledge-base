@@ -77,6 +77,7 @@ def select_initial_route(
     return {
         "status": "ROUTE_SELECTED",
         "mode": mode,
+        "reason": reason,
         "risk_level": risk,
         "prior_failed_attempts": prior_failed_attempts,
         "experience_search": {
@@ -147,6 +148,7 @@ def route_after_attempt(
     return {
         "status": "ROUTE_SELECTED",
         "mode": mode,
+        "reason": reason,
         "result_status": result,
         "prior_failed_attempts": prior_failed_attempts,
         "risk_level": risk,
