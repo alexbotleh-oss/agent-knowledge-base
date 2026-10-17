@@ -151,7 +151,7 @@ class VerifyResumableChatImportTests(unittest.TestCase):
             root = Path(tmp)
             source = root / "native-like-export.zip"
             conversations = sample_conversations(2)
-            conversations[0]["mapping"]["node-0"]["message"]["content"]["parts"].append(
+            conversations[0]["mapping"]["node-0-user"]["message"]["content"]["parts"].append(
                 {"file-service://file-attachment-001": "image"}
             )
             attachment_path = "files/file-attachment-001.bin"
@@ -175,15 +175,17 @@ class VerifyResumableChatImportTests(unittest.TestCase):
             self.assertEqual(sha256_file(snapshot), original_hash)
             with zipfile.ZipFile(snapshot, "r") as archive:
                 self.assertEqual(archive.read(attachment_path), attachment_bytes)
-                staged = json.loads(
-                    sqlite3.connect(out / "import.sqlite3").execute(
+                conn = sqlite3.connect(out / "import.sqlite3")
+                try:
+                    staged = json.loads(conn.execute(
                         """SELECT payload_json FROM raw_conversations
                            WHERE archive_id=? AND source_sha256=? AND source_ordinal=0""",
                         ("VERIFY-ZIP-ATTACHMENT", original_hash),
-                    ).fetchone()[0]
-                )
+                    ).fetchone()[0])
+                finally:
+                    conn.close()
             self.assertEqual(
-                staged["mapping"]["node-0"]["message"]["content"]["parts"][-1],
+                staged["mapping"]["node-0-user"]["message"]["content"]["parts"][-1],
                 {"file-service://file-attachment-001": "image"},
             )
 
