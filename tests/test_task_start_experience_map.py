@@ -494,6 +494,9 @@ class TaskStartExperienceMapTests(unittest.TestCase):
             ) + "]") if event.get("type") == "verification_check_completed"
         ]), 1)
 
+    def test_task_id_is_recovered_from_canonical_task_state_heading(self):
+        self.assertEqual(task_start_module._infer_task_id(self.task), "TASK-PARENT")
+
     def test_no_attention_journal_is_reported_without_inventing_a_branch(self):
         result = build_task_start_experience_map(
             self.task, self.handoff, self.events, "cache recovery",
