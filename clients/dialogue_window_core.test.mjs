@@ -50,7 +50,7 @@ test("recovery prompt deduplicates pairs shared by both windows", () => {
   const prompt = core.formatRecoveryContext(packet);
   assert.equal((prompt.match(/turn=T-1/g) || []).length, 1);
   assert.match(prompt, /GLOBAL_LAST_FIVE \+ CURRENT_CHAT_LAST_FIVE/);
-  assert.match(prompt, /Вложения: NOT_IMPLEMENTED_BY_CURRENT_EXTENSION/);
+  assert.match(prompt, /Вложения: MANUAL_LIBRARY_IMPORT_ONLY_AUTOMATIC_CHATGPT_UPLOAD_CAPTURE_NOT_IMPLEMENTED/);
 });
 
 test("conflicting reuse of a turn ID blocks window construction", () => {
