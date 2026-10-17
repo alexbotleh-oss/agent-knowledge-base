@@ -20,6 +20,7 @@
 - [Полный аудит интеграции кластера](projects/AGENT_MEMORY_SYSTEM/CLUSTER_INTEGRATION_AUDIT_2026-10-17.md) — инвентаризация механизмов, параллельных PR, разрывов интеграции и плана сборки единой цепочки.
 - [`core/unified_task_start_cluster.md`](core/unified_task_start_cluster.md) — единая точка входа для восстановления задачи, утверждённой памяти, опыта, применимости, внимания и безопасного возврата.
 - [`tools/agent_memory_cycle.py`](tools/agent_memory_cycle.py) — явный CLI-кластер; не запускается автоматически из чата.
+- [`tools/github_source_discovery.py`](tools/github_source_discovery.py) и [`registry/remote_source_catalog.json`](registry/remote_source_catalog.json) — поиск источника в явно известных GitHub refs с проверкой идентичности и неполного покрытия.
 - [`core/agent_runtime_protocol.md`](core/agent_runtime_protocol.md) — рабочий цикл непрерывной задачи.
 
 ## Назначение
