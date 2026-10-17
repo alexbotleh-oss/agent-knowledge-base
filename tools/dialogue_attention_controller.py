@@ -15,7 +15,7 @@ import os
 import re
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 CLASSIFICATIONS = {
     "CONTINUATION", "CORRECTION", "SIDE_BRANCH", "DEFERRED_IDEA",
@@ -378,7 +378,8 @@ def return_to_parent(
     }
 
 def _return_to_parent_unchecked(
-    event_log: Path, *, turn_id: str, parent_task_id: str
+    event_log: Path, *, turn_id: str, parent_task_id: str,
+    precommit_guard: Callable[[Path, dict[str, Any]], dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     """Internal journal primitive; callers must already have passed the guard."""
     path = Path(event_log)
@@ -406,6 +407,15 @@ def _return_to_parent_unchecked(
         if top["parent"].get("task_id") != parent_task_id:
             return {"status": "PARENT_MISMATCH", "writes_performed": False,
                     "expected_parent_task_id": top["parent"].get("task_id")}
+        if precommit_guard is not None:
+            try:
+                guarded = precommit_guard(target, top)
+            except Exception as exc:
+                return {"status": "BLOCKED_PRECOMMIT_GUARD", "reason": str(exc), "writes_performed": False}
+            if not isinstance(guarded, dict) or guarded.get("status") != "READY":
+                if isinstance(guarded, dict):
+                    return {**guarded, "writes_performed": False}
+                return {"status": "BLOCKED_PRECOMMIT_GUARD", "writes_performed": False}
         data = {"turn_id": turn_id, "branch_id": top["branch_id"],
                 "parent_task_id": parent_task_id, "parent_checkpoint_id": top["parent"].get("checkpoint_id"),
                 "child_task_id": top["child"].get("task_id"), "returned_at": now()}
