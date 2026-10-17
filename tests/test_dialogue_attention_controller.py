@@ -144,6 +144,24 @@ class DialogueAttentionControllerTests(unittest.TestCase):
             controller.inspect(self.log)
         self.assertEqual(self.log.read_bytes(), before)
 
+    def test_malformed_branch_frame_fails_closed_without_key_error(self):
+        self.log.parent.mkdir(parents=True)
+        event = {
+            "event_id": "EVT-MALFORMED-BRANCH",
+            "type": "attention_branch_opened",
+            "attention": {
+                "parent": {"task_id": "TASK-PARENT", "checkpoint_id": "CKPT-PARENT"},
+                "child": {"task_id": "TASK-SIDE", "checkpoint_id": "CKPT-SIDE"},
+                "classification": "SIDE_BRANCH",
+                "turn_id": "T-MALFORMED",
+            },
+        }
+        self.log.write_text(json.dumps(event) + "\\n", encoding="utf-8")
+        before = self.log.read_bytes()
+        with self.assertRaisesRegex(ValueError, "required identifiers missing"):
+            controller.inspect(self.log)
+        self.assertEqual(self.log.read_bytes(), before)
+
     def test_public_return_fails_closed_without_unified_guard(self):
         self.turn("T-SIDE-GUARD", "Кстати, проверь отдельный вопрос",
                   child_task_id="TASK-SIDE", child_checkpoint_id="CKPT-SIDE")
