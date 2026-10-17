@@ -112,3 +112,26 @@
 - **Ограничения доверия:** позитивная применимость остаётся fail-closed, если отсутствует доверенный verifier с внешне закреплённым keyring hash. Конфигурация репозитория означает запуск проверки, а не гарантию, что approved memory найдена.
 - **Следующий шаг:** проверить exact-head CI финального документационного checkpoint; затем реализовать read-only GitHub branch/revision adapter с branch HEAD SHA, file blob SHA, статусом доступа/покрытия и конфликтами версий.
 - **Статус:** узкая интеграция подтверждена CI; сквозное поведение в живой сессии ChatGPT не подтверждено. PR #36 Draft/open/unmerged, stacked on #35/#34/#27; main не менялся.
+
+## 2026-10-17 — EVT-AGMS-20261017-005: удалённый GitHub source discovery
+
+- **Источник:** PR #37; code checkpoint 0ada1a3db718ad09a050206cd1767681507bc1fe; exact-head CI [#39018573896](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/39018573896).
+- **Подтверждено:** добавлен tools/github_source_discovery.py и registry/remote_source_catalog.json. Поиск сначала проверяет ожидаемый путь по заданным refs, затем известные альтернативные пути; возвращает branch ref/commit SHA/blob SHA/content SHA-256/size и статус покрытия.
+- **Идентичность:** exact hash или структурированное поле ID считаются подтверждением; текстовое упоминание остаётся кандидатом. При недоступности источника, частичном покрытии или движении branch HEAD статус SEARCH_INCOMPLETE, а не глобальное отсутствие.
+- **Интеграция:** memory_aware_session_restore вызывает remote discovery после локального поиска, если approved-memory retrieval вернул PARTIAL_NO_MATCH и не найден подтверждённый локальный identity. Remote result не переносится и не становится approved memory автоматически.
+- **Проверки:** 436 Python tests, 1 skipped; strict write audit 143/0.
+- **Ограничения:** remote catalog содержит только известные refs/paths, не все ветки; внешние архивы, connectors, device storage и автоматический ChatGPT host bridge не подключены.
+- **Следующий шаг:** проверить exact-head CI финального документационного checkpoint; затем добавить контроль drift между каталогом и текущими branch heads, после чего спроектировать/проверить реальный host adapter для вызова локального кластера.
+- **Статус:** remote fallback реализован и узко проверен CI; сквозной live ChatGPT runtime не подтверждён. PR #37 Draft/open/unmerged; main не изменён.
+
+
+## 2026-10-17 — EVT-AGMS-20261017-006: совместимая маршрутизация удалённых источников
+
+- **Источник:** PR #37, исправления после ревью интеграции remote source catalog; commit fe232c4d6ee18308d93bebad801803c364f1e683; exact-head CI [#39019051330](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/39019051330).
+- **Наблюдение:** remote fallback объединял пути всех источников в один список для поиска семантической памяти. Так несовместимый bootstrap-протокол мог стать поисковым кандидатом, а его expected_blob_sha не использовался вызывающим путём.
+- **Исправление:** добавлены source_type и priority в каталог; восстановление ищет сначала semantic_memory, затем event_history и не включает protocol/bootstrap в этот сценарий. Профиль источника передаёт собственный expected path, aliases и hash/blob SHA.
+- **Поведенческие тесты:** проверены порядок двух совместимых источников, исключение bootstrap из memory fallback и подтверждение идентичности по точному Git blob SHA.
+- **Проверка:** exact-head CI прошёл: 438 Python tests, 1 skipped; strict write audit — 143 mutation sites, 0 unclassified.
+- **Ограничения:** это устраняет неверную маршрутизацию в remote memory fallback, но не подключает все типы источников ко всем задачам. Поиск остаётся ограничен явно зарегистрированными refs/paths.
+- **Следующий шаг:** добавить обнаружение drift branch HEAD и конфликтующих ревизий, затем проверить возможность реального вызова локального кластера из рабочего канала ChatGPT.
+- **Статус:** исправление реализовано и узко проверено; PR #37 Draft/open/unmerged; main не изменён.

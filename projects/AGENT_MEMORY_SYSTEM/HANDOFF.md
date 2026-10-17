@@ -785,3 +785,25 @@ Important remaining gap: real ingestion + promotion is tested, but the same test
 - Known gaps: automatic ChatGPT startup and host bridge remain absent; remote GitHub branch/revision discovery is next; source catalog remains local-only; positive applicability needs an externally pinned keyring; archive import/complete reconciliation remains deferred.
 - Next: check final exact-head CI, then add read-only remote GitHub ref discovery with branch HEAD/blob SHA provenance, stale-ref/permission/coverage handling and conflict tests.
 - No destructive changes, no history rewrite, no main edits, no PR merges.
+
+## Current return point — remote source discovery (2026-10-17)
+
+- PR #37: https://github.com/alexbotleh-oss/agent-knowledge-base/pull/37; branch feature/remote-github-source-discovery-20261017; Draft/open/unmerged, stacked on #36/#35/#34/#27. Do not merge; main unchanged.
+- Remote adapter: tools/github_source_discovery.py; known-ref catalog: registry/remote_source_catalog.json.
+- Integrated path: memory_aware_session_restore runs local capability-aware search after PARTIAL_NO_MATCH; if there is no verified local identity and a repository is configured, it runs remote discovery over catalogued refs/paths. It never moves or promotes remote results automatically.
+- Code checkpoint 0ada1a3db718ad09a050206cd1767681507bc1fe passed exact-head CI run 39018573896: 436 Python tests, 1 skipped; write audit 143/0. Final docs/checkpoint HEAD needs exact-head CI recheck.
+- Search contract: expected path first, alternate paths second; preserve ref, commit SHA, blob SHA and content hash; only structured ID/hash proves identity; branch movement/access errors/incomplete coverage remain explicit.
+- Remaining: catalog-head drift detection, wider source registry/aliases, external archive/connector/device adapters, actual ChatGPT host bridge. The local cluster is not automatically invoked by this chat.
+- Next: verify final CI; then add catalog-vs-live branch-head drift handling and design the real host adapter before attempting broad archive integration.
+- Archive transfer and browser extension remain deferred; no destructive changes, no history rewrite, no main edits.
+
+
+## Return point — remote source routing hardening (2026-10-17)
+
+- Continue from PR #37, branch feature/remote-github-source-discovery-20261017, stacked on #36 → #35 → #34 → #27. All PRs remain Draft/open/unmerged; main unchanged.
+- Live state before this checkpoint: PR #37 head fe232c4d6ee18308d93bebad801803c364f1e683; exact-head CI run 39019051330 SUCCESS (438 Python tests, 1 skipped; strict write audit 143 mutation sites / 0 unclassified).
+- Corrected remote fallback routing: source catalog profiles now carry source_type/priority. Memory restore searches only compatible semantic_memory and event_history sources; protocol/bootstrap is not swept into semantic-memory candidate paths. Exact per-source hash/blob metadata is passed through.
+- Added regression coverage for source-type ordering/exclusion and exact Git blob identity. No automatic file movement, pointer repair, or semantic promotion.
+- Full integration audit lives at projects/AGENT_MEMORY_SYSTEM/CLUSTER_INTEGRATION_AUDIT_2026-10-17.md. It identifies the main remaining gap as the actual ChatGPT host/runtime bridge, not another memory format.
+- Next: verify exact current PR/branch HEAD and CI after checkpoint commits; implement branch-head drift/conflicting-revision reporting; then design a supported host invocation path for the local CLI and turn writeback. Do not claim automatic ChatGPT execution without a live round-trip test.
+- Still deferred: browser-extension integration and production archive transfer/completeness. Do not merge or change main.
