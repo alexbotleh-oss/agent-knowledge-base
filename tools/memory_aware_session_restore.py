@@ -235,7 +235,7 @@ def build_memory_aware_packet(task_state:Path,handoff:Path,event_log:Path,reposi
             remote_searches = []
             remote_catalog_error = None
             remote_catalog_path = DEFAULT_REMOTE_SOURCE_CATALOG
-            if repository and (task_id or context_id or query):
+            if repository and (task_id or context_id or query) and not verified:
                 try:
                     remote_catalog_bytes = remote_catalog_path.read_bytes()
                     remote_catalog = json.loads(remote_catalog_bytes.decode("utf-8"))
