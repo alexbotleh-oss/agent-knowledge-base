@@ -151,7 +151,7 @@ class VerifyResumableChatImportTests(unittest.TestCase):
             root = Path(tmp)
             source = root / "native-like-export.zip"
             conversations = sample_conversations(2)
-            conversations[0]["mapping"]["node-0-user"]["message"]["content"]["parts"].append(
+            conversations[0]["mapping"]["node-0"]["message"]["content"]["parts"].append(
                 {"file-service://file-attachment-001": "image"}
             )
             attachment_path = "files/file-attachment-001.bin"
@@ -185,7 +185,7 @@ class VerifyResumableChatImportTests(unittest.TestCase):
                 finally:
                     conn.close()
             self.assertEqual(
-                staged["mapping"]["node-0-user"]["message"]["content"]["parts"][-1],
+                staged["mapping"]["node-0"]["message"]["content"]["parts"][-1],
                 {"file-service://file-attachment-001": "image"},
             )
 
