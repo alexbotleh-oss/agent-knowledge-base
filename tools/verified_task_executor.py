@@ -219,6 +219,8 @@ def run_reviewed_action(
     execute: bool = False,
     timeout_seconds: int = 60,
     lesson_logs: list[Path] | None = None,
+    prior_failed_attempts: int = 0,
+    risk_level: str = "normal",
 ) -> dict[str, Any]:
     """Run one reviewed action and persist a candidate only after independent checks pass."""
     root = Path(workspace_root).resolve()
@@ -284,6 +286,8 @@ def run_reviewed_action(
             current_project_id=project_id,
             evidence_root=root,
             lesson_logs=resolved_lesson_logs,
+            prior_failed_attempts=prior_failed_attempts,
+            risk_level=risk_level,
         )
     except Exception as exc:
         return {"status": "BLOCKED_EXPERIENCE_RETRIEVAL_ERROR", "reason": f"{type(exc).__name__}: {exc}", "writes_performed": False}
@@ -292,6 +296,15 @@ def run_reviewed_action(
             "status": "BLOCKED_EXPERIENCE_RETRIEVAL",
             "loop_status": loop_result.get("status"),
             "writes_performed": False,
+        }
+    route = loop_result.get("adaptive_task_flow")
+    route_mode = route.get("mode") if isinstance(route, dict) else None
+    if route_mode not in {"APPLY_RELEVANT_EXPERIENCE", "REVIEW_EXPERIENCE_CANDIDATES"}:
+        return {
+            "status": "BLOCKED_ROUTE_REQUIRES_DEEPER_ANALYSIS",
+            "route": route,
+            "writes_performed": False,
+            "execution_performed": False,
         }
     candidate = _retrieved_candidate(loop_result, reviewed_experience_event_id)
     if candidate is None:
@@ -351,6 +364,7 @@ def run_reviewed_action(
         return {
             "status": "PLAN_READY_REQUIRES_EXPLICIT_EXECUTE",
             "retrieved_event_id": reviewed_experience_event_id,
+            "route_mode": route_mode,
             "action_rationale": action_rationale,
             "action_argv": action_argv,
             "acceptance_checks": acceptance_checks,
@@ -408,6 +422,10 @@ def run_reviewed_action(
         "task_id": task_id,
         "project_id": project_id,
         "request": request,
+        "task_route": {
+            "mode": route_mode,
+            "reason": route.get("reason") if isinstance(route, dict) else "UNKNOWN",
+        },
         "retrieved_experience": {
             "event_id": reviewed_experience_event_id,
             "source_event_sha256": _sha(json.dumps(source_event, ensure_ascii=False, sort_keys=True).encode("utf-8")),
@@ -511,6 +529,7 @@ def run_reviewed_action(
     return {
         "status": status,
         "retrieved_experience_event_id": reviewed_experience_event_id,
+        "route_mode": route_mode,
         "action_status": action_status,
         "return_code": return_code,
         "acceptance_checks": checks,
@@ -539,6 +558,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--action-rationale", required=True)
     parser.add_argument("--action-spec", required=True, type=Path, help="JSON object with argv, cwd, acceptance_criterion, acceptance_checks, evidence_report, observed_outcome")
     parser.add_argument("--timeout-seconds", type=int, default=60)
+    parser.add_argument("--prior-failed-attempts", type=int, default=0)
+    parser.add_argument("--risk-level", choices=("low", "normal", "high", "critical"), default="normal")
     parser.add_argument("--execute", action="store_true", help="actually execute the command; without this flag only retrieval/plan validation occurs")
     args = parser.parse_args(argv)
     try:
@@ -568,6 +589,8 @@ def main(argv: list[str] | None = None) -> int:
         observed_outcome=spec.get("observed_outcome", ""),
         execute=args.execute,
         timeout_seconds=args.timeout_seconds,
+        prior_failed_attempts=args.prior_failed_attempts,
+        risk_level=args.risk_level,
     )
     print(json.dumps(result, ensure_ascii=False, indent=2))
     return 0 if result.get("status") in {"PLAN_READY_REQUIRES_EXPLICIT_EXECUTE", "VERIFIED_ACTION_AND_CAPTURED", "VERIFIED_ACTION_CAPTURE_ALREADY_PRESENT"} else 2
