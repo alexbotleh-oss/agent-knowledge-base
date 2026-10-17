@@ -751,3 +751,19 @@ P2 is not yet declared ready: this test mocks the final verified restore packet,
 - The result verifies repository code on this candidate branch. It does not verify automatic capture of ChatGPT uploads, integration with the active platform's project library, mobile/browser synchronization or real new-chat restoration.
 - Current branch includes code, tests and docs only; no user's raw conversation or attachment payloads were committed. PR #31 remains Draft/open/unmerged and is stacked on PR #27's integration branch; PR #27/#30 and `main` remain unchanged.
 - **Next action:** update HANDOFF/TASK_STATE, then recheck exact latest HEAD and CI because metadata writes create a new revision. After that, keep the active priority on client integration and actual new-chat recovery rather than returning prematurely to unrelated controller/importer work.
+
+
+## Checkpoint update — browser rolling-context client (2026-10-17)
+
+- Added `clients/chatgpt-web-extension/dialogue_window_core.js`: deterministic two-window construction over captured browser turns, durable receive-sequence ordering where available, pending-turn retention, explicit UNKNOWN project assignment, and a recovery-context formatter that deduplicates pairs shared by global/current-chat windows.
+- Updated `clients/chatgpt-web-extension/background.js` to persist a monotonically increasing `received_sequence` in the existing IndexedDB turn record and expose `LIST_DIALOGUE_WINDOWS`.
+- Updated extension popup and manifest: on explicit user click, the popup identifies the active ChatGPT conversation when possible and copies the last-five-pairs context. It does not silently alter or submit the user's message. The extension README documents the new workflow and limitations.
+- Added `clients/dialogue_window_core.test.mjs` and wired it into CI.
+- **Exact code + protocol HEAD:** `789f81a31b80cf4e14422a77b1179835fd80c99d`.
+- **Exact-head CI:** [run 39001799801](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/39001799801) PASS — 312 Python tests, 11 Node tests (0 failed), strict write audit 136 mutation sites / 0 unclassified, memory validation PASS, project/stack validation PASS.
+- **Failure chronology retained:** (1) strict write audit initially blocked the new attachment library until its mutation contract was classified; (2) popup path parsing initially failed syntax validation due to an over-escaped regex and was replaced with path-segment parsing; (3) a pending-turn prompt test exposed a missing turn ID in formatted output, which was added. Latest exact-head CI passed all these areas.
+- **Current implementation boundary:** extension capture covers recognized text-send paths and assistant output observed in the page DOM, stored locally in IndexedDB. Popup context copy is explicit; context is not automatically injected into the next model request. Attachments are not yet captured/registered by the extension, and the private library tool is not yet wired to upload events.
+- **Not verified:** live behavior in the user's installed Yandex Browser Android, automatic restore in a new chat, complete archive import, cross-device synchronization, or production attachment-library integration.
+- No raw user conversation or attachment payloads were added to the public repo. PR #31 remains Draft/open/unmerged, stacked on PR #27. PR #27/#30 remain open/unmerged; `main` unchanged.
+- **Next action:** record this checkpoint in HANDOFF/TASK_STATE, then verify the new metadata-only HEAD/CI. Keep this memory task active: next engineering step is a scoped, authenticated attachment-capture bridge with explicit project binding and a real-device acceptance test; do not return to unrelated controller/importer problems yet.
+- Status: PARTIAL / active.
