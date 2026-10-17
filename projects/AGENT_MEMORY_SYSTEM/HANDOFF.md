@@ -960,3 +960,11 @@ The applicability verifier now rejects non-string/blank signed `result` claims b
 - Regression: `tests/test_check_reuse_policy.py::test_malformed_evidence_refs_cannot_reuse_signed_pass`.
 - Code/test HEAD `785c9a7ccfc4e2ec4f5c3ca525df7198b51ea626`; exact commit-associated GitHub Actions run [38999688578](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38999688578) completed SUCCESS. Static/documentation checks and synthetic tests do not establish production trust-root acceptance.
 - Next: continue source-led review of check-result receipt validation and guarded parent return; preserve PR #30 Draft/open/unmerged and do not change `main`.
+
+
+## Return point — parent-return precommit race closed (2026-10-17)
+
+- Parent-return commit now revalidates the live reconciliation, top stack frame and newest signed/accepted child result under the shared journal lock.
+- Regression `tests/test_agent_memory_cycle.py::test_return_rechecks_newest_child_result_under_journal_lock` injects a newer unacknowledged result between preflight and commit and confirms no return event is appended.
+- Exact code/test HEAD `1d4e493edd748e0be48827373a33a641d4299f6b`; CI [38999847841](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38999847841) completed SUCCESS.
+- Scope limit: external writers that bypass the shared lock remain outside this guard. PR #30 stays Draft/open/unmerged; do not change `main`.
