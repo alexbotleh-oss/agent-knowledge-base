@@ -238,6 +238,148 @@ def capture_verified_experience_candidate(
     }
 
 
+
+def append_observed_failure_event(
+    event_log: Path,
+    *,
+    evidence_root: Path,
+    project_id: str,
+    task_id: str,
+    request_summary: str,
+    action_taken: str,
+    acceptance_criterion: str,
+    evidence_file: Path,
+    observed_outcome: str,
+    related_event_ids: list[str] | None = None,
+) -> dict[str, Any]:
+    """Append an observed failed-attempt event without promoting it to a lesson."""
+    required = {
+        "project_id": project_id,
+        "task_id": task_id,
+        "request_summary": request_summary,
+        "action_taken": action_taken,
+        "acceptance_criterion": acceptance_criterion,
+        "observed_outcome": observed_outcome,
+    }
+    if any(not isinstance(value, str) or not value.strip() for value in required.values()):
+        return {"status": "BLOCKED_REQUIRED_FIELD_MISSING", "writes_performed": False}
+    if not ID_RE.fullmatch(task_id) or not ID_RE.fullmatch(project_id):
+        return {"status": "BLOCKED_INVALID_PROJECT_OR_TASK_ID", "writes_performed": False}
+    if not isinstance(related_event_ids, (list, type(None))) or any(
+        not isinstance(item, str) or not ID_RE.fullmatch(item) for item in (related_event_ids or [])
+    ):
+        return {"status": "BLOCKED_INVALID_RELATED_EVENT_ID", "writes_performed": False}
+
+    root = Path(evidence_root).resolve()
+    evidence_path = Path(evidence_file)
+    if not evidence_path.is_absolute():
+        evidence_path = root / evidence_path
+    if evidence_path.is_symlink():
+        return {"status": "BLOCKED_EVIDENCE_SYMLINK", "writes_performed": False}
+    resolved_evidence = evidence_path.resolve()
+    try:
+        relative_evidence = resolved_evidence.relative_to(root).as_posix()
+    except ValueError:
+        return {"status": "BLOCKED_EVIDENCE_OUTSIDE_ROOT", "writes_performed": False}
+    try:
+        evidence_bytes = resolved_evidence.read_bytes()
+        evidence_bytes.decode("utf-8")
+    except (OSError, UnicodeDecodeError):
+        return {"status": "BLOCKED_EVIDENCE_UNREADABLE", "writes_performed": False}
+
+    target = Path(event_log)
+    if not target.is_absolute():
+        target = root / target
+    if target.is_symlink():
+        return {"status": "BLOCKED_EVENT_LOG_SYMLINK", "writes_performed": False}
+    target = target.resolve()
+    try:
+        target.relative_to(root)
+    except ValueError:
+        return {"status": "BLOCKED_EVENT_LOG_OUTSIDE_ROOT", "writes_performed": False}
+
+    evidence_sha = _sha(evidence_bytes)
+    identity = {
+        "project_id": project_id,
+        "task_id": task_id,
+        "request_summary": request_summary.strip(),
+        "action_taken": action_taken.strip(),
+        "acceptance_criterion": acceptance_criterion.strip(),
+        "observed_outcome": observed_outcome.strip(),
+        "evidence_ref": relative_evidence,
+        "evidence_sha256": evidence_sha,
+        "related_event_ids": sorted(set(related_event_ids or [])),
+    }
+    identity_sha = _sha(_canonical(identity))
+    event_id = "FAIL-" + identity_sha[:32]
+    now = datetime.now().astimezone().isoformat()
+    record = {
+        "event_id": event_id,
+        "project_id": project_id,
+        "event_time": now,
+        "source_time": "unknown",
+        "recorded_at": now,
+        "time_precision": "exact",
+        "temporal_basis": "artifact_timestamp",
+        "type": "failed_attempt",
+        "summary": f"Acceptance verification failed for {request_summary.strip()}",
+        "status": "observed",
+        "facts": [
+            f"Acceptance criterion: {acceptance_criterion.strip()}",
+            f"Evidence report records an unsuccessful action or acceptance check",
+            f"Evidence SHA-256: {evidence_sha}",
+        ],
+        "hypotheses": [],
+        "action_taken": action_taken.strip(),
+        "outcome": observed_outcome.strip(),
+        "evidence": [{
+            "kind": "file",
+            "ref": relative_evidence,
+            "sha256": evidence_sha,
+            "source_created_at": "unknown",
+        }],
+        "related_event_ids": identity["related_event_ids"],
+        "relations": [],
+        "next_action": "Analyze the failure and verify the cause before retrying",
+        "confidence": "medium",
+        "notes": (
+            "Observed failed-attempt event, not an accepted lesson. The action executor "
+            "recorded failed acceptance checks or protected-source changes; independent "
+            "review is required before generalizing or retrying."
+        ),
+        "capture_identity_sha256": identity_sha,
+    }
+    try:
+        with _lock(target.with_name(target.name + ".capture.lock")):
+            rows = _read_events(target)
+            for existing in rows:
+                if existing.get("event_id") == event_id:
+                    if existing.get("capture_identity_sha256") == identity_sha:
+                        return {
+                            "status": "ALREADY_RECORDED",
+                            "event_id": event_id,
+                            "event_log": str(target),
+                            "evidence_sha256": evidence_sha,
+                            "writes_performed": False,
+                        }
+                    return {"status": "BLOCKED_EVENT_ID_CONFLICT", "event_id": event_id, "writes_performed": False}
+            target.parent.mkdir(parents=True, exist_ok=True)
+            with target.open("ab") as stream:
+                stream.write(_canonical(record) + b"\\n")
+                stream.flush()
+                os.fsync(stream.fileno())
+    except (OSError, ValueError) as exc:
+        return {"status": "BLOCKED_EVENT_LOG_INVALID_OR_UNWRITABLE", "reason": str(exc), "writes_performed": False}
+    return {
+        "status": "FAILURE_EVENT_RECORDED",
+        "event_id": event_id,
+        "event_log": str(target),
+        "evidence_sha256": evidence_sha,
+        "semantic_memory_promoted": False,
+        "writes_performed": True,
+    }
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--event-log", required=True, type=Path)
