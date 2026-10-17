@@ -140,6 +140,53 @@ class SourceIngestionRoundtripTests(unittest.TestCase):
         self.assertNotIn("text", sanitized_user)
         self.assertEqual(sanitized_user["source_snapshot_sha256"], original_sha)
 
+    def test_missing_message_id_keeps_coverage_partial_and_node_provenance_stable(self):
+        self._write_export("synthetic message without an ID")
+        payload = json.loads(self.source.read_text(encoding="utf-8"))
+        del payload[0]["mapping"]["node-assistant-001"]["message"]["id"]
+        self.source.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
+        original_bytes = self.source.read_bytes()
+        original_sha = hashlib.sha256(original_bytes).hexdigest()
+
+        staged = build(self.source, self.staging, archive_id="ARCHIVE-MISSING-ID-TEST")
+        self.assertEqual(staged["raw_sha256"], original_sha)
+        self.assertEqual(self.source.read_bytes(), original_bytes)
+        self.assertEqual(staged["coverage"]["status"], "partial")
+        self.assertEqual(staged["coverage"]["message_id_missing_count"], 1)
+
+        staged_path = self.staging / staged["records_file"]
+        staged_rows = [
+            json.loads(line)
+            for line in staged_path.read_text(encoding="utf-8").splitlines()
+        ]
+        assistant = next(row for row in staged_rows if row["role"] == "assistant")
+        self.assertIsNone(assistant["source_message_id"])
+        self.assertEqual(
+            assistant["source_locator"],
+            "ARCHIVE-MISSING-ID-TEST/conversation-test-001/node-assistant-001",
+        )
+        self.assertEqual(
+            assistant["source_record_id"],
+            "SRC-" + hashlib.sha256(assistant["source_locator"].encode("utf-8")).hexdigest()[:24],
+        )
+
+        adapted = adapt_archive_staging_to_intake(
+            self.staging / "archive_snapshot.json", self.intake_root
+        )
+        manifest_path = Path(adapted["manifest_path"])
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        artifact = manifest["artifacts"][0]
+        rows = [
+            json.loads(line)
+            for line in (manifest_path.parent / artifact["path"]).read_text(encoding="utf-8").splitlines()
+        ]
+        sanitized_assistant = next(row for row in rows if row["role"] == "assistant")
+        self.assertEqual(manifest["source"]["scope_status"], "PARTIAL")
+        self.assertIsNone(sanitized_assistant["source_message_id"])
+        self.assertEqual(sanitized_assistant["source_node_id"], "node-assistant-001")
+        self.assertEqual(sanitized_assistant["source_snapshot_sha256"], original_sha)
+        self.assertNotIn("text", sanitized_assistant)
+
     def test_registry_dry_run_apply_and_exact_replay_are_safe(self):
         manifest_path, _ = self._stage_and_adapt("synthetic source message")
         dry = append_source_records(manifest_path, self.registry, apply=False)
