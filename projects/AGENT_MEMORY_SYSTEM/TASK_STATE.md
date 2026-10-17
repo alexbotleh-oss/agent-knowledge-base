@@ -844,3 +844,14 @@ The no-repeat check fingerprint now binds the current request and relevant seman
 - **CI limits:** pytest-based stack tests skipped because pytest is not installed; HTML/PWA and JS lint/test/build skipped because the repository lacks the needed package/test setup. CI success is not proof that those skipped paths work.
 - **Still unproven:** no production trust root/keyring has been configured and owner-approved; generated-key tests are synthetic. Real complete archive import and automatic cross-chat ChatGPT startup/capture remain unverified.
 - **Next action:** continue source-led review of trusted check-result reuse and claim binding; make only a concrete, source-supported change with a focused regression and exact-head CI. Then update this checkpoint from verified evidence. Do not invent a production trust root.
+
+
+## Verified checkpoint — exact signed-claim binding (2026-10-17)
+
+- **Code change:** `tools/trusted_receipt_verifier.py` now rejects a signed receipt when its `claim` contains fields outside the caller's exact expected claim. This closes a source-confirmed mismatch: previously every expected field was compared, but additional signed fields were ignored. The signature still protects integrity of the whole receipt; the verifier now also enforces the exact claim schema at this boundary.
+- **Regression:** `tests/test_trusted_receipt_verifier.py::test_extra_signed_claim_fields_are_rejected` signs a check-result claim containing an unexpected `authorization_scope` field and confirms verification fails with `CLAIM_MISMATCH`.
+- **Exact code/test HEAD:** `bcd311e5cf322f536316fc22980ca17c46da8063` on `umc02/attention-return-controller-20261016`. CI [run 38993811049](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38993811049) completed SUCCESS on this exact SHA: Python unittest **400 passed, 1 skipped**; Node tests **4 passed**; memory validation PASS.
+- **CI limits:** pytest-based stack tests skipped because pytest is not installed; HTML/PWA and JS lint/test/build skipped because package/test setup is missing. These paths are not verified by this run.
+- **PR safety:** PR #30 remains OPEN / DRAFT / UNMERGED; base `audit/agent-memory-e2e-20261016`, not `main`. No merge or `main` change is authorized.
+- **Trust limitations:** no production trust root/keyring has been configured and owner-approved; generated-key tests remain synthetic. Real archive import and automatic ChatGPT cross-chat startup/capture remain unverified.
+- **Next action:** continue source-led audit of receipt claim typing, trust-boundary failure behavior and guarded parent-return path; add focused regressions only for concrete source-supported invariants. Preserve fail-closed behavior and do not invent a production trust root.
