@@ -95,6 +95,51 @@ class SourceIngestionRoundtripTests(unittest.TestCase):
         self.assertEqual(plan["routes"][0]["logical_view"], "source_evidence_registry")
         self.assertEqual(plan["routes"][0]["planned_operation"], "append_source_records")
 
+    def test_attachment_markers_keep_coverage_partial_and_payloads_unverified(self):
+        self._write_export("synthetic attachment marker")
+        payload = json.loads(self.source.read_text(encoding="utf-8"))
+        user_message = payload[0]["mapping"]["node-user-001"]["message"]
+        user_message["metadata"]["attachments"] = [{
+            "id": "ATTACHMENT-SYNTHETIC-001",
+            "name": "synthetic-attachment.pdf",
+        }]
+        self.source.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
+        original_bytes = self.source.read_bytes()
+        original_sha = hashlib.sha256(original_bytes).hexdigest()
+
+        staged = build(self.source, self.staging, archive_id="ARCHIVE-ATTACHMENT-TEST")
+        self.assertEqual(staged["raw_sha256"], original_sha)
+        self.assertEqual(self.source.read_bytes(), original_bytes)
+        self.assertEqual(staged["coverage"]["status"], "partial")
+        self.assertEqual(staged["coverage"]["records_with_attachment_markers"], 1)
+
+        staged_path = self.staging / staged["records_file"]
+        staged_rows = [
+            json.loads(line)
+            for line in staged_path.read_text(encoding="utf-8").splitlines()
+        ]
+        user_row = next(row for row in staged_rows if row["role"] == "user")
+        self.assertTrue(user_row["has_attachments"])
+        self.assertEqual(user_row["attachment_count"], 1)
+        self.assertFalse(user_row["attachment_payloads_inspected"])
+
+        adapted = adapt_archive_staging_to_intake(
+            self.staging / "archive_snapshot.json", self.intake_root
+        )
+        manifest_path = Path(adapted["manifest_path"])
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        artifact = manifest["artifacts"][0]
+        rows = [
+            json.loads(line)
+            for line in (manifest_path.parent / artifact["path"]).read_text(encoding="utf-8").splitlines()
+        ]
+        sanitized_user = next(row for row in rows if row["role"] == "user")
+        self.assertEqual(manifest["source"]["scope_status"], "PARTIAL")
+        self.assertTrue(sanitized_user["has_attachments"])
+        self.assertFalse(sanitized_user["attachment_payloads_inspected"])
+        self.assertNotIn("text", sanitized_user)
+        self.assertEqual(sanitized_user["source_snapshot_sha256"], original_sha)
+
     def test_registry_dry_run_apply_and_exact_replay_are_safe(self):
         manifest_path, _ = self._stage_and_adapt("synthetic source message")
         dry = append_source_records(manifest_path, self.registry, apply=False)
