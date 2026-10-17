@@ -30,10 +30,10 @@ def _infer_task_id(task_state: Path) -> str | None:
         text = Path(task_state).read_text(encoding="utf-8")
     except OSError:
         return None
-    match = re.search(r"^\\s*(?:parent_task_id|task_id)\\s*:\\s*(\\S+)", text, re.I | re.M)
+    match = re.search(r"^\s*(?:parent_task_id|task_id)\s*:\s*(\S+)", text, re.I | re.M)
     if match:
         return match.group(1)
-    match = re.search(r"^#\\s*TASK_STATE\\s*[—-]\\s*(\\S+)", text, re.I | re.M)
+    match = re.search(r"^#\s*TASK_STATE\s*[—-]\s*(\S+)", text, re.I | re.M)
     return match.group(1) if match else None
 
 
