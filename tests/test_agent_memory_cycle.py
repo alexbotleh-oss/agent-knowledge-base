@@ -8,10 +8,12 @@ import tempfile
 import unittest
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
 
+import agent_memory_cycle as cycle_module
 from agent_memory_cycle import run_cycle, _current_branch_result_ready
 from branch_result_registry import publish_result, acknowledge_result
 from dialogue_attention_controller import process_turn
@@ -216,6 +218,66 @@ class AgentMemoryCycleTests(unittest.TestCase):
         self.assertFalse(after["task_start"]["decision_policy"]["repeat_check"])
         self.assertFalse(after["task_start"]["decision_policy"]["planning_authorized"])
         self.assertTrue(after["writes_performed"])
+
+    def test_return_rechecks_newest_child_result_under_journal_lock(self):
+        opened = process_turn(
+            self.attention, turn_id="T-TOCTOU-SIDE", text="Кстати, отдельный вопрос",
+            active_task_id="TASK-PARENT", active_checkpoint_id="CKPT-PARENT",
+            child_task_id="TASK-SIDE", child_checkpoint_id="CKPT-SIDE",
+        )
+        first = publish_result(self.attention, {
+            "child_branch_id": opened["branch_id"],
+            "parent_checkpoint_id": "CKPT-PARENT", "parent_task_id": "TASK-PARENT",
+            "result_key": "toctou-result-v1", "result_status": "RESULT_REPORTED",
+            "summary": "Initially acknowledged child result.",
+            "source_refs": ["tests/test_toctou.py#result-v1"],
+            "reported_at": "2026-10-16T12:00:00Z", "evidence_status": "verified",
+        })
+        ack = acknowledge_result(
+            self.attention, first["event_id"], "accepted",
+            "owner-confirmation://toctou", "2026-10-16T12:01:00Z",
+            signed_receipt=self._signed_owner_receipt(
+                first["event_id"], "accepted", "owner-confirmation://toctou", "RECEIPT-OWNER-TOCTOU"),
+        )
+        with self.task.open("a", encoding="utf-8") as stream:
+            stream.write(
+                "\n## Checkpoint update UPDATE-TOCTOU\n"
+                "- Parent checkpoint: `CKPT-PARENT`\n"
+                f"- Supporting event: `{ack['event_id']}`\n"
+            )
+
+        original_return = cycle_module._return_to_parent_unchecked
+
+        def append_newer_result_before_commit(event_log, *, turn_id, parent_task_id, precommit_guard=None):
+            newer = publish_result(event_log, {
+                "child_branch_id": opened["branch_id"],
+                "parent_checkpoint_id": "CKPT-PARENT", "parent_task_id": "TASK-PARENT",
+                "result_key": "toctou-result-v2", "result_status": "RESULT_REPORTED",
+                "summary": "Newer result appears after preflight and has no acknowledgement.",
+                "source_refs": ["tests/test_toctou.py#result-v2"],
+                "reported_at": "2026-10-16T12:02:00Z", "evidence_status": "verified",
+            })
+            self.assertEqual(newer["status"], "RESULT_REPORTED")
+            return original_return(
+                event_log, turn_id=turn_id, parent_task_id=parent_task_id,
+                precommit_guard=precommit_guard,
+            )
+
+        with patch("agent_memory_cycle._return_to_parent_unchecked", side_effect=append_newer_result_before_commit):
+            result = run_cycle(
+                self.task, self.handoff, self.project_events, self.attention,
+                "cache recovery index pointer", experience_logs=[self.experience],
+                active_task_id="TASK-SIDE", active_checkpoint_id="CKPT-SIDE",
+                current_project_id="TEST", return_turn_id="T-TOCTOU-RETURN",
+                parent_task_id="TASK-PARENT",
+            )
+
+        self.assertEqual(result["status"], "BLOCKED")
+        self.assertEqual(result["parent_return"]["status"], "BLOCKED_OWNER_ACK_MISSING")
+        self.assertFalse(result["writes_performed"])
+        self.assertEqual(result["attention"]["active"]["task_id"], "TASK-SIDE")
+        rows = [json.loads(line) for line in self.attention.read_text(encoding="utf-8").splitlines() if line.strip()]
+        self.assertFalse(any(event.get("type") == "attention_returned" for event in rows))
 
     def test_cycle_replay_of_same_return_turn_is_idempotent(self):
         opened = process_turn(
