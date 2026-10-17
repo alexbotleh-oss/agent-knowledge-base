@@ -118,6 +118,8 @@ def build_memory_aware_packet(task_state:Path,handoff:Path,event_log:Path,reposi
  query:str|None=None,limit:int=20,registry_path:Path=DEFAULT_REGISTRY,index_root:Path=DEFAULT_INDEX_ROOT,
  source_catalog_path:Path|None=None)->dict:
     packet=build_verified_session_packet(task_state,handoff,event_log,repository,ref,fetch_json=fetch_json)
+    # Preserve the authoritative task-restore state separately from later memory status decoration.
+    packet["task_restore_status"] = packet.get("status", "UNKNOWN")
     if packet.get("status") in {"BLOCKED","REVISION_CHECK_BLOCKED"}:
         packet["semantic_memory"]={"status":"NOT_ATTEMPTED","coverage_status":"UNKNOWN","records":[],"reason":"base restore is blocked","writes_performed":False}
         return packet
