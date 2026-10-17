@@ -81,7 +81,8 @@
     "Live branch-tip smoke run 39023790479 passed on efc7096a411f6ade91b4ce7cc1462e8d0d12589a: VERIFIED_SESSION_RESTORE_PASS and TASK_START_CLUSTER_PASS; task status READY_FOR_REVIEW, restore RESTORED_PACKET, readiness PARTIAL, approved semantic memory UNAVAILABLE, writes/planning/execution all false.",
     "Added read-only tools/audit_chat_export_archive.py and six synthetic tests for ZIP member inventory, duplicate paths, missing conversations.json, CRC corruption, non-ZIP input, and missing source. Exact-head CI run 39071127180 passed on 47c337be6ab867c08bc297786a1e34e22b7e1a4d: 496 Python tests (1 skipped), 4 Node tests, strict write audit 162/0; a subsequent report-only descendant exact-head run 39071199096 also passed the same suite.",
     "Refreshed CONTINUITY_CHECKPOINT.json to exact code/test HEAD 0c54aed38f36dc1a0da5b5be91ffa2df4baa000e and exact-head CI run 39071199096, then verified the metadata-descendant restore/task-start smoke in run 39071258756: VERIFIED_SESSION_RESTORE_PASS, TASK_START_CLUSTER_PASS, READY_FOR_REVIEW, RESTORED_PACKET; readiness PARTIAL because approved semantic memory remains UNAVAILABLE. No writes, planning authorization, or execution occurred.",
-    "Added conservative tools/audit_chat_attachment_references.py and six tests. It preserves candidate reference values with conversation ID/ordinal/JSON Pointer, accepts only exact archive-member path matches, and explicitly leaves heuristic candidates unresolved/ambiguous without rewriting raw payloads. Exact-head CI run 39071406666 passed on report-bearing HEAD 74e8ef7712be75a59b2afa6681291d8094ef7508: 502 Python tests (1 skipped), 4 Node tests, write audit 162/0, memory/event-log/project validation PASS."
+    "Added conservative tools/audit_chat_attachment_references.py and six tests. It preserves candidate reference values with conversation ID/ordinal/JSON Pointer, accepts only exact archive-member path matches, and explicitly leaves heuristic candidates unresolved/ambiguous without rewriting raw payloads. Exact-head CI run 39071406666 passed on report-bearing HEAD 74e8ef7712be75a59b2afa6681291d8094ef7508: 502 Python tests (1 skipped), 4 Node tests, write audit 162/0, memory/event-log/project validation PASS.",
+    "Refreshed the continuity checkpoint to exact code/test/report HEAD 74e8ef7712be75a59b2afa6681291d8094ef7508 and CI run 39071406666; verified the metadata-descendant restore/task-start smoke in run 39071453729: VERIFIED_SESSION_RESTORE_PASS, TASK_START_CLUSTER_PASS, READY_FOR_REVIEW, RESTORED_PACKET; readiness PARTIAL because approved semantic memory remains UNAVAILABLE. No writes, planning authorization, or execution occurred."
   ],
   "confirmed_open": [
     {
@@ -128,7 +129,7 @@
       "status": "NOT_IMPLEMENTED_OR_NOT_CONNECTED"
     }
   ],
-  "next_action": "Refresh this checkpoint to exact code/test/report HEAD 74e8ef7712be75a59b2afa6681291d8094ef7508 and CI run 39071406666, then rerun the metadata-descendant restore/task-start smoke. After smoke passes, continue edge-case tests for the raw importer and conservative reference audit. Native archive completeness and real attachment semantics remain unknown until its bytes are available.",
+  "next_action": "Continue focused edge-case tests for the raw importer and conservative attachment reference audit without broadening the heuristic or inferring matches. Then verify the exact current PR head, CI, report and checkpoint read-back. Only after available preflight gates are closed should the native archive be requested and audited for completeness, chronology and real attachment mapping.",
   "constraints": [
     "Do not merge PR #27 or modify main without explicit user approval.",
     "Do not delete or rewrite source-history exports without a separate explicit decision.",
@@ -137,7 +138,7 @@
     "No semantic record is accepted merely because source metadata was registered.",
     "Never report CI success for a SHA other than the exact checked SHA."
   ],
-  "status": "RAW_IMPORT_PREFLIGHT_CI_PASS_SMOKE_REFRESH_PENDING_PARTIAL_MEMORY",
+  "status": "RAW_IMPORT_PREFLIGHT_CI_AND_RESTORE_SMOKE_PASS_PARTIAL_MEMORY",
   "checkpoint_semantics": "This is a durable task checkpoint committed to the integration branch. It is not an automatic ChatGPT autosave or proof that an undelivered response was saved.",
   "repository_state": {
     "last_verified_code_head": "74e8ef7712be75a59b2afa6681291d8094ef7508",
@@ -154,13 +155,13 @@
     "semantic_memory_registry_tests": 12,
     "canonical_index_tests": 10,
     "memory_aware_restore_tests": 9,
-    "note": "Exact code/test/report HEAD 74e8ef7712be75a59b2afa6681291d8094ef7508 passed CI run 39071406666: 502 Python tests (1 skipped), 4 Node tests, strict write audit 162 mutation sites / 0 unclassified, memory/event-log/project validation PASS. Restore/task-start smoke deferred because this revision adds the reference-audit source/test and report paths after the previously recorded code SHA. Refresh checkpoint to this exact SHA/run, then rerun smoke on a metadata-only descendant. Previous smoke evidence is historical for its recorded code head; this run is not a new smoke PASS. Native archive completeness and real attachment mapping remain unverified.",
+    "note": "Exact code/test/report HEAD 74e8ef7712be75a59b2afa6681291d8094ef7508 passed CI run 39071406666: 502 Python tests (1 skipped), 4 Node tests, strict write audit 162 mutation sites / 0 unclassified, memory/event-log/project validation PASS. Metadata-only descendant 6c1d612ac4bd3be76e8e78e735f1954406d33da3 passed restore/task-start smoke in run 39071453729: VERIFIED_SESSION_RESTORE_PASS and TASK_START_CLUSTER_PASS; task READY_FOR_REVIEW, restore RESTORED_PACKET, readiness PARTIAL because approved semantic memory remains UNAVAILABLE. No writes, planning authorization or execution occurred. This verifies the repository CLI path in GitHub Actions, not automatic invocation inside ChatGPT. Native archive completeness and attachment mapping remain unverified.",
     "edge_correction_registry_tests": 8,
     "correction_index_integration_tests": 2,
     "extension_js_syntax": "PASS_STATIC_ONLY",
-    "live_restore_smoke_head": "8b8203447f456da411cd3a89e26ac3993a5379e1",
-    "live_restore_smoke_run_id": 39071258756,
-    "live_restore_smoke_url": "https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/39071258756",
+    "live_restore_smoke_head": "6c1d612ac4bd3be76e8e78e735f1954406d33da3",
+    "live_restore_smoke_run_id": 39071453729,
+    "live_restore_smoke_url": "https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/39071453729",
     "live_restore_smoke_conclusion": "success",
     "live_restore_status": "PASS",
     "task_restore_status": "RESTORED_PACKET",
@@ -170,9 +171,9 @@
     "planning_authorized": false,
     "execution_performed": false,
     "writes_performed": false,
-    "latest_restore_task_start_smoke_status": "DEFERRED_CODE_REVISION_DRIFT",
-    "latest_restore_task_start_smoke_run_id": 39071406666,
-    "latest_restore_task_start_smoke_url": "https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/39071406666"
+    "latest_restore_task_start_smoke_status": "PASS",
+    "latest_restore_task_start_smoke_run_id": 39071453729,
+    "latest_restore_task_start_smoke_url": "https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/39071453729"
   },
   "historical_repository_state": {
     "last_verified_code_head": "e30450a5ed516ab1f76f65c3c7874cdd2b951c40",
@@ -192,7 +193,7 @@
     "latest_verified_code_head": "Exact code/test/report HEAD 74e8ef7712be75a59b2afa6681291d8094ef7508 passed exact-head CI run 39071406666: 502 Python tests (1 skipped), 4 Node tests, write audit 162/0, memory and project validation PASS. Smoke step deferred pending checkpoint refresh; do not treat it as a fresh restore/task-start PASS.",
     "metadata_revision": "The Git commit containing the current checkpoint/task/handoff/event metadata is authoritative for metadata revision; it is intentionally not embedded as a self-referential SHA.",
     "chronology_rule": "Historical source checkpoint, previous verified code states, current code SHA/CI and subsequent metadata commit remain separate facts.",
-    "live_restore_verification": "PASS in GitHub Actions run 39071258756 on metadata-only branch tip 8b8203447f456da411cd3a89e26ac3993a5379e1, against exact code HEAD 0c54aed38f36dc1a0da5b5be91ffa2df4baa000e and CI run 39071199096: VERIFIED_SESSION_RESTORE_PASS; TASK_START_CLUSTER_PASS; task READY_FOR_REVIEW; restore RESTORED_PACKET; readiness PARTIAL because approved semantic memory is UNAVAILABLE. No writes, planning authorization or execution occurred. This verifies the repository CLI path, not automatic ChatGPT-host invocation."
+    "live_restore_verification": "PASS in GitHub Actions run 39071453729 on metadata-only branch tip 6c1d612ac4bd3be76e8e78e735f1954406d33da3, against exact code HEAD 74e8ef7712be75a59b2afa6681291d8094ef7508 and CI run 39071406666: VERIFIED_SESSION_RESTORE_PASS; TASK_START_CLUSTER_PASS; task READY_FOR_REVIEW; restore RESTORED_PACKET; readiness PARTIAL because approved semantic memory is UNAVAILABLE. No writes, planning authorization or execution occurred. This verifies the repository CLI path, not automatic ChatGPT-host invocation."
   },
   "prior_verified_code_states": [
     {
