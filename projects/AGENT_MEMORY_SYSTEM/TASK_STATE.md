@@ -872,3 +872,11 @@ P2 is not yet declared ready: this test mocks the final verified restore packet,
 - Added regression test `test_adaptive_route_inputs_are_forwarded_to_task_start_not_memory_restore`.
 - Integrated exact code HEAD `5ffedd908c1fdda2ed32d83c5ba316b94ccea86e` passed CI run `39069265060`: 479 Python tests (1 skipped), 4 Node tests, write audit 158/0, whole-log temporal audit PASS, memory validation PASS, project/stack validation PASS.
 - Smoke was deferred in this run because the checkpoint still referenced pre-fix code. Next step is checkpoint refresh and a fresh restore/task-start smoke. Approved semantic memory remains unavailable, so readiness cannot exceed PARTIAL.
+
+
+## Integrated acceptance result — restore/task-start smoke PASS (2026-10-17)
+
+- Code HEAD `5ffedd908c1fdda2ed32d83c5ba316b94ccea86e` passed exact-head CI run `39069265060`: 479 Python tests (1 skipped), 4 Node tests, write audit 158/0, whole-log temporal audit PASS, memory validation PASS and project/stack validation PASS.
+- Metadata-only descendant `9a3ee7c113b08dc3fe2c627a59095e02bc4a488d` passed live restore/task-start smoke run `39069332907`: `VERIFIED_SESSION_RESTORE_PASS`, `TASK_START_CLUSTER_PASS`, task `READY_FOR_REVIEW`, restore `RESTORED_PACKET`.
+- Cluster readiness remains `PARTIAL` because approved semantic memory is `UNAVAILABLE`. No writes, planning authorization or execution occurred. The CLI path is verified in GitHub Actions; automatic ChatGPT-host invocation is not.
+- PR #39 is stacked on PR #38 through a non-force merge commit; both PRs remain Draft/open/unmerged and `main` is untouched.

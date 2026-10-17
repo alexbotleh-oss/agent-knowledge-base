@@ -353,3 +353,12 @@ Scope is the canonical project journal `projects/AGENT_MEMORY_SYSTEM/events.json
 - Regression test `test_adaptive_route_inputs_are_forwarded_to_task_start_not_memory_restore` passes in exact-head CI run `39069265060`.
 - Exact integrated code HEAD `5ffedd908c1fdda2ed32d83c5ba316b94ccea86e`: 479 Python tests (1 skipped), 4 Node tests, write audit 158/0, whole-log temporal audit PASS, memory validation PASS and project/stack validation PASS.
 - Restore/task-start smoke was deferred because checkpoint evidence still pointed to the pre-fix SHA. Update checkpoint and run the metadata-only smoke before marking the integrated path PASS.
+
+
+## Final verification for integrated PR #38/#39 task-start path — 2026-10-17
+
+- Exact code HEAD `5ffedd908c1fdda2ed32d83c5ba316b94ccea86e` passed CI run `39069265060`: 479 Python tests (1 skipped), 4 Node tests, strict write audit 158 mutation sites / 0 unclassified, canonical event-log temporal audit PASS, memory validation PASS and project/stack validation PASS.
+- Metadata-only descendant `9a3ee7c113b08dc3fe2c627a59095e02bc4a488d` passed run `39069332907`: `VERIFIED_SESSION_RESTORE_PASS` and `TASK_START_CLUSTER_PASS`; restore `RESTORED_PACKET`, task `READY_FOR_REVIEW`.
+- The adaptive-parameter API mismatch found in the first integrated smoke was fixed; the new call-contract regression test passes.
+- Outcome capture and the other canonical project-event writers now share the exclusive journal lock contract.
+- **Remaining readiness:** PARTIAL, because approved semantic memory is unavailable. This is a verified repository CLI path in GitHub Actions, not automatic ChatGPT-host invocation. Native archive import/completeness and host writeback remain open acceptance tasks.

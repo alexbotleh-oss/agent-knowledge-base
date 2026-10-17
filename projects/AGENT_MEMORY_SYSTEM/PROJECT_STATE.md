@@ -43,3 +43,7 @@
 
 - **Latest integrated code checkpoint (2026-10-17):** `5ffedd908c1fdda2ed32d83c5ba316b94ccea86e` passed exact-head CI run `39069265060`: 479 Python tests (1 skipped), 4 Node tests, write audit 158/0, whole-log temporal audit PASS, memory validation PASS and project/stack validation PASS.
 - A live task-start smoke exposed and then motivated a fix to the adaptive-parameter call contract; regression test now passes. Smoke on the final code SHA is pending checkpoint refresh. Approved semantic memory remains unavailable.
+
+
+- **Integrated runtime smoke (2026-10-17):** run `39069332907` passed on metadata-only descendant `9a3ee7c113b08dc3fe2c627a59095e02bc4a488d`: verified restore `RESTORED_PACKET`, task-start `READY_FOR_REVIEW`. Cluster readiness remains PARTIAL because approved semantic memory is unavailable.
+- **Verified code:** `5ffedd908c1fdda2ed32d83c5ba316b94ccea86e`, exact-head CI `39069265060`: 479 Python tests (1 skipped), 4 Node tests, write audit 158/0, temporal audit and repository checks PASS.

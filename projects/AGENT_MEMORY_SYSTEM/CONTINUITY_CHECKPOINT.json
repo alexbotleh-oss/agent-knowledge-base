@@ -125,7 +125,7 @@
       "status": "NOT_IMPLEMENTED_OR_NOT_CONNECTED"
     }
   ],
-  "next_action": "Refresh the checkpoint to this exact code HEAD and CI run, then verify restore/task-start on the metadata-only descendant. If smoke passes, record the observed result and retain PARTIAL readiness while approved semantic memory is unavailable. Next engineering priorities after that: establish an approved memory record/registry through the existing approval path, then native archive import/read-back and a supported host invocation/writeback bridge. Do not merge PRs or change main.",
+  "next_action": "Next engineering milestones are not more branch-reconciliation checks: (1) resolve approved semantic-memory availability through the existing approval-bound registry/index path without fabricating records; (2) obtain the actual native full ChatGPT export and perform staged resumable import with count/hash/read-back reconciliation; (3) establish a supported runtime/host invocation and writeback bridge, then prove it with a fresh-session interruption/resume test. Keep readiness PARTIAL until these acceptance tests pass. Do not merge PRs or change main.",
   "constraints": [
     "Do not merge PR #27 or modify main without explicit user approval.",
     "Do not delete or rewrite source-history exports without a separate explicit decision.",
@@ -134,7 +134,7 @@
     "No semantic record is accepted merely because source metadata was registered.",
     "Never report CI success for a SHA other than the exact checked SHA."
   ],
-  "status": "INTEGRATED_PR38_PR39_EXACT_HEAD_CI_PASS_SMOKE_PENDING",
+  "status": "INTEGRATED_PR38_PR39_CI_AND_TASK_START_SMOKE_PASS_PARTIAL_MEMORY",
   "checkpoint_semantics": "This is a durable task checkpoint committed to the integration branch. It is not an automatic ChatGPT autosave or proof that an undelivered response was saved.",
   "repository_state": {
     "last_verified_code_head": "5ffedd908c1fdda2ed32d83c5ba316b94ccea86e",
@@ -151,18 +151,18 @@
     "semantic_memory_registry_tests": 12,
     "canonical_index_tests": 10,
     "memory_aware_restore_tests": 9,
-    "note": "Integrated code HEAD 5ffedd908c1fdda2ed32d83c5ba316b94ccea86e passed exact-head CI run 39069265060: 479 Python tests (1 skipped), 4 Node tests, strict write audit 158 mutation sites / 0 unclassified, whole-log temporal relation audit PASS, memory validation PASS and project/stack validation PASS. The prior integrated smoke failure exposed a real API mismatch: adaptive route parameters were passed to build_memory_aware_packet although they belong to build_task_start_experience_map. The call was corrected and regression test test_adaptive_route_inputs_are_forwarded_to_task_start_not_memory_restore passed. This run deferred smoke because the checkpoint still referenced pre-fix code; refresh checkpoint then rerun smoke.",
+    "note": "Integrated code HEAD 5ffedd908c1fdda2ed32d83c5ba316b94ccea86e passed exact-head CI run 39069265060: 479 Python tests (1 skipped), 4 Node tests, strict write audit 158 mutation sites / 0 unclassified, whole-log temporal audit PASS, memory validation PASS and project/stack validation PASS. Metadata-only descendant 9a3ee7c113b08dc3fe2c627a59095e02bc4a488d passed restore/task-start smoke in run 39069332907: VERIFIED_SESSION_RESTORE_PASS and TASK_START_CLUSTER_PASS; task READY_FOR_REVIEW, restore RESTORED_PACKET, readiness PARTIAL because approved semantic memory remains UNAVAILABLE. No writes, planning authorization or execution occurred. This verifies the repository CLI in GitHub Actions, not automatic invocation inside ChatGPT.",
     "edge_correction_registry_tests": 8,
     "correction_index_integration_tests": 2,
     "extension_js_syntax": "PASS_STATIC_ONLY",
-    "live_restore_smoke_head": null,
-    "live_restore_smoke_run_id": null,
-    "live_restore_smoke_url": null,
-    "live_restore_smoke_conclusion": null,
-    "live_restore_status": "NOT_RUN_FOR_CURRENT_CODE_HEAD",
-    "task_restore_status": "NOT_RUN",
-    "task_start_status": "NOT_RUN",
-    "cluster_readiness": "UNKNOWN",
+    "live_restore_smoke_head": "9a3ee7c113b08dc3fe2c627a59095e02bc4a488d",
+    "live_restore_smoke_run_id": 39069332907,
+    "live_restore_smoke_url": "https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/39069332907",
+    "live_restore_smoke_conclusion": "success",
+    "live_restore_status": "PASS",
+    "task_restore_status": "RESTORED_PACKET",
+    "task_start_status": "READY_FOR_REVIEW",
+    "cluster_readiness": "PARTIAL",
     "approved_memory_status": "UNAVAILABLE",
     "planning_authorized": false,
     "execution_performed": false,
@@ -183,10 +183,10 @@
   },
   "revision_semantics": {
     "source_code_checkpoint": "Historical milestone retained in the original source_code_checkpoint object; it is not the current code HEAD.",
-    "latest_verified_code_head": "Integrated code HEAD 5ffedd908c1fdda2ed32d83c5ba316b94ccea86e passed exact-head CI run 39069265060: 479 Python tests (1 skipped), 4 Node tests, strict write audit 158/0, whole-log temporal audit PASS, memory validation PASS and project/stack validation PASS. The adaptive-argument call-contract defect found by the first integrated smoke was fixed and covered by a regression test. Restore/task-start smoke is pending checkpoint refresh.",
+    "latest_verified_code_head": "Integrated code HEAD 5ffedd908c1fdda2ed32d83c5ba316b94ccea86e passed exact-head CI run 39069265060: 479 Python tests (1 skipped), 4 Node tests, strict write audit 158/0, whole-log temporal audit PASS, memory validation PASS and project/stack validation PASS. Metadata-only descendant 9a3ee7c113b08dc3fe2c627a59095e02bc4a488d passed restore/task-start smoke run 39069332907.",
     "metadata_revision": "The Git commit containing the current checkpoint/task/handoff/event metadata is authoritative for metadata revision; it is intentionally not embedded as a self-referential SHA.",
     "chronology_rule": "Historical source checkpoint, previous verified code states, current code SHA/CI and subsequent metadata commit remain separate facts.",
-    "live_restore_verification": "NOT RUN for integrated code HEAD 5ffedd908c1fdda2ed32d83c5ba316b94ccea86e. CI run 39069265060 passed but deferred smoke because the checkpoint still referred to pre-fix code. Refresh checkpoint with this exact SHA/run, then verify restore/task-start on the metadata-only descendant."
+    "live_restore_verification": "PASS in GitHub Actions run 39069332907 on metadata-only branch tip 9a3ee7c113b08dc3fe2c627a59095e02bc4a488d: VERIFIED_SESSION_RESTORE_PASS; TASK_START_CLUSTER_PASS; task READY_FOR_REVIEW; restore RESTORED_PACKET; cluster readiness PARTIAL because approved semantic memory is UNAVAILABLE. No writes, planning authorization or execution occurred. This verifies the repository CLI path, not automatic ChatGPT-host invocation."
   },
   "prior_verified_code_states": [
     {

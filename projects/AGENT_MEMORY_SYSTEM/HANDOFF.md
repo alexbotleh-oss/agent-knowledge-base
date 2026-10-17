@@ -872,3 +872,11 @@ Important remaining gap: real ingestion + promotion is tested, but the same test
 - First integrated smoke found a real TypeError: `build_memory_aware_packet()` was passed adaptive routing parameters that belong to `build_task_start_experience_map()`. Corrected the call boundary and added a regression test.
 - Exact code HEAD `5ffedd908c1fdda2ed32d83c5ba316b94ccea86e` passed CI run `39069265060`: 479 Python tests (1 skipped), 4 Node tests, write audit 158 mutation sites / 0 unclassified, whole-log temporal audit PASS, memory validation PASS and project/stack validation PASS.
 - This exact-head run deferred smoke until the checkpoint is refreshed to the new SHA/run. Next: refresh and verify `VERIFIED_SESSION_RESTORE_PASS` plus `TASK_START_CLUSTER_PASS`; expected readiness remains PARTIAL while approved semantic memory is unavailable.
+
+
+## Current return point — integrated memory cycle verified (2026-10-17)
+
+- Exact code HEAD `5ffedd908c1fdda2ed32d83c5ba316b94ccea86e` passed CI run `39069265060`: 479 Python tests (1 skipped), 4 Node tests, write audit 158/0, whole-log temporal audit PASS, memory validation PASS and project/stack validation PASS.
+- Metadata-only branch tip `9a3ee7c113b08dc3fe2c627a59095e02bc4a488d` passed smoke run `39069332907`: verified restore `RESTORED_PACKET`; task-start `READY_FOR_REVIEW`; `VERIFIED_SESSION_RESTORE_PASS` and `TASK_START_CLUSTER_PASS` emitted.
+- Readiness remains PARTIAL because approved semantic memory is unavailable. The real ChatGPT host bridge and production native-archive import remain unverified; do not describe them as implemented.
+- Next work is substantive acceptance: approved-memory registry availability, native archive staged import/read-back, and host invocation/writeback with a fresh-session interruption/resume scenario.
