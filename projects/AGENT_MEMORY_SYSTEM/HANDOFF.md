@@ -845,3 +845,13 @@ Important remaining gap: real ingestion + promotion is tested, but the same test
 - Verified restore passed; task-start returned READY_FOR_REVIEW with RESTORED_PACKET. Cluster readiness is PARTIAL because approved semantic memory is UNAVAILABLE. No writes, planning authorization or execution occurred.
 - CONTINUITY_CHECKPOINT.json records code HEAD ebed5f048188b1f057f1c40a00ca148acd087b6 and exact CI run 39023539993, plus the live smoke result.
 - The repository CLI path is verified in GitHub Actions; automatic ChatGPT-host invocation remains unverified. Continue the PR #1–#38 audit. Do not invent approved memory records or resume the deferred archive transfer.
+
+
+## Return point — PR #38 CI/smoke recovered; writer integration defect isolated (2026-10-17)
+
+- PR #38 branch `feature/prewrite-event-relation-validator-20261017` remains open/Draft/unmerged and based on PR #37. Code HEAD `4a2ee4499e11b8ff8fb02292d1320ad8b20e2160` passed exact-head CI run `39068720335` (448 Python tests, 1 skipped; 4 Node tests; write audit 143/0; memory and project validation PASS).
+- The workflow was repaired so stale checkpoint/code drift produces an explicit deferred smoke, not a false code failure or a silently accepted restore. After checkpoint refresh, smoke passed in runs `39068800259` and `39068855181`: restore `RESTORED_PACKET`, task-start `READY_FOR_REVIEW`, cluster readiness `PARTIAL` because approved semantic memory remains unavailable. No writes or execution were authorized.
+- Writer inventory: PR #38 gates three canonical project-event writer entrypoints: branch result/ack, check reuse, and dialogue attention/return stack. The task-state update tool reads supporting event evidence but does not append to the journal.
+- PR #39 adds verified-outcome and observed-failure append paths. Both call the same temporal validator, but they use `.capture.lock` with advisory locking, unlike the existing writers' exclusive `events.jsonl.lock`; these mechanisms do not coordinate and can race. This is the next concrete defect, not a reason to redo the full audit.
+- Next: change PR #39 capture to acquire the same exclusive `events.jsonl.lock` protocol; add a test proving it blocks when that canonical journal lock already exists; rerun exact-head CI; then stack #39 on #38 using a merge commit (no force push), retarget PR #39 to #38, and run the integrated workflow. Preserve both PRs open/unmerged and keep `main` untouched.
+- Known system boundary: repository CLI restore/task-start is verified in GitHub Actions; automatic ChatGPT host invocation/writeback is still not implemented or verified. Approved semantic memory is UNAVAILABLE, so cluster readiness remains PARTIAL.

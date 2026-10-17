@@ -31,3 +31,7 @@
 
 - **Current integration checkpoint (2026-10-17):** PR #27 → #34 → #35 → #36 → #37 remains the code lineage. PR #38 has been synchronized onto the current #37 base through merge commit 258b11610bd57d8c4b1ff051a36b74dd75c741b6, but exact-head CI is pending/unavailable; do not merge or claim validation.
 - **Current integrity boundary:** the canonical event journal preserves unique IDs in the repaired #38 branch; the previous conflicting event ID was resolved append-only as EVT-AGMS-20261017-007. The continuity checkpoint remains stale until a matching code SHA and successful CI run are observed.
+
+
+- **Verified continuation (2026-10-17):** PR #38 code HEAD `4a2ee4499e11b8ff8fb02292d1320ad8b20e2160` passed exact-head CI run `39068720335`; metadata-only descendant smoke passed in run `39068855181`. Task-start is `READY_FOR_REVIEW`, restore `RESTORED_PACKET`, cluster readiness `PARTIAL` because approved semantic memory is unavailable. No automatic ChatGPT-host bridge is verified.
+- **Writer integration risk:** PR #39's outcome-capture paths use a different lock protocol/path from the three canonical event writers in PR #38. Fix and test the shared journal lock before stacking the branches and validating the combined system.

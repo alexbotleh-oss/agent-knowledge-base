@@ -310,3 +310,26 @@ The previous inventory records PR #38 as failing and based on a stale revision; 
 - tools/dialogue_attention_controller.py now imports validate_event_append. The existing branch_result_registry integration and the new validator/test files are preserved.
 - **Verification at the time of the first branch reconciliation was PENDING.** No workflow run/check-run was associated with merge HEAD 258b11610bd57d8c4b1ff051a36b74dd75c741b6. After the PR metadata update, exact-head CI run 39022785538 passed for HEAD 566e90f746f702c0a5ca5abd1cd7f6e163f765df: 446 Python tests (1 skipped), 4 Node tests, strict write audit 143 mutation sites / 0 unclassified, memory validation PASS and project/stack validation PASS. The audit-document correction in this commit changes the HEAD again, so run 39022785538 must not be attributed to the new SHA; obtain exact-head CI before refreshing the checkpoint. A local clone attempt failed because the execution environment could not resolve github.com; no local test run is claimed.
 - Do not merge PR #38. After an exact-head CI result is available, update the continuity checkpoint only with the SHA/run pair that actually passed. The validator is still wired to two writer paths; broad writer coverage and a dedicated whole-log workflow audit remain open.
+
+
+## Writer inventory and verified smoke update — 2026-10-17
+
+Scope is the canonical project journal `projects/AGENT_MEMORY_SYSTEM/events.jsonl`, not every file with an `events.jsonl` name.
+
+| Writer / mechanism | Target | Temporal validator | Lock contract | Assessment |
+|---|---|---|---|---|
+| `branch_result_registry.py` (result + acknowledgement) | Canonical project `events.jsonl` | Yes, before append | Exclusive `events.jsonl.lock` | Gated |
+| `check_reuse_policy.py` | Canonical project `events.jsonl` | Yes, before append | Exclusive `events.jsonl.lock` | Gated |
+| `dialogue_attention_controller.py` | Canonical project `events.jsonl` | Yes, before append | Exclusive `events.jsonl.lock` | Gated |
+| `experience_outcome_capture.py` (verified candidate + observed failure; PR #39 sibling) | Project `events.jsonl` | Yes, before append | Advisory lock on `.capture.lock` | **Not concurrency-safe with the other writers; fix before integration** |
+| `guarded_task_state_update.py` | `TASK_STATE.md` plus paired checkpoint metadata | No event append; validates supporting event evidence | Journal lock + task-state lock | Not a journal writer |
+| `turn_lifecycle_ledger.py` | User-local turn lifecycle ledger | Separate event schema | Advisory lock | Separate authority; cross-reference only |
+| `source_ingestion_runner.py` | Per-run `run_events.jsonl` | Separate ingestion ledger contract | Run lock + atomic projection | Separate authority |
+| `memory_pipeline_coordinator.py` | Per-run `pipeline_events.jsonl` | Hash-chained pipeline ledger | Run lock + append/fsync | Separate authority |
+| `edge_correction_registry.py`, `semantic_memory_registry.py`, `source_evidence_registry.py` | Dedicated registries | Registry-specific validation | Registry-specific locks | Not canonical project-event appenders |
+
+### Exact-head evidence
+
+- Code HEAD `4a2ee4499e11b8ff8fb02292d1320ad8b20e2160`: CI run `39068720335` PASS — 448 Python tests (1 skipped), 4 Node tests, strict write audit 143 mutation sites / 0 unclassified, memory validation and project/stack validation PASS.
+- Metadata-only branch tip `460ba6ab859d1aae906e716b8173c618486edafe`: run `39068855181` PASS — verified restore and task-start smoke both pass; `READY_FOR_REVIEW`, `RESTORED_PACKET`, readiness `PARTIAL` because approved semantic memory is unavailable.
+- This proves the repository CLI path under GitHub Actions only. Automatic ChatGPT-host invocation/writeback remains unverified. Do not merge either PR or modify `main`.
