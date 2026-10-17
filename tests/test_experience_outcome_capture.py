@@ -98,6 +98,27 @@ class ExperienceOutcomeCaptureTests(unittest.TestCase):
             self.assertFalse(result["execution_performed"])
             self.assertFalse(result["writes_performed"])
 
+    def test_relative_paths_are_resolved_inside_declared_root(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            evidence = root / "artifacts" / "check-output.txt"
+            evidence.parent.mkdir(parents=True)
+            evidence.write_text("TEST_RESULT=PASS\\n", encoding="utf-8")
+            result = capture_verified_experience_candidate(
+                Path("projects/TEST/events.jsonl"),
+                evidence_root=root,
+                project_id="TEST",
+                task_id="TASK-002",
+                request_summary="relative path persistence",
+                action_taken="checked output",
+                acceptance_criterion="the output contains a pass marker",
+                expected_evidence_marker="TEST_RESULT=PASS",
+                evidence_file=Path("artifacts/check-output.txt"),
+                observed_outcome="pass marker found",
+            )
+            self.assertEqual(result["status"], "CAPTURED_CANDIDATE")
+            self.assertTrue((root / "projects" / "TEST" / "events.jsonl").is_file())
+
 
 if __name__ == "__main__":
     unittest.main()
