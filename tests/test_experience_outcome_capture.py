@@ -141,9 +141,7 @@ class ExperienceOutcomeCaptureTests(unittest.TestCase):
                 "experience_map": {},
             }
 
-            with patch("agent_memory_cycle.build_task_start_experience_map", return_value=task_start), \\
-                 patch("agent_memory_cycle.inspect_attention", return_value={"status": "OK", "return_stack": []}), \\
-                 patch("agent_memory_cycle.build_branch_return_report", return_value={"status": "CONSISTENT", "issues": []}):
+            with patch("agent_memory_cycle.build_task_start_experience_map", return_value=task_start), patch("agent_memory_cycle.inspect_attention", return_value={"status": "OK", "return_stack": []}), patch("agent_memory_cycle.build_branch_return_report", return_value={"status": "CONSISTENT", "issues": []}):
                 common = dict(
                     current_project_id="TEST",
                     active_task_id="TASK-001",
