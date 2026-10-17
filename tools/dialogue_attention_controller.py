@@ -118,8 +118,9 @@ def read_events(path: Path) -> list[dict[str, Any]]:
             event = json.loads(line)
         except json.JSONDecodeError as exc:
             raise ValueError(f"corrupt canonical event log at line {line_no}: {exc}") from exc
-        if not isinstance(event, dict) or not isinstance(event.get("event_id"), str):
-            raise ValueError(f"invalid canonical event at line {line_no}: event_id required")
+        if (not isinstance(event, dict) or not isinstance(event.get("event_id"), str)
+                or not event.get("event_id", "").strip()):
+            raise ValueError(f"invalid canonical event at line {line_no}: non-empty event_id required")
         if event["event_id"] in seen:
             raise ValueError(f"duplicate event_id {event['event_id']} at line {line_no}")
         seen.add(event["event_id"])
