@@ -125,7 +125,7 @@
       "status": "NOT_IMPLEMENTED_OR_NOT_CONNECTED"
     }
   ],
-  "next_action": "Refresh this checkpoint with the verified code HEAD 4a2ee4499e11b8ff8fb02292d1320ad8b20e2160 and exact-head CI run 39068720335. Then rerun verified restore + agent_memory_cycle on the metadata-only descendant and record the actual smoke result. Keep approved semantic memory UNAVAILABLE/PARTIAL until an approved record exists; do not merge PRs, change main, restart the deferred archive transfer, or claim automatic ChatGPT-host execution.",
+  "next_action": "Refresh restore evidence against the exact code HEAD 0bd664370b393c8cda8ad7e1b7f5239aad5994c7 and CI run 39068973852; then rerun restore/task-start smoke on the metadata-only descendant. Keep approved semantic memory UNAVAILABLE/PARTIAL; do not merge PRs or modify main.",
   "constraints": [
     "Do not merge PR #27 or modify main without explicit user approval.",
     "Do not delete or rewrite source-history exports without a separate explicit decision.",
@@ -134,12 +134,12 @@
     "No semantic record is accepted merely because source metadata was registered.",
     "Never report CI success for a SHA other than the exact checked SHA."
   ],
-  "status": "PR38_EXACT_HEAD_CI_AND_TASK_START_SMOKE_PASS_PARTIAL_MEMORY",
+  "status": "PR38_EXACT_HEAD_CI_PASS_SMOKE_PENDING",
   "checkpoint_semantics": "This is a durable task checkpoint committed to the integration branch. It is not an automatic ChatGPT autosave or proof that an undelivered response was saved.",
   "repository_state": {
-    "last_verified_code_head": "4a2ee4499e11b8ff8fb02292d1320ad8b20e2160",
-    "exact_head_ci_run_id": 39068720335,
-    "exact_head_ci_url": "https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/39068720335",
+    "last_verified_code_head": "0bd664370b393c8cda8ad7e1b7f5239aad5994c7",
+    "exact_head_ci_run_id": 39068973852,
+    "exact_head_ci_url": "https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/39068973852",
     "exact_head_ci_conclusion": "success",
     "python_tests": 448,
     "python_skipped": 1,
@@ -151,18 +151,18 @@
     "semantic_memory_registry_tests": 12,
     "canonical_index_tests": 10,
     "memory_aware_restore_tests": 9,
-    "note": "Exact code HEAD 4a2ee4499e11b8ff8fb02292d1320ad8b20e2160 passed exact-head CI run 39068720335: 448 Python tests (1 skipped), 4 Node tests, strict write audit 143 mutation sites / 0 unclassified, memory validation PASS and project/stack validation PASS. After refreshing this checkpoint, metadata-only branch tip 6f07fe0e64760d916226f9f52a35fc76b650dafc passed live restore/task-start smoke in run 39068800259: VERIFIED_SESSION_RESTORE_PASS, TASK_START_CLUSTER_PASS, task status READY_FOR_REVIEW, restore RESTORED_PACKET, cluster readiness PARTIAL because approved semantic memory remains UNAVAILABLE. No writes, planning authorization or execution occurred. This verifies the CLI cluster in GitHub Actions, not automatic ChatGPT-host invocation.",
+    "note": "Exact code HEAD 0bd664370b393c8cda8ad7e1b7f5239aad5994c7 passed exact-head CI run 39068973852: 448 Python tests (1 skipped), 4 Node tests, strict write audit 143 mutation sites / 0 unclassified, memory validation PASS and project/stack validation PASS. The workflow explicitly deferred task-start smoke because tools/verified_session_restore.py and its test changed after the previous checkpoint. Earlier smoke on the prior code state is historical only; rerun after this checkpoint refresh.",
     "edge_correction_registry_tests": 8,
     "correction_index_integration_tests": 2,
     "extension_js_syntax": "PASS_STATIC_ONLY",
-    "live_restore_smoke_head": "6f07fe0e64760d916226f9f52a35fc76b650dafc",
-    "live_restore_smoke_run_id": 39068800259,
-    "live_restore_smoke_url": "https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/39068800259",
-    "live_restore_smoke_conclusion": "success",
-    "live_restore_status": "PASS",
-    "task_restore_status": "RESTORED_PACKET",
-    "task_start_status": "READY_FOR_REVIEW",
-    "cluster_readiness": "PARTIAL",
+    "live_restore_smoke_head": null,
+    "live_restore_smoke_run_id": null,
+    "live_restore_smoke_url": null,
+    "live_restore_smoke_conclusion": null,
+    "live_restore_status": "NOT_RUN_FOR_CURRENT_CODE_HEAD",
+    "task_restore_status": "NOT_RUN",
+    "task_start_status": "NOT_RUN",
+    "cluster_readiness": "UNKNOWN",
     "approved_memory_status": "UNAVAILABLE",
     "planning_authorized": false,
     "execution_performed": false,
@@ -183,10 +183,10 @@
   },
   "revision_semantics": {
     "source_code_checkpoint": "Historical milestone retained in the original source_code_checkpoint object; it is not the current code HEAD.",
-    "latest_verified_code_head": "Latest verified code HEAD is 4a2ee4499e11b8ff8fb02292d1320ad8b20e2160; exact-head CI run 39068720335 belongs to this SHA. The metadata-only descendant 6f07fe0e64760d916226f9f52a35fc76b650dafc passed restore/task-start smoke run 39068800259.",
+    "latest_verified_code_head": "Latest verified code HEAD is 0bd664370b393c8cda8ad7e1b7f5239aad5994c7; exact-head CI run 39068973852 belongs to this SHA. The run explicitly deferred restore/task-start smoke because the restore revision gate and test changed after the previous checkpoint. Earlier smoke results are historical for the prior code state.",
     "metadata_revision": "The Git commit containing the current checkpoint/task/handoff/event metadata is authoritative for metadata revision; it is intentionally not embedded as a self-referential SHA.",
     "chronology_rule": "Historical source checkpoint, previous verified code states, current code SHA/CI and subsequent metadata commit remain separate facts.",
-    "live_restore_verification": "PASS in GitHub Actions run 39068800259 on metadata-only branch tip 6f07fe0e64760d916226f9f52a35fc76b650dafc: verified restore returned RESTORED_PACKET; task-start returned READY_FOR_REVIEW; cluster readiness was PARTIAL because approved semantic memory is UNAVAILABLE. No writes, planning authorization or execution occurred. This verifies the repository CLI path in GitHub Actions, not automatic execution inside ChatGPT."
+    "live_restore_verification": "NOT RUN for current code HEAD 0bd664370b393c8cda8ad7e1b7f5239aad5994c7. Exact-head CI passed, but its smoke step explicitly deferred because the checkpoint referred to the previous code SHA. Refresh the checkpoint, then rerun smoke on a metadata-only descendant."
   },
   "prior_verified_code_states": [
     {
