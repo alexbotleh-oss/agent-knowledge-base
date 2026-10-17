@@ -182,6 +182,8 @@ def build_memory_aware_packet(task_state:Path,handoff:Path,event_log:Path,reposi
                 except (OSError, UnicodeDecodeError, json.JSONDecodeError, ValueError) as exc:
                     catalog_error = str(exc)
             else:
+                if catalog_path is not None:
+                    catalog_error = "SOURCE_CATALOG_MISSING"
                 for stable_hint in (task_id, context_id):
                     if stable_hint:
                         searches.append(discover(
