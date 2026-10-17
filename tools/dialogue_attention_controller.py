@@ -180,11 +180,16 @@ def project_state(events: list[dict[str, Any]]) -> dict[str, Any]:
             active = dict(child)
         elif kind == "attention_idea_deferred":
             turn_id = data.get("turn_id")
-            if isinstance(turn_id, str):
-                previous = turn_records.get(turn_id)
-                if previous is not None and _canonical(previous) != _canonical(data):
-                    raise ValueError(f"conflicting turn_id {turn_id} at event {event['event_id']}")
-                turn_records[turn_id] = data
+            required_fields = ("turn_id", "active_task_id", "active_checkpoint_id")
+            if any(not isinstance(data.get(key), str) or not data.get(key).strip()
+                   for key in required_fields):
+                raise ValueError(
+                    f"deferred idea event {event['event_id']} missing turn/task/checkpoint identifier"
+                )
+            previous = turn_records.get(turn_id)
+            if previous is not None and _canonical(previous) != _canonical(data):
+                raise ValueError(f"conflicting turn_id {turn_id} at event {event['event_id']}")
+            turn_records[turn_id] = data
             if not stack:
                 active = {
                     "task_id": data.get("active_task_id"),
