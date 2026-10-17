@@ -5,11 +5,13 @@ import tempfile
 import unittest
 import warnings
 import zipfile
+from unittest.mock import patch
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
 
+import audit_chat_export_archive as archive_audit_module
 from audit_chat_export_archive import audit_archive
 
 
@@ -106,6 +108,18 @@ class AuditChatExportArchiveTests(unittest.TestCase):
 
             self.assertEqual(result["status"], "FAIL")
             self.assertEqual(result["reason"], "SOURCE_IS_NOT_A_VALID_ZIP")
+
+    def test_source_digest_change_during_inventory_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            source = root / "export.zip"
+            self.make_zip(source, [("conversations.json", b'[{"id":"c1"}]')])
+            initial_digest = hashlib.sha256(source.read_bytes()).hexdigest()
+            with patch.object(archive_audit_module, "sha256_file",
+                              side_effect=[initial_digest, "f" * 64]):
+                result = audit_archive(source)
+            self.assertEqual(result["status"], "FAIL")
+            self.assertEqual(result["reason"], "SOURCE_CHANGED_DURING_AUDIT")
 
     def test_missing_source_is_reported_without_writes(self):
         with tempfile.TemporaryDirectory() as tmp:
