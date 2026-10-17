@@ -25,7 +25,7 @@ from context_extractor import extract_semantic_context
 from context_trust_gate import authorize_next_step
 from restore_session_packet import build_session_packet
 from trusted_receipt_verifier import make_applicability_verifier_from_env
-from adaptive_task_flow import select_initial_route
+from adaptive_task_flow import count_related_corrections, select_initial_route
 
 TOKEN_RE = re.compile(r"[^\W_]+", re.UNICODE)
 STOP_WORDS = {
@@ -986,6 +986,9 @@ def run_minimal_agent_loop(
             "INSUFFICIENT_DATA", "CONFLICT"
         }
     )
+    prior_correction_count = count_related_corrections(
+        retrieval.get("candidates", []), current_project_id=effective_project_id
+    )
     adaptive_task_flow = select_initial_route(
         experience_status=retrieval.get("status", "UNKNOWN"),
         lesson_status=lesson_retrieval.get("status", "UNKNOWN"),
@@ -993,6 +996,7 @@ def run_minimal_agent_loop(
         unresolved_candidate_count=unresolved_count,
         candidate_count=len(all_candidates),
         prior_failed_attempts=prior_failed_attempts,
+        prior_correction_count=prior_correction_count,
         risk_level=risk_level,
         semantic_memory_status=(
             packet.get("semantic_memory", {}).get("status", "NOT_REQUESTED")

@@ -59,6 +59,30 @@ class AdaptiveTaskFlowTests(unittest.TestCase):
         self.assertEqual(route["mode"], "DEEP_ANALYSIS_BEFORE_RETRY")
         self.assertTrue(route["external_search_required_now"])
 
+    def test_repeated_related_corrections_escalate_without_manual_failure_count(self):
+        from adaptive_task_flow import count_related_corrections
+        candidates = [
+            {"event_id": "EVT-CORR-1", "event_type": "correction", "project_scope_match": "MATCH",
+             "matched_terms": ["cache", "index", "restore"]},
+            {"event_id": "EVT-CORR-2", "event_type": "correction", "project_scope_match": "MATCH",
+             "matched_terms": ["cache", "index", "restore"]},
+            {"event_id": "EVT-OTHER", "event_type": "correction", "project_scope_match": "MISMATCH",
+             "matched_terms": ["cache", "index", "restore"]},
+            {"event_id": "EVT-DUP", "event_type": "correction", "project_scope_match": "MATCH",
+             "matched_terms": ["cache"]},
+        ]
+        count = count_related_corrections(candidates, current_project_id="TEST")
+        self.assertEqual(count, 2)
+        route = select_initial_route(
+            experience_status="CANDIDATES_FOUND",
+            lesson_status="NO_MATCHES",
+            candidate_count=2,
+            prior_correction_count=count,
+        )
+        self.assertEqual(route["mode"], "DEEP_ANALYSIS_BEFORE_RETRY")
+        self.assertTrue(route["external_search_required_now"])
+        self.assertEqual(route["prior_correction_count"], 2)
+
     def test_high_risk_task_escalates_even_without_prior_failure(self):
         route = select_initial_route(
             experience_status="NO_MATCHES",
@@ -91,13 +115,18 @@ class AdaptiveTaskFlowTests(unittest.TestCase):
             events = project / "events.jsonl"
             task.write_text("# TASK_STATE\n- **Активная задача в текущей сессии:** staging snapshot\n", encoding="utf-8")
             handoff.write_text("# HANDOFF\n- **Следующий шаг:** inspect staging\n", encoding="utf-8")
-            events.write_text('{"event_id":"EVT-1","type":"checkpoint","summary":"active checkpoint state","status":"observed"}\n', encoding="utf-8")
+            events.write_text(
+                '{"event_id":"EVT-CORR-1","type":"correction","project_id":"TEST","summary":"cache recovery index pointer correction","status":"verified"}\\n'
+                '{"event_id":"EVT-CORR-2","type":"correction","project_id":"TEST","summary":"cache recovery index pointer correction retry","status":"verified"}\\n',
+                encoding="utf-8",
+            )
             result = run_minimal_agent_loop(
-                task, handoff, events, "quantum zebra lantern",
+                task, handoff, events, "cache recovery index pointer",
                 experience_logs=[events], lesson_logs=[], current_project_id="TEST",
             )
             self.assertIn("adaptive_task_flow", result)
-            self.assertEqual(result["adaptive_task_flow"]["mode"], "STANDARD_EXECUTION_AFTER_EXPERIENCE_REVIEW")
+            self.assertEqual(result["adaptive_task_flow"]["mode"], "DEEP_ANALYSIS_BEFORE_RETRY")
+            self.assertEqual(result["adaptive_task_flow"]["prior_correction_count"], 2)
             self.assertFalse(result["execution_performed"])
 
 

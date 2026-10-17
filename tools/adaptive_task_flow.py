@@ -9,6 +9,8 @@ from __future__ import annotations
 from typing import Any
 
 RISK_LEVELS = {"low", "normal", "high", "critical"}
+REPEAT_CORRECTION_THRESHOLD = 2
+CORRECTION_EVENT_TYPES = {"correction", "regression", "failed_attempt", "verification_failure"}
 FAILURE_RESULTS = {"FAIL", "FAILED", "ERROR", "REGRESSION", "NOT_SOLVED"}
 SUCCESS_RESULTS = {"SUCCESS", "SOLVED"}
 VERIFIED_SUCCESS_RESULTS = {"VERIFIED_SUCCESS", "VERIFIED_SOLVED", "PASS"}
@@ -27,6 +29,7 @@ def select_initial_route(
     unresolved_candidate_count: int = 0,
     candidate_count: int = 0,
     prior_failed_attempts: int = 0,
+    prior_correction_count: int = 0,
     risk_level: str = "normal",
     semantic_memory_status: str = "NOT_REQUESTED",
 ) -> dict[str, Any]:
@@ -39,7 +42,7 @@ def select_initial_route(
             "reason": "risk_level must be low, normal, high, or critical",
             "writes_performed": False,
         }
-    counts = (applicable_experience_count, unresolved_candidate_count, candidate_count, prior_failed_attempts)
+    counts = (applicable_experience_count, unresolved_candidate_count, candidate_count, prior_failed_attempts, prior_correction_count)
     if any(isinstance(value, bool) or not isinstance(value, int) or value < 0 for value in counts):
         return {
             "status": "INVALID_INPUT",
@@ -60,9 +63,14 @@ def select_initial_route(
     if risk in {"high", "critical"}:
         mode = "DEEP_ANALYSIS_BEFORE_EXECUTION"
         reason = "Risk level requires critical analysis before acting."
-    elif prior_failed_attempts > 0:
+    elif prior_failed_attempts > 0 or prior_correction_count >= REPEAT_CORRECTION_THRESHOLD:
         mode = "DEEP_ANALYSIS_BEFORE_RETRY"
-        reason = "Prior failed attempts raise the analysis depth before another execution."
+        reason = (
+            "Prior failed attempts raise the analysis depth before another execution."
+            if prior_failed_attempts > 0 else
+            f"{prior_correction_count} relevant correction/regression events meet the repeat threshold "
+            f"({REPEAT_CORRECTION_THRESHOLD}); investigate the cause before another execution."
+        )
     elif applicable_experience_count > 0:
         mode = "APPLY_RELEVANT_EXPERIENCE"
         reason = "A candidate passed the current applicability evaluator; apply only within its supported scope."
@@ -84,6 +92,8 @@ def select_initial_route(
         "reason": reason,
         "risk_level": risk,
         "prior_failed_attempts": prior_failed_attempts,
+        "prior_correction_count": prior_correction_count,
+        "repeat_correction_threshold": REPEAT_CORRECTION_THRESHOLD,
         "experience_search": {
             "event_status": exp_status,
             "lesson_status": lesson_status,
@@ -105,6 +115,38 @@ def select_initial_route(
         "execution_performed": False,
     }
 
+
+
+def count_related_corrections(
+    candidates: Any,
+    *,
+    current_project_id: str | None = None,
+    min_matched_terms: int = 2,
+) -> int:
+    """Count distinct retrieved correction/failure events with explicit scope and lexical overlap.
+
+    This is a conservative escalation signal, not proof that every event shares
+    the same root cause. Free-text mentions of errors are deliberately not parsed.
+    """
+    if not isinstance(candidates, list) or isinstance(min_matched_terms, bool) or not isinstance(min_matched_terms, int) or min_matched_terms < 1:
+        return 0
+    seen: set[str] = set()
+    for candidate in candidates:
+        if not isinstance(candidate, dict):
+            continue
+        event_id = candidate.get("event_id")
+        event_type = _status(candidate.get("event_type")).lower()
+        if not isinstance(event_id, str) or not event_id.strip() or event_id in seen:
+            continue
+        if event_type not in CORRECTION_EVENT_TYPES:
+            continue
+        if current_project_id and candidate.get("project_scope_match") != "MATCH":
+            continue
+        matched = candidate.get("matched_terms")
+        if not isinstance(matched, list) or len({term.casefold() for term in matched if isinstance(term, str)}) < min_matched_terms:
+            continue
+        seen.add(event_id)
+    return len(seen)
 
 def route_after_attempt(
     result_status: str,
