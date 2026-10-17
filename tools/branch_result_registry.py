@@ -271,6 +271,15 @@ def _acknowledge_result_unlocked(
             return {"status": "CONFLICT", "event_id": ack_id, "writes_performed": False,
                     "error": "Same acknowledgement identity has different content; use a new owner reference."}
 
+    relation_validation = validate_event_append(ack_event, existing)
+    if relation_validation.get("status") != "PASS":
+        return {
+            "status": "BLOCKED_EVENT_RELATION_VALIDATION",
+            "event_id": ack_id,
+            "relation_validation": relation_validation,
+            "writes_performed": False,
+        }
+
     new_text = event_log.read_text(encoding="utf-8")
     if new_text and not new_text.endswith("\n"):
         new_text += "\n"
