@@ -734,3 +734,14 @@ P2 is not yet declared ready: this test mocks the final verified restore packet,
 - **This protocol change is separate from PR #31** so that the browser prototype is preserved without making device-specific code part of the immediate workflow. No PR is merged and `main` is unchanged.
 - **Next:** finish the durable result record for this turn, open a separate draft PR for the protocol, and verify its exact-head CI. Then use the same pre-action/post-action pattern for subsequent meaningful turns.
 - **Status:** PARTIAL / active.
+
+
+## Result update 2026-10-17 — protocol PR and CI verified
+
+- Separate Draft PR #32 opened: https://github.com/alexbotleh-oss/agent-knowledge-base/pull/32
+- Exact PR head at opening: `dbc0802db700bb7597792fba118006d2b03db691`.
+- CI run [39003376335](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/39003376335) PASS: 296 Python tests, 4 Node tests, memory validation PASS, 127 mutation sites / 0 unclassified.
+- Durable request and result records exist in `projects/AGENT_MEMORY_SYSTEM/TURN_JOURNAL.jsonl`. The request record explicitly says its pre-action recording was retrospective because preliminary context retrieval had already started.
+- Next operational rule: for the next meaningful user turn, create REQUEST_RECEIVED before task actions and RESULT_RECORDED before the answer. Do not treat documentation/CI as proof that the platform performs this automatically.
+- Browser extension remains separately preserved in Draft PR #31. No PR merged; main unchanged.
+- Status: protocol documented and CI-validated; ongoing behavioral compliance remains to be demonstrated turn by turn.
