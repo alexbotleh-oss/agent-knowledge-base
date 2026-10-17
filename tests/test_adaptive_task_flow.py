@@ -15,7 +15,7 @@ class AdaptiveTaskFlowTests(unittest.TestCase):
         route = select_initial_route(
             experience_status="NO_MATCHES",
             lesson_status="NO_MATCHES",
-            semantic_memory_status="NOT_REQUESTED",
+            semantic_memory_status="NO_MATCHES",
         )
         self.assertEqual(route["mode"], "STANDARD_EXECUTION_AFTER_EXPERIENCE_REVIEW")
         self.assertTrue(route["experience_search"]["absence_proven"])
