@@ -129,7 +129,7 @@ class VerifiedTaskExecutorTests(unittest.TestCase):
         retrieved = next_start.get("retrieval", {}).get("candidates", [])
         retrieved_by_id = {item.get("event_id"): item for item in retrieved}
         self.assertIn(captured_id, retrieved_by_id)
-        self.assertEqual(retrieved_by_id[captured_id].get("status"), "observed")
+        self.assertIn("Verified outcome candidate", retrieved_by_id[captured_id].get("summary", ""))
 
         persisted = next(
             json.loads(line)
