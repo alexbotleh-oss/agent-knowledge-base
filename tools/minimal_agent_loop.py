@@ -13,15 +13,18 @@ import json
 import re
 import sys
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any, Callable, Iterable
 
 TOOLS_DIR = Path(__file__).resolve().parent
 if str(TOOLS_DIR) not in sys.path:
     sys.path.insert(0, str(TOOLS_DIR))
 
+from applicability_evaluator import evaluate_applicability
+from decision_frontier import reduce_decision_frontier
 from context_extractor import extract_semantic_context
 from context_trust_gate import authorize_next_step
 from restore_session_packet import build_session_packet
+from trusted_receipt_verifier import make_applicability_verifier_from_env
 
 TOKEN_RE = re.compile(r"[^\W_]+", re.UNICODE)
 STOP_WORDS = {
@@ -382,6 +385,7 @@ def retrieve_experience_candidates(
                     normalized_event_time = "UNKNOWN"
                     event_time_source_field = "UNKNOWN"
             indexed.append({
+                "candidate_type": "event",
                 "event_id": event["event_id"],
                 "score": round(min(score, 1.25), 4),
                 "matched_terms": sorted(overlap),
@@ -434,6 +438,7 @@ def retrieve_experience_candidates(
 
     indexed.sort(key=lambda item: (-item["score"], item["event_id"], item["source"]["path"]))
     return {
+        "stage": "S2_LEXICAL",
         "status": "CANDIDATES_FOUND" if indexed else "NO_MATCHES",
         "query": query,
         "query_terms": sorted(query_tokens),
@@ -465,6 +470,336 @@ def retrieve_experience_candidates(
     }
 
 
+_LESSON_SEARCH_FIELDS = (
+    "title", "trigger", "observed_problem", "root_cause", "approach_that_failed",
+    "effective_approach", "prevention_rule", "applicability", "exceptions",
+    "project_id", "scope", "status",
+)
+_LESSON_UNAVAILABLE_SOURCE_STATUSES = {
+    "MISSING_SOURCE", "UNREADABLE_SOURCE", "INVALID_SOURCE_TYPE", "EMPTY_SOURCE", "BINARY_SOURCE",
+}
+
+
+def _lesson_review_gate(scope_match: str, source_status: str) -> str:
+    """Scope and evidence-source routing for a lesson; never an applicability verdict."""
+    if scope_match == "MISMATCH":
+        return "OUT_OF_PROJECT_SCOPE"
+    if scope_match != "MATCH":
+        return "PROJECT_SCOPE_UNKNOWN"
+    if source_status in _LESSON_UNAVAILABLE_SOURCE_STATUSES:
+        return "SCOPE_MATCHED_EVIDENCE_SOURCE_UNAVAILABLE_BLOCKED"
+    return "SCOPE_MATCHED_LESSON_REQUIRES_REVIEW"
+
+
+def extract_explicit_experience_markers(task_state: Path) -> tuple[dict[str, Any] | None, str]:
+    """Read only a declared experience-markers JSON block; never infer markers."""
+    try:
+        text = Path(task_state).read_text(encoding="utf-8")
+    except (OSError, UnicodeError):
+        return None, "TASK_STATE_UNREADABLE"
+    fence = chr(96) * 3
+    match = re.search(re.escape(fence + "experience-markers") + r"\s*(.*?)" + re.escape(fence), text, flags=re.IGNORECASE | re.DOTALL)
+    if not match:
+        return None, "NOT_DECLARED"
+    try:
+        value = json.loads(match.group(1).strip())
+    except json.JSONDecodeError:
+        return None, "INVALID_TASK_STATE_MARKERS_BLOCK"
+    if not isinstance(value, dict):
+        return None, "INVALID_TASK_STATE_MARKERS_BLOCK"
+    return value, "TASK_STATE_EXPLICIT_BLOCK"
+
+
+def _normalized_markers(value: Any) -> set[str]:
+    """Normalize explicit marker values only; never derive markers from prose."""
+    if isinstance(value, str):
+        values = [value]
+    elif isinstance(value, list):
+        values = value
+    else:
+        return set()
+    return {
+        item.strip().casefold()
+        for item in values
+        if isinstance(item, str) and item.strip()
+    }
+
+
+def _marker_dimensions(record: dict[str, Any]) -> dict[str, set[str]]:
+    raw = record.get("markers")
+    raw = raw if isinstance(raw, dict) else {}
+    aliases = {
+        "tools": ("tools", "tool_tags"),
+        "languages": ("languages", "language_tags"),
+        "environments": ("environments", "environment_tags", "platforms"),
+        "problem_types": ("problem_types", "problem_tags"),
+    }
+    result: dict[str, set[str]] = {}
+    for dimension, keys in aliases.items():
+        values: set[str] = set()
+        for key in keys:
+            values.update(_normalized_markers(raw.get(key)))
+            values.update(_normalized_markers(record.get(key)))
+        result[dimension] = values
+    return result
+
+
+def retrieve_lesson_candidates_structured(
+    current_markers: dict[str, Any] | None,
+    lesson_paths: list[Path],
+    *,
+    limit: int = 10,
+    current_project_id: str | None = None,
+    evidence_root: Path | None = None,
+) -> dict[str, Any]:
+    """S1: retrieve same-project lessons by exact structured marker overlap.
+
+    Markers are retrieval features, not evidence of applicability. This stage
+    never searches another project and never treats lexical similarity as a
+    structured match. Missing current markers yields NO_MARKERS for S2 fallback.
+    """
+    if not isinstance(current_markers, dict):
+        return {
+            "stage": "S1_STRUCTURED", "status": "NO_MARKERS", "candidates": [],
+            "source_hashes": {}, "errors": [], "writes_performed": False,
+        }
+    current = _marker_dimensions({"markers": current_markers})
+    if not any(current.values()):
+        return {
+            "stage": "S1_STRUCTURED", "status": "NO_MARKERS", "candidates": [],
+            "source_hashes": {}, "errors": [], "writes_performed": False,
+        }
+    if not isinstance(current_project_id, str) or not current_project_id.strip():
+        return {
+            "stage": "S1_STRUCTURED", "status": "PROJECT_SCOPE_UNKNOWN", "candidates": [],
+            "source_hashes": {}, "errors": [], "writes_performed": False,
+        }
+
+    unique_paths: list[Path] = []
+    seen: set[str] = set()
+    for raw_path in lesson_paths:
+        path = Path(raw_path)
+        identity = str(path.resolve())
+        if identity not in seen:
+            unique_paths.append(path)
+            seen.add(identity)
+
+    source_hashes: dict[str, str] = {}
+    indexed: list[dict[str, Any]] = []
+    errors: list[dict[str, str]] = []
+    out_of_scope_count = 0
+    for path in unique_paths:
+        if not path.is_file():
+            errors.append({"source": str(path), "error": "MISSING_SOURCE"})
+            continue
+        raw = path.read_bytes()
+        source_hashes[str(path)] = hashlib.sha256(raw).hexdigest()
+        try:
+            text = raw.decode("utf-8")
+        except UnicodeDecodeError as exc:
+            errors.append({"source": str(path), "error": f"INVALID_UTF8: {exc}"})
+            continue
+        for line_number, line in enumerate(text.splitlines(), 1):
+            if not line.strip():
+                continue
+            try:
+                lesson = json.loads(line)
+            except Exception as exc:
+                errors.append({"source": str(path), "error": f"INVALID_JSONL line {line_number}: {exc}"})
+                break
+            if not isinstance(lesson, dict) or not isinstance(lesson.get("lesson_id"), str):
+                errors.append({"source": str(path), "error": f"INVALID_LESSON line {line_number}: lesson_id required"})
+                break
+            project_id = lesson.get("project_id")
+            if project_id != current_project_id or lesson.get("scope") == "global":
+                out_of_scope_count += 1
+                continue
+            lesson_markers = _marker_dimensions(lesson)
+            matched = {
+                dimension: sorted(current[dimension] & lesson_markers[dimension])
+                for dimension in current
+                if current[dimension] & lesson_markers[dimension]
+            }
+            if not matched:
+                continue
+            raw_refs = lesson.get("evidence_refs", [])
+            refs_malformed = not isinstance(raw_refs, list)
+            refs = [] if refs_malformed else raw_refs
+            source_validation = _validate_evidence_sources({"evidence_refs": refs}, evidence_root)
+            matched_weight = sum(
+                len(values) * (3 if dimension == "problem_types" else 1)
+                for dimension, values in matched.items()
+            )
+            total_weight = sum(
+                len(values) * (3 if dimension == "problem_types" else 1)
+                for dimension, values in current.items()
+            )
+            indexed.append({
+                "candidate_type": "lesson",
+                "lesson_id": lesson["lesson_id"],
+                "score": round(matched_weight / total_weight, 4) if total_weight else 0.0,
+                "matched_terms": sorted(f"{dimension}:{value}" for dimension, values in matched.items() for value in values),
+                "matching_marker_dimensions": matched,
+                "markers": {dimension: sorted(values) for dimension, values in lesson_markers.items() if values},
+                "title": lesson.get("title", "") if isinstance(lesson.get("title"), str) else "",
+                "status": lesson.get("status", "UNKNOWN"),
+                "scope": lesson.get("scope", "UNKNOWN"),
+                "project_id": project_id,
+                "project_scope_match": "MATCH",
+                "trigger": lesson.get("trigger", "UNKNOWN"),
+                "applicability": lesson.get("applicability", "UNKNOWN"),
+                "exceptions": lesson.get("exceptions", "UNKNOWN"),
+                "supersedes": lesson.get("supersedes", []),
+                "evidence_refs": refs,
+                "evidence_refs_malformed": refs_malformed,
+                "evidence_source_validation": source_validation,
+                "candidate_review_gate": _lesson_review_gate("MATCH", source_validation["status"]),
+                "source": {"path": str(path), "sha256": source_hashes[str(path)], "line": line_number},
+                "transfer_decision": "UNASSESSED",
+                "retrieval_stage": "S1_STRUCTURED",
+            })
+    if errors:
+        return {
+            "stage": "S1_STRUCTURED", "status": "BLOCKED", "candidates": [],
+            "source_hashes": source_hashes, "errors": errors,
+            "out_of_scope_count": out_of_scope_count, "writes_performed": False,
+        }
+    indexed.sort(key=lambda item: (-item["score"], item["lesson_id"], item["source"]["path"]))
+    return {
+        "stage": "S1_STRUCTURED",
+        "status": "CANDIDATES_FOUND" if indexed else "NO_MATCHES",
+        "candidates": indexed[:max(0, limit)],
+        "candidate_count_before_limit": len(indexed),
+        "source_hashes": source_hashes,
+        "out_of_scope_count": out_of_scope_count,
+        "ranking": "exact_explicit_marker_overlap_only_not_applicability",
+        "writes_performed": False,
+    }
+
+
+def retrieve_lesson_candidates(
+    query: str,
+    lesson_paths: list[Path],
+    *,
+    limit: int = 10,
+    current_project_id: str | None = None,
+    evidence_root: Path | None = None,
+) -> dict[str, Any]:
+    """Return lexical lesson-record candidates; a separate type from event candidates.
+
+    Lesson records are read as-is from explicitly supplied JSONL files. Their
+    `status` is carried verbatim (its meaning is decided by the evaluator, not
+    here) and `scope: global` records are returned with their own scope so the
+    evaluator can report them as outside the current search scope.
+    """
+    query_tokens = _tokens(query)
+    if not query_tokens:
+        return {
+            "status": "NO_QUERY_TERMS", "query": query, "query_terms": [],
+            "candidates": [], "source_hashes": {}, "errors": [], "writes_performed": False,
+        }
+    unique_paths: list[Path] = []
+    seen: set[str] = set()
+    for raw_path in lesson_paths:
+        path = Path(raw_path)
+        identity = str(path.resolve())
+        if identity not in seen:
+            unique_paths.append(path)
+            seen.add(identity)
+
+    source_hashes: dict[str, str] = {}
+    indexed: list[dict[str, Any]] = []
+    errors: list[dict[str, str]] = []
+    for path in unique_paths:
+        if not path.is_file():
+            errors.append({"source": str(path), "error": "MISSING_SOURCE"})
+            continue
+        raw = path.read_bytes()
+        source_hashes[str(path)] = hashlib.sha256(raw).hexdigest()
+        try:
+            text = raw.decode("utf-8")
+        except UnicodeDecodeError as exc:
+            errors.append({"source": str(path), "error": f"INVALID_UTF8: {exc}"})
+            continue
+        for line_number, line in enumerate(text.splitlines(), 1):
+            if not line.strip():
+                continue
+            try:
+                lesson = json.loads(line)
+            except Exception as exc:
+                errors.append({"source": str(path), "error": f"INVALID_JSONL line {line_number}: {exc}"})
+                break
+            if not isinstance(lesson, dict) or not isinstance(lesson.get("lesson_id"), str):
+                errors.append({"source": str(path), "error": f"INVALID_LESSON line {line_number}: lesson_id required"})
+                break
+            pieces: list[str] = []
+            for field in _LESSON_SEARCH_FIELDS:
+                if field in lesson:
+                    pieces.extend(_strings(lesson[field]))
+            overlap = query_tokens & _tokens(" ".join(pieces))
+            if not overlap:
+                continue
+            candidate_project_id = lesson.get("project_id")
+            if not isinstance(candidate_project_id, str) or not candidate_project_id.strip():
+                candidate_project_id = None
+            if not current_project_id or not current_project_id.strip() or not candidate_project_id:
+                scope_match = "UNKNOWN"
+            elif candidate_project_id == current_project_id:
+                scope_match = "MATCH"
+            else:
+                scope_match = "MISMATCH"
+            # Evidence refs in lesson records are often plain strings; a non-list
+            # value is reported as malformed rather than reinterpreted.
+            raw_refs = lesson.get("evidence_refs", [])
+            refs_malformed = not isinstance(raw_refs, list)
+            refs = [] if refs_malformed else raw_refs
+            source_validation = _validate_evidence_sources({"evidence_refs": refs}, evidence_root)
+            indexed.append({
+                "candidate_type": "lesson",
+                "retrieval_stage": "S2_LEXICAL",
+                "lesson_id": lesson["lesson_id"],
+                "score": round(len(overlap) / len(query_tokens), 4),
+                "matched_terms": sorted(overlap),
+                "title": lesson.get("title", "") if isinstance(lesson.get("title"), str) else "",
+                "status": lesson.get("status", "UNKNOWN"),
+                "scope": lesson.get("scope", "UNKNOWN"),
+                "project_id": candidate_project_id or "UNKNOWN",
+                "project_scope_match": scope_match,
+                "trigger": lesson.get("trigger", "UNKNOWN"),
+                "applicability": lesson.get("applicability", "UNKNOWN"),
+                "exceptions": lesson.get("exceptions", "UNKNOWN"),
+                "supersedes": lesson.get("supersedes", []),
+                "evidence_refs": refs,
+                "evidence_refs_malformed": refs_malformed,
+                "evidence_source_validation": source_validation,
+                "candidate_review_gate": _lesson_review_gate(scope_match, source_validation["status"]),
+                "source": {"path": str(path), "sha256": source_hashes[str(path)], "line": line_number},
+                "transfer_decision": "UNASSESSED",
+            })
+    if errors:
+        return {
+            "status": "BLOCKED", "query": query, "query_terms": sorted(query_tokens),
+            "candidates": [], "source_hashes": source_hashes, "errors": errors,
+            "writes_performed": False,
+        }
+    indexed.sort(key=lambda item: (-item["score"], item["lesson_id"], item["source"]["path"]))
+    return {
+        "status": "CANDIDATES_FOUND" if indexed else "NO_MATCHES",
+        "query": query,
+        "query_terms": sorted(query_tokens),
+        "candidates": indexed[:max(0, limit)],
+        "candidate_count_before_limit": len(indexed),
+        "source_hashes": source_hashes,
+        "ranking": "lexical_overlap_only_not_confidence_or_applicability",
+        "warnings": [
+            "Lesson candidates are records to assess, not accepted guidance.",
+            "Lesson status is carried verbatim; its handling is defined by the evaluator spec, not by retrieval.",
+            "Free-text trigger/applicability/exceptions are not matched against the current state here.",
+        ],
+        "writes_performed": False,
+    }
+
+
 def run_minimal_agent_loop(
     task_state: Path,
     handoff: Path,
@@ -475,13 +810,23 @@ def run_minimal_agent_loop(
     limit: int = 10,
     current_project_id: str | None = None,
     evidence_root: Path | None = None,
+    lesson_logs: list[Path] | None = None,
+    current_markers: dict[str, Any] | None = None,
+    judgments: list[dict[str, Any]] | None = None,
+    judgment_verifier: Callable[[dict[str, Any], dict[str, Any]], Any] | None = None,
 ) -> dict[str, Any]:
-    """Restore first, then search explicitly supplied event logs for candidates."""
+    """Restore first, then search explicitly supplied event logs (and lesson files) for candidates.
+
+    Lesson files and judgments are optional. The applicability evaluator only
+    narrows what retrieved memory may justify; it never grants planning.
+    """
     packet = build_session_packet(task_state, handoff, event_log)
     context = extract_semantic_context(packet)
     trust = authorize_next_step(context)
     query_parts = [user_request.strip(), context.get("active_goal", "UNKNOWN")]
     blockers = context.get("blockers", [])
+    if judgment_verifier is None:
+        judgment_verifier = make_applicability_verifier_from_env(Path(__file__).resolve().parents[1])
     if isinstance(blockers, list):
         query_parts.extend(item for item in blockers if isinstance(item, str))
     query = " ".join(part for part in query_parts if part and part != "UNKNOWN")
@@ -507,10 +852,111 @@ def run_minimal_agent_loop(
         evidence_root=evidence_root,
     )
 
+    current_markers_source = "EXPLICIT_ARGUMENT" if current_markers is not None else "NOT_DECLARED"
+    if current_markers is None:
+        current_markers, current_markers_source = extract_explicit_experience_markers(task_state)
+
+    lesson_search_stages: list[dict[str, Any]] = []
+    lesson_candidates: list[dict[str, Any]] = []
+    if lesson_logs:
+        s1 = retrieve_lesson_candidates_structured(
+            current_markers, [Path(item) for item in lesson_logs], limit=limit,
+            current_project_id=effective_project_id, evidence_root=evidence_root,
+        )
+        s1_applicability = evaluate_applicability(
+            list(retrieval.get("candidates", [])) + list(s1.get("candidates", [])),
+            judgments, verifier=judgment_verifier,
+        )
+        s1_has_verified_applicable = any(
+            item.get("candidate_type") == "lesson" and item.get("outcome") == "APPLICABLE"
+            for item in s1_applicability["assessments"]
+        )
+        lesson_search_stages.append({
+            "stage": "S1_STRUCTURED",
+            "status": s1["status"],
+            "query": {"markers": current_markers or {}},
+            "marker_source": current_markers_source,
+            "source_hashes": s1.get("source_hashes", {}),
+            "candidate_count": len(s1.get("candidates", [])),
+            "verified_applicable_found": s1_has_verified_applicable,
+        })
+        if s1["status"] == "BLOCKED":
+            lesson_retrieval = s1
+        elif s1_has_verified_applicable:
+            lesson_candidates = list(s1.get("candidates", []))
+            lesson_retrieval = dict(s1)
+            lesson_search_stages.append({
+                "stage": "S2_LEXICAL",
+                "status": "SKIPPED_SUFFICIENT_S1",
+                "query": query,
+                "source_hashes": {},
+                "candidate_count": 0,
+                "verified_applicable_found": False,
+            })
+        else:
+            s2 = retrieve_lesson_candidates(
+                query, [Path(item) for item in lesson_logs], limit=limit,
+                current_project_id=effective_project_id, evidence_root=evidence_root,
+            )
+            lesson_search_stages.append({
+                "stage": "S2_LEXICAL",
+                "status": s2["status"],
+                "query": query,
+                "source_hashes": s2.get("source_hashes", {}),
+                "candidate_count": len(s2.get("candidates", [])),
+                "verified_applicable_found": False,
+            })
+            if s2["status"] == "BLOCKED":
+                lesson_retrieval = s2
+            else:
+                lesson_candidates = list(s1.get("candidates", []))
+                seen_lesson_ids = {item.get("lesson_id") for item in lesson_candidates}
+                for candidate in s2.get("candidates", []):
+                    if candidate.get("lesson_id") not in seen_lesson_ids:
+                        lesson_candidates.append(candidate)
+                        seen_lesson_ids.add(candidate.get("lesson_id"))
+                candidate_count_combined = len(lesson_candidates)
+                lesson_retrieval = dict(s2)
+                lesson_retrieval["candidates"] = lesson_candidates
+                lesson_retrieval["candidate_count_combined"] = candidate_count_combined
+                lesson_retrieval["source_hashes"] = {
+                    **s1.get("source_hashes", {}), **s2.get("source_hashes", {})
+                }
+                if lesson_candidates and lesson_retrieval["status"] == "NO_MATCHES":
+                    lesson_retrieval["status"] = "CANDIDATES_FOUND"
+                lesson_retrieval["stages"] = lesson_search_stages
+    else:
+        lesson_retrieval = {"status": "NOT_REQUESTED", "candidates": [], "writes_performed": False}
+
     candidates_reviewable = (
         context.get("semantic_context_usable")
         and retrieval["status"] not in {"BLOCKED", "NO_QUERY_TERMS"}
+        and lesson_retrieval["status"] not in {"BLOCKED"}
     )
+    all_candidates = (
+        list(retrieval.get("candidates", []))
+        + list(lesson_candidates or lesson_retrieval.get("candidates", []))
+    )
+    applicability = evaluate_applicability(
+        all_candidates,
+        judgments,
+        verifier=judgment_verifier,
+    )
+    decision_frontier = reduce_decision_frontier(
+        all_candidates,
+        applicability,
+        retrieval_status=retrieval.get("status", "UNKNOWN"),
+        lesson_retrieval_status=lesson_retrieval.get("status", "UNKNOWN"),
+    )
+    next_action_policy = (
+        "REVIEW_CANDIDATES_ONLY_NO_PLANNING"
+        if candidates_reviewable
+        else "STOP_AND_RECONCILE_SOURCES"
+    )
+    # The evaluator may only replace the base policy with a more specific
+    # restrictive value; every value still forbids planning.
+    if candidates_reviewable and applicability["restrictive_policy"]:
+        next_action_policy = applicability["restrictive_policy"]
     # Source hashes prove that bytes have not changed since packet creation;
     # they do not prove that this checkpoint still represents the user's live goal.
     currentness_gate = {
@@ -529,13 +975,14 @@ def run_minimal_agent_loop(
         "trust_gate": trust,
         "checkpoint_currentness_gate": currentness_gate,
         "retrieval": retrieval,
+        "lesson_retrieval": lesson_retrieval,
+        "lesson_search_stages": lesson_search_stages,
+        "current_markers_source": current_markers_source,
+        "applicability": applicability,
+        "decision_frontier": decision_frontier,
         "current_project_id": effective_project_id or "UNKNOWN",
         "current_project_id_source": project_id_source,
-        "next_action_policy": (
-            "REVIEW_CANDIDATES_ONLY_NO_PLANNING"
-            if candidates_reviewable
-            else "STOP_AND_RECONCILE_SOURCES"
-        ),
+        "next_action_policy": next_action_policy,
         "writes_performed": False,
         "execution_performed": False,
         "limitations": [
@@ -569,13 +1016,44 @@ def main(argv: list[str] | None = None) -> int:
         default=None,
         help="root for checking repository-relative kind=file evidence references; no network access",
     )
+    parser.add_argument(
+        "--lesson-log", action="append", default=[], type=Path,
+        help="JSONL file of lesson records to search as a separate candidate type; may be repeated",
+    )
+    parser.add_argument(
+        "--context-markers", type=Path, default=None,
+        help="JSON object of explicit current-project markers for S1 (tools, languages, environments, problem_types)",
+    )
+    parser.add_argument(
+        "--judgments", type=Path, default=None,
+        help="JSON list of explicit applicability judgments (criterion, result, judged_by, basis_ref)",
+    )
     args = parser.parse_args(argv)
+    current_markers = None
+    if args.context_markers is not None:
+        try:
+            current_markers = json.loads(args.context_markers.read_text(encoding="utf-8"))
+            if not isinstance(current_markers, dict):
+                raise ValueError("context markers must be a JSON object")
+        except Exception as exc:
+            print(json.dumps({"status": "BLOCKED", "error": f"INVALID_CONTEXT_MARKERS_FILE: {exc}"}, ensure_ascii=False))
+            return 2
+    judgments = None
+    if args.judgments is not None:
+        try:
+            judgments = json.loads(args.judgments.read_text(encoding="utf-8"))
+        except Exception as exc:
+            print(json.dumps({"status": "BLOCKED", "error": f"INVALID_JUDGMENTS_FILE: {exc}"}, ensure_ascii=False))
+            return 2
     result = run_minimal_agent_loop(
         args.task_state, args.handoff, args.event_log, args.request,
         [Path(item) for item in args.experience_log],
         limit=args.limit,
         current_project_id=args.project_id,
         evidence_root=args.evidence_root,
+        lesson_logs=args.lesson_log,
+        current_markers=current_markers,
+        judgments=judgments,
     )
     print(json.dumps(result, ensure_ascii=False, indent=2))
     return 0 if result["status"] == "READY_FOR_REVIEW" else 2
