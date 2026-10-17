@@ -50,6 +50,8 @@ The bridge accepts files up to 25 MiB. The token is stored in the browser profil
 - IndexedDB is local browser-profile storage, not encrypted secret storage. Protect the device/profile. Export is user-initiated and contains exact conversation text.
 - This prototype does not install itself or change browser settings. User installation and a real-device test are required.
 
+Before relying on this prototype on a real device, run every applicable item in [ACCEPTANCE_CHECKLIST.md](./ACCEPTANCE_CHECKLIST.md). CI does not substitute for mobile-browser acceptance.
+
 ## Recovery workflow
 
 Open the extension popup → use “Скопировать контекст диалога” to copy the two rolling windows for the active conversation → paste that context into the new/current ChatGPT chat when continuity is needed. For an interrupted turn, inspect the incomplete turn and copy its recovery prompt separately. The window context is copied only after an explicit click; it is not injected into or sent with the user's message automatically.
