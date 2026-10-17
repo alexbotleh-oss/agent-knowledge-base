@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "checkpoint_id": "CKPT-AGMS-20261017-PR38-RESTORE-SMOKE-BOOTSTRAP-02",
+  "checkpoint_id": "CKPT-AGMS-20261017-PR38-LIVE-TASK-START-PASS-03",
   "project_id": "AGENT_MEMORY_SYSTEM",
   "task_id": "AGMS-2026-10-15-MEMORY-PIPELINE-CONTINUITY",
   "recorded_at": "2026-10-17",
@@ -77,7 +77,8 @@
     "Full PR #1–#38 inventory and cross-branch comparison recorded in CLUSTER_INTEGRATION_AUDIT_2026-10-17.md.",
     "PR #38 branch synchronized with current PR #37 base through a non-force merge commit; missing validate_event_append import fixed; event 006 preserved and correction appended as event 007; current journal has 32 unique event IDs.",
     "Exact-head CI 39022902051 passed for 3de7a25d4248ed7612807ee7faf800b1c5d0240f: 446 Python tests (1 skipped), 4 Node tests, strict write audit 143/0, memory validation PASS, project/stack validation PASS.",
-    "Added a checkpoint-aware live restore/task-start smoke step to the existing validation workflow; exact-head CI 39023539993 passed for ebed5f048188b1f057f1c40a00ca148acd087b6b. The step detected the expected workflow-file drift and deferred the live branch-tip invocation rather than falsely passing it."
+    "Added a checkpoint-aware live restore/task-start smoke step to the existing validation workflow; exact-head CI 39023539993 passed for ebed5f048188b1f057f1c40a00ca148acd087b6b. The step detected the expected workflow-file drift and deferred the live branch-tip invocation rather than falsely passing it.",
+    "Live branch-tip smoke run 39023790479 passed on efc7096a411f6ade91b4ce7cc1462e8d0d12589a: VERIFIED_SESSION_RESTORE_PASS and TASK_START_CLUSTER_PASS; task status READY_FOR_REVIEW, restore RESTORED_PACKET, readiness PARTIAL, approved semantic memory UNAVAILABLE, writes/planning/execution all false."
   ],
   "confirmed_open": [
     {
@@ -114,17 +115,17 @@
       "description": "The ChatGPT web extension is a prototype verified by static CI only. Must be installed and tested in the user's actual Yandex Browser Android version. Verify send gate (no send before durable receipt), exact text and prior assistant message capture, interrupted connection recovery, response DOM detection, multiple incomplete turns, extension restart, and UI-selector drift. Until these pass, do not claim end-to-end capture is operational."
     },
     {
-      "id": "OPEN-LIVE-RESTORE-INVOCATION",
-      "description": "The current verified code SHA/CI pair is recorded, but tools/verified_session_restore.py and tools/agent_memory_cycle.py have not been invoked against the live branch from this ChatGPT environment. No automatic ChatGPT host bridge is established.",
-      "status": "NOT_RUN"
+      "id": "OPEN-APPROVED-SEMANTIC-MEMORY-REGISTRY",
+      "description": "No canonical registry/memory_records.jsonl with approved semantic-memory records exists in the integration branch. The task-start cycle now proceeds with PARTIAL readiness using restored task context and structured global lessons. Do not fabricate approved records or resume the deferred large archive transfer; populate this registry only through the existing approval-bound promotion path when the archive-transfer priority is explicitly resumed.",
+      "status": "UNAVAILABLE_DEFERRED"
     },
     {
-      "id": "OPEN-LIVE-RESTORE-AND-TASK-START-SMOKE",
-      "description": "Checkpoint now records the validated workflow commit. The next workflow run on its metadata-only descendant must verify the live PR branch tip and execute agent_memory_cycle; current live invocation has not yet passed.",
-      "status": "PENDING_NEXT_CI_RUN"
+      "id": "OPEN-CHATGPT-HOST-BRIDGE",
+      "description": "The local CLI cluster has been executed successfully in GitHub Actions, but automatic invocation on each ChatGPT turn is not established and has not been tested.",
+      "status": "NOT_IMPLEMENTED_OR_NOT_CONNECTED"
     }
   ],
-  "next_action": "Trigger the existing validation workflow on the current metadata-only descendant. Confirm logs contain VERIFIED_SESSION_RESTORE_PASS and TASK_START_CLUSTER_PASS, with readiness READY_FOR_REVIEW or PARTIAL, no planning authorization, no execution and no writes. Only then record the live smoke as PASS. Do not merge PR #38.",
+  "next_action": "Continue the full PR #1–#38 overlap/contract audit, prioritizing parallel branches with duplicate IDs and duplicated project-memory transfers. Preserve the current successful restore/task-start smoke. Keep approved semantic memory UNAVAILABLE/PARTIAL until an actual approved registry record exists; do not restart the large archive transfer or claim automatic ChatGPT host execution.",
   "constraints": [
     "Do not merge PR #27 or modify main without explicit user approval.",
     "Do not delete or rewrite source-history exports without a separate explicit decision.",
@@ -133,7 +134,7 @@
     "No semantic record is accepted merely because source metadata was registered.",
     "Never report CI success for a SHA other than the exact checked SHA."
   ],
-  "status": "PR38_VALIDATOR_CI_PASS_LIVE_RESTORE_SMOKE_PENDING",
+  "status": "PR38_LIVE_RESTORE_TASK_START_SMOKE_PASS_PARTIAL_MEMORY",
   "checkpoint_semantics": "This is a durable task checkpoint committed to the integration branch. It is not an automatic ChatGPT autosave or proof that an undelivered response was saved.",
   "repository_state": {
     "last_verified_code_head": "ebed5f048188b1f057f1c40a00ca148acd087b6b",
@@ -150,10 +151,22 @@
     "semantic_memory_registry_tests": 12,
     "canonical_index_tests": 10,
     "memory_aware_restore_tests": 9,
-    "note": "Exact-head CI for ebed5f048188b1f057f1c40a00ca148acd087b6b passed run 39023539993: 446 Python tests (1 skipped), 4 Node tests, strict write audit 143 mutation sites / 0 unclassified, memory validation PASS and project/stack validation PASS. The new smoke step correctly deferred the live branch-tip check because .github/workflows/validate.yml changed after the recorded checkpoint. Refreshing this checkpoint enables the next run to verify the current branch and invoke the unified task-start cycle.",
+    "note": "Exact code HEAD ebed5f048188b1f057f1c40a00ca148acd087b6b passed CI run 39023539993: 446 Python tests (1 skipped), 4 Node tests, strict write audit 143 mutation sites / 0 unclassified, memory validation PASS and project/stack validation PASS. Live branch-tip smoke run 39023790479 on metadata-only descendant efc7096a411f6ade91b4ce7cc1462e8d0d12589a passed: VERIFIED_SESSION_RESTORE_PASS and TASK_START_CLUSTER_PASS; task status READY_FOR_REVIEW, task restore RESTORED_PACKET, cluster readiness PARTIAL because the approved semantic-memory registry is unavailable. No writes, planning authorization or execution occurred. This proves the local CLI cluster in GitHub Actions, not automatic ChatGPT-host invocation.",
     "edge_correction_registry_tests": 8,
     "correction_index_integration_tests": 2,
-    "extension_js_syntax": "PASS_STATIC_ONLY"
+    "extension_js_syntax": "PASS_STATIC_ONLY",
+    "live_restore_smoke_head": "efc7096a411f6ade91b4ce7cc1462e8d0d12589a",
+    "live_restore_smoke_run_id": 39023790479,
+    "live_restore_smoke_url": "https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/39023790479",
+    "live_restore_smoke_conclusion": "success",
+    "live_restore_status": "PASS",
+    "task_restore_status": "RESTORED_PACKET",
+    "task_start_status": "READY_FOR_REVIEW",
+    "cluster_readiness": "PARTIAL",
+    "approved_memory_status": "UNAVAILABLE",
+    "planning_authorized": false,
+    "execution_performed": false,
+    "writes_performed": false
   },
   "historical_repository_state": {
     "last_verified_code_head": "e30450a5ed516ab1f76f65c3c7874cdd2b951c40",
@@ -170,10 +183,10 @@
   },
   "revision_semantics": {
     "source_code_checkpoint": "Historical milestone retained in the original source_code_checkpoint object; it is not the current code HEAD.",
-    "latest_verified_code_head": "Latest verified code HEAD is ebed5f048188b1f057f1c40a00ca148acd087b6b; exact-head CI run 39023539993 belongs to this SHA. Subsequent commits may update only the explicit metadata-only allowlist.",
+    "latest_verified_code_head": "Latest verified code HEAD is ebed5f048188b1f057f1c40a00ca148acd087b6b; exact-head CI run 39023539993 belongs to this SHA. Live restore/task-start smoke passed on metadata-only descendant efc7096a411f6ade91b4ce7cc1462e8d0d12589a in run 39023790479.",
     "metadata_revision": "The Git commit containing the current checkpoint/task/handoff/event metadata is authoritative for metadata revision; it is intentionally not embedded as a self-referential SHA.",
     "chronology_rule": "Historical source checkpoint, previous verified code states, current code SHA/CI and subsequent metadata commit remain separate facts.",
-    "live_restore_verification": "The existing workflow now invokes agent_memory_cycle on the PR #38 branch. Its first run intentionally deferred the live branch-tip restore because the workflow file itself changed after the checkpoint. After this checkpoint refresh, the next metadata-only descendant run must produce VERIFIED_SESSION_RESTORE_PASS and TASK_START_CLUSTER_PASS; until then, live end-to-end status remains pending."
+    "live_restore_verification": "PASS in GitHub Actions run 39023790479 on branch-tip efc7096a411f6ade91b4ce7cc1462e8d0d12589a: verified restore returned RESTORED_PACKET; task-start returned READY_FOR_REVIEW; cluster readiness was PARTIAL because approved semantic memory is UNAVAILABLE. No writes, planning authorization or execution occurred. This verifies the repository CLI path, not automatic execution inside ChatGPT."
   },
   "prior_verified_code_states": [
     {
@@ -229,6 +242,6 @@
     "Do not merge PR #27 or change main; PR remains Draft/open/unmerged.",
     "Production archive acceptance and completeness audit remain separate; full archive/chat coverage is not established.",
     "Production archive acceptance and completeness audit: synthetic provenance resolution passed, but production archive coverage and full chat-history completeness are not established.",
-    "Await exact branch-tip smoke on the metadata-only descendant after checkpoint refresh; require VERIFIED_SESSION_RESTORE_PASS and TASK_START_CLUSTER_PASS before calling the integrated local CLI path end-to-end verified."
+    "Canonical approved semantic-memory registry is absent; task-start currently proceeds in PARTIAL mode. Keep archive transfer deferred and use the existing approval-bound promotion path when explicitly resumed."
   ]
 }
