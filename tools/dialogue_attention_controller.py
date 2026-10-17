@@ -194,6 +194,10 @@ def project_state(events: list[dict[str, Any]]) -> dict[str, Any]:
                 raise ValueError(f"return event {event['event_id']} does not target top stack frame")
             if data.get("parent_task_id") != top["parent"].get("task_id"):
                 raise ValueError(f"return event {event['event_id']} parent task mismatch")
+            if data.get("parent_checkpoint_id") != top["parent"].get("checkpoint_id"):
+                raise ValueError(f"return event {event['event_id']} parent checkpoint mismatch")
+            if data.get("child_task_id") != top["child"].get("task_id"):
+                raise ValueError(f"return event {event['event_id']} child task mismatch")
             stack.pop()
             active = dict(top["parent"])
     return {
