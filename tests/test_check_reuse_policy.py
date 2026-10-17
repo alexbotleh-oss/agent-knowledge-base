@@ -139,7 +139,7 @@ class CheckReusePolicyTests(unittest.TestCase):
             {"event_id": "EVT-OLDER", "relations": []},
             {"event_id": "EVT-LATER", "relations": [{"type": "followed_by", "event_id": "EVT-OLDER"}]},
         ]
-        self.log.write_text("".join(json.dumps(row) + "\\n" for row in rows), encoding="utf-8")
+        self.log.write_text("".join(json.dumps(row) + "\n" for row in rows), encoding="utf-8")
         before = self.log.read_bytes()
         result = record_check_result(
             self.log, self.check, self.sources, self.candidates,
