@@ -834,3 +834,12 @@ P2 is not yet declared ready: this test mocks the final verified restore packet,
 - **Last verified branch HEAD before this protocol correction:** 62623d69af0f45ca1abbec173b3a9ffdc911c18c, CI https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/39002529546 PASS. The new protocol/state/handoff commits change HEAD, so verify CI on the resulting exact HEAD before claiming it passed.
 - **Next action in the new chat:** first perform PRE_ACTION from this checkpoint; read back the current branch HEAD/CI and relevant memory files, then implement/verify the device-independent per-turn memory workflow without browser/device dependencies. After that resume the raw archive importer task from the prior report. No merge without explicit approval.
 - **Status:** PARTIAL; no claim that automatic per-turn persistence is already provided by the ChatGPT platform. The protocol is saved; behavioral execution must be demonstrated.
+
+
+## Addendum — actual archive-importer baseline inspected during handoff preparation (2026-10-17)
+
+- The current branch already contains tools/source_ingestion_runner.py and tests/test_source_ingestion_runner.py; do not restart importer design from zero.
+- The runner describes itself as resumable orchestration for archive staging → intake → source registry. It stops after metadata-only source registration and explicitly does not promote semantic memory, rebuild canonical indexes or claim session restore.
+- core/source_ingestion_protocol.md states that register_source_reference and register_inventory remain planned routes without writer implementation; full end-to-end restore/promotion is not connected, and the raw archive remains an external source while the registry stores links/hashes, not source text.
+- Therefore the preserved next task is **audit and finish the existing partial pipeline**: verify raw-source durability/complete inventory and chronology, exercise interruption/resume/idempotency/truncated snapshot cases against the actual implementation, then identify the minimal missing integration. Do not duplicate existing runner or repeat agent-report analysis already completed.
+- Source code evidence read from current branch: tools/source_ingestion_runner.py SHA 6f90953aec1ed6c8a4c026b767398cb7eecd5dfc; tests/test_source_ingestion_runner.py SHA 242ee38b988697ef7b9ead0d63eabfe908929abb; core/source_ingestion_protocol.md SHA d95deebc7488dcd8145705ae2d289b7ba7a12704.
