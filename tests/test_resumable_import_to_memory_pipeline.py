@@ -93,7 +93,24 @@ class ResumableImportToMemoryPipelineTests(unittest.TestCase):
             intake_manifest = json.loads(Path(adapted["manifest_path"]).read_text(encoding="utf-8"))
             intake_artifact = intake_manifest["artifacts"][0]
             intake_rows_path = Path(adapted["manifest_path"]).parent / intake_artifact["path"]
-            source_row = json.loads(intake_rows_path.read_text(encoding="utf-8").splitlines()[0])
+            intake_rows = [
+                json.loads(line)
+                for line in intake_rows_path.read_text(encoding="utf-8").splitlines()
+            ]
+            self.assertEqual(len(intake_rows), 2)
+            self.assertEqual(
+                [row["source_node_id"] for row in intake_rows],
+                ["NODE-E2E-USER", "NODE-E2E-ASSISTANT"],
+            )
+            self.assertEqual(
+                [row["source_time_unix"] for row in intake_rows],
+                [1790000000, 1790000001],
+            )
+            self.assertIsNone(intake_rows[0]["parent_node_id"])
+            self.assertEqual(intake_rows[0]["child_node_ids"], ["NODE-E2E-ASSISTANT"])
+            self.assertEqual(intake_rows[1]["parent_node_id"], "NODE-E2E-USER")
+            self.assertEqual(intake_rows[1]["child_node_ids"], [])
+            source_row = intake_rows[0]
             memory_record = {
                 "memory_id": "MEM-E2E-001", "record_type": "lesson",
                 "title": "Synthetic E2E memory",
@@ -192,6 +209,7 @@ class ResumableImportToMemoryPipelineTests(unittest.TestCase):
             self.assertEqual(result["stages"]["semantic_promotion"], "PROMOTED", result)
             self.assertEqual(result["stages"]["canonical_index"], "BUILT_PARTIAL", result)
             self.assertEqual(result["stages"]["session_restore"], "RESTORED_PACKET_WITH_PARTIAL_MEMORY", result)
+            self.assertEqual(result["restore"]["task_restore_status"], "RESTORED_PACKET")
 
             restored = retrieve_approved_memory(
                 "AGENT_MEMORY_SYSTEM", task_id="TASK-E2E", context_id="CTX-E2E",
@@ -204,6 +222,18 @@ class ResumableImportToMemoryPipelineTests(unittest.TestCase):
             self.assertTrue(restored["records"][0]["provenance"])
             source_rows = [json.loads(line) for line in source_registry.read_text(encoding="utf-8").splitlines()]
             self.assertEqual(len(source_rows), 2)  # user and assistant message nodes
+            self.assertEqual(
+                [row["source_node_id"] for row in source_rows],
+                ["NODE-E2E-USER", "NODE-E2E-ASSISTANT"],
+            )
+            self.assertEqual(
+                [row["source_time_unix"] for row in source_rows],
+                [1790000000, 1790000001],
+            )
+            self.assertIsNone(source_rows[0]["parent_node_id"])
+            self.assertEqual(source_rows[0]["child_node_ids"], ["NODE-E2E-ASSISTANT"])
+            self.assertEqual(source_rows[1]["parent_node_id"], "NODE-E2E-USER")
+            self.assertEqual(source_rows[1]["child_node_ids"], [])
             for source_row in source_rows:
                 self.assertNotIn("text", source_row)
                 self.assertEqual(source_row["source_snapshot_sha256"], imported["source_sha256"])
