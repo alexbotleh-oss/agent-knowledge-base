@@ -945,3 +945,10 @@ PR #28 and PR #30 remain Draft/open/unmerged. No merge or change to `main` is au
 - **PR safety:** PR #30 remains OPEN / DRAFT / UNMERGED; base `audit/agent-memory-e2e-20261016`, not `main`. No merge or `main` change is authorized.
 - **Trust limitations:** no production trust root/keyring has been configured and owner-approved; generated-key tests remain synthetic. Real archive import and automatic ChatGPT cross-chat startup/capture remain unverified.
 - **Next action:** continue source-led audit of receipt claim typing, trust-boundary failure behavior and guarded parent-return path; add focused regressions only for concrete source-supported invariants. Preserve fail-closed behavior and do not invent a production trust root.
+
+
+## Verified checkpoint — malformed signed applicability result type (2026-10-17)
+
+The applicability verifier now rejects non-string/blank signed `result` claims before collecting outcomes, avoiding an unhandled `TypeError` for a validly signed but malformed dict/list value. Regression coverage exercises a signed dict result and requires safe rejection. Exact code/test head `2516faf2f005bfb2bc28941d3ccef668b0fd033b` is included in successful CI [38994383051](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38994383051): 400 Python tests passed, 1 skipped; 4 Node tests passed; memory validation PASS. Pytest-based stack checks and HTML/PWA/JS lint/test/build remain skipped due missing tooling/setup.
+
+**Next:** audit guarded parent return and malformed/corrupt event handling for concrete fail-open paths. Production trust root, real archive acceptance, and automatic ChatGPT cross-chat startup/capture remain unverified. PR #30 remains Draft/open/unmerged; do not merge or change `main` without explicit user approval.
