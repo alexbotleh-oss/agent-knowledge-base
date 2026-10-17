@@ -35,8 +35,7 @@ def _registry(data: bytes) -> dict[tuple[str,str], dict]:
     return rows
 
 def retrieve_approved_memory(project_id:str,*,task_id:str|None=None,context_id:str|None=None,
- query:str|None=None,limit:int=20,registry_path:Path=DEFAULT_REGISTRY,index_root:Path=DEFAULT_INDEX_ROOT,
- source_catalog_path:Path|None=None)->dict:
+ query:str|None=None,limit:int=20,registry_path:Path=DEFAULT_REGISTRY,index_root:Path=DEFAULT_INDEX_ROOT)->dict:
     if not isinstance(project_id,str) or not project_id.strip():
         return {"status":"AMBIGUOUS_SCOPE","coverage_status":"UNKNOWN","records":[],"reason":"project_id is required"}
     if isinstance(limit,bool) or not isinstance(limit,int) or not 1<=limit<=100:
@@ -116,7 +115,8 @@ def retrieve_approved_memory(project_id:str,*,task_id:str|None=None,context_id:s
 
 def build_memory_aware_packet(task_state:Path,handoff:Path,event_log:Path,repository:str,ref:str|None=None,
  *,fetch_json:Callable[[str],dict]=request_json,task_id:str|None=None,context_id:str|None=None,
- query:str|None=None,limit:int=20,registry_path:Path=DEFAULT_REGISTRY,index_root:Path=DEFAULT_INDEX_ROOT)->dict:
+ query:str|None=None,limit:int=20,registry_path:Path=DEFAULT_REGISTRY,index_root:Path=DEFAULT_INDEX_ROOT,
+ source_catalog_path:Path|None=None)->dict:
     packet=build_verified_session_packet(task_state,handoff,event_log,repository,ref,fetch_json=fetch_json)
     if packet.get("status") in {"BLOCKED","REVISION_CHECK_BLOCKED"}:
         packet["semantic_memory"]={"status":"NOT_ATTEMPTED","coverage_status":"UNKNOWN","records":[],"reason":"base restore is blocked","writes_performed":False}
@@ -253,6 +253,7 @@ def main(argv=None):
     parser.add_argument("--limit",type=int,default=20)
     parser.add_argument("--registry-path",type=Path,default=DEFAULT_REGISTRY,help=argparse.SUPPRESS)
     parser.add_argument("--index-root",type=Path,default=DEFAULT_INDEX_ROOT,help=argparse.SUPPRESS)
+    parser.add_argument("--source-catalog",type=Path,help="optional local source catalog for adaptive fallback discovery")
     parser.add_argument("--source-catalog",type=Path,help="optional local source catalog for adaptive fallback discovery")
     args=parser.parse_args(argv)
     packet=build_memory_aware_packet(args.task_state,args.handoff,args.event_log,args.repository,args.ref,
