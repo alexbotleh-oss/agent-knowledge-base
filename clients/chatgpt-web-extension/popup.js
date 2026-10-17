@@ -19,7 +19,7 @@ function activeConversationId() {
   return new Promise((resolve, reject) => {
     chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
       const error = chrome.runtime.lastError;
-      if (error) return reject(new Error(error.message));
+      if (error) return resolve(null);
       const url = tabs?.[0]?.url || "";
       try {
         const parsed = new URL(url);
