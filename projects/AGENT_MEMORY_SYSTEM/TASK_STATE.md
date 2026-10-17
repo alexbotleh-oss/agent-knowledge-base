@@ -801,3 +801,43 @@ P2 is not yet declared ready: this test mocks the final verified restore packet,
 - **Deferred:** production archive transfer/completeness and browser-extension integration remain paused until the retrieval/restore and runtime boundary are coherent.
 - **Next action:** check live final HEAD/CI; then add explicit catalog branch-head drift/conflicting-revision reporting and assess a supported host invocation path without activating the deferred extension. Do not merge PRs or edit main.
 - **Status:** remote source-type routing implemented and narrowly tested; local CLI cluster remains unverified end-to-end inside live ChatGPT.
+
+
+## Active checkpoint — full PR inventory and temporal-validator reconciliation (2026-10-17)
+
+- **Active goal:** audit PR #1–#38 as one system, identify duplicate implementations and conflicting records, and consolidate existing mechanisms without creating another PR or tool.
+- **Completed:** live PR/base/HEAD/CI inventory; updated the existing cluster integration audit; compared changed-path overlap and selected source blobs; traced the #36 task-start call graph; identified divergent event/lesson IDs in parallel RECIPE_MANAGER branches; verified the current #37 restore checkpoint is stale relative to its code.
+- **PR #38 repair:** existing branch now contains merge commit 258b11610bd57d8c4b1ff051a36b74dd75c741b6, with current PR #37 HEAD 429d939ee0d2225d673dea709b12fd25f8fc9c8e as a parent. It preserves event 006 and appends the correction as event 007; 32 event records have 32 unique IDs. The missing validator import was added. No new PR, force-push, PR merge, close or deletion was performed. At the later state checkpoint, PR #38 HEAD was e951cc2785023b1d50064377a5499baefb628e2d and its diff contained nine paths: five code/event files plus four audit/state documents.
+- **Verification:** exact-head CI for 258b11610bd57d8c4b1ff051a36b74dd75c741b6 is not available yet; both workflow-run and check-run queries returned zero. The old failure on 9c52cefed05f3cabac6df04ae927d8a3a5a87027 must not be attributed to the repaired HEAD, but neither may the repair be called PASS. A local clone/test attempt was blocked by DNS resolution failure.
+- **Checkpoint boundary:** CONTINUITY_CHECKPOINT.json still records code HEAD 1fd9c91ae8bb8662a3cb1a1cea3d63452064fc40 and CI run 38852493391. Do not rewrite it to an unverified SHA/run. The configured verified restore path is expected to fail closed on current source-code drift until exact-head validation and a matching checkpoint update are available.
+- **Next action:** obtain exact-head CI for PR #38; inspect the validator's real test result; then refresh CONTINUITY_CHECKPOINT.json and re-run the configured restore path. After that, exercise the #36 task-start entrypoint with the same packet and keep the host/runtime boundary explicit.
+- **Safety:** main remains unchanged. All PRs remain open/unmerged; no branch was deleted or force-updated. Archive transfer and browser-extension integration remain deferred.
+
+
+## Verified checkpoint — PR #38 exact-head CI and continuity refresh (2026-10-17)
+
+- **Verified code HEAD:** 3de7a25d4248ed7612807ee7faf800b1c5d0240f.
+- **Exact-head CI:** run 39022902051 SUCCESS. It ran 446 Python tests (1 skipped), 4 Node tests (4 passed), strict write audit 143 mutation sites / 0 unclassified, memory validation PASS and project/stack validation PASS.
+- **Checkpoint refresh:** CONTINUITY_CHECKPOINT.json was updated in metadata commit 7ef98e6a75aedcb85f3f57a4f5db9879145a2a91 to record the tested code SHA and its exact CI run. This metadata commit is not a new code HEAD.
+- **PR #38:** remains Draft/open/unmerged, mergeable against current PR #37 base. The previous #38 failure was on old HEAD 9c52cefed05f3cabac6df04ae927d8a3a5a87027; the repaired branch preserves event 006 and appends the correction as event 007. The merged journal has 32 records and 32 unique event IDs.
+- **Boundary:** CI validates the repository snapshot, not live ChatGPT-host behavior. The actual tools/verified_session_restore.py and tools/agent_memory_cycle.py commands have not been executed in this ChatGPT environment. Their live invocation remains NOT RUN; do not report end-to-end runtime success.
+- **Next action:** invoke verified_session_restore against the current branch tip and verify the metadata-only descendant gate; then run agent_memory_cycle with --repository and inspect the returned readiness and packet-reuse evidence. If the host cannot invoke these tools, record BLOCKED.
+
+
+- **Metadata-tip CI:** current metadata-only branch tip 4dec7ba980f64172bc44a7719d19abd660e01a71 also passed run 39022983191 (446 Python tests, 1 skipped; 4 Node tests; write audit 143/0; memory and project/stack validation PASS). The continuity checkpoint intentionally retains code HEAD 3de7a25d4248ed7612807ee7faf800b1c5d0240f and its exact code-head run 39022902051; the later tip changes only allowlisted checkpoint/task/handoff metadata.
+
+
+## Active task context for runtime extractor — 2026-10-17
+
+- **Активная задача в текущей сессии:** Полный аудит PR #1–#38; согласовать существующие механизмы памяти, устранить несовместимости контрактов и проверить сквозной restore/task-start.
+- **Текущий следующий шаг:** Повторить live restore/task-start smoke после синхронизации checkpoint; подтвердить результат READY_FOR_REVIEW или PARTIAL без блокировки, затем зафиксировать фактический результат.
+- **Блокеры / решение пользователя:** Не изменять main, не объединять и не закрывать PR, не создавать новые инструменты или PR без доказанной необходимости; архив и браузерное расширение остаются отложенными.
+- **Последнее событие:** Smoke run 39023599367 подтвердил VERIFIED_SESSION_RESTORE_PASS, но task-start вернул CONTEXT_OR_RETRIEVAL_BLOCKED: active_goal/next_step остались UNKNOWN, а канонический реестр одобренной семантической памяти отсутствует. Проверка выявила, что runtime extractor ищет явные метки в хвостовом checkpoint, которых там не было; не угадывать цель, добавить явные поля.
+
+
+## Latest live smoke result — 2026-10-17
+
+- GitHub Actions run 39023790479 passed on branch-tip efc7096a411f6ade91b4ce7cc1462e8d0d12589a.
+- Verified restore passed; task-start returned READY_FOR_REVIEW with RESTORED_PACKET. Cluster readiness is PARTIAL because approved semantic memory is UNAVAILABLE. No writes, planning authorization or execution occurred.
+- CONTINUITY_CHECKPOINT.json records code HEAD ebed5f048188b1f057f1c40a00ca148acd087b6 and exact CI run 39023539993, plus the live smoke result.
+- This verifies the repository CLI path in GitHub Actions, not automatic invocation inside ChatGPT. The missing approved semantic-memory registry remains open; do not fabricate records or resume the deferred archive transfer.

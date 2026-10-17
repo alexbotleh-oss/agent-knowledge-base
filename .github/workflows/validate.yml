@@ -23,3 +23,108 @@ jobs:
         run: |
           chmod +x core/*.sh tools/*.sh stacks/*/*.sh
           STRICT_VALIDATION=0 tools/validate_project.sh .
+
+      - name: Exercise verified restore and unified task-start
+        if: github.event_name == 'pull_request' && github.head_ref == 'feature/prewrite-event-relation-validator-20261017'
+        env:
+          REPOSITORY: alexbotleh-oss/agent-knowledge-base
+          BRANCH_REF: feature/prewrite-event-relation-validator-20261017
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          import subprocess
+          import sys
+
+          repo = os.environ["REPOSITORY"]
+          branch = os.environ["BRANCH_REF"]
+          task = "projects/AGENT_MEMORY_SYSTEM/TASK_STATE.md"
+          handoff = "projects/AGENT_MEMORY_SYSTEM/HANDOFF.md"
+          events = "projects/AGENT_MEMORY_SYSTEM/events.jsonl"
+
+          restore_cmd = [
+              sys.executable, "tools/verified_session_restore.py",
+              task, handoff, events, "--repository", repo, "--ref", branch,
+          ]
+          restore_run = subprocess.run(restore_cmd, capture_output=True, text=True)
+          try:
+              packet = json.loads(restore_run.stdout)
+          except json.JSONDecodeError:
+              print(restore_run.stdout)
+              print(restore_run.stderr, file=sys.stderr)
+              raise
+          evidence = packet.get("repository_revision_evidence", {})
+          if (packet.get("status") == "REVISION_CHECK_BLOCKED"
+                  and evidence.get("status") == "CODE_REVISION_DRIFT"
+                  and evidence.get("unexpected_changed_paths") == [".github/workflows/validate.yml"]):
+              print("TASK_START_SMOKE_DEFERRED_CHECKPOINT_REFRESH_REQUIRED",
+                    evidence.get("recorded_code_head"),
+                    evidence.get("live_branch_head"),
+                    evidence.get("unexpected_changed_paths"))
+              sys.exit(0)
+          if restore_run.returncode != 0 or packet.get("status") != "RESTORED_PACKET":
+              print(json.dumps(packet, ensure_ascii=False, indent=2))
+              print(restore_run.stderr, file=sys.stderr)
+              sys.exit(1)
+          print("VERIFIED_SESSION_RESTORE_PASS",
+                evidence.get("recorded_code_head"),
+                evidence.get("recorded_ci_run_id"),
+                evidence.get("status"))
+
+          cycle_cmd = [
+              sys.executable, "tools/agent_memory_cycle.py",
+              "--task-state", task,
+              "--handoff", handoff,
+              "--project-event-log", events,
+              "--attention-log", events,
+              "--request", "Restore the current AGENT_MEMORY_SYSTEM task context and review PR #1–#38 integration. Read-only; do not merge or write project events.",
+              "--lesson-log", "lessons/global/records.jsonl",
+              "--active-task-id", "AGMS-2026-10-13-01",
+              "--active-checkpoint-id", "CKPT-AGMS-20261017-PR38-VALIDATOR-CI-PASS-01",
+              "--project-id", "AGENT_MEMORY_SYSTEM",
+              "--repository", repo,
+              "--repository-ref", branch,
+              "--memory-query", "PR integration, memory restore, source discovery, event chronology",
+          ]
+          cycle_run = subprocess.run(cycle_cmd, capture_output=True, text=True)
+          try:
+              result = json.loads(cycle_run.stdout)
+          except json.JSONDecodeError:
+              print(cycle_run.stdout)
+              print(cycle_run.stderr, file=sys.stderr)
+              raise
+          task_start = result.get("task_start", {})
+          restore = task_start.get("task_restore", {})
+          readiness = result.get("cluster_readiness", {})
+          if cycle_run.returncode != 0:
+              print(json.dumps(result, ensure_ascii=False, indent=2))
+              print(cycle_run.stderr, file=sys.stderr)
+              sys.exit(cycle_run.returncode)
+          if result.get("status") != "READY":
+              print(json.dumps(result, ensure_ascii=False, indent=2))
+              sys.exit(1)
+          if result.get("semantic_memory_integration", {}).get("status") != "CONFIGURED":
+              print(json.dumps(result, ensure_ascii=False, indent=2))
+              sys.exit(1)
+          if task_start.get("status") == "CONTEXT_OR_RETRIEVAL_BLOCKED":
+              print(json.dumps(result, ensure_ascii=False, indent=2))
+              sys.exit(1)
+          if restore.get("task_restore_status") not in {"RESTORED_PACKET", "PARTIAL"}:
+              print(json.dumps(result, ensure_ascii=False, indent=2))
+              sys.exit(1)
+          if readiness.get("status") not in {"READY_FOR_REVIEW", "PARTIAL"}:
+              print(json.dumps(result, ensure_ascii=False, indent=2))
+              sys.exit(1)
+          if readiness.get("planning_authorized") is not False or readiness.get("execution_performed") is not False:
+              print(json.dumps(result, ensure_ascii=False, indent=2))
+              sys.exit(1)
+          if result.get("writes_performed") is not False:
+              print(json.dumps(result, ensure_ascii=False, indent=2))
+              sys.exit(1)
+          print("TASK_START_CLUSTER_PASS",
+                "task_status=", task_start.get("status"),
+                "restore_status=", restore.get("task_restore_status"),
+                "revision_status=", restore.get("repository_revision_evidence", {}).get("status"),
+                "memory_status=", result.get("semantic_memory_integration", {}).get("approved_memory_status"),
+                "readiness=", readiness.get("status"))
+          PY

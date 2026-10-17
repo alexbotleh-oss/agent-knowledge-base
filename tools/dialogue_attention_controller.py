@@ -17,6 +17,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable
 
+from event_relation_validator import validate_event_append
+
 CLASSIFICATIONS = {
     "CONTINUATION", "CORRECTION", "SIDE_BRANCH", "DEFERRED_IDEA",
     "NEW_TASK", "PRIORITY_CHANGE", "RETURN_TO_PARENT", "AMBIGUOUS",
@@ -229,6 +231,15 @@ def _append_unlocked(path: Path, event: dict[str, Any]) -> dict[str, Any]:
             if _same_event(old, event):
                 return {"status": "ALREADY_RECORDED", "event_id": event["event_id"], "writes_performed": False}
             return {"status": "CONFLICT", "event_id": event["event_id"], "writes_performed": False}
+    # Validate active temporal relations before committing the proposed event.
+    relation_validation = validate_event_append(event, events)
+    if relation_validation.get("status") != "PASS":
+        return {
+            "status": "BLOCKED_EVENT_RELATION_VALIDATION",
+            "event_id": event.get("event_id"),
+            "relation_validation": relation_validation,
+            "writes_performed": False,
+        }
     # Validate the projected stack before committing the proposed event.
     project_state(events + [event])
     path.parent.mkdir(parents=True, exist_ok=True)

@@ -298,3 +298,15 @@ This section supersedes older PR-state snapshots above where they disagree. Meta
 - Integrate #32/#33 selectively only after deciding journal ownership and aligning global/project instructions and bootstrap location.
 - Repair #38 only after its base is synchronized and its event ID is unique; then wire the temporal validator into the intended writer and repository-validation paths and rerun exact-head CI.
 - The next proof is a real invocation of the #37 configured restore path after the checkpoint is refreshed, followed by the #36 task-start path using that same packet. Do not call this a live ChatGPT end-to-end test until an actual host invokes it.
+
+
+## Correction after PR #38 branch reconciliation — 2026-10-17
+
+The previous inventory records PR #38 as failing and based on a stale revision; that was the verified state before the following repair. The existing PR branch was updated without force-pushing or creating a new PR.
+
+- Merge commit: 258b11610bd57d8c4b1ff051a36b74dd75c741b6. Parents: previous PR #38 HEAD 9c52cefed05f3cabac6df04ae927d8a3a5a87027 and the then-current PR #37 HEAD 429d939ee0d2225d673dea709b12fd25f8fc9c8e.
+- At merge commit 258b11610bd57d8c4b1ff051a36b74dd75c741b6, PR #38 compared against base HEAD 429d939ee0d2225d673dea709b12fd25f8fc9c8e with 7 commits ahead, 0 behind and five code/event paths. Subsequent audit/state updates on the same branch expanded the current PR diff to nine paths: those five code/event paths plus CLUSTER_INTEGRATION_AUDIT, TASK_STATE, HANDOFF and PROJECT_STATE. A refreshed PR metadata response reports mergeable=true.
+- The #37 event EVT-AGMS-20261017-006 was preserved. The validator correction was appended as EVT-AGMS-20261017-007; the resulting events.jsonl has 32 records and 32 unique event IDs.
+- tools/dialogue_attention_controller.py now imports validate_event_append. The existing branch_result_registry integration and the new validator/test files are preserved.
+- **Verification at the time of the first branch reconciliation was PENDING.** No workflow run/check-run was associated with merge HEAD 258b11610bd57d8c4b1ff051a36b74dd75c741b6. After the PR metadata update, exact-head CI run 39022785538 passed for HEAD 566e90f746f702c0a5ca5abd1cd7f6e163f765df: 446 Python tests (1 skipped), 4 Node tests, strict write audit 143 mutation sites / 0 unclassified, memory validation PASS and project/stack validation PASS. The audit-document correction in this commit changes the HEAD again, so run 39022785538 must not be attributed to the new SHA; obtain exact-head CI before refreshing the checkpoint. A local clone attempt failed because the execution environment could not resolve github.com; no local test run is claimed.
+- Do not merge PR #38. After an exact-head CI result is available, update the continuity checkpoint only with the SHA/run pair that actually passed. The validator is still wired to two writer paths; broad writer coverage and a dedicated whole-log workflow audit remain open.
