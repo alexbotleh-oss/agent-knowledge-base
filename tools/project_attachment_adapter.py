@@ -44,7 +44,7 @@ def _json_bytes(value: object) -> bytes:
     return json.dumps(value, ensure_ascii=False, sort_keys=True).encode("utf-8")
 
 
-def make_handler(library_root: Path, token: str, allowed_origins: set[str]):
+def make_handler(library_root: Path, token: str, allowed_origins: set[str], allowed_projects: set[str]):
     class Handler(BaseHTTPRequestHandler):
         server_version = "RimaAttachmentAdapter/1.0"
         sys_version = ""
@@ -116,8 +116,15 @@ def make_handler(library_root: Path, token: str, allowed_origins: set[str]):
             if length > MAX_ATTACHMENT_BYTES:
                 self._send(413, {"status": "ERROR", "error": "attachment_too_large"}, origin=origin)
                 return
+            if length == 0:
+                self._send(400, {"status": "ERROR", "error": "empty_attachment"}, origin=origin)
+                return
+            temp_path: Path | None = None
             try:
                 project_id = _required(self.headers.get("X-Rima-Project-ID"), "X-Rima-Project-ID")
+                if project_id not in allowed_projects:
+                    self._send(403, {"status": "ERROR", "error": "project_not_allowed"}, origin=origin)
+                    return
                 conversation_id = _required(self.headers.get("X-Rima-Conversation-ID"), "X-Rima-Conversation-ID")
                 source_message_id = _required(self.headers.get("X-Rima-Source-Message-ID"), "X-Rima-Source-Message-ID")
                 filename = _safe_filename(self.headers.get("X-Rima-Filename"))
@@ -135,14 +142,11 @@ def make_handler(library_root: Path, token: str, allowed_origins: set[str]):
                         remaining -= len(chunk)
                     temp.flush()
                     os.fsync(temp.fileno())
-                try:
-                    result = register_attachment(
-                        temp_path, library_root, project_id=project_id,
-                        conversation_id=conversation_id, source_message_id=source_message_id,
-                        original_name=filename, media_type=media_type,
-                    )
-                finally:
-                    temp_path.unlink(missing_ok=True)
+                result = register_attachment(
+                    temp_path, library_root, project_id=project_id,
+                    conversation_id=conversation_id, source_message_id=source_message_id,
+                    original_name=filename, media_type=media_type,
+                )
                 result.pop("storage_locator", None)
                 self._send(201 if result["status"] == "REGISTERED" else 200,
                            {"status": result["status"], "attachment": result}, origin=origin)
@@ -151,6 +155,12 @@ def make_handler(library_root: Path, token: str, allowed_origins: set[str]):
             except (OSError, OverflowError) as exc:
                 self._send(500, {"status": "ERROR", "error": "attachment_storage_failed",
                                  "detail": type(exc).__name__}, origin=origin)
+            finally:
+                if temp_path is not None:
+                    try:
+                        temp_path.unlink(missing_ok=True)
+                    except OSError:
+                        sys.stderr.write("rima-attachment-adapter: temporary file cleanup failed\\n")
 
     return Handler
 
@@ -161,6 +171,8 @@ def main() -> int:
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=8766)
     parser.add_argument("--allow-origin", action="append", default=[])
+    parser.add_argument("--allow-project", action="append", default=[],
+                        help="explicit project ID allowed to receive attachments; repeat per project")
     parser.add_argument("--token-file", required=True, help="file containing a long random bearer token")
     args = parser.parse_args()
     if args.host not in {"127.0.0.1", "::1", "localhost"}:
@@ -176,13 +188,16 @@ def main() -> int:
         parser.error("bearer token must contain at least 32 characters")
     if not args.allow_origin:
         parser.error("at least one exact --allow-origin is required")
+    if not args.allow_project:
+        parser.error("at least one explicit --allow-project is required")
     library_root = Path(args.library_root).expanduser().resolve()
     library_root.mkdir(parents=True, exist_ok=True)
     server = ThreadingHTTPServer((args.host, args.port),
-                                 make_handler(library_root, token, set(args.allow_origin)))
+                                 make_handler(library_root, token, set(args.allow_origin), set(args.allow_project)))
     server.daemon_threads = True
     print(json.dumps({"status": "READY", "host": args.host, "port": args.port,
-                      "library_root": str(library_root), "allowed_origins": args.allow_origin}))
+                      "library_root": str(library_root), "allowed_origins": args.allow_origin,
+                      "allowed_projects": args.allow_project}))
     try:
         server.serve_forever()
     except KeyboardInterrupt:
