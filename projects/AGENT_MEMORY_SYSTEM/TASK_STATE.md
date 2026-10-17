@@ -825,3 +825,11 @@ P2 is not yet declared ready: this test mocks the final verified restore packet,
 
 
 - **Metadata-tip CI:** current metadata-only branch tip 4dec7ba980f64172bc44a7719d19abd660e01a71 also passed run 39022983191 (446 Python tests, 1 skipped; 4 Node tests; write audit 143/0; memory and project/stack validation PASS). The continuity checkpoint intentionally retains code HEAD 3de7a25d4248ed7612807ee7faf800b1c5d0240f and its exact code-head run 39022902051; the later tip changes only allowlisted checkpoint/task/handoff metadata.
+
+
+## Active task context for runtime extractor — 2026-10-17
+
+- **Активная задача в текущей сессии:** Полный аудит PR #1–#38; согласовать существующие механизмы памяти, устранить несовместимости контрактов и проверить сквозной restore/task-start.
+- **Текущий следующий шаг:** Повторить live restore/task-start smoke после синхронизации checkpoint; подтвердить результат READY_FOR_REVIEW или PARTIAL без блокировки, затем зафиксировать фактический результат.
+- **Блокеры / решение пользователя:** Не изменять main, не объединять и не закрывать PR, не создавать новые инструменты или PR без доказанной необходимости; архив и браузерное расширение остаются отложенными.
+- **Последнее событие:** Smoke run 39023599367 подтвердил VERIFIED_SESSION_RESTORE_PASS, но task-start вернул CONTEXT_OR_RETRIEVAL_BLOCKED: active_goal/next_step остались UNKNOWN, а канонический реестр одобренной семантической памяти отсутствует. Проверка выявила, что runtime extractor ищет явные метки в хвостовом checkpoint, которых там не было; не угадывать цель, добавить явные поля.
