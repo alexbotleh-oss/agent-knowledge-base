@@ -133,6 +133,23 @@ class CheckReusePolicyTests(unittest.TestCase):
         self.assertEqual(result["status"], "RECHECK_PRIOR_RESULT_NOT_REUSABLE")
         self.assertEqual(result["action"], "RUN_CHECK")
 
+    def test_recording_is_blocked_when_existing_temporal_edge_is_reversed(self):
+        self.log.parent.mkdir(parents=True)
+        rows = [
+            {"event_id": "EVT-OLDER", "relations": []},
+            {"event_id": "EVT-LATER", "relations": [{"type": "followed_by", "event_id": "EVT-OLDER"}]},
+        ]
+        self.log.write_text("".join(json.dumps(row) + "\\n" for row in rows), encoding="utf-8")
+        before = self.log.read_bytes()
+        result = record_check_result(
+            self.log, self.check, self.sources, self.candidates,
+            result_status="FAIL", evidence_refs=["tests/test_trigger.py#case-1"],
+            summary="Chronology regression fixture", recorded_by="test",
+        )
+        self.assertEqual(result["status"], "BLOCKED_EVENT_RELATION_VALIDATION")
+        self.assertFalse(result["writes_performed"])
+        self.assertEqual(self.log.read_bytes(), before)
+
     def test_corrupt_journal_fails_closed(self):
         self.log.parent.mkdir(parents=True)
         self.log.write_text("{broken json\n", encoding="utf-8")
