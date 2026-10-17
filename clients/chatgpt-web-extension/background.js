@@ -242,21 +242,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       case "LINK_ATTACHMENT": {
         if (!fromExtension) throw new Error("attachment_link_requires_extension_popup");
         const turnId = message.turn_id;
-        const ref = message.attachment;
-        if (typeof turnId !== "string" || !turnId || !ref || typeof ref !== "object" || Array.isArray(ref)) {
-          throw new Error("invalid_attachment_link_payload");
-        }
-        const requiredFields = ["attachment_id", "project_id", "conversation_id", "source_message_id", "library_ref", "sha256"];
-        for (const field of requiredFields) {
-          if (typeof ref[field] !== "string" || !ref[field].trim()) throw new Error("invalid_attachment_reference:" + field);
-        }
-        if (ref.source_message_id !== turnId) throw new Error("attachment_source_turn_mismatch");
-        if (!/^project-library:\/\/[A-Za-z0-9][A-Za-z0-9._-]{1,127}\/objects\/sha256\/[a-f0-9]{64}$/.test(ref.library_ref)) {
-          throw new Error("invalid_library_reference");
-        }
-        if (!/^[a-f0-9]{64}$/.test(ref.sha256) || !Number.isSafeInteger(ref.size_bytes) || ref.size_bytes < 0) {
-          throw new Error("invalid_attachment_integrity_metadata");
-        }
+        if (typeof turnId !== "string" || !turnId) throw new Error("invalid_attachment_link_payload");
+        const ref = globalThis.RimaDialogueWindowCore.validateAttachmentRef(message.attachment, turnId);
         const result = await withTurn(turnId, (turn, store) => {
           if (turn.conversation_id !== ref.conversation_id) throw new Error("attachment_conversation_mismatch");
           if (!Array.isArray(turn.attachments)) turn.attachments = [];
