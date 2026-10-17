@@ -77,10 +77,16 @@ def iter_json_array(stream: BinaryIO, chunk_size: int = 65536, *, start_offset: 
             result[key] = value
         return result
 
-    # Duplicate object keys are ambiguous and would be silently lost when the
-    # decoded object is serialized into staging. Fail closed; the immutable
-    # source snapshot remains available for forensic review.
-    decoder = json.JSONDecoder(object_pairs_hook=reject_duplicate_keys)
+    def reject_nonstandard_constant(value):
+        raise ValueError(f"Non-standard JSON numeric constant: {value}")
+
+    # Duplicate object keys and NaN/Infinity are ambiguous/non-standard and
+    # would otherwise be silently normalized into staging. Fail closed; the
+    # immutable source snapshot remains available for forensic review.
+    decoder = json.JSONDecoder(
+        object_pairs_hook=reject_duplicate_keys,
+        parse_constant=reject_nonstandard_constant,
+    )
     utf8 = codecs.getincrementaldecoder("utf-8")()
     buffer = ""
     pos = 0
