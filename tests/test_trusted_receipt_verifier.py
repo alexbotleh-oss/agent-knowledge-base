@@ -189,6 +189,16 @@ class TrustedReceiptVerifierTests(unittest.TestCase):
         verified = verifier(candidate, judgment)
         self.assertTrue(verified["verified"])
         self.assertEqual(verified["receipt_id"], "RECEIPT-1")
+
+        # Even a correctly signed claim must fail closed when its result has
+        # an unexpected type that would otherwise be unhashable in the result set.
+        malformed_claim = dict(claim)
+        malformed_claim["result"] = {"unexpected": "MATCH"}
+        malformed_receipt = self._receipt(malformed_claim)
+        self.receipts.write_text(json.dumps(malformed_receipt) + "\n", encoding="utf-8")
+        self.assertIsNone(verifier(candidate, judgment))
+
+        self.receipts.write_text(json.dumps(receipt) + "\n", encoding="utf-8")
         basis.write_text("def test_trigger():\n    assert False\n", encoding="utf-8")
         self.assertIsNone(verifier(candidate, judgment))
 
