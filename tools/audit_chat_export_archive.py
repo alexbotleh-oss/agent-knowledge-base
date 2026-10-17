@@ -95,6 +95,27 @@ def audit_archive(path: Path) -> dict[str, Any]:
             "error": str(exc),
         }
 
+    # The inventory is read after the initial hash. Detect a source that
+    # changed or became unreadable during the scan rather than returning an
+    # inventory bound to a stale digest.
+    try:
+        final_digest = sha256_file(path)
+    except OSError as exc:
+        return {
+            **result,
+            "status": "FAIL",
+            "reason": "SOURCE_CHANGED_OR_UNREADABLE_DURING_AUDIT",
+            "error_type": type(exc).__name__,
+            "error": str(exc),
+        }
+    if final_digest != result["source_sha256"]:
+        return {
+            **result,
+            "status": "FAIL",
+            "reason": "SOURCE_CHANGED_DURING_AUDIT",
+            "final_source_sha256": final_digest,
+        }
+
     review_reasons = []
     if result["duplicate_member_paths"]:
         review_reasons.append("DUPLICATE_MEMBER_PATHS")
