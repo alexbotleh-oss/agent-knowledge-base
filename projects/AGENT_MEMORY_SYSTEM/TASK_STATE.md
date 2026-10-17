@@ -888,3 +888,14 @@ The no-repeat check fingerprint now binds the current request and relevant seman
 - **Regression guard:** `tests/test_agent_identity_contract.py` checks the canonical diagnostic-marker contract and that the self-monitoring gate precedes repository work. This is a static documentation guard; it does not prove runtime behavior or automatic cross-chat loading.
 - **Evidence boundary:** changes were written to the existing PR branch only. Exact resulting HEAD and CI status must be checked after the updates. Until exact-head CI is observed, test/CI status is PENDING/NOT OBSERVED.
 - **PR safety:** PR #30 remains Draft/open/unmerged; do not merge or modify `main` without explicit user approval.
+
+
+## Self-monitoring follow-up — malformed evidence in reusable check results (2026-10-17)
+
+- **Source-backed gap:** `tools/check_reuse_policy.py` previously treated any non-empty list as sufficient `evidence_refs` before attempting signed check-result receipt verification. A malformed record containing non-string/blank references could reach the reuse decision if a verifier accepted the signed claim.
+- **Correction:** reusable PASS now requires a non-empty list of non-empty strings. Invalid evidence references fall through to `RECHECK_PRIOR_RESULT_NOT_REUSABLE` / `RUN_CHECK`; they cannot suppress the check.
+- **Regression:** `tests/test_check_reuse_policy.py::test_malformed_evidence_refs_cannot_reuse_signed_pass` mutates a recorded event to contain a numeric evidence reference and verifies that even a permissive test verifier cannot make the prior PASS reusable.
+- **Read-back:** modified source and test were fetched from the branch and the guard/test were confirmed present.
+- **Exact code/test HEAD:** `785c9a7ccfc4e2ec4f5c3ca525df7198b51ea626`. GitHub Actions run [38999688578](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38999688578) completed SUCCESS for this PR code/test checkpoint. No test count is claimed here because the run summary exposed only job-level validation steps.
+- **Limit:** this is a local fail-closed regression and synthetic test coverage, not production trusted-key acceptance. The externally pinned production trust root remains unconfigured.
+- **PR safety:** PR #30 remains Draft/open/unmerged, base `audit/agent-memory-e2e-20261016`; no merge or `main` change.
