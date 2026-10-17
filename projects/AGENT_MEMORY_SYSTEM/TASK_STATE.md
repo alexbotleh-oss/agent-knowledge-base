@@ -807,3 +807,14 @@ P2 is not yet declared ready: this test mocks the final verified restore packet,
 - The private attachment bridge remains a manual second selection and explicit source-turn link; automatic capture of ChatGPT's original file upload remains unimplemented.
 - **Next:** verify exact HEAD/CI after this checkpoint write, then prepare/execute the real-device acceptance checklist. Do not mark live browser or localhost bridge tests PASS without observed device results. PR #31 stays Draft/open/unmerged; PR #27/#30 and `main` unchanged.
 - **Status:** PARTIAL / active.
+
+
+## Final verification addendum — attachment event export (2026-10-17)
+
+- Attachment linkage is persisted as a stable `ATTACHMENT_LINKED` event inside the local turn event list, not only as a derived `turn.attachments` field. This keeps reference provenance in JSONL export and makes repeated linkage idempotent by turn + attachment ID.
+- The transition validates the attachment reference against the turn's source ID and conversation ID before adding it to the projection; the shared validator rejects extra/payload fields and checks project/hash consistency. Regression contract test confirms the event is appended and exported.
+- The popup's context action now has two explicit choices: copy to clipboard or insert into an empty composer. Insertion refuses to overwrite any existing draft and never clicks Send.
+- Latest verified code/protocol HEAD remains `efd671b67e1fd3d9c6b7034aee721154dd5457da`, CI [39002425902](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/39002425902) PASS: 323 Python tests, 13 Node tests, audit 144/0, memory/project validation PASS.
+- Metadata-only HEAD before this addendum: `365813fd3937f2c1f56aec48a3e64ebd6201b332`, exact-head CI [39002484645](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/39002484645) PASS.
+- Remaining acceptance is device-level, not repository-level: Yandex Browser Android, local Python bridge launch/CORS/file upload, library resolve after restart, attachment ref present in context, insert into empty composer, non-empty draft refusal, and no auto-submit. Mark each NOT RUN/BLOCKED until actually observed.
+- Status: PARTIAL / active.
