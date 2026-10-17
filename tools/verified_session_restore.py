@@ -28,6 +28,16 @@ METADATA_ONLY_PATHS = {
     "projects/AGENT_MEMORY_SYSTEM/events.jsonl",
 }
 
+EVENT_RECORD_PATH_RE = re.compile(
+    r"^projects/AGENT_MEMORY_SYSTEM/events/EVT-AGMS-[0-9]{8}-[0-9]{3}-[A-Z0-9_-]+\\.md$"
+)
+
+
+def _is_metadata_only_path(path: str) -> bool:
+    """Allow only explicitly listed state files and well-formed append-only event records."""
+    return path in METADATA_ONLY_PATHS or EVENT_RECORD_PATH_RE.fullmatch(path) is not None
+
+
 
 class RemoteEvidenceError(RuntimeError):
     """Raised when live remote evidence is missing, inconsistent, or unsafe."""
@@ -135,7 +145,7 @@ def verify_remote_revision(
                 "Current branch is not a clean descendant of the recorded code SHA "
                 f"(status={compare_status!r}, merge_base={merge_base_sha!r})"
             )
-        unexpected = [path for path in changed_paths if path not in METADATA_ONLY_PATHS]
+        unexpected = [path for path in changed_paths if not _is_metadata_only_path(path)]
         if unexpected:
             return {
                 "status": "CODE_REVISION_DRIFT", "repository": repository, "ref": selected_ref,
