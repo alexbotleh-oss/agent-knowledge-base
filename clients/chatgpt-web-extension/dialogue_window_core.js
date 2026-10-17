@@ -88,6 +88,45 @@
     };
   }
 
+  function validateAttachmentRef(ref, turnId) {
+    if (!ref || typeof ref !== "object" || Array.isArray(ref)) {
+      throw new TypeError("attachment reference must be an object");
+    }
+    if (typeof turnId !== "string" || !turnId) throw new TypeError("turnId is required");
+    const allowed = new Set([
+      "attachment_id", "project_id", "conversation_id", "source_message_id",
+      "library_ref", "sha256", "size_bytes", "access_status", "original_name", "media_type"
+    ]);
+    for (const key of Object.keys(ref)) {
+      if (!allowed.has(key)) throw new Error("attachment payload/unknown field is forbidden: " + key);
+    }
+    for (const key of ["attachment_id", "project_id", "conversation_id", "source_message_id", "library_ref", "sha256"]) {
+      if (typeof ref[key] !== "string" || !ref[key].trim()) throw new TypeError("invalid attachment reference field: " + key);
+    }
+    if (ref.source_message_id !== turnId) throw new Error("attachment source turn mismatch");
+    if (!Number.isSafeInteger(ref.size_bytes) || ref.size_bytes < 1) throw new Error("invalid attachment size");
+    if (ref.access_status !== "AVAILABLE") throw new Error("attachment is not confirmed available");
+    if (ref.original_name !== undefined && typeof ref.original_name !== "string") throw new TypeError("invalid original_name");
+    if (ref.media_type !== undefined && typeof ref.media_type !== "string") throw new TypeError("invalid media_type");
+    const match = ref.library_ref.match(/^project-library:\/\/([A-Za-z0-9][A-Za-z0-9._-]{1,127})\/objects\/sha256\/([a-f0-9]{64})$/);
+    if (!match || match[1] !== ref.project_id || match[2] !== ref.sha256) {
+      throw new Error("library reference project/hash mismatch");
+    }
+    if (!/^[a-f0-9]{64}$/.test(ref.sha256)) throw new Error("invalid attachment SHA-256");
+    return {
+      attachment_id: ref.attachment_id,
+      project_id: ref.project_id,
+      conversation_id: ref.conversation_id,
+      source_message_id: ref.source_message_id,
+      library_ref: ref.library_ref,
+      sha256: ref.sha256,
+      size_bytes: ref.size_bytes,
+      access_status: ref.access_status,
+      ...(ref.original_name === undefined ? {} : { original_name: ref.original_name }),
+      ...(ref.media_type === undefined ? {} : { media_type: ref.media_type })
+    };
+  }
+
   function formatRecoveryContext(packet) {
     if (!packet || packet.schema !== "rima-browser-dialogue-windows-v1") {
       throw new TypeError("unsupported dialogue window packet");
@@ -156,5 +195,5 @@
     return lines.join("\n");
   }
 
-  root.RimaDialogueWindowCore = { buildDialogueWindows, formatRecoveryContext };
+  root.RimaDialogueWindowCore = { buildDialogueWindows, formatRecoveryContext, validateAttachmentRef };
 })(globalThis);
