@@ -767,3 +767,19 @@ P2 is not yet declared ready: this test mocks the final verified restore packet,
 - No raw user conversation or attachment payloads were added to the public repo. PR #31 remains Draft/open/unmerged, stacked on PR #27. PR #27/#30 remain open/unmerged; `main` unchanged.
 - **Next action:** record this checkpoint in HANDOFF/TASK_STATE, then verify the new metadata-only HEAD/CI. Keep this memory task active: next engineering step is a scoped, authenticated attachment-capture bridge with explicit project binding and a real-device acceptance test; do not return to unrelated controller/importer problems yet.
 - Status: PARTIAL / active.
+
+
+## Checkpoint update — attachment bridge and reference recovery (2026-10-17)
+
+- Added `tools/project_attachment_adapter.py`: authenticated loopback-only HTTP intake for raw file bytes, maximum 25 MiB, exact Origin allowlist, bearer authentication, explicit project/conversation/source-turn provenance, project allowlist, temporary-file cleanup, and delegation to the private content-addressed library. It returns reference metadata only.
+- Wired the extension popup to the local bridge. The user explicitly sets project ID and token, selects the exact source turn, reselects the same file once, and confirms library registration. The extension verifies returned provenance and stores only the reference metadata on that turn. This is manual one-time registration, not automatic capture of the original ChatGPT upload.
+- Added strict browser-side reference validation: allowed metadata fields only, source turn must match, project/hash in `library_ref` must match metadata, size/status validated; payload/unknown fields are rejected. Recovery-context formatting includes the stable library reference and safe metadata but not file bytes or storage paths.
+- Unicode filenames are URL-encoded in the header and decoded/sanitized by the bridge. Project IDs are explicitly allowlisted; untrusted origins, missing token, empty/oversized files and invalid project scope are rejected.
+- **Verified code HEAD:** `09de26f7602f6df21e7495728c7466ca0a4f6f2d`.
+- **Exact-head CI:** [run 39002176773](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/39002176773) PASS — 321 Python tests, 13 Node tests (0 failed), strict write audit 144 mutation sites / 0 unclassified, memory validation PASS, project/stack validation PASS.
+- Subsequent documentation revision `6dd409d39722ebf26cf97537456416a4e386ebb1` updates the architecture description to distinguish manual bridge import from automatic capture. Its exact-head CI is pending.
+- **Still not verified:** real-device Yandex Browser Android, starting the Python bridge on the user's device, automatic capture of the file already attached in ChatGPT, automatic context injection into a new chat, cross-device sync and full archive import.
+- **Privacy and state:** no user file bytes or raw conversation text were committed. Attachment bytes are intended to stay in the private local library; IndexedDB and extension settings/token are local-profile data and are not encrypted secret storage.
+- PR #31 remains Draft/open/unmerged and stacked on PR #27. PR #27/#30 and `main` are unchanged.
+- **Next:** record this state, verify latest exact-head CI, then perform/prepare a real-device acceptance path. Do not return to unrelated controller/importer work until the memory and attachment flow is verified end-to-end.
+- Status: PARTIAL / active.
