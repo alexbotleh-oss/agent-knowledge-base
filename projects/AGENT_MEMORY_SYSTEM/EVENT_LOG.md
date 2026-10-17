@@ -123,3 +123,15 @@
 - **Ограничения:** remote catalog содержит только известные refs/paths, не все ветки; внешние архивы, connectors, device storage и автоматический ChatGPT host bridge не подключены.
 - **Следующий шаг:** проверить exact-head CI финального документационного checkpoint; затем добавить контроль drift между каталогом и текущими branch heads, после чего спроектировать/проверить реальный host adapter для вызова локального кластера.
 - **Статус:** remote fallback реализован и узко проверен CI; сквозной live ChatGPT runtime не подтверждён. PR #37 Draft/open/unmerged; main не изменён.
+
+
+## 2026-10-17 — EVT-AGMS-20261017-006: совместимая маршрутизация удалённых источников
+
+- **Источник:** PR #37, исправления после ревью интеграции remote source catalog; commit fe232c4d6ee18308d93bebad801803c364f1e683; exact-head CI [#39019051330](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/39019051330).
+- **Наблюдение:** remote fallback объединял пути всех источников в один список для поиска семантической памяти. Так несовместимый bootstrap-протокол мог стать поисковым кандидатом, а его expected_blob_sha не использовался вызывающим путём.
+- **Исправление:** добавлены source_type и priority в каталог; восстановление ищет сначала semantic_memory, затем event_history и не включает protocol/bootstrap в этот сценарий. Профиль источника передаёт собственный expected path, aliases и hash/blob SHA.
+- **Поведенческие тесты:** проверены порядок двух совместимых источников, исключение bootstrap из memory fallback и подтверждение идентичности по точному Git blob SHA.
+- **Проверка:** exact-head CI прошёл: 438 Python tests, 1 skipped; strict write audit — 143 mutation sites, 0 unclassified.
+- **Ограничения:** это устраняет неверную маршрутизацию в remote memory fallback, но не подключает все типы источников ко всем задачам. Поиск остаётся ограничен явно зарегистрированными refs/paths.
+- **Следующий шаг:** добавить обнаружение drift branch HEAD и конфликтующих ревизий, затем проверить возможность реального вызова локального кластера из рабочего канала ChatGPT.
+- **Статус:** исправление реализовано и узко проверено; PR #37 Draft/open/unmerged; main не изменён.
