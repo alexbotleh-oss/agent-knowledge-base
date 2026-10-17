@@ -77,6 +77,31 @@ class ProjectAttachmentLibraryTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "unsupported characters"):
             self.register(project="../outside")
 
+    def test_stable_reference_resolves_only_after_provenance_and_hash_checks(self):
+        registered = self.register()
+        resolved = library.resolve_attachment(
+            self.library_root, attachment_id=registered["attachment_id"],
+            library_ref=registered["library_ref"],
+        )
+        self.assertEqual(resolved["status"], "AVAILABLE")
+        self.assertEqual(resolved["sha256"], registered["sha256"])
+        self.assertEqual(resolved["conversation_id"], "CHAT-1")
+        with self.assertRaisesRegex(ValueError, "mismatch"):
+            library.resolve_attachment(
+                self.library_root, attachment_id=registered["attachment_id"],
+                library_ref="project-library://OTHER/objects/sha256/" + registered["sha256"],
+            )
+
+    def test_missing_or_tampered_library_object_is_not_reported_available(self):
+        registered = self.register()
+        Path(registered["storage_locator"]).write_bytes(b"tampered")
+        with self.assertRaisesRegex(ValueError, "hash mismatch"):
+            library.resolve_attachment(self.library_root, attachment_id=registered["attachment_id"])
+
+        Path(registered["storage_locator"]).unlink()
+        missing = library.resolve_attachment(self.library_root, attachment_id=registered["attachment_id"])
+        self.assertEqual(missing["status"], "UNAVAILABLE")
+
     def test_corrupt_registry_fails_closed(self):
         self.library_root.mkdir(parents=True)
         (self.library_root / "objects.jsonl").write_text("{broken\n", encoding="utf-8")
