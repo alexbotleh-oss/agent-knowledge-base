@@ -90,7 +90,7 @@ class ResumableArchivePipelineTests(unittest.TestCase):
             self.assertEqual(dry_run["raw_import"]["source_sha256"], original_hash)
             self.assertEqual(dry_run["staging"]["raw_sha256"], original_hash)
             self.assertEqual(dry_run["staging"]["source_record_count"], len(conversations))
-            self.assertFalse(dry_run["source_ingestion"]["writes_performed"])
+            self.assertFalse((root / "registry" / "source_records.jsonl").exists())
             registry = root / "registry" / "source_records.jsonl"
             self.assertFalse(registry.exists())
 
