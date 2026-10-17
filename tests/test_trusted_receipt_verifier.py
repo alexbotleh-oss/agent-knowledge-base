@@ -69,6 +69,8 @@ class TrustedReceiptVerifierTests(unittest.TestCase):
             "key_id": "test-key-1", "issued_at": self.now.isoformat().replace("+00:00", "Z"),
             "claim": claim,
         }
+        if receipt_type == "check_result":
+            receipt["expires_at"] = (self.now + timedelta(hours=1)).isoformat().replace("+00:00", "Z")
         return self._sign(receipt)
 
     def test_valid_signature_and_exact_claim_are_verified(self):
@@ -112,6 +114,7 @@ class TrustedReceiptVerifierTests(unittest.TestCase):
     def test_check_result_receipt_requires_expiry(self):
         claim = {"check_key": "CHECK-1", "input_fingerprint": "a" * 64, "result_status": "PASS"}
         receipt = self._receipt(claim, "check_result")
+        receipt.pop("expires_at")
         receipt = self._sign(receipt)
         result = verify_signed_receipt(
             receipt, claim, keyring_path=self.keyring,
