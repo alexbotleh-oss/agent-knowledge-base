@@ -52,6 +52,17 @@ class ChatGPTWebExtensionContractTests(unittest.TestCase):
         self.assertIn("manual second selection", docs)
         self.assertIn("Never log file bytes", (ROOT / "tools" / "project_attachment_adapter.py").read_text(encoding="utf-8"))
 
+    def test_attachment_reference_is_a_durable_exportable_event(self):
+        background = (EXT / "background.js").read_text(encoding="utf-8")
+        core = (EXT / "dialogue_window_core.js").read_text(encoding="utf-8")
+        self.assertIn('"ATTACHMENT_LINKED"', background)
+        self.assertIn('await appendEvent(', background)
+        self.assertIn('turnId + ":ATTACHMENT_LINKED:" + ref.attachment_id', background)
+        self.assertIn('events = all.flatMap(t => t.events)', background)
+        self.assertIn("validateAttachmentRef", core)
+        self.assertIn("attachment_id: attachment.attachment_id", core)
+        self.assertNotIn("storage_locator", core)
+
     def test_docs_state_live_browser_validation_is_pending(self):
         docs = (EXT / "README.md").read_text(encoding="utf-8")
         self.assertIn("Not yet validated in a live browser", docs)
