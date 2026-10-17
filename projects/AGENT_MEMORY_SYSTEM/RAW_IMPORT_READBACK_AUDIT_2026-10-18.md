@@ -30,6 +30,23 @@ Continue the resumable raw-import work without repeating the PR #38/#39 integrat
 - The source files were read back from GitHub after writes, so persistence of the implementation and tests is verified.
 - No full native ChatGPT export was available in this turn. Synthetic fixtures cannot establish real archive completeness, message chronology, or attachment mapping.
 
-## Next action
 
-Code/test CI for `2fa702cdbc551e0b3760a3d4cb14db0d7ddfc384` is PASS. Next, decide whether to extend the metadata-only allowlist for this report file or leave the smoke deferred until the checkpoint is refreshed by the established workflow; do not modify the large checkpoint by blind replacement. Then run the importer and read-back verifier against the actual native ChatGPT export when its bytes are available. Keep semantic extraction and memory promotion as later stages. Do not merge PR #39 or change `main` without explicit user authorization.
+## Additional ZIP preflight tests — 2026-10-18
+
+- Fixed the ZIP attachment test fixture to use the actual synthetic source key `node-0` (not the nonexistent `node-0-user`). Read-back confirmed the fix on branch commit `1c818f88dcd5d19cd2c6e152c3156dd17b6af9be`.
+- Exact-head CI run [#39070970942](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/39070970942) passed: 488 Python tests (1 skipped), 4 Node tests, repository validation, canonical event-log temporal audit, and restore/task-start smoke.
+- Added two more fail-closed tests on code HEAD `c5845d235a9f89ee4517092dfc7a9941f2744e21`:
+  - ZIP with more than one member named `conversations.json` is rejected and stages zero conversations.
+  - Corrupt ZIP is rejected and stages zero conversations.
+- Exact-head CI run [#39071042500](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/39071042500) passed: **490 Python tests, 1 skipped; 4 Node tests; strict memory/write validation, canonical event-log temporal audit, project/stack validation, and restore/task-start smoke all passed.**
+- The two new ZIP rejection tests, attachment-byte preservation test, and evidence-package-vs-native-export test all passed within this run.
+- This closes the currently testable synthetic ZIP boundary for these cases; it does not establish the completeness or exact attachment-reference semantics of the not-yet-available native archive.
+
+## Remaining preflight work before requesting the native archive
+
+1. Add an explicit, read-only archive inventory report: member paths and sizes, duplicate paths, nested archive markers, CRC/read errors, and candidate attachment files. Keep this inventory separate from semantic interpretation and avoid assuming attachment formats from filenames alone.
+2. Add a source-reference audit that reports candidate attachment references and unresolved/ambiguous matches without rewriting raw conversation payloads.
+3. Verify the report and inventory against the actual archive only after its bytes arrive. Until then, preserve these as synthetic-test boundaries rather than claiming native-export compatibility.
+4. Keep import, independent read-back, attachment inventory, and later semantic extraction as separate stages. Do not promote staged raw content into canonical memory.
+
+No merge was performed and `main` was not changed. Approved semantic-memory registry availability and automatic ChatGPT-host invocation/writeback remain separate unresolved system boundaries.
