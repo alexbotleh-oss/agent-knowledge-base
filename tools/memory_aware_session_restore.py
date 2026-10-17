@@ -5,6 +5,7 @@ import argparse, hashlib, json
 from pathlib import Path
 from typing import Any, Callable
 from canonical_memory_index import DEFAULT_INDEX_ROOT, DEFAULT_REGISTRY, check_index_freshness
+from relocation_aware_discovery import discover
 from verified_session_restore import build_verified_session_packet, request_json
 
 def _canonical(value: Any) -> bytes:
@@ -123,6 +124,36 @@ def build_memory_aware_packet(task_state:Path,handoff:Path,event_log:Path,reposi
     else:
         memory=retrieve_approved_memory(projects[0],task_id=task_id,context_id=context_id,query=query,limit=limit,
                                         registry_path=registry_path,index_root=index_root)
+        if memory.get("status") == "PARTIAL_NO_MATCH":
+            # A zero-result partial index is a discovery trigger, not an absence verdict.
+            search_root = Path(registry_path).resolve().parent.parent
+            try:
+                expected_relative = Path(registry_path).resolve().relative_to(search_root).as_posix()
+            except ValueError:
+                expected_relative = Path(registry_path).name
+            searches = []
+            for stable_hint in (task_id, context_id):
+                if stable_hint:
+                    searches.append(discover(
+                        expected_relative, [search_root], identity=stable_hint,
+                    ))
+            if query:
+                searches.append(discover(
+                    expected_relative, [search_root], query=query,
+                ))
+            memory["relocation_discovery"] = {
+                "status": (
+                    "CANDIDATES_FOUND" if any(item.get("candidates") for item in searches)
+                    else "SEARCH_INCOMPLETE" if any(item.get("coverage_status") != "COMPLETE_WITHIN_CONFIGURED_BOUNDS" for item in searches)
+                    else "NO_CANDIDATES_WITHIN_CONFIGURED_SCOPE"
+                ) if searches else "NOT_RUN_NO_SEARCH_KEY",
+                "searches": searches,
+                "writes_performed": False,
+                "note": "Discovery candidates are not approved semantic memory. Verify identity, provenance, project scope, and intended canonical location before repairing pointers or promoting records.",
+            }
+            memory.setdefault("warnings", []).append(
+                "A partial-index no-match triggered read-only discovery across the configured local repository root; this does not search remote branches or external sources."
+            )
     packet["semantic_memory"]=memory
     if packet.get("status")=="PARTIAL":
         if memory.get("status") in {"AVAILABLE","PARTIAL"}: packet["status"]="PARTIAL_WITH_SEMANTIC_MEMORY"
