@@ -739,3 +739,15 @@ Important remaining gap: real ingestion + promotion is tested, but the same test
 - Exact code/test HEAD `c8ab59e0dee73c18a82f679dec69ea04f4c5f727`; CI run [38999722539](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38999722539) completed SUCCESS for this checkpoint.
 - The importer has synthetic end-to-end and crash/replay coverage; production archive completeness is still not established. The attached startup files contain no raw archive for that acceptance test.
 - Next: preserve the raw source, establish its immutable hash and coverage manifest, run the import/resume/dedup/chronology checks against that exact snapshot, and report unresolved attachments/tail gaps. PR #27 remains Draft/open/unmerged; do not change `main`.
+
+
+## Handoff — device-independent memory writeback cycle (2026-10-17)
+
+- Active priority: use memory as part of work in the current environment; do not make browser/phone/app integration a prerequisite.
+- Before substantial task actions, record the user's intent, active goal, constraints and known starting state. After actions and before the user-facing answer, record actual actions, outcomes, evidence, errors, decisions and the next continuation point. Form the report from the verified result record.
+- Protocol: `core/in_chat_memory_writeback_protocol.md`; mandatory gate in `core/universal_instructions.md`.
+- The current turn's pre-action recording happened retrospectively because context/file retrieval started first. This deviation is explicitly recorded in `projects/AGENT_MEMORY_SYSTEM/TURN_JOURNAL.jsonl`; do not claim the protocol was followed for this turn.
+- Browser extension remains separately preserved in Draft PR #31 / branch `feature/dialogue-stm-source-references-20261017`. It is a future implementation artifact, not required for the in-chat workflow. Device acceptance is unverified.
+- This protocol work is on a separate branch `memory/in-chat-writeback-cycle-20261017`, based on `integration/memory-core-clean-20261015`. No merge; `main` unchanged.
+- Next: open a separate draft PR, inspect exact-head CI, then continue using pre-action and pre-response memory writes on subsequent meaningful turns.
+- Completeness: PARTIAL.
