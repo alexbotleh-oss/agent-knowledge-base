@@ -50,3 +50,12 @@ Continue the resumable raw-import work without repeating the PR #38/#39 integrat
 4. Keep import, independent read-back, attachment inventory, and later semantic extraction as separate stages. Do not promote staged raw content into canonical memory.
 
 No merge was performed and `main` was not changed. Approved semantic-memory registry availability and automatic ChatGPT-host invocation/writeback remain separate unresolved system boundaries.
+
+
+## Read-only archive inventory preflight — 2026-10-18
+
+- Added `tools/audit_chat_export_archive.py`: hashes the original ZIP, lists each member path/size/compressed size/CRC, detects duplicate member paths, counts candidate `conversations.json` members, records filename-only nested-archive hints, and checks every member CRC. It never extracts or changes the source and does not infer that non-conversation files are valid attachments.
+- Added `tests/test_audit_chat_export_archive.py` with six synthetic cases: valid inventory and source immutability, duplicate paths, missing conversations JSON, member CRC corruption, non-ZIP input, and missing source.
+- Exact-head CI run [#39071127180](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/39071127180) passed on `47c337be6ab867c08bc297786a1e34e22b7e1a4d`: **496 Python tests, 1 skipped; 4 Node tests; strict write audit 162 mutation sites / 0 unclassified; memory, event-log, and project/stack validation passed.**
+- Important boundary: the workflow's restore/task-start smoke step **deferred** because the current code checkpoint predates the new code/test/report paths. The job itself passed, but this run does not establish a fresh task-start smoke on this branch tip. The previous known smoke evidence remains historical; do not label this run as a new smoke PASS.
+- Next: refresh the continuity checkpoint through the established checkpoint workflow using the exact verified code HEAD and CI run, then rerun the metadata-descendant restore/task-start smoke. After that, add the conservative message-reference-to-archive-member reconciliation. Full native archive completeness and attachment semantics remain unverified until the actual archive bytes are available.
