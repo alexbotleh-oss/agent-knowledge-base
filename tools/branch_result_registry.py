@@ -17,6 +17,7 @@ from pathlib import Path
 from typing import Any
 
 from trusted_receipt_verifier import verify_signed_receipt
+from event_relation_validator import validate_event_append
 
 REQUIRED = (
     "child_branch_id",
@@ -143,6 +144,15 @@ def _publish_result_unlocked(event_log: Path, result: dict[str, Any]) -> dict[st
                 "writes_performed": False,
                 "error": "Same stable result identity already exists with different content; append a correction with a new result_key.",
             }
+
+    relation_validation = validate_event_append(event, existing)
+    if relation_validation.get("status") != "PASS":
+        return {
+            "status": "REJECTED_EVENT_RELATION_VALIDATION",
+            "event_id": event_id,
+            "relation_validation": relation_validation,
+            "writes_performed": False,
+        }
 
     event_log.parent.mkdir(parents=True, exist_ok=True)
     new_text = event_log.read_text(encoding="utf-8") if event_log.exists() else ""
