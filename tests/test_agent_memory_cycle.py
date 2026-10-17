@@ -273,7 +273,7 @@ class AgentMemoryCycleTests(unittest.TestCase):
             )
 
         self.assertEqual(result["status"], "BLOCKED")
-        self.assertEqual(result["parent_return"]["status"], "BLOCKED_OWNER_ACK_MISSING")
+        self.assertEqual(result["parent_return"]["status"], "BLOCKED_RECONCILIATION")
         self.assertFalse(result["writes_performed"])
         self.assertEqual(result["attention"]["active"]["task_id"], "TASK-SIDE")
         rows = [json.loads(line) for line in self.attention.read_text(encoding="utf-8").splitlines() if line.strip()]
