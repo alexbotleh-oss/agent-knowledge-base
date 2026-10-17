@@ -17,6 +17,8 @@ import os
 from dialogue_attention_controller import inspect as inspect_attention, _return_to_parent_unchecked
 from reconcile_branch_returns import build_report as build_branch_return_report
 from task_start_experience_map import build_task_start_experience_map
+from memory_aware_session_restore import build_memory_aware_packet
+from canonical_memory_index import DEFAULT_INDEX_ROOT, DEFAULT_REGISTRY
 from trusted_receipt_verifier import verify_signed_receipt
 
 
@@ -127,8 +129,18 @@ def run_cycle(
     limit: int = 10,
     return_turn_id: str | None = None,
     parent_task_id: str | None = None,
+    repository: str | None = None,
+    repository_ref: str | None = None,
+    semantic_memory_query: str | None = None,
+    memory_registry_path: Path = DEFAULT_REGISTRY,
+    memory_index_root: Path = DEFAULT_INDEX_ROOT,
+    source_catalog_path: Path | None = None,
 ) -> dict[str, Any]:
-    """Build one composed cycle; optionally perform a guarded explicit parent return."""
+    """Build one composed cycle; optionally perform a guarded explicit parent return.
+
+    When repository is supplied, one verified memory-aware packet is built and
+    reused by task-start retrieval, avoiding a second independent restore pass.
+    """
     task_state, handoff = Path(task_state), Path(handoff)
     project_event_log, attention_log = Path(project_event_log), Path(attention_log)
     states = [Path(path) for path in (task_state_paths or [task_state])]
@@ -137,13 +149,25 @@ def run_cycle(
         experiences.insert(0, project_event_log)
     lessons = [Path(path) for path in (lesson_logs or [])]
 
-    task_start = build_task_start_experience_map(
-        task_state, handoff, project_event_log, user_request,
-        experience_logs=experiences, lesson_logs=lessons,
-        attention_log=attention_log, active_task_id=active_task_id,
-        active_checkpoint_id=active_checkpoint_id, current_project_id=current_project_id,
-        limit=limit,
-    )
+    def build_start(task_id: str | None, checkpoint_id: str | None) -> dict[str, Any]:
+        session_packet = None
+        if isinstance(repository, str) and repository.strip():
+            session_packet = build_memory_aware_packet(
+                task_state, handoff, project_event_log, repository.strip(), repository_ref,
+                task_id=task_id, context_id=checkpoint_id,
+                query=semantic_memory_query or user_request,
+                registry_path=Path(memory_registry_path), index_root=Path(memory_index_root),
+                source_catalog_path=Path(source_catalog_path) if source_catalog_path else None,
+            )
+        return build_task_start_experience_map(
+            task_state, handoff, project_event_log, user_request,
+            experience_logs=experiences, lesson_logs=lessons,
+            attention_log=attention_log, active_task_id=task_id,
+            active_checkpoint_id=checkpoint_id, current_project_id=current_project_id,
+            limit=limit, session_packet=session_packet,
+        )
+
+    task_start = build_start(active_task_id, active_checkpoint_id)
     try:
         attention = inspect_attention(attention_log)
     except (OSError, ValueError) as exc:
@@ -178,13 +202,7 @@ def run_cycle(
                 attention_log, turn_id=return_turn_id, parent_task_id=parent_task_id
             )
             if return_result.get("status") == "ALREADY_RETURNED":
-                task_start = build_task_start_experience_map(
-                    task_state, handoff, project_event_log, user_request,
-                    experience_logs=experiences, lesson_logs=lessons,
-                    attention_log=attention_log, active_task_id=parent_task_id,
-                    active_checkpoint_id=active_checkpoint_id,
-                    current_project_id=current_project_id, limit=limit,
-                )
+                task_start = build_start(parent_task_id, active_checkpoint_id)
                 attention = inspect_attention(attention_log)
         else:
             top = attention["return_stack"][-1]
@@ -242,13 +260,7 @@ def run_cycle(
                     )
                     if return_result.get("status") in {"RETURNED", "ALREADY_RETURNED"}:
                         attention = inspect_attention(attention_log)
-                        task_start = build_task_start_experience_map(
-                            task_state, handoff, project_event_log, user_request,
-                            experience_logs=experiences, lesson_logs=lessons,
-                            attention_log=attention_log, active_task_id=parent_task_id,
-                            active_checkpoint_id=parent.get("checkpoint_id"),
-                            current_project_id=current_project_id, limit=limit,
-                        )
+                        task_start = build_start(parent_task_id, parent.get("checkpoint_id"))
 
     blocked_return = return_result is not None and return_result.get("status") not in {
         "RETURNED", "ALREADY_RETURNED"
@@ -257,6 +269,14 @@ def run_cycle(
         "schema_version": "1.0",
         "status": "BLOCKED" if blocked_return else "READY",
         "task_start": task_start,
+        "semantic_memory_integration": {
+            "status": "CONFIGURED" if isinstance(repository, str) and repository.strip() else "NOT_CONFIGURED",
+            "repository": repository.strip() if isinstance(repository, str) and repository.strip() else None,
+            "packet_status": task_start.get("task_restore", {}).get("status", "UNKNOWN"),
+            "note": "CONFIGURED means the verified memory-aware restore was invoked; it does not imply approved memory was available or planning was authorized."
+                if isinstance(repository, str) and repository.strip()
+                else "Legacy local task-start path only; approved semantic-memory retrieval and live repository verification were not invoked.",
+        },
         "attention": attention,
         "branch_reconciliation": reconciliation,
         "parent_return": return_result,
@@ -287,6 +307,12 @@ def main(argv=None) -> int:
     parser.add_argument("--limit", type=int, default=10)
     parser.add_argument("--return-turn-id")
     parser.add_argument("--parent-task-id")
+    parser.add_argument("--repository", help="GitHub owner/repository; enables live revision verification and approved-memory retrieval")
+    parser.add_argument("--repository-ref", help="explicit branch/ref to verify; defaults to checkpoint branch")
+    parser.add_argument("--memory-query", help="override the current request used for approved-memory retrieval")
+    parser.add_argument("--memory-registry", type=Path, default=DEFAULT_REGISTRY)
+    parser.add_argument("--memory-index-root", type=Path, default=DEFAULT_INDEX_ROOT)
+    parser.add_argument("--source-catalog", type=Path)
     args = parser.parse_args(argv)
     result = run_cycle(
         args.task_state, args.handoff, args.project_event_log, args.attention_log,
@@ -295,6 +321,10 @@ def main(argv=None) -> int:
         active_task_id=args.active_task_id, active_checkpoint_id=args.active_checkpoint_id,
         current_project_id=args.project_id, limit=args.limit,
         return_turn_id=args.return_turn_id, parent_task_id=args.parent_task_id,
+        repository=args.repository, repository_ref=args.repository_ref,
+        semantic_memory_query=args.memory_query,
+        memory_registry_path=args.memory_registry, memory_index_root=args.memory_index_root,
+        source_catalog_path=args.source_catalog,
     )
     print(json.dumps(result, ensure_ascii=False, indent=2))
     return 0 if result.get("status") == "READY" else 2
