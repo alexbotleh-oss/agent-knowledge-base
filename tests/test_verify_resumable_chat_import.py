@@ -3,12 +3,13 @@ import sqlite3
 import sys
 import tempfile
 import unittest
+import zipfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
 
-from resumable_chat_import import import_export
+from resumable_chat_import import import_export, sha256_file
 from verify_resumable_chat_import import verify_import
 
 
@@ -144,6 +145,74 @@ class VerifyResumableChatImportTests(unittest.TestCase):
             self.assertEqual(ambiguous["reason"], "SOURCE_SNAPSHOT_AMBIGUOUS")
             selected = verify_import(out, "VERIFY-MULTI", first["source_sha256"])
             self.assertEqual(selected["verification"], "PASS")
+
+    def test_zip_snapshot_preserves_attachment_bytes_and_readback_passes(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            source = root / "native-like-export.zip"
+            conversations = sample_conversations(2)
+            conversations[0]["mapping"]["node-0"]["message"]["content"]["parts"].append(
+                {"file-service://file-attachment-001": "image"}
+            )
+            attachment_path = "files/file-attachment-001.bin"
+            attachment_bytes = b"opaque-attachment-bytes\x00\xff"
+            with zipfile.ZipFile(source, "w") as archive:
+                archive.writestr(
+                    "account/conversations.json",
+                    json.dumps(conversations, ensure_ascii=False),
+                )
+                archive.writestr(attachment_path, attachment_bytes)
+
+            original_hash = sha256_file(source)
+            out = root / "state"
+            imported = import_export(source, out, "VERIFY-ZIP-ATTACHMENT", batch_size=1)
+            result = verify_import(out, "VERIFY-ZIP-ATTACHMENT")
+
+            self.assertEqual(imported["status"], "RAW_COMPLETE")
+            self.assertEqual(result["verification"], "PASS")
+            self.assertEqual(result["source_sha256"], original_hash)
+            snapshot = Path(imported["snapshot_path"])
+            self.assertEqual(sha256_file(snapshot), original_hash)
+            with zipfile.ZipFile(snapshot, "r") as archive:
+                self.assertEqual(archive.read(attachment_path), attachment_bytes)
+                staged = json.loads(
+                    sqlite3.connect(out / "import.sqlite3").execute(
+                        """SELECT payload_json FROM raw_conversations
+                           WHERE archive_id=? AND source_sha256=? AND source_ordinal=0""",
+                        ("VERIFY-ZIP-ATTACHMENT", original_hash),
+                    ).fetchone()[0]
+                )
+            self.assertEqual(
+                staged["mapping"]["node-0"]["message"]["content"]["parts"][-1],
+                {"file-service://file-attachment-001": "image"},
+            )
+
+    def test_evidence_package_without_conversations_json_is_not_a_native_export(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            source = root / "evidence-package.zip"
+            with zipfile.ZipFile(source, "w") as archive:
+                archive.writestr("README.md", "A partial evidence package, not a native export.")
+                archive.writestr("source_evidence/chat.txt", "Conversation excerpt.")
+            out = root / "state"
+
+            with self.assertRaisesRegex(ValueError, "Expected exactly one conversations.json"):
+                import_export(source, out, "EVIDENCE-ONLY-PACKAGE", batch_size=2)
+
+            conn = sqlite3.connect(out / "import.sqlite3")
+            try:
+                state = conn.execute(
+                    "SELECT status FROM imports WHERE archive_id=?",
+                    ("EVIDENCE-ONLY-PACKAGE",),
+                ).fetchone()
+                count = conn.execute(
+                    "SELECT COUNT(*) FROM raw_conversations WHERE archive_id=?",
+                    ("EVIDENCE-ONLY-PACKAGE",),
+                ).fetchone()[0]
+            finally:
+                conn.close()
+            self.assertEqual(state[0], "FAILED")
+            self.assertEqual(count, 0)
 
     def test_empty_export_is_a_valid_complete_source(self):
         with tempfile.TemporaryDirectory() as tmp:
