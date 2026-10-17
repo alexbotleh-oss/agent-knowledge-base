@@ -824,3 +824,12 @@ The no-repeat check fingerprint now binds the current request and relevant seman
 - **Known limits:** no production trust root has been configured or accepted here; synthetic receipt tests do not prove production signer ownership. No real user archive has been run through the full pipeline. Automatic startup/capture in every ChatGPT chat/client remains unimplemented/unverified.
 - **Status:** identity agreement recorded and read back; architecture/protocol/template docs persisted; workflow pass observed for the stated commit. Runtime behavior and cross-chat installation remain unverified.
 
+
+
+## Current continuation checkpoint — 2026-10-17
+
+- Exact code/test head `0cb8d21f14d0416aa166e066258dbe3062579f0c` passed PR CI [38967851214](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38967851214): 398 Python tests passed, 1 skipped; 4 Node tests passed; write audit 143/0; memory validation PASS. The expiry-order regression test is present in the run log.
+- Change: signed receipts with `expires_at <= issued_at` are rejected, closing an impossible-lifetime edge case within the permitted clock-skew window.
+- CI limitations remain: pytest stack checks and HTML/PWA/JS lint/test/build were skipped because the required tooling/setup is absent. Production trust root and real archive acceptance remain unverified.
+- PR #30 remains Draft/open/unmerged; its current base is `audit/agent-memory-e2e-20261016`, not `main`. No merge or main-branch change is authorized.
+- Next action: source-led audit of signed check-result reuse/trust binding; add a regression only for a concrete supported invariant, then run exact-head CI.
