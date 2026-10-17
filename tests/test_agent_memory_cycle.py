@@ -107,6 +107,7 @@ class AgentMemoryCycleTests(unittest.TestCase):
             "receipt_type": "check_result", "issuer_id": "test-signer",
             "key_id": "test-key-1",
             "issued_at": datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z"),
+            "expires_at": (datetime.now(timezone.utc) + __import__("datetime").timedelta(hours=1)).isoformat(timespec="seconds").replace("+00:00", "Z"),
             "claim": claim,
         }
         payload_path = self.root / "receipt-payload.json"
