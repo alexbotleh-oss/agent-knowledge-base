@@ -42,6 +42,26 @@ class ImportEdgeCaseTests(unittest.TestCase):
             finally:
                 conn.close()
 
+    def test_nonstandard_json_numeric_constants_fail_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            source = root / "conversations.json"
+            source.write_text('[{"id":"c1","value":NaN}]', encoding="utf-8")
+            out = root / "state"
+
+            with self.assertRaisesRegex(ValueError, "Non-standard JSON numeric constant"):
+                import_export(source, out, "NONSTANDARD-JSON-NUMBER", batch_size=1)
+
+            conn = sqlite3.connect(out / "import.sqlite3")
+            try:
+                status, staged = conn.execute(
+                    "SELECT status, (SELECT COUNT(*) FROM raw_conversations) FROM imports"
+                ).fetchone()
+                self.assertEqual(status, "FAILED")
+                self.assertEqual(staged, 0)
+            finally:
+                conn.close()
+
     def test_directory_named_conversations_json_is_not_an_import_candidate(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
