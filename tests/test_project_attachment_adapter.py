@@ -98,6 +98,11 @@ class ProjectAttachmentAdapterTests(unittest.TestCase):
         self.assertEqual(reference["source_message_id"], "MSG-1")
         self.assertEqual(reference["original_name"], "private report.txt")
 
+    def test_encoded_unicode_filename_is_preserved(self):
+        status, _, result = self.upload(filename="%D0%BE%D1%82%D1%87%D0%B5%D1%82.txt")
+        self.assertEqual(status, 201)
+        self.assertEqual(result["attachment"]["original_name"], "отчет.txt")
+
     def test_exact_replay_is_idempotent_and_new_message_reuses_object(self):
         first_status, _, first = self.upload()
         replay_status, _, replay = self.upload()
