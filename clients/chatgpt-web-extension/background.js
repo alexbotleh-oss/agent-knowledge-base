@@ -127,7 +127,7 @@ async function registerTurn(payload, sender) {
             received_sequence: receivedSequence,
             tab_id: sender?.tab?.id ?? null, url, conversation_id,
             state: "AWAITING_START", received_at: received.timestamp, updated_at: received.timestamp,
-            events: [received], artifacts: [], last_event: received
+            events: [received], artifacts: [], attachments: [], last_event: received
           };
           store.add(turn);
           outcome = { status: "APPENDED", turn };
@@ -206,7 +206,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   const fromChat = isChatPage(sender?.url || "");
   const fromExtension = (sender?.url || "").startsWith(chrome.runtime.getURL(""));
   const action = message?.action;
-  if (["REGISTER_TURN", "RECORD_EVENT", "ASSISTANT_RENDERED", "LIST_INCOMPLETE", "INSPECT_TURN", "LIST_DIALOGUE_WINDOWS"].includes(action) && !fromChat && !fromExtension) {
+  if (["REGISTER_TURN", "RECORD_EVENT", "ASSISTANT_RENDERED", "LIST_INCOMPLETE", "INSPECT_TURN", "LIST_DIALOGUE_WINDOWS", "LINK_ATTACHMENT"].includes(action) && !fromChat && !fromExtension) {
     sendResponse({ status: "ERROR", error: "untrusted_sender" });
     return false;
   }
@@ -238,6 +238,38 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         const currentConversationId = message.current_conversation_id == null ? null : message.current_conversation_id;
         const packet = globalThis.RimaDialogueWindowCore.buildDialogueWindows(all, currentConversationId, 5);
         return { status: "OK", packet };
+      }
+      case "LINK_ATTACHMENT": {
+        if (!fromExtension) throw new Error("attachment_link_requires_extension_popup");
+        const turnId = message.turn_id;
+        const ref = message.attachment;
+        if (typeof turnId !== "string" || !turnId || !ref || typeof ref !== "object" || Array.isArray(ref)) {
+          throw new Error("invalid_attachment_link_payload");
+        }
+        const requiredFields = ["attachment_id", "project_id", "conversation_id", "source_message_id", "library_ref", "sha256"];
+        for (const field of requiredFields) {
+          if (typeof ref[field] !== "string" || !ref[field].trim()) throw new Error("invalid_attachment_reference:" + field);
+        }
+        if (ref.source_message_id !== turnId) throw new Error("attachment_source_turn_mismatch");
+        if (!/^project-library:\/\/[A-Za-z0-9][A-Za-z0-9._-]{1,127}\/objects\/sha256\/[a-f0-9]{64}$/.test(ref.library_ref)) {
+          throw new Error("invalid_library_reference");
+        }
+        if (!/^[a-f0-9]{64}$/.test(ref.sha256) || !Number.isSafeInteger(ref.size_bytes) || ref.size_bytes < 0) {
+          throw new Error("invalid_attachment_integrity_metadata");
+        }
+        const result = await withTurn(turnId, (turn, store) => {
+          if (turn.conversation_id !== ref.conversation_id) throw new Error("attachment_conversation_mismatch");
+          if (!Array.isArray(turn.attachments)) turn.attachments = [];
+          const existing = turn.attachments.find(item => item.attachment_id === ref.attachment_id);
+          if (existing) {
+            if (stableJson(existing) !== stableJson(ref)) throw new Error("attachment_id_collision");
+            return { status: "ALREADY_LINKED", turn };
+          }
+          turn.attachments.push(ref);
+          store.put(turn);
+          return { status: "LINKED", turn };
+        });
+        return result;
       }
       case "EXPORT_LEDGER": {
         if (!fromExtension) throw new Error("export_requires_extension_popup");
