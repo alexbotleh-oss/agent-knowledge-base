@@ -12,6 +12,7 @@ sys.path.insert(0, str(TOOLS))
 
 from resumable_chat_import import import_export
 from archive_registry_staging import build as build_staging
+from adapt_archive_staging_to_intake import adapt_archive_staging_to_intake
 from memory_aware_session_restore import retrieve_approved_memory
 
 
@@ -88,8 +89,11 @@ class ResumableImportToMemoryPipelineTests(unittest.TestCase):
 
             # Bind the semantic candidate to a staged source row; no source text is
             # copied into the canonical source registry.
-            records_path = staging_root / staged["records_file"]
-            source_row = json.loads(records_path.read_text(encoding="utf-8").splitlines()[0])
+            adapted = adapt_archive_staging_to_intake(snapshot_manifest, root / "intake")
+            intake_manifest = json.loads(Path(adapted["manifest_path"]).read_text(encoding="utf-8"))
+            intake_artifact = intake_manifest["artifacts"][0]
+            intake_rows_path = Path(adapted["manifest_path"]).parent / intake_artifact["path"]
+            source_row = json.loads(intake_rows_path.read_text(encoding="utf-8").splitlines()[0])
             memory_record = {
                 "memory_id": "MEM-E2E-001", "record_type": "lesson",
                 "title": "Synthetic E2E memory",
