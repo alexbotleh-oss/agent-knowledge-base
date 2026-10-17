@@ -59,7 +59,7 @@ The coordinator tools/memory_pipeline_coordinator.py composes source ingestion, 
 
 1. The versioned local catalog registry/source_catalog.json covers the current checkout's registry, AGENT_MEMORY_SYSTEM project files, core protocols, tools, and tests. It is not a global authority for all locations; it omits remote branches, external archives, connected apps and device storage.
 2. The adaptive search is composed into the partial-index fallback in memory_aware_session_restore.py. It runs only when approved-memory retrieval returns PARTIAL_NO_MATCH and the restore function is actually invoked. It is not automatically executed by ChatGPT at the start of every task or session.
-3. Remote branches, GitHub file history, connected apps, device storage, and external archives still need separate adapters. Each adapter must report access, coverage, revision/freshness, stable identity and provenance.
+3. The read-only GitHub branch/commit adapter now covers the explicit refs/paths in `registry/remote_source_catalog.json`; it does not enumerate every branch or scan arbitrary remote paths. GitHub history beyond configured refs, connected apps, device storage, and external archives still need separate adapters. Each adapter must report access, coverage, revision/freshness, stable identity and provenance.
 4. Search ranking is currently limited. Approved-memory retrieval uses exact project/task/context filters and lexical substring; archive temporal search is a separate tool. A unified planner should route among them instead of assuming one index contains everything.
 5. Ingestion has distinct stopping points. The source ingestion runner alone stops at metadata-only source registration. The broader pipeline coordinator can continue through semantic promotion/index/restore only with the required manifests, approval receipt and inputs.
 6. The path core/agent_bootstrap.md is absent from main (HEAD a0c12ba849a3416f50e1289d8f0dd20844e1e51f), integration/memory-core-clean-20261015, and the current feature branch, but it is present on the separate open Draft PR #33 branch fix/identity-continuity-contract-20261017 (HEAD 82ce508c6b77f6060e4674ecfe24830b61eb27c6; exact-head CI run 39012907765 SUCCESS). This is a branch-location discrepancy, not global absence. PR #33 is based on main and is not part of the current #27/#34/#35 stack. Its global instruction points to a feature-branch URL; after deliberate integration, replace that with a stable canonical ref. Do not create a duplicate bootstrap file on #35.
@@ -69,9 +69,9 @@ The coordinator tools/memory_pipeline_coordinator.py composes source ingestion, 
 1. Run python tools/audit_memory_architecture.py on the checked-out target revision; retain its JSON output as evidence when needed.
 2. Define a versioned source catalog over existing stores and tools; do not duplicate the source registry or semantic-memory registry.
 3. Add explicit adapters for local checkout and remote GitHub branch/revision retrieval, preserving branch SHA and file SHA.
-4. Add a remote GitHub branch/revision adapter that preserves branch HEAD SHA, file blob SHA, permissions/errors, and stale-ref detection; search expected path first, then other known refs.
-5. Add end-to-end tests for: expected path missing but same source found on another branch; a compatible source searched before a conflicting source; unknown metadata fallback; stale remote refs; incomplete permissions/coverage; conflicting revisions; and no silent move/promotion.
-6. Only after those tests pass, evaluate whether the actual session/runtime can call the restore mechanism. Do not describe repository code as automatic ChatGPT behavior without an end-to-end runtime test.
+4. Extend the remote catalog from a bounded known-ref list to a maintained, revision-checked source registry with aliases and per-source capabilities; do not enumerate arbitrary refs without limits.
+5. Add adapters for external archives, connected apps and device storage, each with explicit access/coverage/provenance contracts.
+6. Only after those adapters are tested, evaluate whether the actual session/runtime can call the restore mechanism. Do not describe repository code as automatic ChatGPT behavior without an end-to-end runtime test.
 
 ## 6. Evidence discipline
 
