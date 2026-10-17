@@ -18,8 +18,8 @@ class RelocationAwareDiscoveryTests(unittest.TestCase):
         (self.root / "archive").mkdir()
 
     def test_finds_stable_identity_elsewhere_when_expected_path_is_empty(self):
-        (self.root / "archive" / "history.md").write_text(
-            "Earlier checkpoint references EVT-AGMS-20261017-004 and preserves provenance.",
+        (self.root / "archive" / "events.json").write_text(
+            '{"event_id":"EVT-AGMS-20261017-004","provenance":["checkpoint"]}',
             encoding="utf-8",
         )
         result = discover(
@@ -28,8 +28,21 @@ class RelocationAwareDiscoveryTests(unittest.TestCase):
         )
         self.assertEqual(result["status"], "FOUND_ELSEWHERE_IDENTITY_MATCH")
         self.assertFalse(result["expected_path_exists"])
-        self.assertEqual(result["candidates"][0]["relative_path"], "archive/history.md")
+        self.assertEqual(result["candidates"][0]["relative_path"], "archive/events.json")
+        self.assertIn("STRUCTURED_IDENTITY_FIELD", result["candidates"][0]["evidence"])
         self.assertFalse(result["writes_performed"])
+
+    def test_identity_mentioned_in_prose_is_not_verified(self):
+        (self.root / "archive" / "notes.md").write_text(
+            "A note mentions EVT-AGMS-20261017-004 but does not own that event.",
+            encoding="utf-8",
+        )
+        result = discover(
+            "expected/missing.md", [self.root],
+            identity="EVT-AGMS-20261017-004",
+        )
+        self.assertEqual(result["status"], "CANDIDATES_UNVERIFIED")
+        self.assertFalse(result["candidates"][0]["identity_verified"])
 
     def test_exact_hash_is_stronger_than_query_candidate(self):
         data = b"the source record"
