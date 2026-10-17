@@ -42,6 +42,43 @@ class ExperienceOutcomeCaptureTests(unittest.TestCase):
             self.assertFalse(result["writes_performed"])
             self.assertFalse(event_log.exists())
 
+    def test_capture_paths_share_exclusive_canonical_journal_lock(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            evidence = root / "artifacts" / "check-output.txt"
+            evidence.parent.mkdir(parents=True)
+            evidence.write_text("TEST_RESULT=PASS\n", encoding="utf-8")
+            event_log = root / "projects" / "TEST" / "events.jsonl"
+            event_log.parent.mkdir(parents=True)
+            lock_path = event_log.with_name(event_log.name + ".lock")
+            lock_path.write_text('{"pid": 123, "started_at": "test"}\n', encoding="utf-8")
+            lock_before = lock_path.read_bytes()
+
+            candidate = self._capture(root, event_log, evidence)
+            self.assertEqual(candidate["status"], "BLOCKED_EVENT_LOG_LOCKED")
+            self.assertFalse(candidate["writes_performed"])
+            self.assertFalse(event_log.exists())
+            self.assertEqual(lock_path.read_bytes(), lock_before)
+
+            failure_evidence = root / "artifacts" / "failure-report.txt"
+            failure_evidence.write_text("TEST_RESULT=FAIL\n", encoding="utf-8")
+            failure = append_observed_failure_event(
+                event_log,
+                evidence_root=root,
+                project_id="TEST",
+                task_id="TASK-FAIL-002",
+                request_summary="service worker cache restore",
+                action_taken="attempted a cache-key change",
+                acceptance_criterion="the latest app shell is restored",
+                evidence_file=failure_evidence,
+                observed_outcome="The acceptance check failed",
+                related_event_ids=["EVT-REPRO-001"],
+            )
+            self.assertEqual(failure["status"], "BLOCKED_EVENT_LOG_LOCKED")
+            self.assertFalse(failure["writes_performed"])
+            self.assertFalse(event_log.exists())
+            self.assertEqual(lock_path.read_bytes(), lock_before)
+
     def test_verified_outcome_persists_and_changes_next_task_route(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
