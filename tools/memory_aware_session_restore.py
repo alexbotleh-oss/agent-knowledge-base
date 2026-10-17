@@ -6,7 +6,10 @@ from pathlib import Path
 from typing import Any, Callable
 from canonical_memory_index import DEFAULT_INDEX_ROOT, DEFAULT_REGISTRY, check_index_freshness
 from relocation_aware_discovery import discover
+from adaptive_source_search import build_plan as build_adaptive_search_plan, execute_search as execute_adaptive_search
 from verified_session_restore import build_verified_session_packet, request_json
+
+DEFAULT_SOURCE_CATALOG = Path(__file__).resolve().parents[1] / "registry" / "source_catalog.json"
 
 def _canonical(value: Any) -> bytes:
     return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
@@ -32,7 +35,8 @@ def _registry(data: bytes) -> dict[tuple[str,str], dict]:
     return rows
 
 def retrieve_approved_memory(project_id:str,*,task_id:str|None=None,context_id:str|None=None,
- query:str|None=None,limit:int=20,registry_path:Path=DEFAULT_REGISTRY,index_root:Path=DEFAULT_INDEX_ROOT)->dict:
+ query:str|None=None,limit:int=20,registry_path:Path=DEFAULT_REGISTRY,index_root:Path=DEFAULT_INDEX_ROOT,
+ source_catalog_path:Path|None=None)->dict:
     if not isinstance(project_id,str) or not project_id.strip():
         return {"status":"AMBIGUOUS_SCOPE","coverage_status":"UNKNOWN","records":[],"reason":"project_id is required"}
     if isinstance(limit,bool) or not isinstance(limit,int) or not 1<=limit<=100:
@@ -131,28 +135,102 @@ def build_memory_aware_packet(task_state:Path,handoff:Path,event_log:Path,reposi
                 expected_relative = Path(registry_path).resolve().relative_to(search_root).as_posix()
             except ValueError:
                 expected_relative = Path(registry_path).name
+            catalog_path = Path(source_catalog_path) if source_catalog_path else (
+                DEFAULT_SOURCE_CATALOG if Path(registry_path).resolve() == DEFAULT_REGISTRY.resolve() else None
+            )
             searches = []
-            for stable_hint in (task_id, context_id):
-                if stable_hint:
+            catalog_error = None
+            if catalog_path is not None and catalog_path.is_file():
+                try:
+                    catalog_bytes = catalog_path.read_bytes()
+                    catalog = json.loads(catalog_bytes.decode("utf-8"))
+                    if catalog_path.read_bytes() != catalog_bytes:
+                        raise ValueError("source catalog changed during read")
+                    sources = catalog.get("sources") if isinstance(catalog, dict) else None
+                    if not isinstance(sources, list) or not sources:
+                        raise ValueError("source catalog must contain a non-empty sources array")
+                    normalized_sources = []
+                    for source in sources:
+                        if not isinstance(source, dict):
+                            continue
+                        item = dict(source)
+                        root = item.get("root")
+                        if isinstance(root, str) and root and not Path(root).is_absolute():
+                            item["root"] = str((catalog_path.resolve().parent / root).resolve())
+                        normalized_sources.append(item)
+                    for stable_hint in (task_id, context_id):
+                        if stable_hint:
+                            request = {"identity": stable_hint, "project_id": projects[0]}
+                            if query:
+                                request["query"] = query
+                            plan = build_adaptive_search_plan(normalized_sources, request)
+                            result = execute_adaptive_search(plan, request, expected_relative)
+                            searches.append({
+                                "search_key": {"identity": stable_hint, "query": query},
+                                "status": result.get("status"),
+                                "result": result,
+                            })
+                    if query and not any((task_id, context_id)):
+                        request = {"query": query, "project_id": projects[0]}
+                        plan = build_adaptive_search_plan(normalized_sources, request)
+                        result = execute_adaptive_search(plan, request, expected_relative)
+                        searches.append({
+                            "search_key": {"query": query},
+                            "status": result.get("status"),
+                            "result": result,
+                        })
+                except (OSError, UnicodeDecodeError, json.JSONDecodeError, ValueError) as exc:
+                    catalog_error = str(exc)
+            else:
+                for stable_hint in (task_id, context_id):
+                    if stable_hint:
+                        searches.append(discover(
+                            expected_relative, [search_root], identity=stable_hint,
+                        ))
+                if query:
                     searches.append(discover(
-                        expected_relative, [search_root], identity=stable_hint,
+                        expected_relative, [search_root], query=query,
                     ))
-            if query:
-                searches.append(discover(
-                    expected_relative, [search_root], query=query,
-                ))
+
+            nested_results = [
+                item.get("result") for item in searches
+                if isinstance(item.get("result"), dict)
+            ]
+            verified = any(item.get("status") == "VERIFIED_MATCH_FOUND" for item in nested_results)
+            candidates_found = any(
+                item.get("status") == "UNVERIFIED_CANDIDATES_ONLY"
+                or any(
+                    bool(search.get("result", {}).get("candidates"))
+                    for search in item.get("searches", [])
+                    if isinstance(search, dict)
+                )
+                for item in nested_results
+            ) or any(item.get("candidates") for item in searches if isinstance(item, dict))
+            incomplete = bool(catalog_error) or any(
+                item.get("status") == "SEARCH_INCOMPLETE"
+                or item.get("coverage_status") == "PARTIAL"
+                for item in nested_results
+            ) or any(
+                item.get("coverage_status") != "COMPLETE_WITHIN_CONFIGURED_BOUNDS"
+                for item in searches if "coverage_status" in item
+            )
+            discovery_status = (
+                "VERIFIED_MATCH_FOUND" if verified else
+                "CANDIDATES_FOUND" if candidates_found else
+                "SEARCH_INCOMPLETE" if incomplete else
+                "NO_CANDIDATES_WITHIN_CONFIGURED_SCOPE"
+            ) if searches or catalog_error else "NOT_RUN_NO_SEARCH_KEY"
             memory["relocation_discovery"] = {
-                "status": (
-                    "CANDIDATES_FOUND" if any(item.get("candidates") for item in searches)
-                    else "SEARCH_INCOMPLETE" if any(item.get("coverage_status") != "COMPLETE_WITHIN_CONFIGURED_BOUNDS" for item in searches)
-                    else "NO_CANDIDATES_WITHIN_CONFIGURED_SCOPE"
-                ) if searches else "NOT_RUN_NO_SEARCH_KEY",
+                "status": discovery_status,
+                "catalog_path": str(catalog_path) if catalog_path is not None else None,
+                "catalog_error": catalog_error,
                 "searches": searches,
                 "writes_performed": False,
-                "note": "Discovery candidates are not approved semantic memory. Verify identity, provenance, project scope, and intended canonical location before repairing pointers or promoting records.",
+                "automatic_relocation_performed": False,
+                "note": "Discovery candidates are not approved semantic memory. Verify identity, provenance, project scope, and intended canonical location before repairing pointers or promoting records. A no-match applies only to configured local sources and scan bounds.",
             }
             memory.setdefault("warnings", []).append(
-                "A partial-index no-match triggered read-only discovery across the configured local repository root; this does not search remote branches or external sources."
+                "A partial-index no-match triggered read-only discovery. When the source catalog is available, known-compatible locations are searched before unknown or conflicting ones; this still does not search remote branches, external archives, connected apps, or device storage."
             )
     packet["semantic_memory"]=memory
     if packet.get("status")=="PARTIAL":
@@ -175,10 +253,11 @@ def main(argv=None):
     parser.add_argument("--limit",type=int,default=20)
     parser.add_argument("--registry-path",type=Path,default=DEFAULT_REGISTRY,help=argparse.SUPPRESS)
     parser.add_argument("--index-root",type=Path,default=DEFAULT_INDEX_ROOT,help=argparse.SUPPRESS)
+    parser.add_argument("--source-catalog",type=Path,help="optional local source catalog for adaptive fallback discovery")
     args=parser.parse_args(argv)
     packet=build_memory_aware_packet(args.task_state,args.handoff,args.event_log,args.repository,args.ref,
       task_id=args.task_id,context_id=args.context_id,query=args.query,limit=args.limit,
-      registry_path=args.registry_path,index_root=args.index_root)
+      registry_path=args.registry_path,index_root=args.index_root,source_catalog_path=args.source_catalog)
     print(json.dumps(packet,ensure_ascii=False,indent=2))
     return 0 if packet.get("status") in {"RESTORED_PACKET_WITH_SEMANTIC_MEMORY","RESTORED_PACKET_WITH_PARTIAL_MEMORY","RESTORED_PACKET_WITH_PARTIAL_MEMORY_NO_MATCH","PARTIAL_WITH_SEMANTIC_MEMORY","PARTIAL_WITH_SEMANTIC_MEMORY_NO_MATCH"} else 2
 
