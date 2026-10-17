@@ -26,6 +26,10 @@
     }
 
     const ordered = [...seen.values()].sort((a, b) => {
+      if (Number.isInteger(a.received_sequence) && Number.isInteger(b.received_sequence) &&
+          a.received_sequence !== b.received_sequence) {
+        return a.received_sequence - b.received_sequence;
+      }
       const byTime = time(a.received_at).localeCompare(time(b.received_at));
       return byTime || a.turn_id.localeCompare(b.turn_id);
     });
@@ -39,6 +43,7 @@
           turn_id: turn.turn_id,
           task_id: text(turn.task_id) || null,
           project_id: null,
+          received_sequence: Number.isInteger(turn.received_sequence) ? turn.received_sequence : null,
           received_at: time(turn.received_at) || null,
           completed_at: time(turn.delivery?.observed_at || turn.updated_at) || null,
           user: { text: turn.user_text, message_id: turn.turn_id + ":user", attachments: turn.attachments || [] },
@@ -119,9 +124,18 @@
         "Рима: " + pair.assistant.text
       );
     }
+    const pendingById = new Map();
     for (const turn of packet.global_pending_turns || []) {
-      lines.push("", "НЕЗАВЕРШЁННЫЙ ХОД: state=" + turn.state + " conversation=" +
-        (turn.conversation_id || "UNKNOWN"), "Пользователь: " + turn.user_text,
+      pendingById.set(turn.turn_id, { turn, scopes: ["GLOBAL_PENDING"] });
+    }
+    for (const turn of packet.current_chat_pending_turns || []) {
+      const found = pendingById.get(turn.turn_id);
+      if (found) found.scopes.push("CURRENT_CHAT_PENDING");
+      else pendingById.set(turn.turn_id, { turn, scopes: ["CURRENT_CHAT_PENDING"] });
+    }
+    for (const { turn, scopes } of pendingById.values()) {
+      lines.push("", "НЕЗАВЕРШЁННЫЙ ХОД [" + scopes.join(" + ") + "]: state=" + turn.state +
+        " conversation=" + (turn.conversation_id || "UNKNOWN"), "Пользователь: " + turn.user_text,
         "Ответ ассистента: " + (turn.assistant_text || "НЕ ЗАФИКСИРОВАН"));
     }
     lines.push("", "Перед действием сверь цель, проектное состояние, ограничения и релевантные источники. После действия зафиксируй результат и доказательство. Не повторяй проверенную попытку без новой причины.");
