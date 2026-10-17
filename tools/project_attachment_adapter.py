@@ -33,7 +33,7 @@ def _required(value: str | None, field: str, limit: int = MAX_ID_CHARS) -> str:
 
 
 def _safe_filename(value: str | None) -> str:
-    value = _required(value, "X-Rima-Filename", 255).replace("\\", "/").split("/")[-1]
+    value = unquote(_required(value, "X-Rima-Filename", 1024)).replace("\\\\", "/").split("/")[-1]
     value = FILENAME_RE.sub("_", value).strip(" .")
     if not value or value in {".", ".."}:
         raise ValueError("invalid attachment filename")
