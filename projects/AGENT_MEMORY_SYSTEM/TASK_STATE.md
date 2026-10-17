@@ -783,3 +783,15 @@ P2 is not yet declared ready: this test mocks the final verified restore packet,
 - PR #31 remains Draft/open/unmerged and stacked on PR #27. PR #27/#30 and `main` are unchanged.
 - **Next:** record this state, verify latest exact-head CI, then perform/prepare a real-device acceptance path. Do not return to unrelated controller/importer work until the memory and attachment flow is verified end-to-end.
 - Status: PARTIAL / active.
+
+
+## Checkpoint 2026-10-17 — current exact-head acceptance status
+
+- **Verified HEAD before this checkpoint write:** `988e8d3ff0dd843eb6de5cc7068ec0396dc2516b`.
+- **Exact-head CI PASS:** [run 39002297569](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/39002297569) — 321 Python tests passed; 13 Node tests passed; strict write audit 144 mutation sites / 0 unclassified; memory validation and project/stack validation PASS.
+- Added `clients/chatgpt-web-extension/ACCEPTANCE_CHECKLIST.md` and linked it from README. It separates code/CI evidence from required live-device acceptance.
+- `core/universal_instructions.md` now explicitly requires Rima to consult the global last-five and current-chat last-five windows before/after meaningful work, check pending turns and source refs, and mark unavailable windows PARTIAL/UNKNOWN rather than claiming they were consulted. `core/agent_runtime_protocol.md` describes the actual manual popup/bridge flow and limitations.
+- Current extension capability: local capture of recognized text sends and observed assistant responses; popup copies both rolling windows; popup supports explicit project ID/token and manual re-selection/upload of an already-sent attachment to the authenticated local bridge, then links only validated reference metadata to a selected source turn. The local library is content-addressed and hash-resolvable.
+- **Not complete:** live Yandex Browser Android acceptance; bridge startup on the user's device; actual localhost CORS/file transfer there; automatic capture of the original ChatGPT composer file; automatic injection of context into model requests; cross-device sync; full archive import. Do not describe these as implemented.
+- **Next action:** treat CI as code-level PASS, then conduct or prepare the real-device checklist. If no access to the user's device is available, report those checks as BLOCKED/UNKNOWN and do not claim a live test. Keep PR #31 Draft/open/unmerged; PR #27/#30 and `main` remain untouched.
+- **Status:** PARTIAL / active.
