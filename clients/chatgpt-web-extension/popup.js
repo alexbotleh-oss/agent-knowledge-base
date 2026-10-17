@@ -158,7 +158,7 @@ async function uploadAttachmentToLibrary() {
         "X-Rima-Project-ID": projectId,
         "X-Rima-Conversation-ID": conversationId,
         "X-Rima-Source-Message-ID": turnId,
-        "X-Rima-Filename": file.name
+        "X-Rima-Filename": encodeURIComponent(file.name)
       },
       body: file,
       cache: "no-store"
