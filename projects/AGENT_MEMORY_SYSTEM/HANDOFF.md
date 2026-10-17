@@ -792,3 +792,16 @@ Important remaining gap: real ingestion + promotion is tested, but the same test
 - Security note: extension profile storage/IndexedDB are not encrypted secret storage. Use a dedicated random bearer token, keep bridge loopback-only, and configure exact origin + explicit project allowlist.
 - Next: verify latest metadata-only HEAD/CI, then perform real-device acceptance or provide exact setup steps without claiming it worked. Keep this memory task active before returning to PR #27/#30 issues.
 - Completeness: PARTIAL.
+
+
+## Handoff — latest verified rolling-memory and attachment bridge checkpoint (2026-10-17)
+
+- Active priority: finish and validate short-term dialogue memory; do not return to unrelated semantic-memory/importer/controller issues yet.
+- PR #31 / branch `feature/dialogue-stm-source-references-20261017`, base `integration/memory-core-clean-20261015`, Draft/open/unmerged. PR #27/#30 and `main` unchanged.
+- Exact code/protocol HEAD before this handoff write: `988e8d3ff0dd843eb6de5cc7068ec0396dc2516b`; CI [39002297569](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/39002297569) PASS: 321 Python tests, 13 Node tests, strict audit 144/0 unclassified, memory/project validation PASS.
+- Rolling memory: extension-local IndexedDB, global last five completed pairs + current-chat last five, pending turns retained, durable receive sequence for new records, overlap deduplicated in the copied context. Popup copies context only on explicit click; it is not automatically injected into a model request.
+- Attachments: private project-scoped content-addressed library + SHA-256 resolver; authenticated loopback bridge with exact Origin allowlist, bearer token, 25 MiB cap and explicit project/conversation/source-turn provenance. Popup manually reselects an already-sent file, uploads it to localhost, then links only validated reference metadata to the selected turn. No payload or absolute storage path enters the dialogue window.
+- Universal rules now require cross-checking the global/current-chat windows before and after meaningful work; if windows are unavailable, say PARTIAL/UNKNOWN and do not pretend they were read.
+- Real-device checklist: `clients/chatgpt-web-extension/ACCEPTANCE_CHECKLIST.md`. Live Yandex Browser Android, local bridge startup, localhost CORS/file transfer, full archive import, automatic original-file capture, automatic context injection and cross-device sync remain unverified.
+- Next action: confirm CI after the checkpoint/handoff commits, then provide/execute the real-device acceptance steps. If device execution is unavailable, keep those items BLOCKED/UNKNOWN; do not claim acceptance. Do not merge PR #31 without explicit approval.
+- Completeness: PARTIAL.
