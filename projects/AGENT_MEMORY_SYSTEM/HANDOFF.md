@@ -739,3 +739,16 @@ Important remaining gap: real ingestion + promotion is tested, but the same test
 - Exact code/test HEAD `c8ab59e0dee73c18a82f679dec69ea04f4c5f727`; CI run [38999722539](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38999722539) completed SUCCESS for this checkpoint.
 - The importer has synthetic end-to-end and crash/replay coverage; production archive completeness is still not established. The attached startup files contain no raw archive for that acceptance test.
 - Next: preserve the raw source, establish its immutable hash and coverage manifest, run the import/resume/dedup/chronology checks against that exact snapshot, and report unresolved attachments/tail gaps. PR #27 remains Draft/open/unmerged; do not change `main`.
+
+
+## Handoff checkpoint — rolling dialogue memory (2026-10-17)
+
+- Active priority: rolling short-term dialogue memory and attachment-library references before resuming other memory-system issues.
+- Candidate branch: `feature/dialogue-stm-source-references-20261017`, based on PR #27 head `9eb2ab86fb3cc99791c8803b5ac3564ce9b63b19`.
+- Added `tools/dialogue_window.py`, `tests/test_dialogue_window.py`, `core/short_term_dialogue_memory.md`; linked the protocol from `core/agent_runtime_protocol.md`.
+- Design: last five completed user→assistant pairs globally + last five in current chat; pending turn preserved separately; window rollover never deletes canonical history; attachments are stable library references only; validate project boundary and IDs; cross-check windows against task state and primary evidence at meaningful work boundaries.
+- Not implemented: automatic platform capture, real project-library registration/resolution, browser/mobile client integration, and end-to-end new-chat recovery. These must remain explicit boundaries.
+- Tests/CI: exact-head run and read-back not yet confirmed. Check the candidate PR and CI before changing implementation status.
+- Privacy: no raw user chat text or attachment payloads added to the public repo.
+- Next action: read back exact candidate files, open a Draft PR targeting `integration/memory-core-clean-20261015`, inspect exact-head CI, repair failures, then update checkpoint. PR #27 and PR #30 remain Draft/open/unmerged; `main` unchanged.
+- Completeness: PARTIAL.
