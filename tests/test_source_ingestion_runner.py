@@ -131,6 +131,37 @@ runner.run_ingestion(Path(sys.argv[2]), Path(sys.argv[3]), intake_root=Path(sys.
             self.assertEqual(state["latest_sequence"], events[-1]["sequence"])
             self.assertFalse(registry.exists())
 
+    def test_rechained_ledger_with_mixed_run_identity_blocks_before_registry_write(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            snapshot = self._snapshot(root)
+            registry = root / "registry" / "source_records.jsonl"
+            first = run_ingestion(snapshot, root / "runs", intake_root=root / "intake",
+                                  registry_path=registry, apply=False)
+            ledger = Path(first["event_ledger_path"])
+            events = [json.loads(line) for line in ledger.read_text(encoding="utf-8").splitlines()]
+            self.assertGreaterEqual(len(events), 2)
+            events[1]["run_id"] = "OTHER-RUN"
+
+            previous = None
+            for event in events:
+                event["previous_event_sha256"] = previous
+                body = {key: value for key, value in event.items() if key != "event_sha256"}
+                canonical = json.dumps(body, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+                event["event_sha256"] = hashlib.sha256(canonical).hexdigest()
+                previous = event["event_sha256"]
+            ledger.write_text(
+                "".join(json.dumps(event, ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\\n"
+                        for event in events),
+                encoding="utf-8",
+            )
+
+            resumed = run_ingestion(snapshot, root / "runs", intake_root=root / "intake",
+                                    registry_path=registry, apply=True)
+            self.assertEqual(resumed["status"], "BLOCKED")
+            self.assertIn("identity mismatch", resumed["error"])
+            self.assertFalse(registry.exists())
+
     def test_tampered_run_ledger_blocks_before_registry_write(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
