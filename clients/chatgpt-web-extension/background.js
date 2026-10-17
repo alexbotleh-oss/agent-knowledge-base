@@ -1,3 +1,5 @@
+importScripts("dialogue_window_core.js");
+
 const DB_NAME = "chat-turn-continuity";
 const DB_VERSION = 1;
 const STORE = "turns";
@@ -5,7 +7,8 @@ const MAX_TEXT_CHARS = 1_000_000;
 const TERMINAL = new Set(["CLOSED_DELIVERED", "CLOSED_FAILED", "CLOSED_ABANDONED"]);
 const EVENT_TYPES = new Set([
   "WORK_STARTED", "PROGRESS", "ARTIFACT_CREATED", "REPORT_PREPARED",
-  "RESPONSE_SUBMITTED", "DELIVERY_ACKNOWLEDGED", "TURN_FAILED", "TURN_ABANDONED"
+  "RESPONSE_SUBMITTED", "DELIVERY_ACKNOWLEDGED", "TURN_FAILED", "TURN_ABANDONED",
+  "ATTACHMENT_LINKED"
 ]);
 
 let dbPromise;
@@ -39,6 +42,15 @@ function transition(turn, event) {
     case "WORK_STARTED": turn.state = "IN_PROGRESS"; break;
     case "PROGRESS": break;
     case "ARTIFACT_CREATED": turn.artifacts.push(event.artifact || {}); break;
+    case "ATTACHMENT_LINKED": {
+      const ref = globalThis.RimaDialogueWindowCore.validateAttachmentRef(event.attachment, turn.turn_id);
+      if (turn.conversation_id !== ref.conversation_id) throw new Error("attachment_conversation_mismatch");
+      if (!Array.isArray(turn.attachments)) turn.attachments = [];
+      const existing = turn.attachments.find(item => item.attachment_id === ref.attachment_id);
+      if (existing && stableJson(existing) !== stableJson(ref)) throw new Error("attachment_id_collision");
+      if (!existing) turn.attachments.push(ref);
+      break;
+    }
     case "REPORT_PREPARED": turn.state = "REPORT_PREPARED_UNCONFIRMED"; turn.report = event.report || {}; break;
     case "RESPONSE_SUBMITTED": turn.state = "RESPONSE_SUBMITTED_UNCONFIRMED"; turn.response_submission = event.submission || {}; break;
     case "DELIVERY_ACKNOWLEDGED": turn.state = "CLOSED_DELIVERED"; turn.delivery = event.delivery || {}; break;
@@ -106,21 +118,38 @@ async function registerTurn(payload, sender) {
         tx.abort();
         return;
       }
-      const received = makeEvent(turn_id, "TURN_RECEIVED", {
-        task_id, user_text, previous_checkpoint, user_text_sha256: userTextSha256,
-        previous_assistant_message
-      }, turn_id + ":TURN_RECEIVED");
-      // WebCrypto is asynchronous; exact text is retained locally. The hash is a
-      // convenience integrity field, not a substitute for the stored exact text.
-      const turn = {
-        turn_id, task_id, user_text, previous_checkpoint, previous_assistant_message,
-        assistant_count_before: Number.isInteger(assistant_count_before) ? assistant_count_before : 0,
-        tab_id: sender?.tab?.id ?? null, url, conversation_id,
-        state: "AWAITING_START", received_at: received.timestamp, updated_at: received.timestamp,
-        events: [received], artifacts: [], last_event: received
+      const allRequest = store.getAll();
+      allRequest.onsuccess = () => {
+        try {
+          const priorSequences = allRequest.result
+            .map(item => item.received_sequence)
+            .filter(Number.isInteger);
+          const receivedSequence = priorSequences.reduce((max, value) => Math.max(max, value), 0) + 1;
+          const received = makeEvent(turn_id, "TURN_RECEIVED", {
+            task_id, user_text, previous_checkpoint, user_text_sha256: userTextSha256,
+            previous_assistant_message
+          }, turn_id + ":TURN_RECEIVED");
+          // WebCrypto is asynchronous; exact text is retained locally. The hash is a
+          // convenience integrity field, not a substitute for the stored exact text.
+          const turn = {
+            turn_id, task_id, user_text, previous_checkpoint, previous_assistant_message,
+            assistant_count_before: Number.isInteger(assistant_count_before) ? assistant_count_before : 0,
+            received_sequence: receivedSequence,
+            tab_id: sender?.tab?.id ?? null, url, conversation_id,
+            state: "AWAITING_START", received_at: received.timestamp, updated_at: received.timestamp,
+            events: [received], artifacts: [], attachments: [], last_event: received
+          };
+          store.add(turn);
+          outcome = { status: "APPENDED", turn };
+        } catch (error) {
+          failure = error;
+          try { tx.abort(); } catch {}
+        }
       };
-      store.add(turn);
-      outcome = { status: "APPENDED", turn };
+      allRequest.onerror = () => {
+        failure = allRequest.error || new Error("turn_sequence_read_failed");
+        try { tx.abort(); } catch {}
+      };
     };
     get.onerror = () => { failure = get.error; };
     tx.oncomplete = () => resolve(outcome);
@@ -142,7 +171,7 @@ async function appendEvent(turnId, eventType, fields = {}, eventId) {
       }
       throw new Error("event_id_collision_with_different_content");
     }
-    if (TERMINAL.has(turn.state)) throw new Error("turn_already_terminal");
+    if (TERMINAL.has(turn.state) && eventType !== "ATTACHMENT_LINKED") throw new Error("turn_already_terminal");
     transition(turn, event);
     store.put(turn);
     return { status: "APPENDED", turn };
@@ -187,7 +216,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   const fromChat = isChatPage(sender?.url || "");
   const fromExtension = (sender?.url || "").startsWith(chrome.runtime.getURL(""));
   const action = message?.action;
-  if (["REGISTER_TURN", "RECORD_EVENT", "ASSISTANT_RENDERED", "LIST_INCOMPLETE", "INSPECT_TURN"].includes(action) && !fromChat && !fromExtension) {
+  if (["REGISTER_TURN", "RECORD_EVENT", "ASSISTANT_RENDERED", "LIST_INCOMPLETE", "INSPECT_TURN", "LIST_DIALOGUE_WINDOWS", "LINK_ATTACHMENT"].includes(action) && !fromChat && !fromExtension) {
     sendResponse({ status: "ERROR", error: "untrusted_sender" });
     return false;
   }
@@ -213,6 +242,26 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         const turn = all.find(t => t.turn_id === message.turn_id);
         if (!turn) throw new Error("turn_not_found");
         return { status: "OK", turn };
+      }
+      case "LIST_DIALOGUE_WINDOWS": {
+        const all = await listTurns();
+        const currentConversationId = message.current_conversation_id == null ? null : message.current_conversation_id;
+        const packet = globalThis.RimaDialogueWindowCore.buildDialogueWindows(all, currentConversationId, 5);
+        return { status: "OK", packet };
+      }
+      case "LINK_ATTACHMENT": {
+        if (!fromExtension) throw new Error("attachment_link_requires_extension_popup");
+        const turnId = message.turn_id;
+        if (typeof turnId !== "string" || !turnId) throw new Error("invalid_attachment_link_payload");
+        const ref = globalThis.RimaDialogueWindowCore.validateAttachmentRef(message.attachment, turnId);
+        const result = await appendEvent(
+          turnId, "ATTACHMENT_LINKED", { attachment: ref },
+          turnId + ":ATTACHMENT_LINKED:" + ref.attachment_id
+        );
+        return {
+          status: result.status === "ALREADY_RECORDED" ? "ALREADY_LINKED" : "LINKED",
+          turn: result.turn
+        };
       }
       case "EXPORT_LEDGER": {
         if (!fromExtension) throw new Error("export_requires_extension_popup");

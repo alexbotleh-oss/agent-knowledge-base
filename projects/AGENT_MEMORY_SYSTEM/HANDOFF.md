@@ -739,3 +739,128 @@ Important remaining gap: real ingestion + promotion is tested, but the same test
 - Exact code/test HEAD `c8ab59e0dee73c18a82f679dec69ea04f4c5f727`; CI run [38999722539](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38999722539) completed SUCCESS for this checkpoint.
 - The importer has synthetic end-to-end and crash/replay coverage; production archive completeness is still not established. The attached startup files contain no raw archive for that acceptance test.
 - Next: preserve the raw source, establish its immutable hash and coverage manifest, run the import/resume/dedup/chronology checks against that exact snapshot, and report unresolved attachments/tail gaps. PR #27 remains Draft/open/unmerged; do not change `main`.
+
+
+## Handoff checkpoint — rolling dialogue memory (2026-10-17)
+
+- Active priority: rolling short-term dialogue memory and attachment-library references before resuming other memory-system issues.
+- Candidate branch: `feature/dialogue-stm-source-references-20261017`, based on PR #27 head `9eb2ab86fb3cc99791c8803b5ac3564ce9b63b19`.
+- Added `tools/dialogue_window.py`, `tests/test_dialogue_window.py`, `core/short_term_dialogue_memory.md`; linked the protocol from `core/agent_runtime_protocol.md`.
+- Design: last five completed user→assistant pairs globally + last five in current chat; pending turn preserved separately; window rollover never deletes canonical history; attachments are stable library references only; validate project boundary and IDs; cross-check windows against task state and primary evidence at meaningful work boundaries.
+- Not implemented: automatic platform capture, real project-library registration/resolution, browser/mobile client integration, and end-to-end new-chat recovery. These must remain explicit boundaries.
+- Tests/CI: exact-head run and read-back not yet confirmed. Check the candidate PR and CI before changing implementation status.
+- Privacy: no raw user chat text or attachment payloads added to the public repo.
+- Next action: read back exact candidate files, open a Draft PR targeting `integration/memory-core-clean-20261015`, inspect exact-head CI, repair failures, then update checkpoint. PR #27 and PR #30 remain Draft/open/unmerged; `main` unchanged.
+- Completeness: PARTIAL.
+
+
+## Handoff update — exact-head CI PASS (2026-10-17)
+
+- Active priority: rolling dialogue memory, references-only attachment windows and private project attachment library.
+- Added `tools/project_attachment_library.py`; it stores an incoming file once under a project-scoped content-addressed object path, records a stable library reference and separate conversation/message provenance. Private files remain outside Git. The library tool must be explicitly called with a file path; current ChatGPT upload capture is not automatic.
+- Added `tests/test_project_attachment_library.py`; dialogue tests are in `tests/test_dialogue_window.py`.
+- Exact code HEAD `1f1a06a5402b3983c775a9bb8e141fbda3025aca`; exact-head CI [39001405812](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/39001405812) PASS: 310 Python tests, strict write audit 136/0 unclassified, memory validation PASS, project validation PASS.
+- Failure chronology: earlier CI failed because the new library writer had not yet been classified in the strict mutation audit. The contract was added and the later exact-head run passed.
+- PR #31 is Draft/open/unmerged and stacked on `integration/memory-core-clean-20261015`; no merge or main changes. PR #27/#30 remain open/unmerged.
+- Not yet implemented/verified: automatic ChatGPT upload capture, platform project-library integration, trusted client invocation before model work, persistent cross-device journal access and end-to-end restore in a new chat.
+- Next: after this metadata update, verify the new branch HEAD and its CI; then design/implement the smallest trusted client adapter path for receiving a message + attachment, storing its library ref, appending the dialogue ledger, and restoring both windows at chat start.
+- Completeness: PARTIAL.
+
+
+## Handoff — browser rolling-context implementation (2026-10-17)
+
+- Active priority remains short-term dialogue memory and project-library attachment references.
+- Candidate PR [#31](https://github.com/alexbotleh-oss/agent-knowledge-base/pull/31), branch `feature/dialogue-stm-source-references-20261017`, stacked on PR #27's `integration/memory-core-clean-20261015`. Do not merge; PR #27/#30 remain open/unmerged and `main` is unchanged.
+- Core code: `tools/dialogue_window.py`, `tools/project_attachment_library.py` with `resolve_attachment()`; browser core `clients/chatgpt-web-extension/dialogue_window_core.js`; local turn capture in `clients/chatgpt-web-extension/background.js`; popup action copies global/current-chat windows on explicit click.
+- The extension's current window builder uses durable `received_sequence` for new turns and timestamp fallback for old turns; project assignment remains UNKNOWN rather than inferred from conversation ID.
+- Verified code+protocol HEAD `789f81a31b80cf4e14422a77b1179835fd80c99d`; exact-head CI [39001799801](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/39001799801) PASS: 312 Python tests, 11 Node tests, write audit 136/0, memory validation PASS, project/stack validation PASS.
+- The browser popup only copies a recovery context when clicked; it does not silently modify/send messages. Attachment-only capture and bridge from browser upload to the private library are not implemented. Real-device Yandex Browser Android acceptance and new-chat restore remain unverified.
+- Earlier failures were diagnosed and fixed: strict mutation audit classification; invalid regex in popup path parser; missing pending-turn ID in the formatter. Do not repeat those investigations unless new evidence appears.
+- Next: verify exact latest metadata HEAD and CI, then implement a small authenticated attachment bridge with explicit project binding and acceptance tests. Avoid mixing this work with PR #27's semantic-memory pipeline or PR #30's attention-return controller until this memory layer is validated.
+- Completeness: PARTIAL.
+
+
+## Handoff update — manual attachment bridge integrated (2026-10-17)
+
+- Active task: rolling short-term dialogue memory + project-library references, not yet end-to-end complete.
+- PR #31 / branch `feature/dialogue-stm-source-references-20261017` remains Draft/open/unmerged, stacked on PR #27's integration branch. Do not merge; PR #27/#30 and `main` unchanged.
+- Current implementation: rolling windows in `tools/dialogue_window.py` and browser `dialogue_window_core.js`; local turn ledger in IndexedDB; popup copies the last five global and last five current-chat pairs, deduplicating overlap. New turns use durable receive sequence; old turns fall back to timestamp ordering.
+- Attachment library: `tools/project_attachment_library.py` + `tools/project_attachment_adapter.py`; the extension popup now explicitly imports a reselected file through authenticated loopback and links reference metadata to a chosen source turn. Project ID and origin are allowlisted. The recovery prompt includes stable attachment refs but never bytes/absolute storage paths.
+- Verified code HEAD `09de26f7602f6df21e7495728c7466ca0a4f6f2d`; CI [39002176773](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/39002176773) PASS: 321 Python tests, 13 Node tests, write audit 144/0, memory validation PASS, project/stack validation PASS.
+- Doc update `6dd409d39722ebf26cf97537456416a4e386ebb1` describes the current manual bridge boundary; its exact-head CI is pending.
+- Limits: attachment capture is not automatic from ChatGPT's original file chooser; user must reselect once. Context is copied explicitly and pasted manually, not injected into model requests. Real Yandex Browser Android and local bridge startup have not been tested on the user's device.
+- Security note: extension profile storage/IndexedDB are not encrypted secret storage. Use a dedicated random bearer token, keep bridge loopback-only, and configure exact origin + explicit project allowlist.
+- Next: verify latest metadata-only HEAD/CI, then perform real-device acceptance or provide exact setup steps without claiming it worked. Keep this memory task active before returning to PR #27/#30 issues.
+- Completeness: PARTIAL.
+
+
+## Handoff — latest verified rolling-memory and attachment bridge checkpoint (2026-10-17)
+
+- Active priority: finish and validate short-term dialogue memory; do not return to unrelated semantic-memory/importer/controller issues yet.
+- PR #31 / branch `feature/dialogue-stm-source-references-20261017`, base `integration/memory-core-clean-20261015`, Draft/open/unmerged. PR #27/#30 and `main` unchanged.
+- Exact code/protocol HEAD before this handoff write: `988e8d3ff0dd843eb6de5cc7068ec0396dc2516b`; CI [39002297569](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/39002297569) PASS: 321 Python tests, 13 Node tests, strict audit 144/0 unclassified, memory/project validation PASS.
+- Rolling memory: extension-local IndexedDB, global last five completed pairs + current-chat last five, pending turns retained, durable receive sequence for new records, overlap deduplicated in the copied context. Popup copies context only on explicit click; it is not automatically injected into a model request.
+- Attachments: private project-scoped content-addressed library + SHA-256 resolver; authenticated loopback bridge with exact Origin allowlist, bearer token, 25 MiB cap and explicit project/conversation/source-turn provenance. Popup manually reselects an already-sent file, uploads it to localhost, then links only validated reference metadata to the selected turn. No payload or absolute storage path enters the dialogue window.
+- Universal rules now require cross-checking the global/current-chat windows before and after meaningful work; if windows are unavailable, say PARTIAL/UNKNOWN and do not pretend they were read.
+- Real-device checklist: `clients/chatgpt-web-extension/ACCEPTANCE_CHECKLIST.md`. Live Yandex Browser Android, local bridge startup, localhost CORS/file transfer, full archive import, automatic original-file capture, automatic context injection and cross-device sync remain unverified.
+- Next action: confirm CI after the checkpoint/handoff commits, then provide/execute the real-device acceptance steps. If device execution is unavailable, keep those items BLOCKED/UNKNOWN; do not claim acceptance. Do not merge PR #31 without explicit approval.
+- Completeness: PARTIAL.
+
+
+## Handoff — explicit composer insertion checkpoint (2026-10-17)
+
+- Active goal: rolling short-term dialogue memory + project-library references, with mandatory cross-checks at meaningful work boundaries.
+- Candidate PR #31 / branch `feature/dialogue-stm-source-references-20261017`, base `integration/memory-core-clean-20261015`, Draft/open/unmerged. PR #27/#30 and `main` unchanged.
+- Exact code/protocol HEAD before this checkpoint write: `efd671b67e1fd3d9c6b7034aee721154dd5457da`; CI [39002425902](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/39002425902) PASS: 323 Python tests, 13 Node tests, strict audit 144/0 unclassified, memory/project validation PASS.
+- The popup now offers both copy and **explicit insert into empty active ChatGPT composer**. It preserves an existing draft and does not send the message. The user must review and send it; automatic per-request injection is not implemented.
+- The popup also supports manual re-selection/upload of a previously attached file to the authenticated loopback library bridge, with explicit project ID and source turn. It stores only validated references on the turn. Automatic capture of the original ChatGPT file remains unimplemented.
+- Universal/runtime protocols require rolling-window cross-checks before/after meaningful work and explicit PARTIAL/UNKNOWN when the windows are not actually available.
+- Real-device acceptance checklist: `clients/chatgpt-web-extension/ACCEPTANCE_CHECKLIST.md`. Still unverified: installed Yandex Browser Android behavior, running the local Python bridge on-device, localhost CORS/upload, persistence after browser restart, new-chat context insertion, and complete archive import.
+- Next: verify CI for the new checkpoint commits; then execute or request the device acceptance steps without claiming results that are not observed. Do not merge PR #31 without explicit approval.
+- Completeness: PARTIAL.
+
+
+## Handoff addendum — durable attachment event verified (2026-10-17)
+
+- Attachment references are appended as `ATTACHMENT_LINKED` events, not only stored in a turn projection; JSONL export preserves the ref and source-turn provenance. Linkage is idempotent and validates conversation/source/project/hash metadata; payload/unknown fields are rejected.
+- Explicit context insertion is now available in the popup for an empty composer only. It does not overwrite a draft and does not submit the message; the user reviews and presses Send.
+- Latest code/protocol head `efd671b67e1fd3d9c6b7034aee721154dd5457da`, CI [39002425902](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/39002425902) PASS (323 Python, 13 Node, audit 144/0, memory/project validation PASS). Metadata-only head `365813fd3937f2c1f56aec48a3e64ebd6201b332`, CI [39002484645](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/39002484645) PASS.
+- Next step is a real-device acceptance run using `clients/chatgpt-web-extension/ACCEPTANCE_CHECKLIST.md`. Do not claim Yandex Browser Android, localhost bridge or end-to-end recovery as working until observed. Keep this memory task active; PR #31 stays Draft/unmerged.
+- Completeness: PARTIAL.
+
+
+## AUTHORITATIVE CHECKPOINT — 2026-10-17: device-independent memory workflow supersedes device testing
+
+- **User correction takes priority over earlier next-step notes:** do NOT proceed to Yandex Browser/mobile/device acceptance. The browser extension is not the current implementation target.
+- **Active goal:** make Rima use available current-environment capabilities to follow PRE_ACTION → EXECUTE → POST_ACTION → REPORT. Before a substantial action, record intent/goal/constraints and evidence plan in memory. After action, record observed result/evidence/unknowns/next step and read it back before responding. The report must be generated from the saved result.
+- **New protocol:** core/turn_execution_memory_protocol.md. Universal instructions, short-term dialogue memory and runtime protocol updated to describe the device-independent behavior and explicit limits.
+- **Short-term window design:** last five completed user→Rima pairs globally, last five completed pairs for the current chat, plus pending turn separately. Window eviction never deletes the canonical full history. Use actual available messages and source links; if global history is not accessible, state PARTIAL/UNKNOWN instead of inventing it.
+- **Attachments:** avoid repeatedly copying payloads. Keep stable, verifiable project-library references and source provenance where available; consult the linked source during relevant work. Do not claim a library link exists unless it was actually created and can be resolved.
+- **Prior implementation preserved:** browser extension, popup, IndexedDB, attachment bridge and checklist remain saved in PR #31 / branch feature/dialogue-stm-source-references-20261017 as a deferred future prototype. Do not delete, merge, or continue device integration without a separate user decision.
+- **Other unfinished task preserved from the recent report:** implement a fast, safe, resumable raw archive importer that first preserves source messages and chronology without semantic merging; then analyze events/decisions/attempts/causal links in a separate pass. Test interruption/resume, idempotent repeat, chronology, truncated-source handling and completeness. Agent reports were already reviewed; do not repeat that investigation absent contradictory new evidence.
+- **Process deviation honestly recorded:** in the current turn, PRE_ACTION was not durably written before the initial file/repository reads. EVT-AGMS-20261017-001 records this retrospectively. Therefore this turn does not prove compliance with the new protocol. The next substantial turn must begin with PRE_ACTION before tool/action work.
+- **Current repository state at checkpoint start:** PR #31 Draft/open/unmerged; base integration/memory-core-clean-20261015; PR #27 and #30 remain open Drafts; main unchanged.
+- **Last verified branch HEAD before this protocol correction:** 62623d69af0f45ca1abbec173b3a9ffdc911c18c, CI https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/39002529546 PASS. The new protocol/state/handoff commits change HEAD, so verify CI on the resulting exact HEAD before claiming it passed.
+- **Next action in the new chat:** first perform PRE_ACTION from this checkpoint; read back the current branch HEAD/CI and relevant memory files, then implement/verify the device-independent per-turn memory workflow without browser/device dependencies. After that resume the raw archive importer task from the prior report. No merge without explicit approval.
+- **Status:** PARTIAL; no claim that automatic per-turn persistence is already provided by the ChatGPT platform. The protocol is saved; behavioral execution must be demonstrated.
+
+
+## Addendum — actual archive-importer baseline inspected during handoff preparation (2026-10-17)
+
+- The current branch already contains tools/source_ingestion_runner.py and tests/test_source_ingestion_runner.py; do not restart importer design from zero.
+- The runner describes itself as resumable orchestration for archive staging → intake → source registry. It stops after metadata-only source registration and explicitly does not promote semantic memory, rebuild canonical indexes or claim session restore.
+- core/source_ingestion_protocol.md states that register_source_reference and register_inventory remain planned routes without writer implementation; full end-to-end restore/promotion is not connected, and the raw archive remains an external source while the registry stores links/hashes, not source text.
+- Therefore the preserved next task is **audit and finish the existing partial pipeline**: verify raw-source durability/complete inventory and chronology, exercise interruption/resume/idempotency/truncated snapshot cases against the actual implementation, then identify the minimal missing integration. Do not duplicate existing runner or repeat agent-report analysis already completed.
+- Source code evidence read from current branch: tools/source_ingestion_runner.py SHA 6f90953aec1ed6c8a4c026b767398cb7eecd5dfc; tests/test_source_ingestion_runner.py SHA 242ee38b988697ef7b9ead0d63eabfe908929abb; core/source_ingestion_protocol.md SHA d95deebc7488dcd8145705ae2d289b7ba7a12704.
+
+
+## Source attachments used to prepare this handoff
+
+- Настройка Агента часть 3.txt — SHA-256 d309d28b205f170d2a3a6c0b0ee328562938ebbc4c77b737379497e12a34dfc1. Read in the current conversation. Preserves the prior report's design for a fast/resumable raw archive importer, with raw preservation before semantic analysis; existing agent reports had already been reviewed, so do not restart that investigation.
+- Проверка архива.txt — SHA-256 15b9732e3643afe76b4ed3d58082f95185e3f2244a374de9eb5a8f0c52c3fa4f. Read in the current conversation. Preserves the broader goal: Rima should become more reliable in actions, not merely more confident in answers; use verified results and admit unknowns.
+- **Attachment-reference status:** content-derived findings have been preserved in this handoff/event/decision memory. The raw files were not committed to the public repository. A durable project-library reference for these two raw uploads was **not created** in this turn; the available current environment did not expose a usable private project-library write action. Do not claim otherwise or ask the user to resend them unless exact raw content becomes necessary. This remains an open library-integration item.
+
+
+## Clarification — PRE/POST applies to every user request (2026-10-17)
+
+The user explicitly requires memory recording before executing each incoming request and again after the work but before the answer/report. This is not limited to substantial tool actions. The protocol and universal instructions now require a compact PRE_ACTION for every user request; short replies may use a compact record, but must not skip the phase. POST_ACTION must be written before the user-visible answer. If durable persistence cannot actually be written, mark PERSISTENCE=UNAVAILABLE rather than pretending.

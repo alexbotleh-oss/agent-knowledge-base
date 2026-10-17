@@ -6,6 +6,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from resumable_chat_import import conversation_id
+
 def sha256(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
@@ -47,12 +49,12 @@ def _build_unlocked(source: Path, output: Path, archive_id: str) -> dict:
     digest = sha256(raw)
     records, timestamps, seen = [], [], set()
     missing_ids = attachment_count = 0
-    for conv in conversations:
+    for conversation_ordinal, conv in enumerate(conversations):
         if not isinstance(conv, dict):
             continue
-        cid = conv.get("id") or conv.get("conversation_id")
-        if not cid:
-            cid = "conversation-unknown-" + sha256(json.dumps(conv, sort_keys=True, ensure_ascii=False).encode())[:16]
+        # Share the exact identity/fallback algorithm with the raw importer.
+        # Ordinal scope prevents identical ID-less conversations from colliding.
+        cid, _identity_method = conversation_id(conv, conversation_ordinal)
         mapping = conv.get("mapping") or {}
         if not isinstance(mapping, dict):
             continue
@@ -92,7 +94,9 @@ def _build_unlocked(source: Path, output: Path, archive_id: str) -> dict:
                 "attachment_count": len(attachments) if isinstance(attachments, list) else None,
                 "attachment_payloads_inspected": False if has_attachments else None,
             })
-    records.sort(key=lambda x: (x["event_time_unix"] is None, x["event_time_unix"] or 0, x["source_locator"]))
+    # Python sorting is stable: equal timestamps retain original export/mapping order.
+    # A source locator is an identity, not a chronology signal, so never use it as a tie-breaker.
+    records.sort(key=lambda x: (x["event_time_unix"] is None, x["event_time_unix"] or 0))
     output.mkdir(parents=True, exist_ok=True)
     # Versioned immutable generations prevent a crash between record and manifest
     # publication from making the old manifest point at newly replaced records.

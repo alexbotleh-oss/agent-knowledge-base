@@ -7,7 +7,9 @@ This is a host-specific prototype for the ChatGPT web interface. It stores turn 
 - Intercepts recognized ChatGPT text-send actions and waits for local journal registration before dispatching the message.
 - Stores the exact incoming text, the immediately previous assistant message, conversation/task identifiers, the prior checkpoint reference (currently UNKNOWN/null unless supplied by a future integration), and timestamps.
 - Tracks work start, the last assistant message count, and the final assistant response when the DOM observer can confidently identify a new completed response.
-- Shows incomplete turns in the extension popup, lets the user copy a recovery prompt, and allows an explicit JSONL export.
+- Shows incomplete turns and builds two rolling context windows from locally captured turns: the last five completed pairs globally and the last five completed pairs for the active ChatGPT conversation.
+- Lets the user explicitly copy a compact recovery context or insert it into an empty active ChatGPT composer. Overlapping pairs are included once and labeled with both window memberships. Insertion does not submit the message and refuses to overwrite an existing draft.
+- Allows an explicit JSONL export.
 - If registration fails, the recognized text send is blocked and the input remains in the composer.
 - No background upload, analytics, or external network requests are implemented.
 
@@ -21,19 +23,37 @@ This is a host-specific prototype for the ChatGPT web interface. It stores turn 
 
 Yandex documents third-party extension support and developer-mode loading for Android here: https://yandex.com/support/browser-mobile-android-phone/en/personal-settings/extensions
 
+## Optional local attachment-library bridge
+
+The popup can explicitly import a file into the private project library and link the resulting reference to a recorded turn. This is a **manual second selection** of the file; it does not read the file already selected inside ChatGPT, and it does not upload automatically.
+
+1. Run the bridge on the **same device** as the browser. It binds to loopback only:
+   ```sh
+   python3 -c "import secrets; print(secrets.token_urlsafe(32))" > rima-attachment-token.txt
+   chmod 600 rima-attachment-token.txt
+   python3 tools/project_attachment_adapter.py --token-file rima-attachment-token.txt --allow-origin chrome-extension://YOUR_EXTENSION_ID --allow-project AGENT_MEMORY_SYSTEM
+   ```
+2. Open the extension popup. Copy the exact extension origin shown there into `--allow-origin` (restart the bridge if it changes). Enter the explicit project ID and the same token in the popup, then save settings.
+3. Open the ChatGPT conversation containing the already-sent message, open the popup, select the exact source turn and reselect the same file from device storage. Choose **Сохранить вложение в библиотеку**.
+4. The popup sends file bytes to `127.0.0.1:8766` only. The bridge stores a project-scoped SHA-256 object outside the repository, and the extension records only reference metadata on the selected turn.
+
+The bridge accepts files up to 25 MiB. The token is stored in the browser profile's local extension storage, which is not encrypted secret storage. Do not expose the token, bind the service to a network interface, or add broad/untrusted origins to the allowlist. The server rejects requests without bearer authentication and explicit project/conversation/turn provenance. Live device acceptance is still required.
+
 ## Critical limitations
 
 - **Not yet validated in a live browser.** CI can validate code syntax and repository contracts, but cannot prove that current ChatGPT DOM selectors, mobile click behavior, extension permissions, or lifecycle timing work on the user's installed Yandex Browser version.
 - ChatGPT may change its DOM. The content script uses several known composer/send selectors and a form-submit fallback, but a UI change can prevent capture. Verify the visible extension behavior before relying on it.
-- Attachments-only, voice, and other non-text submission paths are outside the current capture contract.
+- Attachments-only, voice, and other non-text submission paths are outside the current capture contract. The extension does not automatically capture the file already attached inside ChatGPT. A separate authenticated loopback bridge is wired to a manual popup import workflow: the user reselects the file, explicitly chooses a project and source turn, and only reference metadata is linked into the dialogue journal. No project is inferred automatically.
 - Assistant output detection is based on DOM observation after generation appears to stop. This is evidence that a final answer was rendered in the client, not a server-side delivery receipt.
 - The extension cannot observe hidden model/tool activity, and it cannot reconstruct output that never appeared in the page.
 - The prior checkpoint reference is currently recorded as UNKNOWN/null because no canonical checkpoint bridge is connected to the ChatGPT UI.
 - IndexedDB is local browser-profile storage, not encrypted secret storage. Protect the device/profile. Export is user-initiated and contains exact conversation text.
 - This prototype does not install itself or change browser settings. User installation and a real-device test are required.
 
+Before relying on this prototype on a real device, run every applicable item in [ACCEPTANCE_CHECKLIST.md](./ACCEPTANCE_CHECKLIST.md). CI does not substitute for mobile-browser acceptance.
+
 ## Recovery workflow
 
-Open the extension popup → inspect the incomplete turn → copy the recovery prompt → return to the chat and submit it manually if needed. The prompt includes the exact user instruction, the previous assistant message captured before send, the last recorded state, and the last event. It tells the next assistant to continue from the first unverified milestone rather than repeat completed work.
+Open the extension popup → use “Вставить контекст в пустое поле текущего чата” to insert the two rolling windows into an empty composer, or use “Скопировать контекст диалога” and paste manually. Review the inserted context and press Send yourself; the extension never submits it automatically and refuses to overwrite an existing draft. For an interrupted turn, inspect the incomplete turn and copy its recovery prompt separately. For every meaningful work step, the model can cross-check these windows only if the context is actually present in the conversation/request; this browser prototype does not silently inject context into every future model call.
 
 Do not infer that an incomplete turn means no work occurred. Correlate the journal with Git changes, checkpoint records, CI, and any available artifacts. Do not delete suspected partial files automatically.

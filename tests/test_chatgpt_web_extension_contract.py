@@ -7,12 +7,13 @@ EXT = ROOT / "clients" / "chatgpt-web-extension"
 
 
 class ChatGPTWebExtensionContractTests(unittest.TestCase):
-    def test_manifest_is_mv3_and_limits_host_access_to_chatgpt(self):
+    def test_manifest_is_mv3_and_limits_host_access_to_chatgpt_and_loopback_bridge(self):
         manifest = json.loads((EXT / "manifest.json").read_text(encoding="utf-8"))
         self.assertEqual(manifest["manifest_version"], 3)
         self.assertEqual(set(manifest["host_permissions"]), {
-            "https://chatgpt.com/*", "https://chat.openai.com/*"
+            "https://chatgpt.com/*", "https://chat.openai.com/*", "http://127.0.0.1/*"
         })
+        self.assertIn("storage", manifest["permissions"])
         self.assertEqual(manifest["background"]["service_worker"], "background.js")
         for relative in [
             manifest["background"]["service_worker"],
@@ -39,6 +40,37 @@ class ChatGPTWebExtensionContractTests(unittest.TestCase):
         self.assertIn('action: "EXPORT_LEDGER"', popup)
         self.assertIn("Скопировать запрос восстановления", popup)
         self.assertIn("createObjectURL", popup)
+
+    def test_dialogue_context_insertion_is_explicit_non_submitting_and_preserves_drafts(self):
+        popup = (EXT / "popup.js").read_text(encoding="utf-8")
+        content = (EXT / "content_script.js").read_text(encoding="utf-8")
+        self.assertIn('action: "INSERT_DIALOGUE_CONTEXT"', popup)
+        self.assertIn('document.getElementById("insert-memory")', popup)
+        self.assertIn('composer_not_empty; existing draft was preserved', content)
+        self.assertIn('submitted: false', content)
+        self.assertIn('if (composerText(input))', content)
+
+    def test_attachment_popup_requires_explicit_project_and_links_reference_only(self):
+        popup = (EXT / "popup.js").read_text(encoding="utf-8")
+        background = (EXT / "background.js").read_text(encoding="utf-8")
+        docs = (EXT / "README.md").read_text(encoding="utf-8")
+        self.assertIn('http://127.0.0.1:8766/v1/attachments', popup)
+        self.assertIn('"X-Rima-Project-ID": projectId', popup)
+        self.assertIn('action: "LINK_ATTACHMENT"', popup)
+        self.assertIn('case "LINK_ATTACHMENT"', background)
+        self.assertIn("manual second selection", docs)
+        self.assertIn("Never log file bytes", (ROOT / "tools" / "project_attachment_adapter.py").read_text(encoding="utf-8"))
+
+    def test_attachment_reference_is_a_durable_exportable_event(self):
+        background = (EXT / "background.js").read_text(encoding="utf-8")
+        core = (EXT / "dialogue_window_core.js").read_text(encoding="utf-8")
+        self.assertIn('"ATTACHMENT_LINKED"', background)
+        self.assertIn('await appendEvent(', background)
+        self.assertIn('turnId + ":ATTACHMENT_LINKED:" + ref.attachment_id', background)
+        self.assertIn('events = all.flatMap(t => t.events)', background)
+        self.assertIn("validateAttachmentRef", core)
+        self.assertIn("attachment_id: attachment.attachment_id", core)
+        self.assertNotIn("storage_locator", core)
 
     def test_docs_state_live_browser_validation_is_pending(self):
         docs = (EXT / "README.md").read_text(encoding="utf-8")

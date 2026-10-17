@@ -26,6 +26,7 @@ CONTRACTS = {
     "tools/branch_result_registry.py": "events.jsonl result/ack append: schema validation, stable ID, replay/conflict handling, journal lock, atomic replace",
     "tools/archive_registry_staging.py": "archive staging: source hash and deterministic records; output staging only; snapshot manifest write requires review",
     "tools/resumable_chat_import.py": "resumable import: immutable source snapshot and SQLite batch/transaction persistence; verify restart/replay contract",
+    "tools/audit_resumable_archive.py": "read-only archive audit: SQLite opened with mode=ro and SELECT-only queries; source files are never repaired or rewritten; report is derived output",
     "tools/validate_memory.py": "validation/reporting: inspect output paths and distinguish report writes from canonical state",
     "tools/reconcile_branch_returns.py": "reconciliation report: derived/read-only report contract; must not mutate canonical task state",
     "tools/archive_temporal_index.py": "derived temporal index: rebuildability and source provenance required",
@@ -40,6 +41,8 @@ CONTRACTS = {
     "tools/continuity_checkpoint_bundle.py": "paired TASK_STATE/HANDOFF checkpoint: immutable generation, hash-verified parent chain, single atomic CURRENT_CHECKPOINT pointer, OS lock, recoverable projections",
     "tools/turn_lifecycle_ledger.py": "protected local append-only turn journal: advisory lock, fsync, exact-input hash, explicit lifecycle states, fail-closed corrupt journal; workspace artifact scan is read-only and ownership remains UNKNOWN",
     "tools/turn_lifecycle_adapter.py": "authenticated local HTTP adapter: request/response socket writes are protocol output, while all durable state changes delegate to the protected turn lifecycle ledger; loopback by default, bearer auth, body/origin validation",
+    "tools/project_attachment_library.py": "private local attachment library: project-scoped content-addressed objects, SHA-256 verification, atomic first-write, OS advisory lock, fsynced append-only object/reference registries, exact replay/conflict guards; no payloads in public repo",
+    "tools/project_attachment_adapter.py": "authenticated loopback-only HTTP attachment intake: exact origin allowlist, bearer auth, explicit project/conversation/message provenance, bounded raw-body reads, temporary staging file cleaned after registration, delegates durable object/index writes to private project attachment library, never returns attachment bytes",
 }
 DEFAULT_MUTATING_SUFFIXES = (".md", ".jsonl", ".json", ".sqlite", ".db")
 

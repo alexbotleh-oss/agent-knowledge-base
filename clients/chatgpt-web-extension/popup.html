@@ -16,9 +16,31 @@ button{border:1px solid #aaa;border-radius:7px;background:#f8f9fa;padding:8px 10
 <h1>Незавершённые ходы</h1>
 <p class="muted">Локальный журнал браузера. Тексты не отправляются на внешний сервер.</p>
 <div id="status">Читаю журнал…</div>
+<section class="card">
+  <strong>Краткосрочная память диалога</strong>
+  <p class="muted">Последние пять пар глобально и последние пять пар текущего чата. Контекст копируется только по нажатию; он не отправляется автоматически.</p>
+  <div id="memory-status" class="muted">Готовлю окна…</div>
+  <button id="copy-memory">Скопировать контекст диалога</button>
+  <button id="insert-memory">Вставить контекст в пустое поле текущего чата</button>
+</section>
+<section class="card">
+  <strong>Библиотека вложений проекта</strong>
+  <p class="muted">Повторно выбери файл, который уже прикреплялся к сообщению ChatGPT. Он будет передан только локальному bridge, если тот запущен. Проект и ход указываются явно.</p>
+  <label for="project-id">ID проекта</label>
+  <input id="project-id" type="text" maxlength="128" placeholder="например, AGENT_MEMORY_SYSTEM" style="box-sizing:border-box;width:100%;margin:4px 0 8px;padding:7px">
+  <label for="bridge-token">Локальный bearer token</label>
+  <input id="bridge-token" type="password" autocomplete="off" placeholder="токен из локального token-файла" style="box-sizing:border-box;width:100%;margin:4px 0 8px;padding:7px">
+  <button id="save-bridge">Сохранить настройки</button>
+  <label for="attachment-turn">Сообщение-источник (последние ходы текущего чата)</label>
+  <select id="attachment-turn" style="box-sizing:border-box;width:100%;margin:4px 0 8px;padding:7px"></select>
+  <input id="attachment-file" type="file" style="max-width:100%;margin:4px 0 8px">
+  <button id="upload-attachment">Сохранить вложение в библиотеку</button>
+  <div id="attachment-status" class="muted">Сначала сохрани настройки и обнови список ходов.</div>
+</section>
 <div id="turns"></div>
 <button id="refresh">Обновить</button>
 <button id="export">Экспорт журнала JSONL</button>
+<script src="dialogue_window_core.js"></script>
 <script src="popup.js"></script>
 </body>
 </html>
