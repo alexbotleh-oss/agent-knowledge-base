@@ -110,6 +110,36 @@ class VerifiedTaskExecutorTests(unittest.TestCase):
         self.assertIn("EVT-EXP-001", captured["related_event_ids"])
         self.assertEqual(captured["status"], "observed")
 
+    def test_success_candidate_is_retrieved_in_next_task_start_cycle(self):
+        first_run = self._run(execute=True)
+        self.assertEqual(first_run["status"], "VERIFIED_ACTION_AND_CAPTURED")
+        captured_id = first_run["capture"]["event_id"]
+
+        # Start a fresh task cycle using only the persisted logs, not the prior
+        # in-memory result. This is the critical persistence -> retrieval check.
+        next_start = run_minimal_agent_loop(
+            self.task_state,
+            self.handoff,
+            self.event_log,
+            "service worker cache restore",
+            experience_logs=[self.experience_log, self.event_log],
+            current_project_id="TEST",
+            evidence_root=self.root,
+        )
+        retrieved = next_start.get("retrieval", {}).get("candidates", [])
+        retrieved_by_id = {item.get("event_id"): item for item in retrieved}
+        self.assertIn(captured_id, retrieved_by_id)
+        self.assertEqual(retrieved_by_id[captured_id].get("status"), "observed")
+
+        persisted = next(
+            json.loads(line)
+            for line in self.event_log.read_text(encoding="utf-8").splitlines()
+            if json.loads(line).get("event_id") == captured_id
+        )
+        self.assertEqual(persisted["type"], "test")
+        self.assertIn("EVT-EXP-001", persisted["related_event_ids"])
+        self.assertFalse(first_run["semantic_memory_promoted"])
+
     def test_failed_independent_check_does_not_capture_outcome(self):
         result = self._run(
             execute=True,
