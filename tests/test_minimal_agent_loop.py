@@ -736,5 +736,24 @@ class MinimalAgentLoopTests(unittest.TestCase):
         self.assertEqual(context["field_status"]["active_goal"], "STALE_SOURCE")
 
 
+    def test_prebuilt_memory_aware_packet_is_reused_without_second_restore(self):
+        packet = build_session_packet(self.task, self.handoff, self.events)
+        packet["task_restore_status"] = packet["status"]
+        packet["semantic_memory"] = {
+            "status": "AVAILABLE", "coverage_status": "COMPLETE",
+            "records": [{"memory_id": "MEM-1", "revision_id": "r1"}],
+        }
+        packet["status"] = "RESTORED_PACKET_WITH_SEMANTIC_MEMORY"
+        with patch("minimal_agent_loop.build_session_packet", side_effect=AssertionError("duplicate restore")):
+            result = run_minimal_agent_loop(
+                self.task, self.handoff, self.events, "restore staging snapshot",
+                experience_logs=[self.events], current_project_id="TEST",
+                session_packet=packet,
+            )
+        self.assertEqual(result["restore_packet_status"], "RESTORED_PACKET_WITH_SEMANTIC_MEMORY")
+        self.assertEqual(result["task_restore_status"], "RESTORED_PACKET")
+        self.assertEqual(result["semantic_memory"]["status"], "AVAILABLE")
+        self.assertTrue(result["context"]["freshness_verified"])
+
 if __name__ == "__main__":
     unittest.main()
