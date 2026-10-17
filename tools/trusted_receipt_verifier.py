@@ -124,6 +124,10 @@ def verify_signed_receipt(
     if issued_at is None or (issued_at - current).total_seconds() > 300:
         return {"status": "INVALID_RECEIPT_TIME", "verified": False}
     expires = receipt.get("expires_at")
+    # Reusable check-result receipts must be time-bounded; otherwise a signed
+    # PASS could be replayed indefinitely while its source fingerprint stays unchanged.
+    if receipt.get("receipt_type") == "check_result" and expires is None:
+        return {"status": "RECEIPT_EXPIRED_OR_INVALID", "verified": False}
     if expires is not None:
         expires_at = _timestamp(expires)
         if expires_at is None or expires_at <= current or expires_at <= issued_at:
