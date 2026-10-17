@@ -105,6 +105,39 @@ class AdaptiveTaskFlowTests(unittest.TestCase):
         route = route_after_attempt("VERIFIED_SUCCESS")
         self.assertEqual(route["mode"], "CAPTURE_CONFIRMED_EXPERIENCE")
 
+
+    def test_full_failure_retry_verification_and_experience_capture_sequence(self):
+        from adaptive_task_flow import count_related_corrections
+
+        history = [
+            {"event_id": "EVT-CORR-1", "event_type": "correction", "project_scope_match": "MATCH",
+             "matched_terms": ["cache", "index", "restore"]},
+            {"event_id": "EVT-CORR-2", "event_type": "regression", "project_scope_match": "MATCH",
+             "matched_terms": ["cache", "index", "restore"]},
+        ]
+        correction_count = count_related_corrections(history, current_project_id="TEST")
+        first_route = select_initial_route(
+            experience_status="CANDIDATES_FOUND",
+            lesson_status="CANDIDATES_FOUND",
+            candidate_count=2,
+            prior_correction_count=correction_count,
+        )
+        self.assertEqual(first_route["mode"], "DEEP_ANALYSIS_BEFORE_RETRY")
+
+        failed_attempt = route_after_attempt("NOT_SOLVED", prior_failed_attempts=1)
+        self.assertEqual(failed_attempt["mode"], "DEEP_ANALYSIS_EXTERNAL_SEARCH")
+        self.assertTrue(failed_attempt["external_search_required_now"])
+
+        retry_reported_success = route_after_attempt("SUCCESS", prior_failed_attempts=1)
+        self.assertEqual(retry_reported_success["mode"], "VERIFY_RESULT")
+        self.assertFalse(retry_reported_success["external_search_required_now"])
+        self.assertIn("acceptance criterion", retry_reported_success["reason"])
+
+        verified = route_after_attempt("VERIFIED_SUCCESS", prior_failed_attempts=1)
+        self.assertEqual(verified["mode"], "CAPTURE_CONFIRMED_EXPERIENCE")
+        self.assertFalse(verified["writes_performed"])
+        self.assertFalse(verified["execution_performed"])
+
     def test_actual_minimal_loop_exposes_experience_first_route(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)

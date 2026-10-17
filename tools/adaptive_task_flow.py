@@ -187,8 +187,9 @@ def route_after_attempt(
     if prior_failed_attempts > 0 and result not in VERIFIED_SUCCESS_RESULTS:
         reason += " Earlier failed attempts also argue against repeating the same approach."
         if result in SUCCESS_RESULTS:
-            mode = "DEEP_ANALYSIS_EXTERNAL_SEARCH"
-            external = True
+            mode = "VERIFY_RESULT"
+            reason += " Verify the retry against the explicit acceptance criterion before any experience capture."
+            external = False
     if risk in {"high", "critical"} and result not in VERIFIED_SUCCESS_RESULTS:
         reason += " Risk remains elevated; do not proceed on an unverified assumption."
     return {
