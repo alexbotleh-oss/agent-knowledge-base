@@ -111,6 +111,33 @@ class MemoryAwareRestoreTests(unittest.TestCase):
         self.assertEqual(packet["semantic_memory"]["status"], "PARTIAL")
         self.assertEqual(packet["semantic_memory"]["index_freshness"]["status"], "CURRENT_PARTIAL")
 
+    def test_partial_no_match_triggers_read_only_relocation_discovery(self):
+        archive = self.root / "archive"
+        archive.mkdir()
+        (archive / "old_notes.md").write_text(
+            "The missing source marker is retained here with historical context.",
+            encoding="utf-8",
+        )
+        no_match = {
+            "status": "PARTIAL_NO_MATCH", "coverage_status": "PARTIAL",
+            "records": [], "warnings": ["No match in the current partial index."],
+        }
+        with mock.patch.object(restore, "build_verified_session_packet", return_value=dict(self.base_packet)), \
+             mock.patch.object(restore, "retrieve_approved_memory", return_value=no_match):
+            packet = restore.build_memory_aware_packet(
+                Path("projects/AGENT_MEMORY_SYSTEM/TASK_STATE.md"),
+                Path("projects/AGENT_MEMORY_SYSTEM/HANDOFF.md"),
+                Path("projects/AGENT_MEMORY_SYSTEM/events.jsonl"),
+                "alexbotleh-oss/agent-knowledge-base",
+                query="missing source marker",
+                registry_path=self.registry, index_root=self.index_root,
+            )
+        discovery = packet["semantic_memory"]["relocation_discovery"]
+        self.assertEqual(discovery["status"], "CANDIDATES_FOUND")
+        self.assertEqual(discovery["searches"][0]["status"], "CANDIDATES_UNVERIFIED")
+        self.assertFalse(discovery["writes_performed"])
+        self.assertEqual(packet["semantic_memory"]["status"], "PARTIAL_NO_MATCH")
+
     def test_mismatched_project_scope_blocks_memory_retrieval(self):
         base = dict(self.base_packet)
         base["project_scope"] = dict(self.base_packet["project_scope"], event_log_project_id="CARD111")
