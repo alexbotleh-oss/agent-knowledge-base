@@ -88,14 +88,25 @@ class EventRelationValidatorTests(unittest.TestCase):
         self.assertEqual(result["status"], "PASS")
         self.assertEqual(bad["relations"][0]["type"], "followed_by")
 
-    def test_known_event_log_can_be_reconciled_by_append_only_correction_candidate(self):
+    def test_current_event_log_passes_after_append_only_correction_overlay(self):
+        event_log = ROOT / "projects" / "AGENT_MEMORY_SYSTEM" / "events.jsonl"
+        existing = [
+            json.loads(line) for line in event_log.read_text(encoding="utf-8").splitlines()
+            if line.strip()
+        ]
+        result = audit_event_log(existing)
+        self.assertEqual(result["status"], "PASS", json.dumps(result, ensure_ascii=False, indent=2))
+        self.assertEqual(result["issue_count"], 0)
+
+    def test_appending_duplicate_correction_event_is_rejected(self):
         event_log = ROOT / "projects" / "AGENT_MEMORY_SYSTEM" / "events.jsonl"
         existing = [
             json.loads(line) for line in event_log.read_text(encoding="utf-8").splitlines()
             if line.strip()
         ]
         result = validate_event_append(correction_event(), existing)
-        self.assertEqual(result["status"], "PASS", json.dumps(result, ensure_ascii=False, indent=2))
+        self.assertEqual(result["status"], "REJECTED")
+        self.assertEqual(result["issues"][0]["code"], "DUPLICATE_EVENT_ID")
 
     def test_duplicate_event_id_is_rejected(self):
         prior = event("EVT-1")
