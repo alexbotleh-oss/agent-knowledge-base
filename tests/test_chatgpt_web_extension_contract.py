@@ -11,7 +11,7 @@ class ChatGPTWebExtensionContractTests(unittest.TestCase):
         manifest = json.loads((EXT / "manifest.json").read_text(encoding="utf-8"))
         self.assertEqual(manifest["manifest_version"], 3)
         self.assertEqual(set(manifest["host_permissions"]), {
-            "https://chatgpt.com/*", "https://chat.openai.com/*", "http://127.0.0.1:8766/*"
+            "https://chatgpt.com/*", "https://chat.openai.com/*", "http://127.0.0.1/*"
         })
         self.assertIn("storage", manifest["permissions"])
         self.assertEqual(manifest["background"]["service_worker"], "background.js")
