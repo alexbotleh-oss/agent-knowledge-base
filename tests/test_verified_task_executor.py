@@ -142,6 +142,34 @@ class VerifiedTaskExecutorTests(unittest.TestCase):
             for line in self.event_log.read_text(encoding="utf-8").splitlines()
         ))
 
+    def test_action_without_traceable_link_to_retrieved_experience_is_blocked(self):
+        result = run_reviewed_action(
+            workspace_root=self.root,
+            task_state=self.task_state,
+            handoff=self.handoff,
+            event_log=self.event_log,
+            experience_logs=[self.experience_log],
+            request="service worker cache restore",
+            project_id="TEST",
+            task_id="TASK-RESTORE-002",
+            reviewed_experience_event_id="EVT-EXP-001",
+            action_rationale="Run an unrelated database cleanup and inspect the customer table",
+            action_argv=[sys.executable, "-c", "from pathlib import Path; Path('artifacts/should-not-exist').write_text('x')"],
+            action_cwd=self.root,
+            acceptance_criterion="A generated artifact exists",
+            acceptance_checks=[
+                {"type": "command_exit_code", "expected": 0},
+                {"type": "file_contains", "path": "artifacts/should-not-exist", "expected": "x"},
+            ],
+            evidence_report=Path("artifacts/task-run-evidence.json"),
+            observed_outcome="test",
+            execute=True,
+            timeout_seconds=10,
+        )
+        self.assertEqual(result["status"], "BLOCKED_EXPERIENCE_NOT_LINKED_TO_ACTION")
+        self.assertFalse(result["execution_performed"] if "execution_performed" in result else False)
+        self.assertFalse((self.root / "artifacts" / "should-not-exist").exists())
+
 
 if __name__ == "__main__":
     unittest.main()
