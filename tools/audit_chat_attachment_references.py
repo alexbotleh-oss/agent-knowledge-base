@@ -96,6 +96,30 @@ def audit_references(source: Path) -> dict[str, Any]:
         if archive is not None:
             archive.close()
 
+    # The scan reads the source after the initial hash. Do not report its
+    # results under a digest that no longer describes the current source.
+    try:
+        final_digest = sha256_file(source)
+    except OSError as exc:
+        return {
+            "status": "FAIL",
+            "reason": "SOURCE_CHANGED_OR_UNREADABLE_DURING_SCAN",
+            "source_path": str(source),
+            "source_sha256": digest,
+            "error_type": type(exc).__name__,
+            "error": str(exc),
+            "raw_payloads_modified": False,
+        }
+    if final_digest != digest:
+        return {
+            "status": "FAIL",
+            "reason": "SOURCE_CHANGED_DURING_SCAN",
+            "source_path": str(source),
+            "source_sha256": digest,
+            "final_source_sha256": final_digest,
+            "raw_payloads_modified": False,
+        }
+
     counts = Counter(item["match_status"] for item in references)
     return {
         "status": "SCAN_COMPLETE_REVIEW_REQUIRED",
