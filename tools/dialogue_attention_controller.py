@@ -17,6 +17,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable
 
+from event_relation_validator import validate_event_append
+
 CLASSIFICATIONS = {
     "CONTINUATION", "CORRECTION", "SIDE_BRANCH", "DEFERRED_IDEA",
     "NEW_TASK", "PRIORITY_CHANGE", "RETURN_TO_PARENT", "AMBIGUOUS",

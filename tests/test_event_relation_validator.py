@@ -28,7 +28,7 @@ def correction_event():
         ("EVT-AGMS-20261016-008", "EVT-AGMS-20261016-007", "subsequent checkpoint reconciliation preserves event chronology"),
     ]
     return {
-        "event_id": "EVT-AGMS-20261017-006",
+        "event_id": "EVT-AGMS-20261017-007",
         "event_time": "2026-10-17",
         "time_precision": "day",
         "relations": [{

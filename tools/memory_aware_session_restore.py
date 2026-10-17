@@ -247,49 +247,71 @@ def build_memory_aware_packet(task_state:Path,handoff:Path,event_log:Path,reposi
                     known_refs = remote_catalog.get("known_refs")
                     if not isinstance(source_specs, list) or not isinstance(known_refs, list):
                         raise ValueError("remote catalog must contain sources and known_refs arrays")
-                    primary_source = next(
-                        (item for item in source_specs if isinstance(item, dict) and item.get("source_id") == "semantic-memory-registry"),
-                        None,
+                    source_by_id = {
+                        item.get("source_id"): item
+                        for item in source_specs
+                        if isinstance(item, dict) and isinstance(item.get("source_id"), str)
+                    }
+                    # This fallback is for missing approved memory, so route only to
+                    # compatible memory/event sources. Protocol files such as the
+                    # bootstrap contract must be queried through their own source ID,
+                    # not swept into a semantic-memory search as unrelated candidates.
+                    searchable_sources = sorted(
+                        (
+                            item for item in source_specs
+                            if isinstance(item, dict)
+                            and item.get("source_type") in {"semantic_memory", "event_history"}
+                            and isinstance(item.get("expected_path"), str)
+                        ),
+                        key=lambda item: (item.get("priority", 1000), item.get("source_id", "")),
                     )
-                    if not isinstance(primary_source, dict) or not isinstance(primary_source.get("expected_path"), str):
-                        raise ValueError("semantic-memory-registry source profile is missing")
+                    if not any(item.get("source_id") == "semantic-memory-registry" for item in searchable_sources):
+                        raise ValueError("compatible semantic-memory-registry source profile is missing")
                     refs = [
-                        item.get("ref") for item in known_refs
-                        if isinstance(item, dict) and isinstance(item.get("ref"), str)
+                        item.get("ref") for item in sorted(
+                            (entry for entry in known_refs if isinstance(entry, dict) and isinstance(entry.get("ref"), str)),
+                            key=lambda entry: (entry.get("priority", 1000), entry.get("ref", "")),
+                        )
                     ]
                     preferred_ref = ref or packet.get("remote_repository_evidence", {}).get("ref")
                     if isinstance(preferred_ref, str) and preferred_ref:
                         refs = [preferred_ref] + [item for item in refs if item != preferred_ref]
-                    candidate_paths = []
-                    for spec in source_specs:
-                        if not isinstance(spec, dict):
-                            continue
-                        path_value = spec.get("expected_path")
-                        if isinstance(path_value, str) and path_value != primary_source["expected_path"] and path_value not in candidate_paths:
-                            candidate_paths.append(path_value)
-                        aliases = spec.get("candidate_paths", [])
-                        if isinstance(aliases, list):
-                            for alias in aliases:
-                                if isinstance(alias, str) and alias != primary_source["expected_path"] and alias not in candidate_paths:
-                                    candidate_paths.append(alias)
                     stable_hints = [item for item in (task_id, context_id) if isinstance(item, str) and item.strip()]
                     if not stable_hints and query:
                         stable_hints = [None]
-                    for stable_hint in stable_hints:
-                        remote_result = discover_github_source(
-                            repository,
-                            primary_source["expected_path"],
-                            refs,
-                            identity=stable_hint,
-                            query=query,
-                            candidate_paths=candidate_paths,
-                            fetch_json=fetch_json,
-                        )
-                        remote_searches.append({
-                            "search_key": {"identity": stable_hint, "query": query},
-                            "result": remote_result,
-                        })
-                        if remote_result.get("status") in {"FOUND_AT_EXPECTED_PATH", "FOUND_ELSEWHERE_IDENTITY_MATCH"}:
+                    for source_spec in searchable_sources:
+                        expected_path = source_spec["expected_path"]
+                        aliases = source_spec.get("candidate_paths", [])
+                        candidate_paths = [
+                            alias for alias in aliases
+                            if isinstance(aliases, list)
+                            and isinstance(alias, str)
+                            and alias.strip()
+                            and alias != expected_path
+                        ] if isinstance(aliases, list) else []
+                        for stable_hint in stable_hints:
+                            remote_result = discover_github_source(
+                                repository,
+                                expected_path,
+                                refs,
+                                identity=stable_hint,
+                                expected_sha256=source_spec.get("expected_sha256"),
+                                expected_blob_sha=source_spec.get("expected_blob_sha"),
+                                query=query,
+                                candidate_paths=candidate_paths,
+                                fetch_json=fetch_json,
+                            )
+                            remote_searches.append({
+                                "source_id": source_spec.get("source_id"),
+                                "source_type": source_spec.get("source_type"),
+                                "search_key": {"identity": stable_hint, "query": query},
+                                "result": remote_result,
+                            })
+                            if remote_result.get("status") in {"FOUND_AT_EXPECTED_PATH", "FOUND_ELSEWHERE_IDENTITY_MATCH"}:
+                                break
+                        if remote_searches and remote_searches[-1].get("result", {}).get("status") in {
+                            "FOUND_AT_EXPECTED_PATH", "FOUND_ELSEWHERE_IDENTITY_MATCH"
+                        }:
                             break
                 except (OSError, UnicodeDecodeError, json.JSONDecodeError, ValueError) as exc:
                     remote_catalog_error = str(exc)
