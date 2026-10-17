@@ -156,7 +156,7 @@ class DialogueAttentionControllerTests(unittest.TestCase):
                 "turn_id": "T-MALFORMED",
             },
         }
-        self.log.write_text(json.dumps(event) + "\\n", encoding="utf-8")
+        self.log.write_text(json.dumps(event) + "\n", encoding="utf-8")
         before = self.log.read_bytes()
         with self.assertRaisesRegex(ValueError, "required identifiers missing"):
             controller.inspect(self.log)
