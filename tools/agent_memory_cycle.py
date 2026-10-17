@@ -205,8 +205,40 @@ def run_cycle(
                 if ready.get("status") != "READY":
                     return_result = {**ready, "writes_performed": False}
                 else:
+                    def precommit_guard(event_path: Path, expected_top: dict[str, Any]) -> dict[str, Any]:
+                        # Recheck the live event log while _return_to_parent_unchecked
+                        # holds the shared journal lock, closing the preflight/commit race.
+                        current_reconciliation = build_branch_return_report(event_path, states)
+                        if current_reconciliation.get("status") != "CONSISTENT":
+                            return {
+                                "status": "BLOCKED_RECONCILIATION",
+                                "reconciliation_status": current_reconciliation.get("status"),
+                                "issues": current_reconciliation.get("issues", []),
+                            }
+                        current_attention = inspect_attention(event_path)
+                        current_stack = current_attention.get("return_stack", [])
+                        if current_attention.get("status") != "OK":
+                            return {
+                                "status": "BLOCKED_ATTENTION_STATE",
+                                "attention_status": current_attention.get("status"),
+                            }
+                        if not current_stack or current_stack[-1].get("branch_id") != branch_id:
+                            return {"status": "BLOCKED_RETURN_STACK_CHANGED"}
+                        current_parent = current_stack[-1].get("parent", {})
+                        if (
+                            current_parent.get("task_id") != parent_task_id
+                            or current_parent.get("checkpoint_id") != parent.get("checkpoint_id")
+                            or expected_top.get("branch_id") != branch_id
+                        ):
+                            return {"status": "BLOCKED_PARENT_MISMATCH"}
+                        return _current_branch_result_ready(
+                            event_path, str(branch_id), parent_task_id,
+                            str(parent.get("checkpoint_id") or ""),
+                        )
+
                     return_result = _return_to_parent_unchecked(
-                        attention_log, turn_id=return_turn_id, parent_task_id=parent_task_id
+                        attention_log, turn_id=return_turn_id, parent_task_id=parent_task_id,
+                        precommit_guard=precommit_guard,
                     )
                     if return_result.get("status") in {"RETURNED", "ALREADY_RETURNED"}:
                         attention = inspect_attention(attention_log)
