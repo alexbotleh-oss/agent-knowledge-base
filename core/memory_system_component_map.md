@@ -52,25 +52,24 @@ The coordinator tools/memory_pipeline_coordinator.py composes source ingestion, 
 - memory_aware_session_restore.py: combines verified task recovery with freshness-checked approved-memory retrieval; its retrieval is exact multidimensional filtering plus lexical substring matching, not embedding-based semantic ranking.
 - memory_pipeline_coordinator.py: composes the guarded import/promotion/correction/index/restore stages when explicitly run.
 - relocation_aware_discovery.py: bounded, read-only discovery in explicitly supplied local roots when the expected location misses.
-- adaptive_source_search.py: orders configured local roots by known compatibility, unknown metadata, and known conflict. It is not yet invoked by session restore or the pipeline coordinator.
+- adaptive_source_search.py: orders configured local roots by known compatibility, unknown metadata, and known conflict. It is now called by memory_aware_session_restore.py after PARTIAL_NO_MATCH when the source catalog is available; the pipeline coordinator reaches it through its restore stage when using the default memory registry path. This is a bounded local fallback, not automatic ChatGPT session-start execution.
 - audit_memory_architecture.py: read-only static audit of Python tool imports, statically declared storage paths, and expected protocol locations. It reports evidence, not runtime call coverage.
 
 ## 4. Important gaps and status
 
-1. No single executable source catalog is yet the authority for all locations. The adaptive search requires an explicitly supplied catalog; it currently covers local roots only.
-2. The adaptive search is not yet composed into the normal restore path. Its existence and CI success do not mean it runs during every task or session start.
-3. Remote branches, GitHub file history, connected apps, device storage, and external archives need separate adapters. Each adapter must report access, coverage, revision/freshness, stable identity and provenance.
-4. Session-start execution is not automatic in ChatGPT. Repository instructions and Python tools require an actual caller/runtime.
-5. Search ranking is currently limited. Approved-memory retrieval uses exact project/task/context filters and lexical substring; archive temporal search is a separate tool. A unified planner should route among them instead of assuming one index contains everything.
-6. Ingestion has distinct stopping points. The source ingestion runner alone stops at metadata-only source registration. The broader pipeline coordinator can continue through semantic promotion/index/restore only with the required manifests, approval receipt and inputs.
-7. The path core/agent_bootstrap.md is absent from the audited feature branch, its base branch integration/memory-core-clean-20261015, and main (HEAD a0c12ba849a3416f50e1289d8f0dd20844e1e51f); a GitHub branch-name search for bootstrap returned no matches. This confirms a repository-local absence across those checked refs, not global absence from every archive or external source. The active README instead points to core/universal_instructions.md and core/agent_runtime_protocol.md. Do not create a replacement until checking the project instruction's intended bootstrap contract and other available sources.
+1. The versioned local catalog registry/source_catalog.json covers the current checkout's registry, AGENT_MEMORY_SYSTEM project files, core protocols, tools, and tests. It is not a global authority for all locations; it omits remote branches, external archives, connected apps and device storage.
+2. The adaptive search is composed into the partial-index fallback in memory_aware_session_restore.py. It runs only when approved-memory retrieval returns PARTIAL_NO_MATCH and the restore function is actually invoked. It is not automatically executed by ChatGPT at the start of every task or session.
+3. Remote branches, GitHub file history, connected apps, device storage, and external archives still need separate adapters. Each adapter must report access, coverage, revision/freshness, stable identity and provenance.
+4. Search ranking is currently limited. Approved-memory retrieval uses exact project/task/context filters and lexical substring; archive temporal search is a separate tool. A unified planner should route among them instead of assuming one index contains everything.
+5. Ingestion has distinct stopping points. The source ingestion runner alone stops at metadata-only source registration. The broader pipeline coordinator can continue through semantic promotion/index/restore only with the required manifests, approval receipt and inputs.
+6. The path core/agent_bootstrap.md is absent from the audited feature branch, its base branch integration/memory-core-clean-20261015, and main (HEAD a0c12ba849a3416f50e1289d8f0dd20844e1e51f); a GitHub branch-name search for bootstrap returned no matches. This confirms a repository-local absence across those checked refs, not global absence from every archive or external source. The active README instead points to core/universal_instructions.md and core/agent_runtime_protocol.md. Do not create a replacement until checking the project instruction's intended bootstrap contract and other available sources.
 
 ## 5. Next implementation sequence
 
 1. Run python tools/audit_memory_architecture.py on the checked-out target revision; retain its JSON output as evidence when needed.
 2. Define a versioned source catalog over existing stores and tools; do not duplicate the source registry or semantic-memory registry.
 3. Add explicit adapters for local checkout and remote GitHub branch/revision retrieval, preserving branch SHA and file SHA.
-4. Compose the planner into memory_aware_session_restore.py behind an explicit catalog argument/configuration, with current behavior unchanged when no catalog is supplied.
+4. Add a remote GitHub branch/revision adapter that preserves branch HEAD SHA, file blob SHA, permissions/errors, and stale-ref detection; search expected path first, then other known refs.
 5. Add end-to-end tests for: expected path missing but same source found on another branch; a compatible source searched before a conflicting source; unknown metadata fallback; stale remote refs; incomplete permissions/coverage; conflicting revisions; and no silent move/promotion.
 6. Only after those tests pass, evaluate whether the actual session/runtime can call the restore mechanism. Do not describe repository code as automatic ChatGPT behavior without an end-to-end runtime test.
 
