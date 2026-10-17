@@ -32,9 +32,42 @@ def _normalise(value: str) -> str:
 
 
 def _identity_present(text: str, identity: str) -> bool:
-    # Treat IDs/paths as tokens; do not let a short identity match inside a longer word.
+    # A textual mention is a candidate, not proof that this file owns the identity.
     return re.search(r"(?<![A-Za-z0-9_.:/-])" + re.escape(identity) +
                      r"(?![A-Za-z0-9_.:/-])", text) is not None
+
+
+IDENTITY_FIELDS = {
+    "memory_id", "source_record_id", "source_id", "event_id", "record_id",
+    "conversation_id", "message_id", "source_node_id", "archive_id",
+}
+
+
+def _structured_identity_present(path: Path, text: str, identity: str) -> bool:
+    """Verify an ID in a declared identity field, not merely in prose or provenance."""
+    if path.suffix.lower() not in {".json", ".jsonl"}:
+        return False
+
+    def contains(value: Any) -> bool:
+        if isinstance(value, dict):
+            for key, child in value.items():
+                if key in IDENTITY_FIELDS and child == identity:
+                    return True
+                if contains(child):
+                    return True
+        elif isinstance(value, list):
+            return any(contains(item) for item in value)
+        return False
+
+    try:
+        if path.suffix.lower() == ".jsonl":
+            for line in text.splitlines():
+                if line.strip() and contains(json.loads(line)):
+                    return True
+            return False
+        return contains(json.loads(text))
+    except (json.JSONDecodeError, TypeError):
+        return False
 
 
 def discover(
@@ -114,9 +147,10 @@ def discover(
 
         actual_sha = _sha(data)
         hash_match = bool(expected_sha256 and actual_sha.lower() == expected_sha256.lower())
-        identity_match = bool(identity and _identity_present(text, identity))
+        identity_token_match = bool(identity and _identity_present(text, identity))
+        structured_identity_match = bool(identity and _structured_identity_present(path, text, identity))
         query_match = bool(normal_query and normal_query in _normalise(text))
-        if not (hash_match or identity_match or query_match):
+        if not (hash_match or identity_token_match or query_match):
             return
         try:
             relative = path.relative_to(root).as_posix()
@@ -125,8 +159,10 @@ def discover(
         evidence = []
         if hash_match:
             evidence.append("EXACT_SHA256")
-        if identity_match:
+        if identity_token_match:
             evidence.append("EXACT_IDENTITY_TOKEN")
+        if structured_identity_match:
+            evidence.append("STRUCTURED_IDENTITY_FIELD")
         if query_match:
             evidence.append("NORMALIZED_TEXT_MATCH")
         candidates.append({
@@ -136,7 +172,7 @@ def discover(
             "sha256": actual_sha,
             "size_bytes": size,
             "evidence": evidence,
-            "identity_verified": hash_match or identity_match,
+            "identity_verified": hash_match or structured_identity_match,
             "canonical_path": path in expected_locations,
         })
 
