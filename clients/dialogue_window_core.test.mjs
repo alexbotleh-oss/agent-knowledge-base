@@ -60,6 +60,27 @@ test("conflicting reuse of a turn ID blocks window construction", () => {
   );
 });
 
+test("recovery context includes stable attachment refs but never storage payloads", () => {
+  const attachment = {
+    attachment_id: "ATT-1",
+    library_ref: "project-library://AGENT_MEMORY_SYSTEM/objects/sha256/" + "a".repeat(64),
+    access_status: "AVAILABLE",
+    sha256: "a".repeat(64),
+    original_name: "Документ.pdf",
+    size_bytes: 123,
+    storage_locator: "/private/path/must-not-leak",
+    payload: "file bytes must not leak"
+  };
+  const packet = core.buildDialogueWindows(
+    [turn(1, "chat-A", { attachments: [attachment] })],
+    "chat-A"
+  );
+  const prompt = core.formatRecoveryContext(packet);
+  assert.match(prompt, /project-library:\/\/AGENT_MEMORY_SYSTEM\/objects\/sha256\//);
+  assert.match(prompt, /Документ\.pdf/);
+  assert.doesNotMatch(prompt, /storage_locator|private\/path|file bytes must not leak/);
+});
+
 test("durable receive sequence wins over tied timestamps", () => {
   const first = turn(1, "chat-A", { received_at: "2026-10-17T00:00:00.000Z", received_sequence: 2 });
   const second = turn(2, "chat-A", { received_at: "2026-10-17T00:00:00.000Z", received_sequence: 1 });
