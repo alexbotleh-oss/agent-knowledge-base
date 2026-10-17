@@ -28,12 +28,10 @@ python tools/agent_memory_cycle.py \
   --request "Continue the current task" \
   --project-id AGENT_MEMORY_SYSTEM \
   --repository alexbotleh-oss/agent-knowledge-base \
-  --repository-ref feature/unified-task-start-cluster-20261017 \
-  --experience-log projects/AGENT_MEMORY_SYSTEM/events.jsonl \
-  --lesson-log projects/AGENT_MEMORY_SYSTEM/LESSONS.jsonl
+  --experience-log projects/AGENT_MEMORY_SYSTEM/events.jsonl
 ~~~
 
-Use the actual lesson-log path available in the target checkout; do not invent an absent file. The repository argument enables live GitHub revision/CI checks and approved-memory retrieval. Without it, the tool runs the legacy local task-start path and explicitly reports semantic-memory integration as NOT_CONFIGURED.
+Lesson retrieval is optional; only pass `--lesson-log` when a real, schema-compatible JSONL lesson source is available. The repository argument enables live GitHub revision/CI checks and approved-memory retrieval. Without it, the tool runs the legacy local task-start path and explicitly reports semantic-memory integration as NOT_CONFIGURED. If the checkpoint's branch is not the intended ref, supply `--repository-ref` explicitly after verifying that ref.
 
 Relevant options:
 - \`--memory-query\`: override the request used for approved-memory retrieval.
