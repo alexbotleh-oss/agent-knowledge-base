@@ -134,8 +134,9 @@
       else pendingById.set(turn.turn_id, { turn, scopes: ["CURRENT_CHAT_PENDING"] });
     }
     for (const { turn, scopes } of pendingById.values()) {
-      lines.push("", "НЕЗАВЕРШЁННЫЙ ХОД [" + scopes.join(" + ") + "]: state=" + turn.state +
-        " conversation=" + (turn.conversation_id || "UNKNOWN"), "Пользователь: " + turn.user_text,
+      lines.push("", "НЕЗАВЕРШЁННЫЙ ХОД [" + scopes.join(" + ") + "]: turn=" + turn.turn_id +
+        " state=" + turn.state + " conversation=" + (turn.conversation_id || "UNKNOWN"),
+        "Пользователь: " + turn.user_text,
         "Ответ ассистента: " + (turn.assistant_text || "НЕ ЗАФИКСИРОВАН"));
     }
     lines.push("", "Перед действием сверь цель, проектное состояние, ограничения и релевантные источники. После действия зафиксируй результат и доказательство. Не повторяй проверенную попытку без новой причины.");
