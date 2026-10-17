@@ -68,7 +68,7 @@ class ResumableImportToMemoryPipelineTests(unittest.TestCase):
             }]
             with zipfile.ZipFile(source, "w", compression=zipfile.ZIP_DEFLATED) as archive:
                 archive.writestr("conversations.json", json.dumps(conversations, ensure_ascii=False))
-                archive.writestr("files/synthetic-attachment.pdf", b"%PDF-1.4\\nsynthetic test payload\\n%%EOF")
+                archive.writestr("files/synthetic-attachment.pdf", b"%PDF-1.4\nsynthetic test payload\n%%EOF")
             source_bytes = source.read_bytes()
             import_root = root / "resumable-import"
 
