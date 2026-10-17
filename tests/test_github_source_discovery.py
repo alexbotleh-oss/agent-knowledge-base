@@ -47,6 +47,22 @@ class GithubSourceDiscoveryTests(unittest.TestCase):
         self.assertTrue(result["matches"][0]["ref_stable_at_return"])
         self.assertFalse(result["writes_performed"])
 
+    def test_expected_blob_sha_verifies_registered_source(self):
+        raw = b"# canonical bootstrap contract\\n"
+        def fetch(url):
+            if url.endswith("/branches/expected"):
+                return {"commit": {"sha": SHA_A}}
+            if f"/contents/core/agent_bootstrap.md?ref={SHA_A}" in url:
+                return api_file(raw, "f" * 40)
+            raise RemoteEvidenceError("HTTP Error 404: Not Found")
+        result = discover_github_source(
+            REPO, "core/agent_bootstrap.md", ["expected"],
+            expected_blob_sha="f" * 40, fetch_json=fetch,
+        )
+        self.assertEqual(result["status"], "FOUND_AT_EXPECTED_PATH")
+        self.assertEqual(result["matches"][0]["match_kind"], "GIT_BLOB_SHA_MATCH")
+        self.assertTrue(result["matches"][0]["verified_identity"])
+
     def test_expected_path_miss_finds_identity_in_alternate_ref_and_path(self):
         raw = (json.dumps({"source_record_id": "SRC-ALTERNATE-1"}) + "\n").encode()
         def fetch(url):
