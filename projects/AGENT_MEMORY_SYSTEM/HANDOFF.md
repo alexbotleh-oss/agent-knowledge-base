@@ -818,3 +818,12 @@ Important remaining gap: real ingestion + promotion is tested, but the same test
 - Real-device acceptance checklist: `clients/chatgpt-web-extension/ACCEPTANCE_CHECKLIST.md`. Still unverified: installed Yandex Browser Android behavior, running the local Python bridge on-device, localhost CORS/upload, persistence after browser restart, new-chat context insertion, and complete archive import.
 - Next: verify CI for the new checkpoint commits; then execute or request the device acceptance steps without claiming results that are not observed. Do not merge PR #31 without explicit approval.
 - Completeness: PARTIAL.
+
+
+## Handoff addendum — durable attachment event verified (2026-10-17)
+
+- Attachment references are appended as `ATTACHMENT_LINKED` events, not only stored in a turn projection; JSONL export preserves the ref and source-turn provenance. Linkage is idempotent and validates conversation/source/project/hash metadata; payload/unknown fields are rejected.
+- Explicit context insertion is now available in the popup for an empty composer only. It does not overwrite a draft and does not submit the message; the user reviews and presses Send.
+- Latest code/protocol head `efd671b67e1fd3d9c6b7034aee721154dd5457da`, CI [39002425902](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/39002425902) PASS (323 Python, 13 Node, audit 144/0, memory/project validation PASS). Metadata-only head `365813fd3937f2c1f56aec48a3e64ebd6201b332`, CI [39002484645](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/39002484645) PASS.
+- Next step is a real-device acceptance run using `clients/chatgpt-web-extension/ACCEPTANCE_CHECKLIST.md`. Do not claim Yandex Browser Android, localhost bridge or end-to-end recovery as working until observed. Keep this memory task active; PR #31 stays Draft/unmerged.
+- Completeness: PARTIAL.
