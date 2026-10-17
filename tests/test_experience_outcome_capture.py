@@ -1,6 +1,7 @@
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -8,6 +9,7 @@ sys.path.insert(0, str(ROOT / "tools"))
 
 from experience_outcome_capture import capture_verified_experience_candidate
 from minimal_agent_loop import run_minimal_agent_loop
+from agent_memory_cycle import run_cycle
 
 
 class ExperienceOutcomeCaptureTests(unittest.TestCase):
@@ -118,6 +120,65 @@ class ExperienceOutcomeCaptureTests(unittest.TestCase):
             )
             self.assertEqual(result["status"], "CAPTURED_CANDIDATE")
             self.assertTrue((root / "projects" / "TEST" / "events.jsonl").is_file())
+
+    def test_memory_cycle_only_persists_after_verified_route(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            project = root / "projects" / "TEST"
+            project.mkdir(parents=True)
+            task_state = project / "TASK_STATE.md"
+            handoff = project / "HANDOFF.md"
+            event_log = project / "events.jsonl"
+            attention_log = project / "attention.jsonl"
+            evidence = root / "artifacts" / "check-output.txt"
+            evidence.parent.mkdir(parents=True)
+            evidence.write_text("TEST_RESULT=PASS\\n", encoding="utf-8")
+            task_state.write_text("# TASK_STATE\\n", encoding="utf-8")
+            handoff.write_text("# HANDOFF\\n", encoding="utf-8")
+            task_start = {
+                "status": "READY_FOR_REVIEW",
+                "task_restore": {"semantic_memory": {"status": "UNAVAILABLE"}},
+                "experience_map": {},
+            }
+
+            with patch("agent_memory_cycle.build_task_start_experience_map", return_value=task_start), \\
+                 patch("agent_memory_cycle.inspect_attention", return_value={"status": "OK", "return_stack": []}), \\
+                 patch("agent_memory_cycle.build_branch_return_report", return_value={"status": "CONSISTENT", "issues": []}):
+                common = dict(
+                    current_project_id="TEST",
+                    active_task_id="TASK-001",
+                    capture_outcome_candidate=True,
+                    capture_evidence_root=root,
+                    capture_task_id="TASK-001",
+                    capture_request_summary="service worker cache restore",
+                    capture_action_taken="updated cache key after reproducing stale restore",
+                    capture_acceptance_criterion="the latest app shell is restored after reload",
+                    capture_expected_evidence_marker="TEST_RESULT=PASS",
+                    capture_evidence_file=evidence,
+                    capture_observed_outcome="acceptance output marker is PASS",
+                )
+                unverified = run_cycle(
+                    task_state, handoff, event_log, attention_log,
+                    "service worker cache restore",
+                    attempt_result_status="SUCCESS",
+                    **common,
+                )
+                self.assertEqual(
+                    unverified["experience_capture"]["status"],
+                    "BLOCKED_ROUTE_NOT_CAPTURE_READY",
+                )
+                self.assertFalse(event_log.exists())
+
+                verified = run_cycle(
+                    task_state, handoff, event_log, attention_log,
+                    "service worker cache restore",
+                    attempt_result_status="PASS",
+                    **common,
+                )
+                self.assertEqual(verified["status"], "READY")
+                self.assertEqual(verified["experience_capture"]["status"], "CAPTURED_CANDIDATE")
+                self.assertTrue(verified["writes_performed"])
+                self.assertTrue(event_log.is_file())
 
 
 if __name__ == "__main__":
