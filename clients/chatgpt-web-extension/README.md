@@ -27,7 +27,7 @@ Yandex documents third-party extension support and developer-mode loading for An
 
 - **Not yet validated in a live browser.** CI can validate code syntax and repository contracts, but cannot prove that current ChatGPT DOM selectors, mobile click behavior, extension permissions, or lifecycle timing work on the user's installed Yandex Browser version.
 - ChatGPT may change its DOM. The content script uses several known composer/send selectors and a form-submit fallback, but a UI change can prevent capture. Verify the visible extension behavior before relying on it.
-- Attachments-only, voice, and other non-text submission paths are outside the current capture contract. The current extension does not register uploaded files in the private project attachment library and does not capture attachment references; the library tool is a separate callable component.
+- Attachments-only, voice, and other non-text submission paths are outside the current capture contract. The extension does not yet capture or register uploaded files. A separate authenticated loopback bridge now exists at `tools/project_attachment_adapter.py`, but the browser extension is not wired to it and no project is inferred automatically.
 - Assistant output detection is based on DOM observation after generation appears to stop. This is evidence that a final answer was rendered in the client, not a server-side delivery receipt.
 - The extension cannot observe hidden model/tool activity, and it cannot reconstruct output that never appeared in the page.
 - The prior checkpoint reference is currently recorded as UNKNOWN/null because no canonical checkpoint bridge is connected to the ChatGPT UI.
