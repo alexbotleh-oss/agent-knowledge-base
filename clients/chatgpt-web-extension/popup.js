@@ -32,6 +32,27 @@ function activeConversationId() {
     });
   });
 }
+function activeChatTab() {
+  return new Promise((resolve, reject) => {
+    chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
+      const error = chrome.runtime.lastError;
+      if (error) return reject(new Error(error.message));
+      const tab = tabs?.[0];
+      if (!tab?.id || !/^https:\/\/(chatgpt\.com|chat\.openai\.com)\//.test(tab.url || "")) {
+        return resolve(null);
+      }
+      resolve(tab);
+    });
+  });
+}
+function sendToTab(tabId, payload) {
+  return new Promise((resolve, reject) => chrome.tabs.sendMessage(tabId, payload, response => {
+    const error = chrome.runtime.lastError;
+    if (error) return reject(new Error(error.message));
+    if (!response || response.status === "ERROR") return reject(new Error(response?.error || "content_script_error"));
+    resolve(response);
+  }));
+}
 async function copyDialogueMemory() {
   memoryStatusNode.textContent = "Читаю локальные пары диалога…";
   try {
@@ -86,6 +107,29 @@ async function loadBridgeSettings() {
     bridgeStatusNode.textContent = "Origin расширения для allowlist локального bridge: " + extensionOrigin;
   } catch (error) {
     bridgeStatusNode.textContent = "Не удалось прочитать локальные настройки: " + String(error.message || error);
+  }
+}
+async function insertDialogueMemory() {
+  memoryStatusNode.textContent = "Собираю контекст для текущего чата…";
+  try {
+    const tab = await activeChatTab();
+    if (!tab) throw new Error("Открой ChatGPT в активной вкладке");
+    let currentConversationId = null;
+    try {
+      const parsed = new URL(tab.url);
+      const segments = parsed.pathname.split("/");
+      const cIndex = segments.indexOf("c");
+      currentConversationId = cIndex >= 0 && segments[cIndex + 1] ? segments[cIndex + 1] : null;
+    } catch {}
+    const result = await ask({ action: "LIST_DIALOGUE_WINDOWS", current_conversation_id: currentConversationId });
+    const context = globalThis.RimaDialogueWindowCore?.formatRecoveryContext(result.packet);
+    if (typeof context !== "string" || !context) throw new Error("dialogue_context_unavailable");
+    const inserted = await sendToTab(tab.id, { action: "INSERT_DIALOGUE_CONTEXT", text: context });
+    memoryStatusNode.textContent = "Контекст вставлен (" + inserted.characters +
+      " символов). Он НЕ отправлен: проверь поле и нажми отправку сам. Покрытие: " + result.packet.status + ".";
+  } catch (error) {
+    memoryStatusNode.textContent = "Контекст не вставлен: " + String(error.message || error) +
+      ". Существующий черновик не изменён.";
   }
 }
 async function saveBridgeSettings() {
@@ -250,6 +294,7 @@ async function refresh() {
 }
 document.getElementById("refresh").addEventListener("click", () => void refresh());
 document.getElementById("copy-memory").addEventListener("click", () => void copyDialogueMemory());
+document.getElementById("insert-memory").addEventListener("click", () => void insertDialogueMemory());
 document.getElementById("save-bridge").addEventListener("click", () => void saveBridgeSettings());
 document.getElementById("upload-attachment").addEventListener("click", () => void uploadAttachmentToLibrary());
 void loadBridgeSettings();
