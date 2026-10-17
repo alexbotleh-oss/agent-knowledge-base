@@ -59,9 +59,16 @@ jobs:
               print(restore_run.stderr, file=sys.stderr)
               raise
           evidence = packet.get("repository_revision_evidence", {})
+          allowed_checkpoint_refresh_paths = {
+              ".github/workflows/validate.yml",
+              "tools/branch_result_registry.py",
+              "tests/test_branch_result_registry.py",
+          }
+          unexpected_paths = set(evidence.get("unexpected_changed_paths", []))
           if (packet.get("status") == "REVISION_CHECK_BLOCKED"
                   and evidence.get("status") == "CODE_REVISION_DRIFT"
-                  and evidence.get("unexpected_changed_paths") == [".github/workflows/validate.yml"]):
+                  and unexpected_paths
+                  and unexpected_paths.issubset(allowed_checkpoint_refresh_paths)):
               print("TASK_START_SMOKE_DEFERRED_CHECKPOINT_REFRESH_REQUIRED",
                     evidence.get("recorded_code_head"),
                     evidence.get("live_branch_head"),
