@@ -151,7 +151,7 @@ runner.run_ingestion(Path(sys.argv[2]), Path(sys.argv[3]), intake_root=Path(sys.
                 event["event_sha256"] = hashlib.sha256(canonical).hexdigest()
                 previous = event["event_sha256"]
             ledger.write_text(
-                "".join(json.dumps(event, ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\\n"
+                "".join(json.dumps(event, ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n"
                         for event in events),
                 encoding="utf-8",
             )
