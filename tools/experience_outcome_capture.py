@@ -169,7 +169,7 @@ def capture_verified_experience_candidate(
         "recorded_at": now,
         "time_precision": "exact",
         "temporal_basis": "artifact_timestamp",
-        "type": "experience_candidate",
+        "type": "test",
         "summary": f"Verified outcome candidate for {request_summary.strip()}",
         "status": "verified",
         "facts": [
