@@ -102,10 +102,9 @@ def register_attachment(
         raise ValueError("source attachment is missing or is not a regular file")
 
     digest = sha256_file(source)
-    suffix = Path(original_name or source.name).suffix.lower()
-    if not re.fullmatch(r"\.[a-z0-9]{1,10}", suffix or ""):
-        suffix = ""
-    object_rel = Path("objects") / project_id / digest[:2] / f"{digest}{suffix}"
+    # Object paths are hash-only: a renamed file or a different extension must
+    # not create a second physical copy for identical bytes.
+    object_rel = Path("objects") / project_id / digest[:2] / digest
     destination = root / object_rel
     destination.parent.mkdir(parents=True, exist_ok=True)
 
