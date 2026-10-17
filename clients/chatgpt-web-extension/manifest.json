@@ -7,7 +7,7 @@
   "host_permissions": [
     "https://chatgpt.com/*",
     "https://chat.openai.com/*",
-    "http://127.0.0.1:8766/*"
+    "http://127.0.0.1/*"
   ],
   "background": {
     "service_worker": "background.js"
