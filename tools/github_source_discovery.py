@@ -326,9 +326,11 @@ def discover_github_source(
 
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--repository", required=True)
-    parser.add_argument("--expected-path", required=True)
-    parser.add_argument("--ref", action="append", required=True, help="expected ref first, then alternate branches/commit SHAs")
+    parser.add_argument("--repository", help="GitHub owner/repository; defaults to catalog repository")
+    parser.add_argument("--expected-path", help="expected source path; defaults to catalog source")
+    parser.add_argument("--ref", action="append", default=[], help="expected ref first, then alternate branches/commit SHAs")
+    parser.add_argument("--catalog", type=str, help="optional JSON remote source catalog")
+    parser.add_argument("--source-id", help="source_id to select from --catalog")
     parser.add_argument("--identity")
     parser.add_argument("--expected-sha256")
     parser.add_argument("--expected-blob-sha")
@@ -337,10 +339,54 @@ def main(argv=None) -> int:
     parser.add_argument("--max-refs", type=int, default=20)
     parser.add_argument("--max-files", type=int, default=200)
     args = parser.parse_args(argv)
+
+    repository = args.repository
+    expected_path = args.expected_path
+    refs = list(args.ref)
+    expected_sha256 = args.expected_sha256
+    expected_blob_sha = args.expected_blob_sha
+    candidate_paths = list(args.candidate_path)
+
+    if args.catalog:
+        try:
+            catalog = json.loads(__import__("pathlib").Path(args.catalog).read_text(encoding="utf-8"))
+            if not isinstance(catalog, dict) or catalog.get("schema_version") != "github-remote-source-catalog-v1":
+                raise ValueError("unsupported catalog schema_version")
+            sources = catalog.get("sources")
+            if not isinstance(sources, list):
+                raise ValueError("catalog sources must be a list")
+            source = next((item for item in sources if isinstance(item, dict) and item.get("source_id") == args.source_id), None)
+            if source is None:
+                raise ValueError("source_id not found in catalog")
+            repository = repository or catalog.get("repository")
+            expected_path = expected_path or source.get("expected_path")
+            expected_sha256 = expected_sha256 or source.get("expected_sha256")
+            expected_blob_sha = expected_blob_sha or source.get("expected_blob_sha")
+            if not refs:
+                source_refs = source.get("refs")
+                if isinstance(source_refs, list) and source_refs:
+                    refs = source_refs
+                else:
+                    known_refs = catalog.get("known_refs", [])
+                    refs = [
+                        item.get("ref") for item in known_refs
+                        if isinstance(item, dict) and isinstance(item.get("ref"), str)
+                    ]
+            if not candidate_paths:
+                candidate_paths = list(source.get("candidate_paths", []))
+        except (OSError, UnicodeDecodeError, json.JSONDecodeError, ValueError) as exc:
+            print(json.dumps({
+                "schema_version": SCHEMA_VERSION, "status": "INVALID_CATALOG",
+                "reason": str(exc), "writes_performed": False,
+            }, ensure_ascii=False, indent=2))
+            return 2
+
+    if not repository or not expected_path or not refs:
+        parser.error("provide --repository, --expected-path and at least one --ref, or provide --catalog and --source-id")
     result = discover_github_source(
-        args.repository, args.expected_path, args.ref, identity=args.identity,
-        expected_sha256=args.expected_sha256, expected_blob_sha=args.expected_blob_sha,
-        query=args.query, candidate_paths=args.candidate_path,
+        repository, expected_path, refs, identity=args.identity,
+        expected_sha256=expected_sha256, expected_blob_sha=expected_blob_sha,
+        query=args.query, candidate_paths=candidate_paths,
         max_refs=args.max_refs, max_files=args.max_files,
     )
     print(json.dumps(result, ensure_ascii=False, indent=2))
