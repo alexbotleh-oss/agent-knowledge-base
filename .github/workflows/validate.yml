@@ -15,7 +15,7 @@ jobs:
           python3 tools/validate_memory.py
           python3 tools/audit_write_contracts.py --strict
           python3 -m unittest discover -s tests -v
-          node --test clients/turn_lifecycle_client.test.mjs
+          node --test clients/turn_lifecycle_client.test.mjs clients/dialogue_window_core.test.mjs
           node --check clients/chatgpt-web-extension/background.js
           node --check clients/chatgpt-web-extension/content_script.js
           node --check clients/chatgpt-web-extension/popup.js
