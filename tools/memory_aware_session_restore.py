@@ -113,6 +113,10 @@ def build_memory_aware_packet(task_state:Path,handoff:Path,event_log:Path,reposi
  *,fetch_json:Callable[[str],dict]=request_json,task_id:str|None=None,context_id:str|None=None,
  query:str|None=None,limit:int=20,registry_path:Path=DEFAULT_REGISTRY,index_root:Path=DEFAULT_INDEX_ROOT)->dict:
     packet=build_verified_session_packet(task_state,handoff,event_log,repository,ref,fetch_json=fetch_json)
+    # Preserve the task/event restore result before semantic-memory status is layered on top.
+    # Otherwise the coordinator reports RESTORED_PACKET_WITH_PARTIAL_MEMORY as the
+    # task_restore_status and loses the distinction between the two stages.
+    packet.setdefault("task_restore_status", packet.get("status"))
     if packet.get("status") in {"BLOCKED","REVISION_CHECK_BLOCKED"}:
         packet["semantic_memory"]={"status":"NOT_ATTEMPTED","coverage_status":"UNKNOWN","records":[],"reason":"base restore is blocked","writes_performed":False}
         return packet
