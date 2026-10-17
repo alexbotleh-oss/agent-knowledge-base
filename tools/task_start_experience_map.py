@@ -337,6 +337,8 @@ def build_task_start_experience_map(
         "status": status,
         "task_restore": {
             "status": loop.get("restore_packet_status", "UNKNOWN"),
+            "task_restore_status": loop.get("task_restore_status", loop.get("restore_packet_status", "UNKNOWN")),
+            "semantic_memory": loop.get("semantic_memory", {"status": "NOT_REQUESTED", "coverage_status": "UNKNOWN", "records": []}),
             "context": loop.get("context", {}),
             "trust_gate": loop.get("trust_gate", {}),
             "checkpoint_currentness_gate": loop.get("checkpoint_currentness_gate", {}),
