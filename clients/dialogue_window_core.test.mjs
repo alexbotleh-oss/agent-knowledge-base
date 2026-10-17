@@ -60,6 +60,23 @@ test("conflicting reuse of a turn ID blocks window construction", () => {
   );
 });
 
+test("durable receive sequence wins over tied timestamps", () => {
+  const first = turn(1, "chat-A", { received_at: "2026-10-17T00:00:00.000Z", received_sequence: 2 });
+  const second = turn(2, "chat-A", { received_at: "2026-10-17T00:00:00.000Z", received_sequence: 1 });
+  const packet = core.buildDialogueWindows([first, second], "chat-A");
+  assert.deepEqual(packet.current_chat_recent_pairs.map(p => p.turn_id), ["T-2", "T-1"]);
+});
+
+test("recovery prompt includes both global and current-chat pending turns", () => {
+  const current = turn(1, "chat-A", { state: "IN_PROGRESS", report: undefined });
+  const other = turn(2, "chat-B", { state: "IN_PROGRESS", report: undefined });
+  const packet = core.buildDialogueWindows([current, other], "chat-A");
+  const prompt = core.formatRecoveryContext(packet);
+  assert.match(prompt, /turn=T-1/);
+  assert.match(prompt, /turn=T-2/);
+  assert.match(prompt, /CURRENT_CHAT_PENDING/);
+});
+
 test("unknown current chat is explicit partial rather than guessed", () => {
   const packet = core.buildDialogueWindows([turn(1)], null);
   assert.equal(packet.status, "PARTIAL");
