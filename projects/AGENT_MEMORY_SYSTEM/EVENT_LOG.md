@@ -102,3 +102,13 @@
 - **Не решено:** автоматическая проверка направления temporal relations до записи и регрессионный тест. Исправление последствия не равно предотвращению повторения.
 - **Следующий шаг:** реализовать pre-write validator и проверить его на старых и новых event records.
 - **Статус:** ошибка исправлена в интерпретации; prevention mechanism отсутствует.
+
+## 2026-10-17 — EVT-AGMS-20261017-004: единый task-start кластер
+
+- **Источник:** PR #36, ветка feature/unified-task-start-cluster-20261017; кодовый checkpoint 9f89d5f2156ac34c862875f76bfcdab046c49454; exact-head CI [#39018028508](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/39018028508).
+- **Подтверждено:** выборочно перенесены механизмы PR #28/#30: applicability evaluator, decision frontier, trusted receipt verifier, attention controller, check reuse, task-start experience map и guarded branch-return cycle. agent_memory_cycle.py теперь может вызывать memory-aware verified restore и передавать тот же packet в candidate loop без повторного restore.
+- **Проверки:** 429 Python tests, 1 skipped; strict write audit 143 mutation sites / 0 unclassified. Тесты проверяют передачу готового packet без второго restore и извлечение task ID из заголовка TASK_STATE.
+- **Честный статус:** локальный кластер реализован как явно запускаемый CLI. cluster_readiness различает READY_FOR_REVIEW / PARTIAL / BLOCKED и не выдаёт разрешение на планирование. Автоматический запуск из ChatGPT, runtime bridge к локальному turn adapter, remote GitHub branch discovery и внешние источники не реализованы.
+- **Ограничения доверия:** позитивная применимость остаётся fail-closed, если отсутствует доверенный verifier с внешне закреплённым keyring hash. Конфигурация репозитория означает запуск проверки, а не гарантию, что approved memory найдена.
+- **Следующий шаг:** проверить exact-head CI финального документационного checkpoint; затем реализовать read-only GitHub branch/revision adapter с branch HEAD SHA, file blob SHA, статусом доступа/покрытия и конфликтами версий.
+- **Статус:** узкая интеграция подтверждена CI; сквозное поведение в живой сессии ChatGPT не подтверждено. PR #36 Draft/open/unmerged, stacked on #35/#34/#27; main не менялся.

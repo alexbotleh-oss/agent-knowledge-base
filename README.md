@@ -18,6 +18,8 @@
 - [`core/memory_system_component_map.md`](core/memory_system_component_map.md) — фактическая карта компонентов памяти, хранилищ, связей и непокрытых интеграций.
 - `tools/audit_memory_architecture.py` — read-only аудит зависимостей инструментов, объявленных путей хранения и отсутствующих ожидаемых источников.
 - [Полный аудит интеграции кластера](projects/AGENT_MEMORY_SYSTEM/CLUSTER_INTEGRATION_AUDIT_2026-10-17.md) — инвентаризация механизмов, параллельных PR, разрывов интеграции и плана сборки единой цепочки.
+- [`core/unified_task_start_cluster.md`](core/unified_task_start_cluster.md) — единая точка входа для восстановления задачи, утверждённой памяти, опыта, применимости, внимания и безопасного возврата.
+- [`tools/agent_memory_cycle.py`](tools/agent_memory_cycle.py) — явный CLI-кластер; не запускается автоматически из чата.
 - [`core/agent_runtime_protocol.md`](core/agent_runtime_protocol.md) — рабочий цикл непрерывной задачи.
 
 ## Назначение

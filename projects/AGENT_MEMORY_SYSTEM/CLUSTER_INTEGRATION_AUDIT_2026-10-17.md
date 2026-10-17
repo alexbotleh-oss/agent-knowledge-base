@@ -15,7 +15,8 @@ This is a repository/branch inspection, not a claim that the current ChatGPT ses
 - main: a0c12ba849a3416f50e1289d8f0dd20844e1e51f.
 - PR #27 integration branch: integration/memory-core-clean-20261015, HEAD 9eb2ab86fb3cc99791c8803b5ac3564ce9b63b19, Draft/open/unmerged.
 - PR #34: relocation-aware discovery, HEAD 2d661ee60da6981ad3d8ad150b7f86f0a5ae0cb7, Draft/open/unmerged, based on #27.
-- PR #35: capability-aware local source search and cluster audit, at the verified audit checkpoint HEAD f4d874c7a9bc3e81c5ebe29f5609d4b1c2055acd, Draft/open/unmerged, based on #34.
+- PR #35: capability-aware local source search and cluster audit, current observed HEAD 5ee3816d3d780cccd6124df85de733e9485fb273, Draft/open/unmerged, based on #34.
+- PR #36: unified task-start cluster, stacked on #35; code integration checkpoint 9f89d5f2156ac34c862875f76bfcdab046c49454 passed exact-head CI run 39018028508 (429 Python tests, 1 skipped; write audit 143 mutation sites / 0 unclassified). Later documentation-only commits require their own final-head CI check.
 - Exact-head CI for audit checkpoint f4d874c7a9bc3e81c5ebe29f5609d4b1c2055acd: run 39016798651 — SUCCESS; both memory-protocol/record validation and knowledge-base/stack validation passed. Earlier code checkpoint c979abd99f0e525a94cbe31ea74bc3f9cc496e86 passed run 39015228626 with 315 Python tests (1 skipped), 4 Node tests, write-contract audit 127 mutation sites / 0 unclassified.
 - More than 30 PRs are open. Many are historical project-memory transfers; they are not automatically components of the current runtime. Do not bulk-merge them or treat open as integrated.
 
@@ -59,7 +60,7 @@ Several valid but distinct paths currently coexist:
 - PR #30 adds tools/task_start_experience_map.py and a broader tools/agent_memory_cycle.py composition candidate. PR #30 is based on the older audit branch and is not integrated into #35.
 - PR #28 adds tools/applicability_evaluator.py and tools/decision_frontier.py. The evaluator is fail-closed; permissive judgments remain unknown until a trusted verifier is connected.
 
-Main integration defect: these are not one task-start path. minimal_agent_loop and memory_aware_session_restore use different retrieval inputs and have different outputs. The current adaptive fallback is connected only to memory_aware_session_restore, not to the candidate-retrieval/applicability path. The task-start/attention cycle is on another branch. The system can therefore recover one kind of context without invoking the other.
+At the audited PR #35 revision, these were not one task-start path. PR #36 now adds an explicit local composition that invokes memory-aware restore when a repository is configured, passes the same packet into the candidate/applicability path, and combines attention/reuse/branch-return mechanisms. This removes the duplicate task restore and connects the major local task-start capabilities. The composition remains an explicit CLI, not automatic ChatGPT startup; its final exact-head CI and end-to-end runtime bridge still require separate verification.
 
 Direct call-graph check against the exact PR #30 source (HEAD 85137d13c40777ef9f48cf305a0811c1e26cb3f1) makes the boundary more specific:
 - `agent_memory_cycle.run_cycle()` calls `build_task_start_experience_map()`, attention inspection, branch-return reconciliation, and (only on an explicit return request) the guarded parent-return path.
@@ -67,7 +68,7 @@ Direct call-graph check against the exact PR #30 source (HEAD 85137d13c40777ef9f
 - Neither function calls `build_memory_aware_packet()` / `retrieve_approved_memory()`, `applicability_evaluator.evaluate_applicability()`, or `decision_frontier.reduce_decision_frontier()`. The trusted receipt verifier is used for signed parent-return acknowledgement, not as the missing applicability-verification bridge.
 - Therefore the name/comment “single local entry point for the current connected memory cycle” is accurate only for the attention + event/lesson-candidate + branch-return subcycle. It is not yet the unified task-start orchestrator described above. This is a source-inspected call-graph finding, not an inference from filenames or CI.
 
-Integration implication: do not simply port PR #30 as the cluster entry point. First define the shared packet contract and adapt this cycle to accept/return the verified restore packet and candidate assessments, then call the applicability evaluator and decision frontier exactly once. Keep branch-return authorization as a separate optional operation so it cannot accidentally authorize use of a memory candidate.
+Integration implication: PR #36 selectively ports the #28/#30 primitives and defines a shared packet flow: one memory-aware restore packet is injected into candidate retrieval, applicability and decision-frontier evaluation run within the minimal loop, and attention/reuse/optional parent return remain distinct gates. Parent-return authorization is still separate and cannot authorize a memory candidate.
 
 Recommended composition contract: one outer task-start orchestrator should:
 1. restore the authoritative task/checkpoint and verify live source freshness;
@@ -136,7 +137,7 @@ PR #32 and PR #31 also edit core/universal_instructions.md, and PR #33 edits it 
 
 tools/adaptive_source_search.py supports preferred/fallback/emergency tiers and correctly treats unknown metadata as fallback rather than exclusion. It stops early only after verified identity/hash evidence and does not move or promote files.
 
-However, its current integration in tools/memory_aware_session_restore.py supplies stable identity, lexical query and project ID, but does not populate request source_type, format, required_capabilities or size_bytes. Therefore the general capability-aware ranking engine exists, but the integrated restore path currently exercises only a subset of its capability filters.
+At PR #35, the restore path supplied identity, lexical query and project ID but omitted source_type, format and required_capabilities. PR #36 now supplies source_type=semantic_memory, format=jsonl and required_capabilities=[approved_records, source_provenance] when searching after a partial memory-index no-match. Size constraints remain unused because this restore request does not know the source item's byte size. Other task/event discovery adapters still need to pass their own source constraints.
 
 registry/source_catalog.json covers configured local roots in the current checkout. It does not enumerate remote branches or other open PR heads. PR #33 demonstrates why branch-aware lookup is required: a source absent from the active integration branch exists on a known separate PR branch. A future remote adapter must preserve exact ref/HEAD/blob identity and distinguish:
 - not found at this ref/path;
@@ -193,10 +194,11 @@ Direct inspection of `projects/AGENT_MEMORY_SYSTEM/events.jsonl` found that `EVT
 - **System implication:** this is direct evidence that a stored lesson did not reliably influence the next write. A pre-write temporal-relation validator and regression test are still missing. The current architecture audit can identify imports and declared paths, but does not check semantic consistency of event relations.
 - **Status:** source discrepancy confirmed and corrected append-only; prevention is not implemented.
 
-## Current status
+## Current status after PR #36 composition
 
-- Implemented: multiple robust components; a connected synthetic source-to-approved-memory/index/restore pipeline; local adaptive source discovery; turn lifecycle service/ledger; candidate retrieval and trust-gate primitives.
-- Verified in separate drafts: identity/bootstrap (#33), writeback protocol (#32), dialogue window/archive adapter (#31), attention/return and signed receipt cycle (#30), applicability/decision frontier (#28).
-- Not yet one integrated cluster: these drafts have different bases, schemas and entrypoints.
-- Main missing capability: a single orchestrated task lifecycle connected to the actual ChatGPT host, with one event/state contract and cross-branch source discovery.
-- Safety: PR #35 remains Draft/open/unmerged; main unchanged. Browser-extension integration and large archive transfer remain deferred.
+- Implemented and narrowly tested: PR #36 ports the applicable #28/#30 modules into the #35 lineage; one explicit `agent_memory_cycle.py` entry point now composes verified task restore + approved semantic-memory retrieval + event/lesson candidate retrieval + applicability/frontier + attention/check-reuse + optional guarded parent return.
+- Single-restore contract: the memory-aware packet is passed through to the candidate loop; a regression test rejects a second call to the local restore builder.
+- Honest readiness: `cluster_readiness` is separate from legacy cycle status and marks missing repository/semantic-memory configuration as PARTIAL rather than complete.
+- Exact code checkpoint `9f89d5f2156ac34c862875f76bfcdab046c49454` passed CI run 39018028508: 429 Python tests, 1 skipped; strict write audit 143 mutation sites / 0 unclassified. Final documentation/checkpoint HEAD still requires its own exact-head CI check.
+- Still not one production runtime: ChatGPT does not automatically invoke this CLI; trusted local host/writeback bridge is absent; remote branch/commit search and external source adapters are not implemented; trusted applicability remains fail-closed without external pinned keyring configuration.
+- PR #36 is Draft/open/unmerged, stacked on #35/#34/#27. main unchanged. Browser-extension integration and large archive transfer remain deferred.
