@@ -120,9 +120,22 @@
         "",
         "[" + scopes.join(" + ") + "] conversation=" + pair.conversation_id +
           " turn=" + pair.turn_id + " project=UNKNOWN",
-        "Пользователь: " + pair.user.text,
-        "Рима: " + pair.assistant.text
+        "Пользователь: " + pair.user.text
       );
+      const attachments = Array.isArray(pair.user.attachments) ? pair.user.attachments : [];
+      for (const attachment of attachments) {
+        if (!attachment || typeof attachment !== "object") continue;
+        const safeRef = {
+          attachment_id: attachment.attachment_id || "UNKNOWN",
+          library_ref: attachment.library_ref || "UNKNOWN",
+          access_status: attachment.access_status || "UNKNOWN",
+          sha256: attachment.sha256 || "UNKNOWN",
+          original_name: attachment.original_name || "UNKNOWN",
+          size_bytes: Number.isSafeInteger(attachment.size_bytes) ? attachment.size_bytes : null
+        };
+        lines.push("Вложение (только ссылка и метаданные): " + JSON.stringify(safeRef));
+      }
+      lines.push("Рима: " + pair.assistant.text);
     }
     const pendingById = new Map();
     for (const turn of packet.global_pending_turns || []) {
