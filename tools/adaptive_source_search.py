@@ -109,6 +109,7 @@ def build_plan(sources: list[dict], request: dict) -> dict:
         planned.append({
             "source_id": source_id,
             "root": root,
+            "expected_path": source.get("expected_path"),
             "tier": tier,
             "priority": priority,
             "configuration_order": position,
@@ -159,7 +160,7 @@ def execute_search(plan: dict, request: dict, expected_path: str, *,
         tier_results = []
         for source in tier["sources"]:
             result = discover(
-                expected_path, [Path(source["root"])],
+                source.get("expected_path") or expected_path, [Path(source["root"])],
                 identity=request.get("identity"),
                 expected_sha256=request.get("expected_sha256"),
                 query=request.get("query"),
@@ -220,6 +221,18 @@ def main() -> int:
     catalog = json.loads(args.catalog.read_text(encoding="utf-8"))
     request = json.loads(args.request.read_text(encoding="utf-8"))
     sources = catalog.get("sources") if isinstance(catalog, dict) else None
+    if isinstance(sources, list):
+        catalog_root = args.catalog.resolve().parent
+        normalized_sources = []
+        for source in sources:
+            if not isinstance(source, dict):
+                continue
+            item = dict(source)
+            root = item.get("root")
+            if isinstance(root, str) and root and not Path(root).is_absolute():
+                item["root"] = str((catalog_root / root).resolve())
+            normalized_sources.append(item)
+        sources = normalized_sources
     plan = build_plan(sources, request)
     result = plan if args.plan_only else execute_search(
         plan, request, args.expected_path,
