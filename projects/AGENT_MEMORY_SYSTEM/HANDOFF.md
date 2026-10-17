@@ -778,3 +778,17 @@ Important remaining gap: real ingestion + promotion is tested, but the same test
 - Earlier failures were diagnosed and fixed: strict mutation audit classification; invalid regex in popup path parser; missing pending-turn ID in the formatter. Do not repeat those investigations unless new evidence appears.
 - Next: verify exact latest metadata HEAD and CI, then implement a small authenticated attachment bridge with explicit project binding and acceptance tests. Avoid mixing this work with PR #27's semantic-memory pipeline or PR #30's attention-return controller until this memory layer is validated.
 - Completeness: PARTIAL.
+
+
+## Handoff update — manual attachment bridge integrated (2026-10-17)
+
+- Active task: rolling short-term dialogue memory + project-library references, not yet end-to-end complete.
+- PR #31 / branch `feature/dialogue-stm-source-references-20261017` remains Draft/open/unmerged, stacked on PR #27's integration branch. Do not merge; PR #27/#30 and `main` unchanged.
+- Current implementation: rolling windows in `tools/dialogue_window.py` and browser `dialogue_window_core.js`; local turn ledger in IndexedDB; popup copies the last five global and last five current-chat pairs, deduplicating overlap. New turns use durable receive sequence; old turns fall back to timestamp ordering.
+- Attachment library: `tools/project_attachment_library.py` + `tools/project_attachment_adapter.py`; the extension popup now explicitly imports a reselected file through authenticated loopback and links reference metadata to a chosen source turn. Project ID and origin are allowlisted. The recovery prompt includes stable attachment refs but never bytes/absolute storage paths.
+- Verified code HEAD `09de26f7602fdf?` (use exact commit `09de26f7602f6df21e7495728c7466ca0a4f6f2d`); CI [39002176773](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/39002176773) PASS: 321 Python tests, 13 Node tests, write audit 144/0, memory validation PASS, project/stack validation PASS.
+- Doc update `6dd409d39722ebf26cf97537456416a4e386ebb1` describes the current manual bridge boundary; its exact-head CI is pending.
+- Limits: attachment capture is not automatic from ChatGPT's original file chooser; user must reselect once. Context is copied explicitly and pasted manually, not injected into model requests. Real Yandex Browser Android and local bridge startup have not been tested on the user's device.
+- Security note: extension profile storage/IndexedDB are not encrypted secret storage. Use a dedicated random bearer token, keep bridge loopback-only, and configure exact origin + explicit project allowlist.
+- Next: verify latest metadata-only HEAD/CI, then perform real-device acceptance or provide exact setup steps without claiming it worked. Keep this memory task active before returning to PR #27/#30 issues.
+- Completeness: PARTIAL.
