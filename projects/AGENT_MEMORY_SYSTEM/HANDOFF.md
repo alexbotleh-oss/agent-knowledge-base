@@ -807,3 +807,13 @@ Important remaining gap: real ingestion + promotion is tested, but the same test
 - Full integration audit lives at projects/AGENT_MEMORY_SYSTEM/CLUSTER_INTEGRATION_AUDIT_2026-10-17.md. It identifies the main remaining gap as the actual ChatGPT host/runtime bridge, not another memory format.
 - Next: verify exact current PR/branch HEAD and CI after checkpoint commits; implement branch-head drift/conflicting-revision reporting; then design a supported host invocation path for the local CLI and turn writeback. Do not claim automatic ChatGPT execution without a live round-trip test.
 - Still deferred: browser-extension integration and production archive transfer/completeness. Do not merge or change main.
+
+
+## Current return point — full PR audit and PR #38 reconciliation (2026-10-17)
+
+- Continue from PR #38 HEAD 258b11610bd57d8c4b1ff051a36b74dd75c741b6; base branch is PR #37's feature/remote-github-source-discovery-20261017, currently at 429d939ee0d2225d673dea709b12fd25f8fc9c8e. The merge commit preserves both histories and the corrected branch compares as 7 commits ahead / 0 behind across five intended paths.
+- Event history now retains PR #37's EVT-AGMS-20261017-006 and appends the PR #38 temporal-relation correction as EVT-AGMS-20261017-007. Read-back verified 32 JSONL records and 32 unique event IDs.
+- The missing validate_event_append import in dialogue_attention_controller.py is fixed on the existing PR branch. No new PR was created and main was not changed.
+- Exact-head CI for 258b11610bd57d8c4b1ff051a36b74dd75c741b6 has not run or is not visible through the connected GitHub actions; no check-runs were returned. Local clone failed on DNS. Keep status UNVERIFIED, not PASS.
+- Do not merge PR #38. First obtain exact-head CI, then update the continuity checkpoint to a genuinely verified SHA/run pair and confirm the configured verified-session restore no longer reports code drift.
+- Broader findings and the PR #1–#38 inventory are in CLUSTER_INTEGRATION_AUDIT_2026-10-17.md. The highest-risk unresolved areas are parallel project-memory ID collisions, stale checkpoint evidence, journal ownership across the turn lifecycle stores, bootstrap/global-project instruction integration, and the absence of an actual ChatGPT host bridge.
