@@ -151,6 +151,13 @@ def make_handler(library_root: Path, token: str, allowed_origins: set[str], allo
                     original_name=filename, media_type=media_type,
                 )
                 result.pop("storage_locator", None)
+                result.update({
+                    "project_id": project_id,
+                    "conversation_id": conversation_id,
+                    "source_message_id": source_message_id,
+                    "original_name": filename,
+                    "media_type": media_type,
+                })
                 self._send(201 if result["status"] == "REGISTERED" else 200,
                            {"status": result["status"], "attachment": result}, origin=origin)
             except ValueError as exc:
