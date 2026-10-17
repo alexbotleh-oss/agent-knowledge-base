@@ -153,6 +153,13 @@ def project_state(events: list[dict[str, Any]]) -> dict[str, Any]:
             child = data.get("child")
             if not isinstance(parent, dict) or not isinstance(child, dict):
                 raise ValueError(f"invalid branch-open event {event['event_id']}")
+            required_strings = ("branch_id", "classification", "turn_id")
+            if any(not isinstance(data.get(key), str) or not data.get(key).strip()
+                   for key in required_strings):
+                raise ValueError(f"invalid branch-open event {event['event_id']}: required identifiers missing")
+            if any(not isinstance(frame.get(key), str) or not frame.get(key).strip()
+                   for frame in (parent, child) for key in ("task_id", "checkpoint_id")):
+                raise ValueError(f"invalid branch-open event {event['event_id']}: task/checkpoint missing")
             if active is not None and active.get("task_id") != parent.get("task_id"):
                 raise ValueError(f"causal stack mismatch at {event['event_id']}: active task differs from parent")
             stack.append({
