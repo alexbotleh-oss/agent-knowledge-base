@@ -31,7 +31,7 @@ from experience_outcome_capture import capture_verified_experience_candidate
 
 MAX_TIMEOUT_SECONDS = 300
 MAX_OUTPUT_BYTES = 1_000_000
-TOKEN_RE = re.compile(r"[^\\W_]+", re.UNICODE)
+TOKEN_RE = re.compile(r"[^\W_]+", re.UNICODE)
 STOP_WORDS = {"and", "the", "for", "with", "from", "that", "this", "into", "when", "after", "before", "then", "prior", "experience", "identified", "run", "verify", "verified", "result", "task", "action", "fix", "fixed"}
 ARTIFACT_CHECK_TYPES = {"file_contains", "file_sha256", "json_field_equals"}
 ALLOWED_CHECK_TYPES = ARTIFACT_CHECK_TYPES | {"command_exit_code"}
