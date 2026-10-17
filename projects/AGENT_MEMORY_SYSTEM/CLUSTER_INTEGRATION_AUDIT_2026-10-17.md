@@ -333,3 +333,13 @@ Scope is the canonical project journal `projects/AGENT_MEMORY_SYSTEM/events.json
 - Code HEAD `4a2ee4499e11b8ff8fb02292d1320ad8b20e2160`: CI run `39068720335` PASS — 448 Python tests (1 skipped), 4 Node tests, strict write audit 143 mutation sites / 0 unclassified, memory validation and project/stack validation PASS.
 - Metadata-only branch tip `460ba6ab859d1aae906e716b8173c618486edafe`: run `39068855181` PASS — verified restore and task-start smoke both pass; `READY_FOR_REVIEW`, `RESTORED_PACKET`, readiness `PARTIAL` because approved semantic memory is unavailable.
 - This proves the repository CLI path under GitHub Actions only. Automatic ChatGPT-host invocation/writeback remains unverified. Do not merge either PR or modify `main`.
+
+
+## Integrated PR #38/#39 verification update — 2026-10-17
+
+- PR #39 is now stacked on PR #38 via merge commit `9d924ba172a306cc7f221f065367582daf9fe91e`; PR #39 base is PR #38. This preserves both histories without force-push or PR merge.
+- Integrated exact-head CI run `39069110273` passed: 478 Python tests (1 skipped), 4 Node tests, strict write audit 158 mutation sites / 0 unclassified, canonical event-log temporal audit PASS, memory validation PASS, project/stack validation PASS.
+- The PR #39 outcome-capture writer lock defect is fixed. Both capture methods use the same exclusive `events.jsonl.lock` path/protocol as the other canonical project-event writers; `test_capture_paths_share_exclusive_canonical_journal_lock` passes.
+- Workflow conditions now cover both branch names, the restore target ref comes from `github.head_ref`, and task/checkpoint IDs are read from the checkpoint file. This removes the hardcoded PR #38 ref and stale checkpoint ID.
+- Smoke was explicitly deferred in run `39069110273` until the integrated SHA/run is recorded. Do not mark integrated restore/task-start PASS until the subsequent metadata-only run passes.
+- The earlier writer table's lock mismatch row is historical and superseded by this correction. Approved semantic memory remains UNAVAILABLE; archive completeness and actual ChatGPT-host invocation remain open.

@@ -855,3 +855,12 @@ Important remaining gap: real ingestion + promotion is tested, but the same test
 - PR #39 adds verified-outcome and observed-failure append paths. Both call the same temporal validator, but they use `.capture.lock` with advisory locking, unlike the existing writers' exclusive `events.jsonl.lock`; these mechanisms do not coordinate and can race. This is the next concrete defect, not a reason to redo the full audit.
 - Next: change PR #39 capture to acquire the same exclusive `events.jsonl.lock` protocol; add a test proving it blocks when that canonical journal lock already exists; rerun exact-head CI; then stack #39 on #38 using a merge commit (no force push), retarget PR #39 to #38, and run the integrated workflow. Preserve both PRs open/unmerged and keep `main` untouched.
 - Known system boundary: repository CLI restore/task-start is verified in GitHub Actions; automatic ChatGPT host invocation/writeback is still not implemented or verified. Approved semantic memory is UNAVAILABLE, so cluster readiness remains PARTIAL.
+
+
+## Current return point — integrated PR #38/#39 branch (2026-10-17)
+
+- PR #39 branch `feature/experience-first-adaptive-analysis-20261017` now has PR #38 branch `feature/prewrite-event-relation-validator-20261017` as a parent; PR #39 base is PR #38. Merge commit `9d924ba172a306cc7f221f065367582daf9fe91e` is a branch merge commit only. Both PRs remain Draft/open/unmerged; `main` is untouched.
+- Integrated exact-head CI run `39069110273` PASS on `9d924ba172a306cc7f221f065367582daf9fe91e`: 478 Python tests (1 skipped), 4 Node tests, strict write audit 158/0, whole-log temporal relation audit PASS, memory validation PASS and project/stack validation PASS.
+- The outcome-capture lock mismatch is fixed: both success and failure event appends now use the same exclusive `events.jsonl.lock` as the other canonical event writers. Regression test `test_capture_paths_share_exclusive_canonical_journal_lock` passes.
+- The workflow now runs the temporal-log audit and task-start smoke for either integration branch, reads task/checkpoint IDs from `CONTINUITY_CHECKPOINT.json`, and resolves the branch from `github.head_ref` rather than a hardcoded PR #38 ref.
+- The exact-head CI correctly deferred smoke until this integrated code SHA is recorded in the checkpoint. Next: verify the metadata-only descendant restore/task-start smoke. Readiness remains PARTIAL because approved semantic memory is unavailable; automatic ChatGPT-host invocation and production archive completeness remain unverified.

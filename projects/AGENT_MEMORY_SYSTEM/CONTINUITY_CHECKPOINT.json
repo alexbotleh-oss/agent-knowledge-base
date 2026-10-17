@@ -125,7 +125,7 @@
       "status": "NOT_IMPLEMENTED_OR_NOT_CONNECTED"
     }
   ],
-  "next_action": "Run exact-head CI for the integrated PR #38/#39 branch. If it passes, update this checkpoint to the exact integrated code SHA and matching CI run, then verify restore/task-start on a metadata-only descendant. Keep approved semantic memory UNAVAILABLE/PARTIAL until an approved record exists; do not merge either PR or change main.",
+  "next_action": "Refresh evidence on the metadata-only descendant by running verified restore and agent_memory_cycle. If the smoke passes, record its run and final readiness. Then finish the broader system acceptance plan: approved semantic-memory availability, native archive import/read-back, and a real host invocation/writeback bridge remain open. Do not merge PRs or change main.",
   "constraints": [
     "Do not merge PR #27 or modify main without explicit user approval.",
     "Do not delete or rewrite source-history exports without a separate explicit decision.",
@@ -134,24 +134,24 @@
     "No semantic record is accepted merely because source metadata was registered.",
     "Never report CI success for a SHA other than the exact checked SHA."
   ],
-  "status": "INTEGRATED_PR38_PR39_CI_PENDING",
+  "status": "INTEGRATED_PR38_PR39_EXACT_HEAD_CI_PASS_SMOKE_PENDING",
   "checkpoint_semantics": "This is a durable task checkpoint committed to the integration branch. It is not an automatic ChatGPT autosave or proof that an undelivered response was saved.",
   "repository_state": {
-    "last_verified_code_head": "0bd664370b393c8cda8ad7e1b7f5239aad5994c7",
-    "exact_head_ci_run_id": 39068973852,
-    "exact_head_ci_url": "https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/39068973852",
+    "last_verified_code_head": "9d924ba172a306cc7f221f065367582daf9fe91e",
+    "exact_head_ci_run_id": 39069110273,
+    "exact_head_ci_url": "https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/39069110273",
     "exact_head_ci_conclusion": "success",
-    "python_tests": 448,
+    "python_tests": 478,
     "python_skipped": 1,
     "node_tests": 4,
-    "write_audit_mutation_sites": 143,
+    "write_audit_mutation_sites": 158,
     "write_audit_unclassified": 0,
     "memory_validation": "PASS",
     "project_validation": "PASS",
     "semantic_memory_registry_tests": 12,
     "canonical_index_tests": 10,
     "memory_aware_restore_tests": 9,
-    "note": "Last independently verified pre-integration code HEAD 0bd664370b393c8cda8ad7e1b7f5239aad5994c7 passed exact-head CI run 39068973852 (448 Python tests, 1 skipped; 4 Node tests; strict write audit 143/0; memory and project validation PASS). PR #39's sibling code HEAD 422d74670cf833a5c3f5bcdeb1fd19c17911c11f passed CI run 39068944900 (468 Python tests, 1 skipped; 4 Node tests; write audit 158/0). These are separate-branch results, not proof of integrated behavior. The merged branch requires new exact-head CI before smoke.",
+    "note": "Integrated code HEAD 9d924ba172a306cc7f221f065367582daf9fe91e passed exact-head CI run 39069110273: 478 Python tests (1 skipped), 4 Node tests, strict write audit 158 mutation sites / 0 unclassified, canonical temporal event-log audit PASS, memory validation PASS and project/stack validation PASS. The workflow correctly deferred task-start smoke because this exact code SHA was not yet recorded in the checkpoint. The next metadata-only commit records this SHA/run; the following CI must verify restore/task-start against the integrated branch.",
     "edge_correction_registry_tests": 8,
     "correction_index_integration_tests": 2,
     "extension_js_syntax": "PASS_STATIC_ONLY",
@@ -183,10 +183,10 @@
   },
   "revision_semantics": {
     "source_code_checkpoint": "Historical milestone retained in the original source_code_checkpoint object; it is not the current code HEAD.",
-    "latest_verified_code_head": "Before integration, PR #38 code HEAD 0bd664370b393c8cda8ad7e1b7f5239aad5994c7 passed run 39068973852 and sibling PR #39 code HEAD 422d74670cf833a5c3f5bcdeb1fd19c17911c11f passed run 39068944900. Neither run verifies the combined merge commit.",
+    "latest_verified_code_head": "Integrated code HEAD 9d924ba172a306cc7f221f065367582daf9fe91e passed exact-head CI run 39069110273. Whole-log temporal validation and repository checks passed; restore/task-start smoke was explicitly deferred pending checkpoint refresh.",
     "metadata_revision": "The Git commit containing the current checkpoint/task/handoff/event metadata is authoritative for metadata revision; it is intentionally not embedded as a self-referential SHA.",
     "chronology_rule": "Historical source checkpoint, previous verified code states, current code SHA/CI and subsequent metadata commit remain separate facts.",
-    "live_restore_verification": "NOT RUN for the integrated PR #38/#39 branch. Both source branches passed their own CI, but the combined tree must pass exact-head CI before the checkpoint is refreshed and restore/task-start smoke is run."
+    "live_restore_verification": "NOT RUN for integrated code HEAD 9d924ba172a306cc7f221f065367582daf9fe91e. The exact-head CI passed, but the workflow deferred smoke because the checkpoint referred to pre-integration code. Refresh the checkpoint with this exact SHA/run, then verify the metadata-only descendant."
   },
   "prior_verified_code_states": [
     {

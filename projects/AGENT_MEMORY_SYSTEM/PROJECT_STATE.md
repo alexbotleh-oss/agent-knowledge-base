@@ -35,3 +35,7 @@
 
 - **Verified continuation (2026-10-17):** PR #38 code HEAD `4a2ee4499e11b8ff8fb02292d1320ad8b20e2160` passed exact-head CI run `39068720335`; metadata-only descendant smoke passed in run `39068855181`. Task-start is `READY_FOR_REVIEW`, restore `RESTORED_PACKET`, cluster readiness `PARTIAL` because approved semantic memory is unavailable. No automatic ChatGPT-host bridge is verified.
 - **Writer integration risk:** PR #39's outcome-capture paths use a different lock protocol/path from the three canonical event writers in PR #38. Fix and test the shared journal lock before stacking the branches and validating the combined system.
+
+
+- **Integrated branch checkpoint (2026-10-17):** PR #39 is stacked on PR #38 through merge commit `9d924ba172a306cc7f221f065367582daf9fe91e`; no PR merge or `main` change. Exact-head CI run `39069110273` passed 478 Python tests (1 skipped), 4 Node tests, write audit 158/0, whole-log temporal validation, memory validation and project/stack validation.
+- **Remaining readiness boundary:** restore/task-start smoke must be rerun after the checkpoint refresh; approved semantic memory is still unavailable. Native archive completeness and automatic ChatGPT-host invocation/writeback remain unverified.
