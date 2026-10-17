@@ -4,6 +4,7 @@ import json
 import sys
 import tempfile
 import unittest
+import zipfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -26,7 +27,7 @@ class ResumableImportToMemoryPipelineTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            source = root / "conversations.json"
+            source = root / "export.zip"
             conversations = [{
                 "id": "CONV-E2E-001",
                 "title": "Synthetic E2E fixture",
@@ -37,7 +38,10 @@ class ResumableImportToMemoryPipelineTests(unittest.TestCase):
                             "id": "MSG-E2E-USER", "create_time": 1790000000,
                             "author": {"role": "user"},
                             "content": {"content_type": "text", "parts": ["synthetic source fact"]},
-                            "metadata": {},
+                            "metadata": {"attachments": [{
+                                "id": "ATTACHMENT-E2E-001",
+                                "name": "synthetic-attachment.pdf",
+                            }]},
                         },
                     },
                     "NODE-E2E-ASSISTANT": {
@@ -62,7 +66,9 @@ class ResumableImportToMemoryPipelineTests(unittest.TestCase):
                     },
                 },
             }]
-            source.write_text(json.dumps(conversations, ensure_ascii=False), encoding="utf-8")
+            with zipfile.ZipFile(source, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+                archive.writestr("conversations.json", json.dumps(conversations, ensure_ascii=False))
+                archive.writestr("files/synthetic-attachment.pdf", b"%PDF-1.4\\nsynthetic test payload\\n%%EOF")
             source_bytes = source.read_bytes()
             import_root = root / "resumable-import"
 
@@ -93,6 +99,8 @@ class ResumableImportToMemoryPipelineTests(unittest.TestCase):
             staging_root = root / "staging"
             staged = build_staging(snapshot_file, staging_root, "ARCHIVE-E2E-001")
             self.assertEqual(staged["raw_sha256"], imported["source_sha256"])
+            self.assertEqual(staged["coverage"]["status"], "partial")
+            self.assertEqual(staged["coverage"]["records_with_attachment_markers"], 1)
             snapshot_manifest = staging_root / "archive_snapshot.json"
             source_registry = root / "registry" / "source_records.jsonl"
             memory_registry = root / "registry" / "memory_records.jsonl"
@@ -119,6 +127,8 @@ class ResumableImportToMemoryPipelineTests(unittest.TestCase):
             )
             self.assertIsNone(intake_rows[0]["parent_node_id"])
             self.assertEqual(intake_rows[0]["child_node_ids"], ["NODE-E2E-ASSISTANT"])
+            self.assertTrue(intake_rows[0]["has_attachments"])
+            self.assertFalse(intake_rows[0]["attachment_payloads_inspected"])
             self.assertEqual(intake_rows[1]["parent_node_id"], "NODE-E2E-USER")
             self.assertEqual(intake_rows[1]["child_node_ids"], ["NODE-E2E-A-FOLLOWUP"])
             self.assertEqual(intake_rows[2]["parent_node_id"], "NODE-E2E-ASSISTANT")
@@ -245,6 +255,8 @@ class ResumableImportToMemoryPipelineTests(unittest.TestCase):
             )
             self.assertIsNone(source_rows[0]["parent_node_id"])
             self.assertEqual(source_rows[0]["child_node_ids"], ["NODE-E2E-ASSISTANT"])
+            self.assertTrue(source_rows[0]["has_attachments"])
+            self.assertFalse(source_rows[0]["attachment_payloads_inspected"])
             self.assertEqual(source_rows[1]["parent_node_id"], "NODE-E2E-USER")
             self.assertEqual(source_rows[1]["child_node_ids"], ["NODE-E2E-A-FOLLOWUP"])
             self.assertEqual(source_rows[2]["parent_node_id"], "NODE-E2E-ASSISTANT")
