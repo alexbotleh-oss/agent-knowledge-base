@@ -19,15 +19,15 @@ class MemoryArchitectureAuditTests(unittest.TestCase):
         (self.root / "registry").mkdir()
         (self.root / "registry" / "records.jsonl").write_text("", encoding="utf-8")
         (self.root / "tools" / "reader.py").write_text(
-            "def read():\\n    return True\\n", encoding="utf-8"
+            "def read():\n    return True\n", encoding="utf-8"
         )
         (self.root / "tools" / "writer.py").write_text(
-            "from reader import read\\n"
-            "from pathlib import Path\\n"
-            "ROOT = Path(__file__).resolve().parents[1]\\n"
-            "DEFAULT_REGISTRY = ROOT / 'registry' / 'records.jsonl'\\n"
-            "if __name__ == '__main__':\\n"
-            "    print(read())\\n",
+            "from reader import read\n"
+            "from pathlib import Path\n"
+            "ROOT = Path(__file__).resolve().parents[1]\n"
+            "DEFAULT_REGISTRY = ROOT / 'registry' / 'records.jsonl'\n"
+            "if __name__ == '__main__':\n"
+            "    print(read())\n",
             encoding="utf-8",
         )
 
@@ -55,7 +55,7 @@ class MemoryArchitectureAuditTests(unittest.TestCase):
         )
 
     def test_parse_error_marks_scan_partial(self):
-        (self.root / "tools" / "broken.py").write_text("def broken(:\\n", encoding="utf-8")
+        (self.root / "tools" / "broken.py").write_text("def broken(:\n", encoding="utf-8")
         report = build_audit(self.root)
         self.assertEqual(report["status"], "PARTIAL_SCAN")
         broken = next(item for item in report["components"] if item["path"] == "tools/broken.py")
