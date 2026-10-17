@@ -55,7 +55,7 @@ class VerifiedTaskExecutorTests(unittest.TestCase):
     def tearDown(self):
         self.temp.cleanup()
 
-    def _run(self, *, execute, checks=None, argv=None, event_id="EVT-EXP-001"):
+    def _run(self, *, execute, checks=None, argv=None, event_id="EVT-EXP-001", risk_level="normal", prior_failed_attempts=0):
         return run_reviewed_action(
             workspace_root=self.root,
             task_state=self.task_state,
@@ -83,6 +83,8 @@ class VerifiedTaskExecutorTests(unittest.TestCase):
             observed_outcome="Independent artifact checks passed after the reviewed action",
             execute=execute,
             timeout_seconds=10,
+            risk_level=risk_level,
+            prior_failed_attempts=prior_failed_attempts,
         )
 
     def test_dry_run_retrieves_experience_but_does_not_execute_or_write(self):
@@ -189,6 +191,20 @@ class VerifiedTaskExecutorTests(unittest.TestCase):
         )
         self.assertEqual(result["status"], "BLOCKED_EXPERIENCE_NOT_LINKED_TO_ACTION")
         self.assertFalse(result["execution_performed"] if "execution_performed" in result else False)
+        self.assertFalse((self.root / "artifacts" / "should-not-exist").exists())
+
+    def test_high_risk_route_blocks_action_even_when_execute_flag_is_set(self):
+        result = self._run(
+            execute=True,
+            risk_level="critical",
+            argv=[
+                sys.executable,
+                "-c",
+                "from pathlib import Path; Path('artifacts/should-not-exist').write_text('x')",
+            ],
+        )
+        self.assertEqual(result["status"], "BLOCKED_ROUTE_REQUIRES_DEEPER_ANALYSIS")
+        self.assertFalse(result["execution_performed"])
         self.assertFalse((self.root / "artifacts" / "should-not-exist").exists())
 
 
