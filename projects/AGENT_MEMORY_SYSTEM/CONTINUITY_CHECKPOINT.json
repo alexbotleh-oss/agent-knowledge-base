@@ -125,7 +125,7 @@
       "status": "NOT_IMPLEMENTED_OR_NOT_CONNECTED"
     }
   ],
-  "next_action": "Continue the PR #1–#38 overlap and contract audit. Prioritize reconciling duplicate/parallel memory-transfer branches and the current-vs-historical status text in PROJECT_STATE/audit/PR description in a planned code-head revision. After exact-head CI, refresh the checkpoint and rerun the branch-tip smoke. Keep approved semantic memory UNAVAILABLE/PARTIAL until an actual approved record exists; do not restart the deferred archive transfer or claim automatic ChatGPT-host execution.",
+  "next_action": "Refresh this checkpoint with the verified code HEAD 4a2ee4499e11b8ff8fb02292d1320ad8b20e2160 and exact-head CI run 39068720335. Then rerun verified restore + agent_memory_cycle on the metadata-only descendant and record the actual smoke result. Keep approved semantic memory UNAVAILABLE/PARTIAL until an approved record exists; do not merge PRs, change main, restart the deferred archive transfer, or claim automatic ChatGPT-host execution.",
   "constraints": [
     "Do not merge PR #27 or modify main without explicit user approval.",
     "Do not delete or rewrite source-history exports without a separate explicit decision.",
@@ -134,14 +134,14 @@
     "No semantic record is accepted merely because source metadata was registered.",
     "Never report CI success for a SHA other than the exact checked SHA."
   ],
-  "status": "PR38_LIVE_RESTORE_TASK_START_SMOKE_PASS_PARTIAL_MEMORY",
+  "status": "PR38_EXACT_HEAD_CI_PASS_SMOKE_PENDING",
   "checkpoint_semantics": "This is a durable task checkpoint committed to the integration branch. It is not an automatic ChatGPT autosave or proof that an undelivered response was saved.",
   "repository_state": {
-    "last_verified_code_head": "ebed5f048188b1f057f1c40a00ca148acd087b6b",
-    "exact_head_ci_run_id": 39023539993,
-    "exact_head_ci_url": "https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/39023539993",
+    "last_verified_code_head": "4a2ee4499e11b8ff8fb02292d1320ad8b20e2160",
+    "exact_head_ci_run_id": 39068720335,
+    "exact_head_ci_url": "https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/39068720335",
     "exact_head_ci_conclusion": "success",
-    "python_tests": 446,
+    "python_tests": 448,
     "python_skipped": 1,
     "node_tests": 4,
     "write_audit_mutation_sites": 143,
@@ -151,7 +151,7 @@
     "semantic_memory_registry_tests": 12,
     "canonical_index_tests": 10,
     "memory_aware_restore_tests": 9,
-    "note": "Exact code HEAD ebed5f048188b1f057f1c40a00ca148acd087b6b passed CI run 39023539993: 446 Python tests (1 skipped), 4 Node tests, strict write audit 143 mutation sites / 0 unclassified, memory validation PASS and project/stack validation PASS. Live branch-tip smoke run 39023790479 on metadata-only descendant efc7096a411f6ade91b4ce7cc1462e8d0d12589a passed: VERIFIED_SESSION_RESTORE_PASS and TASK_START_CLUSTER_PASS; task status READY_FOR_REVIEW, task restore RESTORED_PACKET, cluster readiness PARTIAL because the approved semantic-memory registry is unavailable. No writes, planning authorization or execution occurred. This proves the local CLI cluster in GitHub Actions, not automatic ChatGPT-host invocation.",
+    "note": "Exact code HEAD 4a2ee4499e11b8ff8fb02292d1320ad8b20e2160 passed exact-head CI run 39068720335: 448 Python tests (1 skipped), 4 Node tests, strict write audit 143 mutation sites / 0 unclassified, memory validation PASS and project/stack validation PASS. The restore/task-start step explicitly deferred its smoke because the checkpoint still referred to older code and the live branch had code-path drift. Prior smoke run 39023790479 belongs to the earlier code state and is historical only for this HEAD. Refresh checkpoint to this SHA/run, then repeat smoke on a metadata-only descendant.",
     "edge_correction_registry_tests": 8,
     "correction_index_integration_tests": 2,
     "extension_js_syntax": "PASS_STATIC_ONLY",
@@ -183,10 +183,10 @@
   },
   "revision_semantics": {
     "source_code_checkpoint": "Historical milestone retained in the original source_code_checkpoint object; it is not the current code HEAD.",
-    "latest_verified_code_head": "Latest verified code HEAD is ebed5f048188b1f057f1c40a00ca148acd087b6b; exact-head CI run 39023539993 belongs to this SHA. Live restore/task-start smoke passed on metadata-only descendant efc7096a411f6ade91b4ce7cc1462e8d0d12589a in run 39023790479.",
+    "latest_verified_code_head": "Latest verified code HEAD is 4a2ee4499e11b8ff8fb02292d1320ad8b20e2160; exact-head CI run 39068720335 belongs to this SHA. Task-start smoke was explicitly deferred in that run because the checkpoint had not yet been refreshed; the prior smoke result is historical and does not verify this code HEAD.",
     "metadata_revision": "The Git commit containing the current checkpoint/task/handoff/event metadata is authoritative for metadata revision; it is intentionally not embedded as a self-referential SHA.",
     "chronology_rule": "Historical source checkpoint, previous verified code states, current code SHA/CI and subsequent metadata commit remain separate facts.",
-    "live_restore_verification": "PASS in GitHub Actions run 39023790479 on branch-tip efc7096a411f6ade91b4ce7cc1462e8d0d12589a: verified restore returned RESTORED_PACKET; task-start returned READY_FOR_REVIEW; cluster readiness was PARTIAL because approved semantic memory is UNAVAILABLE. No writes, planning authorization or execution occurred. This verifies the repository CLI path, not automatic execution inside ChatGPT."
+    "live_restore_verification": "Historical PASS in GitHub Actions run 39023790479 on metadata-only descendant efc7096a411f6ade91b4ce7cc1462e8d0d12589a: verified restore returned RESTORED_PACKET; task-start returned READY_FOR_REVIEW; cluster readiness was PARTIAL because approved semantic memory was UNAVAILABLE. That result predates code changes in the current HEAD and must not be treated as current verification. Current code HEAD 4a2ee4499e11b8ff8fb02292d1320ad8b20e2160 passed CI, but the live restore/task-start smoke was deferred pending checkpoint refresh."
   },
   "prior_verified_code_states": [
     {
