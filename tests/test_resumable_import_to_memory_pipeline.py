@@ -41,11 +41,22 @@ class ResumableImportToMemoryPipelineTests(unittest.TestCase):
                         },
                     },
                     "NODE-E2E-ASSISTANT": {
-                        "parent": "NODE-E2E-USER", "children": [],
+                        "parent": "NODE-E2E-USER", "children": ["NODE-E2E-A-FOLLOWUP"],
                         "message": {
                             "id": "MSG-E2E-ASSISTANT", "create_time": 1790000001,
                             "author": {"role": "assistant"},
                             "content": {"content_type": "text", "parts": ["synthetic response"]},
+                            "metadata": {},
+                        },
+                    },
+                    # This node sorts lexically before NODE-E2E-ASSISTANT but
+                    # appears after it in the export and has the same timestamp.
+                    "NODE-E2E-A-FOLLOWUP": {
+                        "parent": "NODE-E2E-ASSISTANT", "children": [],
+                        "message": {
+                            "id": "MSG-E2E-FOLLOWUP", "create_time": 1790000001,
+                            "author": {"role": "assistant"},
+                            "content": {"content_type": "text", "parts": ["synthetic followup"]},
                             "metadata": {},
                         },
                     },
@@ -97,19 +108,21 @@ class ResumableImportToMemoryPipelineTests(unittest.TestCase):
                 json.loads(line)
                 for line in intake_rows_path.read_text(encoding="utf-8").splitlines()
             ]
-            self.assertEqual(len(intake_rows), 2)
+            self.assertEqual(len(intake_rows), 3)
             self.assertEqual(
                 [row["source_node_id"] for row in intake_rows],
-                ["NODE-E2E-USER", "NODE-E2E-ASSISTANT"],
+                ["NODE-E2E-USER", "NODE-E2E-ASSISTANT", "NODE-E2E-A-FOLLOWUP"],
             )
             self.assertEqual(
                 [row["source_time_unix"] for row in intake_rows],
-                [1790000000, 1790000001],
+                [1790000000, 1790000001, 1790000001],
             )
             self.assertIsNone(intake_rows[0]["parent_node_id"])
             self.assertEqual(intake_rows[0]["child_node_ids"], ["NODE-E2E-ASSISTANT"])
             self.assertEqual(intake_rows[1]["parent_node_id"], "NODE-E2E-USER")
-            self.assertEqual(intake_rows[1]["child_node_ids"], [])
+            self.assertEqual(intake_rows[1]["child_node_ids"], ["NODE-E2E-A-FOLLOWUP"])
+            self.assertEqual(intake_rows[2]["parent_node_id"], "NODE-E2E-ASSISTANT")
+            self.assertEqual(intake_rows[2]["child_node_ids"], [])
             source_row = intake_rows[0]
             memory_record = {
                 "memory_id": "MEM-E2E-001", "record_type": "lesson",
@@ -221,19 +234,21 @@ class ResumableImportToMemoryPipelineTests(unittest.TestCase):
             self.assertEqual(restored["records"][0]["revision_id"], "REV-E2E-001")
             self.assertTrue(restored["records"][0]["provenance"])
             source_rows = [json.loads(line) for line in source_registry.read_text(encoding="utf-8").splitlines()]
-            self.assertEqual(len(source_rows), 2)  # user and assistant message nodes
+            self.assertEqual(len(source_rows), 3)  # three message nodes
             self.assertEqual(
                 [row["source_node_id"] for row in source_rows],
-                ["NODE-E2E-USER", "NODE-E2E-ASSISTANT"],
+                ["NODE-E2E-USER", "NODE-E2E-ASSISTANT", "NODE-E2E-A-FOLLOWUP"],
             )
             self.assertEqual(
                 [row["source_time_unix"] for row in source_rows],
-                [1790000000, 1790000001],
+                [1790000000, 1790000001, 1790000001],
             )
             self.assertIsNone(source_rows[0]["parent_node_id"])
             self.assertEqual(source_rows[0]["child_node_ids"], ["NODE-E2E-ASSISTANT"])
             self.assertEqual(source_rows[1]["parent_node_id"], "NODE-E2E-USER")
-            self.assertEqual(source_rows[1]["child_node_ids"], [])
+            self.assertEqual(source_rows[1]["child_node_ids"], ["NODE-E2E-A-FOLLOWUP"])
+            self.assertEqual(source_rows[2]["parent_node_id"], "NODE-E2E-ASSISTANT")
+            self.assertEqual(source_rows[2]["child_node_ids"], [])
             for source_row in source_rows:
                 self.assertNotIn("text", source_row)
                 self.assertEqual(source_row["source_snapshot_sha256"], imported["source_sha256"])
