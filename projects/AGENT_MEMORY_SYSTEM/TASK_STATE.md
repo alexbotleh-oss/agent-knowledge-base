@@ -424,3 +424,12 @@ Tests added for first pass, completed replay, and a changed source under the sam
 - **Evidence and uncertainty:** CARD111 stale Pages UI and ORGANISM OAuth white screen remain distinct incidents. Their exact root causes are not merged or guessed. Global lesson status is validated/high as a shared process rule, not as proof that either app's runtime was verified.
 - **Validation boundary:** prior exact-head CI passed for `fe88a27cb8e1aeda3baf90207aaf9fd4531a0ef9` in run #39024118077. This new consolidation commit requires its own read-back and exact-head CI check.
 - **Next:** compare other cross-file lesson candidates only when their source evidence supports the same rule; do not merge low-similarity candidates. Keep PR #22 Draft/open/unmerged and preserve project boundaries.
+
+## Cross-file lesson consolidation — G-LESSON-002 — 2026-10-17
+
+- **Canonical record:** updated `lessons/global/records.jsonl:G-LESSON-002` to be the single shared rule for checking installed API version and constructor signature before patching.
+- **Duplicate disposition:** the standalone `L-RM-002` section in `projects/RECIPE_MANAGER/LESSONS.md` is now a pointer to G-LESSON-002 rather than a second general rule. Source event `EVT-20260927-001` remains the evidence anchor.
+- **Uncertainty preserved:** the `PopupMenuItem(..., text=...)` TypeError is confirmed in the source summary, but the exact installed version, root cause and final fix remain unverified. Canonical status stays candidate/medium.
+- **Prior verification:** GitHub Actions Validate knowledge base passed for HEAD `c85ffe55bc25235aa8f3d06074b4a27a4f5b9502` in run #39024266434. This checkpoint advances the branch; the new HEAD requires a separate exact-head CI check.
+- **Method lesson:** a similar title is not sufficient to merge records. The B77-L-010 / L-RM-022 camera pair was inspected and left as an explicit cross-project pointer because it already preserves one canonical project lesson and correctly distinguishes browser/PWA from native scanner context.
+- **Next:** continue only with source-backed duplicate clusters; retain one canonical shared rule and project-local evidence pointers, with uncertainty and provenance intact.
