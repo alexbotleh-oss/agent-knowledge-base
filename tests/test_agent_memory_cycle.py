@@ -537,5 +537,19 @@ class AgentMemoryCycleTests(unittest.TestCase):
             [second["event_id"]],
         )
 
+    def test_cluster_readiness_does_not_call_local_only_mode_complete(self):
+        result = run_cycle(
+            self.task, self.handoff, self.attention, self.attention,
+            "restore task context", experience_logs=[self.attention],
+            lesson_logs=[], current_project_id="AGENT_MEMORY_SYSTEM",
+        )
+        self.assertEqual(result["semantic_memory_integration"]["status"], "NOT_CONFIGURED")
+        self.assertEqual(result["cluster_readiness"]["status"], "PARTIAL")
+        self.assertIn(
+            "LIVE_REPOSITORY_AND_APPROVED_MEMORY_NOT_CONFIGURED",
+            result["cluster_readiness"]["issues"],
+        )
+        self.assertFalse(result["cluster_readiness"]["planning_authorized"])
+
 if __name__ == "__main__":
     unittest.main()
