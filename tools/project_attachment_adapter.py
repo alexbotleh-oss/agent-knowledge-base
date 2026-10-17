@@ -23,7 +23,7 @@ from project_attachment_library import PROJECT_RE, register_attachment
 
 MAX_ATTACHMENT_BYTES = 25 * 1024 * 1024
 MAX_ID_CHARS = 256
-FILENAME_RE = re.compile(r"[\\x00-\\x1f\\x7f<>:\"|?*]+")
+FILENAME_RE = re.compile(r"[\x00-\x1f\x7f<>:\"|?*]+")
 
 
 def _required(value: str | None, field: str, limit: int = MAX_ID_CHARS) -> str:
