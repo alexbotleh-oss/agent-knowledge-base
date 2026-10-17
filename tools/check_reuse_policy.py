@@ -182,7 +182,12 @@ def evaluate_check_reuse(
         event = exact[-1]
         record = event["check_result"]
         evidence_refs = record.get("evidence_refs")
-        if record.get("result_status") == "PASS" and isinstance(evidence_refs, list) and evidence_refs:
+        if (
+            record.get("result_status") == "PASS"
+            and isinstance(evidence_refs, list)
+            and evidence_refs
+            and all(isinstance(ref, str) and ref.strip() for ref in evidence_refs)
+        ):
             expected_claim = {
                 "check_key": fingerprint["check_key"],
                 "input_fingerprint": fingerprint["input_fingerprint"],
