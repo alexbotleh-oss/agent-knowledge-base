@@ -108,21 +108,38 @@ async function registerTurn(payload, sender) {
         tx.abort();
         return;
       }
-      const received = makeEvent(turn_id, "TURN_RECEIVED", {
-        task_id, user_text, previous_checkpoint, user_text_sha256: userTextSha256,
-        previous_assistant_message
-      }, turn_id + ":TURN_RECEIVED");
-      // WebCrypto is asynchronous; exact text is retained locally. The hash is a
-      // convenience integrity field, not a substitute for the stored exact text.
-      const turn = {
-        turn_id, task_id, user_text, previous_checkpoint, previous_assistant_message,
-        assistant_count_before: Number.isInteger(assistant_count_before) ? assistant_count_before : 0,
-        tab_id: sender?.tab?.id ?? null, url, conversation_id,
-        state: "AWAITING_START", received_at: received.timestamp, updated_at: received.timestamp,
-        events: [received], artifacts: [], last_event: received
+      const allRequest = store.getAll();
+      allRequest.onsuccess = () => {
+        try {
+          const priorSequences = allRequest.result
+            .map(item => item.received_sequence)
+            .filter(Number.isInteger);
+          const receivedSequence = priorSequences.length ? Math.max(...priorSequences) + 1 : 1;
+          const received = makeEvent(turn_id, "TURN_RECEIVED", {
+            task_id, user_text, previous_checkpoint, user_text_sha256: userTextSha256,
+            previous_assistant_message
+          }, turn_id + ":TURN_RECEIVED");
+          // WebCrypto is asynchronous; exact text is retained locally. The hash is a
+          // convenience integrity field, not a substitute for the stored exact text.
+          const turn = {
+            turn_id, task_id, user_text, previous_checkpoint, previous_assistant_message,
+            assistant_count_before: Number.isInteger(assistant_count_before) ? assistant_count_before : 0,
+            received_sequence: receivedSequence,
+            tab_id: sender?.tab?.id ?? null, url, conversation_id,
+            state: "AWAITING_START", received_at: received.timestamp, updated_at: received.timestamp,
+            events: [received], artifacts: [], last_event: received
+          };
+          store.add(turn);
+          outcome = { status: "APPENDED", turn };
+        } catch (error) {
+          failure = error;
+          try { tx.abort(); } catch {}
+        }
       };
-      store.add(turn);
-      outcome = { status: "APPENDED", turn };
+      allRequest.onerror = () => {
+        failure = allRequest.error || new Error("turn_sequence_read_failed");
+        try { tx.abort(); } catch {}
+      };
     };
     get.onerror = () => { failure = get.error; };
     tx.oncomplete = () => resolve(outcome);
