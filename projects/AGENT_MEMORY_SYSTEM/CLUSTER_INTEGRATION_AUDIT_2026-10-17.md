@@ -362,3 +362,11 @@ Scope is the canonical project journal `projects/AGENT_MEMORY_SYSTEM/events.json
 - The adaptive-parameter API mismatch found in the first integrated smoke was fixed; the new call-contract regression test passes.
 - Outcome capture and the other canonical project-event writers now share the exclusive journal lock contract.
 - **Remaining readiness:** PARTIAL, because approved semantic memory is unavailable. This is a verified repository CLI path in GitHub Actions, not automatic ChatGPT-host invocation. Native archive import/completeness and host writeback remain open acceptance tasks.
+
+
+## Bootstrap/source-map status — 2026-10-17
+
+- The source map `core/agent_bootstrap.md` is absent from `main` and integrated PR #38/#39; it exists on separate open Draft PR #33 branch `fix/identity-continuity-contract-20261017` at `1ffd67002d42957910175a089d5233bdbbdc0739`.
+- Read the bootstrap plus `guardrails.md`, `identity_and_continuity_contract.md`, `universal_instructions.md`, `context_interpretation.md`, `session_handoff.md`, and `agent_runtime_protocol.md` from that branch. Their presence does not prove integration or automatic runtime loading.
+- Do not cherry-pick the bootstrap alone. Existing audit requires selective #32/#33 integration after journal ownership and global/project instruction/bootstrap alignment are reconciled.
+- This is a separate integration dependency; PR #38/#39 exact-head CI and task-start smoke remain verified. Readiness remains PARTIAL because approved semantic memory is unavailable.

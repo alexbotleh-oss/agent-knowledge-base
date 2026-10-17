@@ -47,3 +47,6 @@
 
 - **Integrated runtime smoke (2026-10-17):** run `39069332907` passed on metadata-only descendant `9a3ee7c113b08dc3fe2c627a59095e02bc4a488d`: verified restore `RESTORED_PACKET`, task-start `READY_FOR_REVIEW`. Cluster readiness remains PARTIAL because approved semantic memory is unavailable.
 - **Verified code:** `5ffedd908c1fdda2ed32d83c5ba316b94ccea86e`, exact-head CI `39069265060`: 479 Python tests (1 skipped), 4 Node tests, write audit 158/0, temporal audit and repository checks PASS.
+
+
+- **Bootstrap dependency:** `core/agent_bootstrap.md` is absent from `main` and the integrated PR #38/#39 branch, but exists in separate open Draft PR #33. Its referenced core documents were read there; selective integration remains deferred pending the existing journal-ownership and global/project-instruction audit.

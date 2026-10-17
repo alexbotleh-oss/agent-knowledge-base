@@ -880,3 +880,11 @@ P2 is not yet declared ready: this test mocks the final verified restore packet,
 - Metadata-only descendant `9a3ee7c113b08dc3fe2c627a59095e02bc4a488d` passed live restore/task-start smoke run `39069332907`: `VERIFIED_SESSION_RESTORE_PASS`, `TASK_START_CLUSTER_PASS`, task `READY_FOR_REVIEW`, restore `RESTORED_PACKET`.
 - Cluster readiness remains `PARTIAL` because approved semantic memory is `UNAVAILABLE`. No writes, planning authorization or execution occurred. The CLI path is verified in GitHub Actions; automatic ChatGPT-host invocation is not.
 - PR #39 is stacked on PR #38 through a non-force merge commit; both PRs remain Draft/open/unmerged and `main` is untouched.
+
+
+## Source-map dependency found — PR #33 remains separate (2026-10-17)
+
+- The required `core/agent_bootstrap.md` is absent from `main` and the integrated PR #38/#39 branch. It is present at `fix/identity-continuity-contract-20261017`, HEAD `1ffd67002d42957910175a089d5233bdbbdc0739`, in open Draft PR #33.
+- Read the bootstrap and its referenced guardrails, identity/continuity contract, universal instructions, context interpretation, session handoff, and runtime protocol on that branch. These are source-retrieved proposed contracts, not proof they are integrated or automatically executed.
+- Existing integration audit explicitly defers selective PR #32/#33 integration until journal ownership and global/project instruction/bootstrap alignment are resolved. Do not copy the bootstrap alone and imply the source map is complete.
+- This does not invalidate the verified PR #38/#39 repository CLI path; it identifies a separate integration dependency for the wider agent.

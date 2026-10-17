@@ -125,7 +125,7 @@
       "status": "NOT_IMPLEMENTED_OR_NOT_CONNECTED"
     }
   ],
-  "next_action": "Next engineering milestones are not more branch-reconciliation checks: (1) resolve approved semantic-memory availability through the existing approval-bound registry/index path without fabricating records; (2) obtain the actual native full ChatGPT export and perform staged resumable import with count/hash/read-back reconciliation; (3) establish a supported runtime/host invocation and writeback bridge, then prove it with a fresh-session interruption/resume test. Keep readiness PARTIAL until these acceptance tests pass. Do not merge PRs or change main.",
+  "next_action": "Do not restart the completed PR #38/#39 integration. Continue with substantive acceptance: approved semantic-memory registry availability, real native-export staged import/read-back, and supported host invocation/writeback. Separately reconcile PR #33 bootstrap/identity contracts into the active branch only after its journal-ownership and instruction-boundary dependencies are reviewed.",
   "constraints": [
     "Do not merge PR #27 or modify main without explicit user approval.",
     "Do not delete or rewrite source-history exports without a separate explicit decision.",
@@ -244,5 +244,23 @@
     "Production archive acceptance and completeness audit: synthetic provenance resolution passed, but production archive coverage and full chat-history completeness are not established.",
     "Canonical approved semantic-memory registry is absent; task-start currently proceeds in PARTIAL mode. Keep archive transfer deferred and use the existing approval-bound promotion path when explicitly resumed.",
     "PROJECT_STATE.md, the dated cluster audit and PR #38 description still contain historical pre-smoke status text. Treat CONTINUITY_CHECKPOINT.json plus the latest TASK_STATE/HANDOFF sections as current. Reconcile those summary surfaces in one planned non-metadata revision, then run exact-head CI, refresh the checkpoint and rerun the live smoke; do not weaken the revision gate."
-  ]
+  ],
+  "source_map_status": {
+    "canonical_bootstrap_path": "core/agent_bootstrap.md",
+    "integrated_branch_status": "ABSENT",
+    "main_status": "ABSENT",
+    "available_in": "fix/identity-continuity-contract-20261017",
+    "available_head": "1ffd67002d42957910175a089d5233bdbbdc0739",
+    "source_status": "PR #33 open/Draft/unmerged",
+    "related_sources_read": [
+      "core/guardrails.md",
+      "core/identity_and_continuity_contract.md",
+      "core/universal_instructions.md",
+      "core/context_interpretation.md",
+      "core/session_handoff.md",
+      "core/agent_runtime_protocol.md"
+    ],
+    "integration_status": "DEFERRED",
+    "reason": "Existing cluster audit requires selective PR #32/#33 integration only after journal ownership and global/project instruction/bootstrap alignment are reconciled."
+  }
 }

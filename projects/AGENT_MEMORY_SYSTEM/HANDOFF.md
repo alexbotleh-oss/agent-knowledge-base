@@ -880,3 +880,11 @@ Important remaining gap: real ingestion + promotion is tested, but the same test
 - Metadata-only branch tip `9a3ee7c113b08dc3fe2c627a59095e02bc4a488d` passed smoke run `39069332907`: verified restore `RESTORED_PACKET`; task-start `READY_FOR_REVIEW`; `VERIFIED_SESSION_RESTORE_PASS` and `TASK_START_CLUSTER_PASS` emitted.
 - Readiness remains PARTIAL because approved semantic memory is unavailable. The real ChatGPT host bridge and production native-archive import remain unverified; do not describe them as implemented.
 - Next work is substantive acceptance: approved-memory registry availability, native archive staged import/read-back, and host invocation/writeback with a fresh-session interruption/resume scenario.
+
+
+## Additional integration dependency — bootstrap/identity contract (2026-10-17)
+
+- `core/agent_bootstrap.md` is not present on `main` or the integrated PR #38/#39 branch. It is available on the separate PR #33 branch `fix/identity-continuity-contract-20261017` at `1ffd67002d42957910175a089d5233bdbbdc0739`.
+- The bootstrap and its six referenced core documents were read from that branch. Treat them as proposed, branch-scoped sources until integrated; do not claim they are current canonical files.
+- Selective integration of PR #33 remains deferred by the existing audit requirement to reconcile journal ownership and global/project instruction boundaries.
+- Verified current state remains: code CI PASS, restore/task-start smoke PASS, readiness PARTIAL because approved semantic memory is unavailable.
