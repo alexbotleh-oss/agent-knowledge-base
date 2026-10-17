@@ -19,6 +19,11 @@ jobs:
           node --check clients/chatgpt-web-extension/background.js
           node --check clients/chatgpt-web-extension/content_script.js
           node --check clients/chatgpt-web-extension/popup.js
+      - name: Audit canonical event-log temporal relations
+        if: github.event_name == 'pull_request' && github.head_ref == 'feature/prewrite-event-relation-validator-20261017'
+        run: |
+          python3 tools/event_relation_validator.py --event-log projects/AGENT_MEMORY_SYSTEM/events.jsonl
+
       - name: Validate knowledge base and detected stacks
         run: |
           chmod +x core/*.sh tools/*.sh stacks/*/*.sh
