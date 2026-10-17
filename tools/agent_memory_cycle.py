@@ -173,8 +173,6 @@ def run_cycle(
                 query=semantic_memory_query or user_request,
                 registry_path=Path(memory_registry_path), index_root=Path(memory_index_root),
                 source_catalog_path=Path(source_catalog_path) if source_catalog_path else None,
-                prior_failed_attempts=prior_failed_attempts,
-                risk_level=risk_level,
             )
         return build_task_start_experience_map(
             task_state, handoff, project_event_log, user_request,
@@ -182,6 +180,8 @@ def run_cycle(
             attention_log=attention_log, active_task_id=task_id,
             active_checkpoint_id=checkpoint_id, current_project_id=current_project_id,
             limit=limit, session_packet=session_packet,
+            prior_failed_attempts=prior_failed_attempts,
+            risk_level=risk_level,
         )
 
     task_start = build_start(active_task_id, active_checkpoint_id)
