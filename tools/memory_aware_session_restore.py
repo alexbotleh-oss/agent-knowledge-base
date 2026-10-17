@@ -254,7 +254,6 @@ def main(argv=None):
     parser.add_argument("--registry-path",type=Path,default=DEFAULT_REGISTRY,help=argparse.SUPPRESS)
     parser.add_argument("--index-root",type=Path,default=DEFAULT_INDEX_ROOT,help=argparse.SUPPRESS)
     parser.add_argument("--source-catalog",type=Path,help="optional local source catalog for adaptive fallback discovery")
-    parser.add_argument("--source-catalog",type=Path,help="optional local source catalog for adaptive fallback discovery")
     args=parser.parse_args(argv)
     packet=build_memory_aware_packet(args.task_state,args.handoff,args.event_log,args.repository,args.ref,
       task_id=args.task_id,context_id=args.context_id,query=args.query,limit=args.limit,
