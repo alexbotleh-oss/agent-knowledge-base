@@ -843,3 +843,8 @@ P2 is not yet declared ready: this test mocks the final verified restore packet,
 - core/source_ingestion_protocol.md states that register_source_reference and register_inventory remain planned routes without writer implementation; full end-to-end restore/promotion is not connected, and the raw archive remains an external source while the registry stores links/hashes, not source text.
 - Therefore the preserved next task is **audit and finish the existing partial pipeline**: verify raw-source durability/complete inventory and chronology, exercise interruption/resume/idempotency/truncated snapshot cases against the actual implementation, then identify the minimal missing integration. Do not duplicate existing runner or repeat agent-report analysis already completed.
 - Source code evidence read from current branch: tools/source_ingestion_runner.py SHA 6f90953aec1ed6c8a4c026b767398cb7eecd5dfc; tests/test_source_ingestion_runner.py SHA 242ee38b988697ef7b9ead0d63eabfe908929abb; core/source_ingestion_protocol.md SHA d95deebc7488dcd8145705ae2d289b7ba7a12704.
+
+
+## Clarification — PRE/POST applies to every user request (2026-10-17)
+
+The user explicitly requires memory recording before executing each incoming request and again after the work but before the answer/report. This is not limited to substantial tool actions. The protocol and universal instructions now require a compact PRE_ACTION for every user request; short replies may use a compact record, but must not skip the phase. POST_ACTION must be written before the user-visible answer. If durable persistence cannot actually be written, mark PERSISTENCE=UNAVAILABLE rather than pretending.
