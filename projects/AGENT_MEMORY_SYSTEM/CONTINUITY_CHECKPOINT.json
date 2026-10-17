@@ -1,0 +1,190 @@
+{
+  "schema_version": "1.0",
+  "checkpoint_id": "CKPT-AGMS-20261016-REAL-E2E-RESTORE-PASS-09",
+  "project_id": "AGENT_MEMORY_SYSTEM",
+  "task_id": "AGMS-2026-10-15-MEMORY-PIPELINE-CONTINUITY",
+  "recorded_at": "2026-10-16",
+  "recorded_time_precision": "day",
+  "source_chat": "Настройка Агента",
+  "source_message": "User authorized completing continuity synchronization after exact-head CI verified the combined real-ingestion and real-memory-restore test.",
+  "goal": "Make work recoverable after connection/session interruption without repeating already verified steps; connect source ingestion, approved semantic-memory processing, index refresh, and next-session restore, while preserving provenance and project boundaries.",
+  "branch": "integration/memory-core-clean-20261015",
+  "pr": {
+    "number": 27,
+    "url": "https://github.com/alexbotleh-oss/agent-knowledge-base/pull/27",
+    "state": "open",
+    "draft": true,
+    "merged": false,
+    "base": "main"
+  },
+  "source_code_checkpoint": {
+    "head": "0f2c76f1b79d1c73aa89eed0f3e98830658c338d",
+    "ci_run_id": 38862706088,
+    "ci_url": "https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38862706088",
+    "ci_conclusion": "success",
+    "evidence_scope": "Exact-head GitHub Actions workflow completed successfully; memory-protocol/record validation and knowledge-base/stack validation steps passed. Test counts are not asserted because they were not exposed in the retrieved run metadata."
+  },
+  "confirmed_completed": [
+    "Resumable source-ingestion runner exists and has CI tests for dry-run, apply/replay, uncertain registry acknowledgement after crash, tampered ledger, and missing state projection reconstruction.",
+    "Archive staging to sanitized intake to metadata-only source registry is implemented.",
+    "Concurrent intake publication race was reproduced, fixed, and covered by a two-process regression test.",
+    "Strict write-contract audit is enabled in CI.",
+    "The runner explicitly stops at SOURCE_REGISTERED_DOWNSTREAM_PENDING and does not claim semantic promotion, canonical index refresh, or automatic next-session restore.",
+    "Added tools/continuity_checkpoint_bundle.py: immutable paired TASK_STATE/HANDOFF generation, hash-linked parent generations, atomic CURRENT_CHECKPOINT pointer as the commit point, OS-managed lock, drift verification, and replay recovery after interruption.",
+    "Added six behavioral tests covering capture/verify, interruption after pointer publication, paired projection recovery, idempotent replay, parent-chain preservation, tamper rejection, and missing-pointer fail-closed behavior (five named test methods plus idempotent replay; total six tests).",
+    "Added strict write-contract classification for the checkpoint bundle and documented capture/verify/recover usage in core/agent_runtime_protocol.md.",
+    "Exact-head CI for 30be5e944d6dd2d8a60395626b52ef07ff898640 passed: 201 tests, one skipped; 85 mutation sites, zero unclassified.",
+    "Updated TASK_STATE.md and HANDOFF.md with a current continuation checkpoint and the next single action; preserved prior checkpoint history rather than replacing it.",
+    "Appended implementation event EVT-AGMS-20261015-001 to the AGENT_MEMORY_SYSTEM event journal.",
+    "Added tools/turn_lifecycle_ledger.py and tests/test_turn_lifecycle_ledger.py: exact user instruction/checkpoint capture when invoked by a client, append-only turn lifecycle, progress/artifact/report/submission/delivery states, idempotent replay, corrupt-journal fail-closed behavior, and empty/partial artifact scan.",
+    "Added core/turn_lifecycle_and_interruption_recovery.md and linked it from core/agent_runtime_protocol.md; documented 10–12 minute work slices, uncertainty semantics, artifact correlation, and the hard boundary that automatic ChatGPT capture requires a client integration.",
+    "Exact code HEAD 49b11d8ba6cb52fa9cef1159dd3e0d4132cae529 passed GitHub Actions run 38753181276: 212 tests, 1 skipped; write audit 90 mutation sites / 0 unclassified.",
+    "Preserved append-only chronology correction EVT-AGMS-20261015-003 for the temporal edge in EVT-AGMS-20261015-002.",
+    "Added authenticated loopback HTTP adapter tools/turn_lifecycle_adapter.py with exact-origin CORS allowlist, bearer-token auth, body/field validation, inspection endpoints, and fail-closed handling for corrupt ledger reads.",
+    "Added clients/turn_lifecycle_client.js. runTrackedTurn blocks the work callback until the durable incoming-message receipt and WORK_STARTED event are acknowledged; SDK distinguishes prepared report, submitted response and explicit delivery acknowledgement.",
+    "Added Python HTTP integration tests and Node SDK tests; CI now runs both test suites. Exact code HEAD cf78d65d1ffa2421ce6e8a24d262812550ab30c9 passed GitHub Actions run 38761636991: 223 Python tests (1 skipped), 4 Node tests; strict write audit passed with no unclassified mutation sites.",
+    "Added core/turn_lifecycle_client_adapter.md and linked the adapter contract from core/agent_runtime_protocol.md.",
+    "Added clients/chatgpt-web-extension/ as a local-only MV3 prototype for the ChatGPT web interface: send interception, durable IndexedDB registration before dispatch, exact user text plus previous assistant message capture, lifecycle events, DOM-based final-answer observation, incomplete-turn popup, recovery prompt copy, and explicit JSONL export.",
+    "Added static extension contract tests and CI JavaScript syntax checks. Exact branch HEAD d707a91f9662cb1aa451db4fba1596baef8511a9 passed GitHub Actions run 38762303927: 227 Python tests, 1 skipped, 4 Node SDK tests, strict write audit 92 mutation sites / 0 unclassified, extension JS syntax checks passed.",
+    "Yandex Browser's official Android documentation confirms third-party extension installation and developer-mode testing are supported in principle; actual behavior on the user's installed version remains unverified.",
+    "At code HEAD e30450a5ed516ab1f76f65c3c7874cdd2b951c40, exact-head CI run 38772804206 passed: 230 Python tests (1 skipped), 4 Node tests, strict write audit 92 mutation sites / 0 unclassified, extension JavaScript syntax checks passed.",
+    "Closed the causal restoration gap: restore_session_packet follows explicit event links transitively, keeps journal order, and reports PARTIAL for missing transitive event references; unit tests cover complete and incomplete ancestry.",
+    "Extended the end-to-end regression scenario across branch result publication, owner acknowledgement, guarded task update, paired checkpoint capture/recovery after simulated projection interruption, and fresh-process restore.",
+    "Audited the source-ingestion route: source_ingestion_runner connects staging → intake adapter → route validation → metadata-only source registration; existing tests cover replay, crash after registry commit, projection rebuild, and tamper rejection. Semantic promotion and canonical index refresh remain NOT_IMPLEMENTED; next-session restore remains NOT_VERIFIED.",
+    "Added tools/verified_session_restore.py as a read-only single entry point that independently fetches the target GitHub branch HEAD, exact recorded Actions run, and compare result; it composes tools/restore_session_packet.py rather than duplicating event ancestry restoration.",
+    "The verifier accepts an exact code HEAD match or a clean descendant with only allowlisted metadata paths changed; it fails closed on source/code drift, diverged ancestry, truncated compare, wrong/incomplete/failed exact-head CI, invalid checkpoint or unavailable remote evidence.",
+    "Added tests/test_verified_session_restore.py: 6 tests for exact head, metadata-only descendant, wrong/failed CI, unexpected source changes, diverged/truncated compare, and missing checkpoint. Exact code HEAD 467d68795d296b4a5e3ee473e1252be43e5e5bdc passed CI run 38849505217: 241 Python tests (1 skipped), 4 Node tests, strict write audit 92 mutation sites / 0 unclassified, memory and project validation PASS.",
+    "Documented the live remote revision verification entry point and trust boundary in core/agent_runtime_protocol.md. The entry point remains read-only and does not implement semantic promotion, canonical index refresh or automatic chat capture.",
+    "Audited the full source-ingestion → approval → semantic-promotion → canonical-index → normal-restore path at branch HEAD 95524a90a4e1b024e237e7a49e1d4be9c795a433; exact-head CI run 38849636651 passed. Findings and stage contracts are in projects/AGENT_MEMORY_SYSTEM/MEMORY_PIPELINE_INTEGRATION_AUDIT_2026-10-16.md.",
+    "Implemented tools/semantic_memory_registry.py as a separate guarded append-only promotion stage; exact manifest/artifact hashes and explicit approval receipt are checked; dry-run is default; replay/conflict/revision-chain/provenance/corrupt-registry cases are tested. Exact code HEAD d9da0b6991b282bd8ddd7de25edb1fae8330e016 passed CI #38851184392 (253 Python tests, 1 skipped; 4 Node tests; write audit 100/0; memory validation PASS).",
+    "Implemented tools/semantic_memory_registry.py as a guarded append-only semantic promotion writer; exact-head CI #38851184392 passed.",
+    "Implemented tools/canonical_memory_index.py with deterministic immutable generations, multidimensional reference views, current-revision map, atomic CURRENT pointer and freshness checks; invalid registries/revision chains block publication; failed pointer publication preserves prior pointer.",
+    "Implemented tools/memory_aware_session_restore.py to compose verified task/event restore with freshness-checked current semantic memory, exact project/task/context filtering, provenance/evidence/conflict output, and explicit partial/stale/unavailable status.",
+    "Exact code/test HEAD bec868ce9e7491802c5239068b4581eff002a809 passed CI #38851785241: 272 Python tests (1 skipped), 4 Node tests, write audit 108 mutation sites / 0 unclassified, memory validation PASS.",
+    "After integrating the memory-aware restore protocol and implementation-status documentation, exact HEAD 15df917acfa27001b80f7a7049e5c082b7b646e5 passed CI #38851849713: 272 Python tests (1 skipped), 4 Node tests, write audit 108/0, memory validation PASS. Subsequent checkpoint/handoff/event commits are metadata-only.",
+    "Defined an append-only, source-revision/hash-bound edge-correction contract and guarded writer; accepted corrections require a separate receipt bound to exact correction input bytes. Canonical index applies accepted add/retract/replace only to derived relation views and tracks correction-registry freshness. Exact code+protocol HEAD 1fd9c91ae8bb8662a3cb1a1cea3d63452064fc40 passed CI #38852493391: 282 Python tests (1 skipped), 4 Node tests, write audit 116/0, memory validation PASS.",
+    "Added tools/memory_pipeline_coordinator.py to compose source ingestion, approval preflight, canonical SourceRecord provenance resolution, semantic promotion, optional correction registration, canonical index refresh, and verified session restore.",
+    "Added deterministic input-bound run IDs, hash-chained append-only stage ledger, rebuildable state projection, and separate source-stage/canonical/ledger write accounting.",
+    "Added coordinator tests for provenance resolution/ambiguity, preflight blocking, ledger tamper/projection recovery, deterministic dry-run replay, mocked stage composition, and real semantic-promotion/correction/index/restore executors over synthetic data.",
+    "Exact-head CI at feeb14446c8b039271b753a8ecd0b2661318b818 passed: 294 Python tests (1 skipped), 4 Node tests, write audit 127 mutation sites / 0 unclassified.",
+    "Confirmed exact-head CI run 38853687319 is for feeb14446c8b039271b753a8ecd0b2661318b818, which includes the real-stage crash/replay test added immediately before the run.",
+    "Added tests/test_memory_pipeline_real_ingestion.py: synthetic archive is staged, the real source_ingestion_runner registers source records, and the coordinator then validates provenance and promotes an approved semantic record. Exact-head CI is not yet visible/confirmed.",
+    "Exact-head CI 38856130862 passed for fadc95c083a6a6ffafbe7042e78a70f1a0d2c31f: 295 Python tests (1 skipped), 4 Node tests, write audit 127 mutation sites / 0 unclassified.",
+    "tests/test_memory_pipeline_real_ingestion.py passed: stages a synthetic archive, uses real source_ingestion_runner.py to register source records, then real provenance validation and semantic promotion successfully execute through the coordinator.",
+    "Combined synthetic end-to-end regression uses the real source_ingestion_runner, real coordinator promotion and canonical index, and real memory-aware session restore. Exact code HEAD 0f2c76f1b79d1c73aa89eed0f3e98830658c338d passed exact-head CI run 38862706088.",
+    "The combined test asserts retrieval of MEM-REAL-INGEST-1 / REV-REAL-1 and non-empty provenance under project AGENT_MEMORY_SYSTEM, task TASK-REAL, and context CTX-REAL."
+  ],
+  "confirmed_open": [
+    {
+      "id": "OPEN-SEMANTIC-PROMOTION",
+      "description": "Inspect existing lifecycle/approval contracts. No canonical semantic-promotion executor was found in inspected tools. Specify and test an executor before implementing; never treat metadata-only source registration as accepted memory.",
+      "status": "RESOLVED",
+      "resolved_at": "2026-10-16",
+      "resolution": "Implemented and exact-head CI passed #38851184392."
+    },
+    {
+      "id": "OPEN-CANONICAL-INDEX",
+      "description": "No verified canonical memory-index refresh executor is connected to the ingestion runner. archive_temporal_index.py is a read-only archive search/index, not a canonical memory index rebuild.",
+      "status": "RESOLVED_WITH_PARTIAL_COVERAGE",
+      "resolved_at": "2026-10-16",
+      "resolution": "Deterministic index builder and freshness checker implemented; index coverage remains PARTIAL because correction overlay source/contract is unavailable."
+    },
+    {
+      "id": "OPEN-RESTORE-ORCHESTRATION",
+      "description": "Restore reads project TASK_STATE.md, HANDOFF.md and events.jsonl; source registration does not automatically update or restore these records.",
+      "status": "PARTIAL",
+      "updated_at": "2026-10-16",
+      "resolution": "Memory-aware restore and correction-aware index exist; durable coordinator/crash recovery and provenance resolution remain open."
+    },
+    {
+      "id": "OPEN-PAIRED-CHECKPOINT",
+      "description": "TASK_STATE.md and HANDOFF.md are not protected by a single paired-write protocol. Their history contains stale checkpoints; the latest verified repository state must be compared with checkpoint metadata before resuming."
+    },
+    {
+      "id": "OPEN-REPORT-PERSISTENCE",
+      "description": "A report that was never durably written to the repository cannot be reconstructed verbatim after a network interruption. Future work must persist concise checkpoints after each material verified milestone and distinguish persisted records from undelivered response text."
+    },
+    {
+      "id": "OPEN-LIVE-ANDROID-ACCEPTANCE",
+      "description": "The ChatGPT web extension is a prototype verified by static CI only. Must be installed and tested in the user's actual Yandex Browser Android version. Verify send gate (no send before durable receipt), exact text and prior assistant message capture, interrupted connection recovery, response DOM detection, multiple incomplete turns, extension restart, and UI-selector drift. Until these pass, do not claim end-to-end capture is operational."
+    }
+  ],
+  "next_action": "Build and run the combined synthetic end-to-end test with real source ingestion and real verified restore; verify exact-head CI, then decide P2 readiness. Keep production archive acceptance/coverage audit separate.",
+  "constraints": [
+    "Do not merge PR #27 or modify main without explicit user approval.",
+    "Do not delete or rewrite source-history exports without a separate explicit decision.",
+    "Keep project histories isolated; unknown project applicability remains unknown.",
+    "Preserve chronology, failed attempts, uncertainty, and source provenance.",
+    "No semantic record is accepted merely because source metadata was registered.",
+    "Never report CI success for a SHA other than the exact checked SHA."
+  ],
+  "status": "REAL_INGESTION_AND_SEMANTIC_PROMOTION_PASS_FULL_RESTORE_INTEGRATION_OPEN",
+  "checkpoint_semantics": "This is a durable task checkpoint committed to the integration branch. It is not an automatic ChatGPT autosave or proof that an undelivered response was saved.",
+  "repository_state": {
+    "last_verified_code_head": "1fd9c91ae8bb8662a3cb1a1cea3d63452064fc40",
+    "exact_head_ci_run_id": 38852493391,
+    "exact_head_ci_url": "https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38852493391",
+    "exact_head_ci_conclusion": "success",
+    "python_tests": 282,
+    "python_skipped": 1,
+    "node_tests": 4,
+    "write_audit_mutation_sites": 116,
+    "write_audit_unclassified": 0,
+    "memory_validation": "PASS",
+    "project_validation": "PASS",
+    "semantic_memory_registry_tests": 12,
+    "canonical_index_tests": 10,
+    "memory_aware_restore_tests": 9,
+    "note": "Exact code+protocol HEAD 1fd9c91ae8bb8662a3cb1a1cea3d63452064fc40 passed exact-head CI #38852493391. Edge correction schemas/writer and index consumer are implemented and tested. No production correction file was populated; index coverage remains PARTIAL until source/archive completeness is proven. Later commits update only the four continuity metadata files.",
+    "edge_correction_registry_tests": 8,
+    "correction_index_integration_tests": 2
+  },
+  "historical_repository_state": {
+    "last_verified_code_head": "e30450a5ed516ab1f76f65c3c7874cdd2b951c40",
+    "exact_head_ci_run_id": 38772804206,
+    "exact_head_ci_url": "https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38772804206",
+    "exact_head_ci_conclusion": "success",
+    "python_tests": 230,
+    "python_skipped": 1,
+    "node_tests": 4,
+    "write_audit_mutation_sites": 92,
+    "write_audit_unclassified": 0,
+    "extension_js_syntax": "PASS",
+    "note": "Exact-head CI verifies code HEAD e30450a5ed516ab1f76f65c3c7874cdd2b951c40. Following commits update checkpoint/task/handoff metadata only; application code remains unchanged."
+  },
+  "revision_semantics": {
+    "source_code_checkpoint": "Historical milestone retained in the original source_code_checkpoint object; it is not the current code HEAD.",
+    "latest_verified_code_head": "repository_state.last_verified_code_head; exact-head CI run 38849505217 belongs to code SHA 467d68795d296b4a5e3ee473e1252be43e5e5bdc.",
+    "metadata_revision": "The Git commit containing the current checkpoint/task/handoff/event metadata is authoritative for metadata revision; it is intentionally not embedded as a self-referential SHA.",
+    "chronology_rule": "Historical source checkpoint, previous verified code states, current code SHA/CI and subsequent metadata commit remain separate facts.",
+    "live_restore_verification": "tools/verified_session_restore.py fetches the branch tip, exact workflow run and compare API. A later branch tip is accepted only when it is a clean descendant and every changed path is in the explicit metadata-only allowlist."
+  },
+  "prior_verified_code_states": [
+    {
+      "code_head": "86c18cfd6266517c2a3488bddf21b7f65ea339fa",
+      "ci_run_id": "38804578271",
+      "ci_url": "https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38804578271",
+      "ci_conclusion": "success",
+      "python_tests": 232,
+      "python_skipped": 1,
+      "node_tests": 4,
+      "recorded_note": "This is the latest verified code HEAD as of 2026-10-15, before the P1 metadata-only update. CI evidence applies only to this exact code SHA; subsequent metadata commits do not imply code changed or that CI ran on those metadata-only commits.",
+      "superseded_at_code_head": "467d68795d296b4a5e3ee473e1252be43e5e5bdc"
+    },
+    {
+      "code_head": "ca9fabe998f9203bb8fe78f1b51515d54f5f4f09",
+      "ci_run_id": "38848337390",
+      "ci_url": "https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/38848337390",
+      "ci_conclusion": "success",
+      "recorded_note": "P1 restore_session_packet revision-evidence implementation; retained from earlier HANDOFF record."
+    }
+  ],
+  "open_items": [
+    "Production archive acceptance and completeness audit",
+    "Live Android browser-extension acceptance",
+    "Do not merge PR #27 or change main; PR remains Draft/open/unmerged.",
+    "Production archive acceptance and completeness audit remain separate; full archive/chat coverage is not established.",
+    "Production archive acceptance and completeness audit: synthetic provenance resolution passed, but production archive coverage and full chat-history completeness are not established.",
+    "Verify exact-head CI for the final metadata revision 360d90c690b0d1e485714889c96239dbe68b762d."
+  ]
+}

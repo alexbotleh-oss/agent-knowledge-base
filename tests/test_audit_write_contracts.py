@@ -1,0 +1,84 @@
+import ast
+import importlib.util
+import unittest
+from pathlib import Path
+
+
+SCRIPT = Path(__file__).resolve().parents[1] / "tools" / "audit_write_contracts.py"
+SPEC = importlib.util.spec_from_file_location("audit_write_contracts", SCRIPT)
+audit_module = importlib.util.module_from_spec(SPEC)
+SPEC.loader.exec_module(audit_module)
+
+
+def operations(source: str) -> list[tuple[int, str, str]]:
+    tree = ast.parse(source)
+    visitor = audit_module.MutationVisitor("fixture.py", tree)
+    visitor.visit(tree)
+    return visitor.hits
+
+
+class TestAuditWriteContracts(unittest.TestCase):
+    def test_string_replace_is_not_classified_as_filesystem_mutation(self):
+        hits = operations(
+            'def normalize(value: str):\n'
+            '    return value.strip().replace("Z", "+00:00")\n'
+        )
+        self.assertEqual(hits, [])
+
+    def test_path_replace_is_classified_from_path_assignment_and_derivation(self):
+        hits = operations(
+            'from pathlib import Path\n'
+            'def publish(root: Path):\n'
+            '    staged = root / "stage.json"\n'
+            '    target = staged.with_name("final.json")\n'
+            '    staged.replace(target)\n'
+        )
+        self.assertEqual(
+            [(name, op) for _, name, op in hits],
+            [("publish", "replace")],
+        )
+
+    def test_os_replace_is_classified_as_filesystem_mutation(self):
+        hits = operations(
+            'import os\n'
+            'def publish(source, target):\n'
+            '    os.replace(source, target)\n'
+        )
+        self.assertEqual(
+            [(name, op) for _, name, op in hits],
+            [("publish", "replace")],
+        )
+
+    def test_adapter_and_source_registry_mutations_have_explicit_contracts(self):
+        self.assertIn("tools/adapt_archive_staging_to_intake.py", audit_module.CONTRACTS)
+        self.assertIn("tools/source_evidence_registry.py", audit_module.CONTRACTS)
+        self.assertNotEqual(audit_module.CONTRACTS["tools/adapt_archive_staging_to_intake.py"], "UNCLASSIFIED")
+        self.assertNotEqual(audit_module.CONTRACTS["tools/source_evidence_registry.py"], "UNCLASSIFIED")
+
+    def test_resumable_ingestion_runner_has_explicit_write_contract(self):
+        self.assertIn("tools/source_ingestion_runner.py", audit_module.CONTRACTS)
+        self.assertIn("hash-chained transition ledger", audit_module.CONTRACTS["tools/source_ingestion_runner.py"])
+
+    def test_continuity_checkpoint_bundle_has_explicit_write_contract(self):
+        self.assertIn("tools/continuity_checkpoint_bundle.py", audit_module.CONTRACTS)
+        self.assertIn("single atomic CURRENT_CHECKPOINT pointer", audit_module.CONTRACTS["tools/continuity_checkpoint_bundle.py"])
+
+    def test_turn_lifecycle_ledger_has_explicit_local_journal_contract(self):
+        self.assertIn("tools/turn_lifecycle_ledger.py", audit_module.CONTRACTS)
+        self.assertIn("protected local append-only turn journal", audit_module.CONTRACTS["tools/turn_lifecycle_ledger.py"])
+
+    def test_turn_lifecycle_adapter_has_explicit_socket_write_contract(self):
+        self.assertIn("tools/turn_lifecycle_adapter.py", audit_module.CONTRACTS)
+        self.assertIn("socket writes are protocol output", audit_module.CONTRACTS["tools/turn_lifecycle_adapter.py"])
+
+    def test_untyped_path_parameter_is_not_guessed_as_path(self):
+        # Conservative boundary: no false claim of a filesystem write without path evidence.
+        hits = operations(
+            'def normalize(value):\n'
+            '    return value.replace("-", "_")\n'
+        )
+        self.assertEqual(hits, [])
+
+
+if __name__ == "__main__":
+    unittest.main()

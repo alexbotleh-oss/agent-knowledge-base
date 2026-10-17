@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Edge correction approval receipt",
+  "description": "Binds an explicit user decision to the exact correction bytes; it does not cryptographically authenticate the author.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "decision_id",
+    "decision",
+    "actor_type",
+    "actor_ref",
+    "decided_at",
+    "correction_id",
+    "correction_sha256",
+    "decision_source_ref",
+    "rationale"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "edge-correction-approval-v1"
+    },
+    "decision_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "decision": {
+      "enum": [
+        "approve",
+        "reject",
+        "request_changes"
+      ]
+    },
+    "actor_type": {
+      "const": "user"
+    },
+    "actor_ref": {
+      "type": "string",
+      "minLength": 1
+    },
+    "decided_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "correction_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "correction_sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "decision_source_ref": {
+      "type": "string",
+      "minLength": 1
+    },
+    "rationale": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}

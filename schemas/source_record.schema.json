@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/alexbotleh-oss/agent-knowledge-base/blob/main/schemas/source_record.schema.json",
+  "title": "Metadata-only source record",
+  "description": "A stable reference to one source message/node in one source snapshot. Raw message text, author names and project assignment are intentionally excluded.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "source_record_id", "archive_id", "conversation_id", "source_message_id",
+    "source_node_id", "source_locator", "parent_node_id", "child_node_ids",
+    "source_time", "source_time_unix", "role", "content_type", "text_sha256",
+    "source_snapshot_sha256", "parser_version", "has_attachments",
+    "attachment_count", "attachment_payloads_inspected"
+  ],
+  "properties": {
+    "source_record_id": { "type": "string", "pattern": "^SRC-[a-f0-9]{24}$" },
+    "archive_id": { "type": "string", "minLength": 1 },
+    "conversation_id": { "type": "string", "minLength": 1 },
+    "source_message_id": { "type": ["string", "null"] },
+    "source_node_id": { "type": "string", "minLength": 1 },
+    "source_locator": { "type": "string", "minLength": 1 },
+    "parent_node_id": { "type": ["string", "null"] },
+    "child_node_ids": { "type": "array", "items": { "type": "string" } },
+    "source_time": {
+      "oneOf": [
+        { "type": "string", "format": "date-time" },
+        { "type": "null" }
+      ],
+      "description": "Timestamp from the source message. It is not a semantic event_time."
+    },
+    "source_time_unix": { "type": ["number", "null"] },
+    "role": { "type": ["string", "null"] },
+    "content_type": { "type": ["string", "null"] },
+    "text_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "source_snapshot_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "parser_version": { "type": "string", "minLength": 1 },
+    "has_attachments": { "type": "boolean" },
+    "attachment_count": { "type": ["integer", "null"], "minimum": 0 },
+    "attachment_payloads_inspected": { "type": ["boolean", "null"] },
+    "batch_id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{2,127}$" },
+    "registered_at": { "type": "string", "format": "date-time" },
+    "schema_version": { "const": "source-record-v1" }
+  }
+}

@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Semantic memory approval receipt",
+  "description": "Binds an explicit user decision to exact manifest and artifact hashes; does not authenticate the receipt author.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "decision_id",
+    "decision",
+    "actor_type",
+    "actor_ref",
+    "decided_at",
+    "batch_id",
+    "artifact_id",
+    "manifest_sha256",
+    "artifact_sha256",
+    "decision_source_ref",
+    "rationale"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "semantic-memory-approval-v1"
+    },
+    "decision_id": {
+      "type": "string",
+      "minLength": 3
+    },
+    "decision": {
+      "enum": [
+        "approve",
+        "reject",
+        "request_changes"
+      ]
+    },
+    "actor_type": {
+      "const": "user"
+    },
+    "actor_ref": {
+      "type": "string",
+      "minLength": 1
+    },
+    "decided_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "batch_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "artifact_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "manifest_sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "artifact_sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "decision_source_ref": {
+      "type": "string",
+      "minLength": 1
+    },
+    "rationale": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}

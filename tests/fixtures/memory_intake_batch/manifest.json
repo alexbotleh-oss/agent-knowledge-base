@@ -1,0 +1,37 @@
+{
+  "schema_version": "1.0",
+  "command": "IMPORT_READY",
+  "batch_id": "FIXTURE-20261014-001",
+  "created_at": "2026-10-14T00:00:00Z",
+  "payload_classification": "sanitized",
+  "source": {
+    "source_type": "chat_summary",
+    "source_id": "synthetic-fixture-source",
+    "project_id": "MEMORY_PIPELINE_FIXTURE",
+    "conversation_ids": [
+      "synthetic-conversation-001"
+    ],
+    "source_locator": "synthetic-fixture-only",
+    "captured_at": "unknown",
+    "scope_status": "PARTIAL"
+  },
+  "observed_context": {
+    "languages": [],
+    "tools": [],
+    "task_types": []
+  },
+  "artifacts": [
+    {
+      "artifact_id": "FIXTURE-EVENTS-001",
+      "kind": "event_records",
+      "path": "records.jsonl",
+      "sha256": "0532cc9f96f66c31f14e93b6d0f84893faf4f27a9b1b572c870abb7da654f166",
+      "record_count": 1,
+      "lifecycle_status": "candidate",
+      "evidence_status": "observed",
+      "approval_status": "pending",
+      "notes": "Synthetic test fixture only."
+    }
+  ],
+  "notes": "Synthetic fixture only; do not use as production memory."
+}

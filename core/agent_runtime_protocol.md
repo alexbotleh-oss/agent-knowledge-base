@@ -1,7 +1,18 @@
 # Протокол непрерывной работы агента
 
 ## Назначение
-Этот протокол превращает базу знаний в рабочую память агента. ChatGPT используется как исполнитель и рассуждающая система, а репозиторий — как внешняя, проверяемая память. Само наличие файлов не гарантирует их автоматического подключения: при старте сессии агент обязан получить к ним доступ доступными инструментами или запросить только тот доступ, который действительно отсутствует.
+Этот протокол превращает `agent-knowledge-base` в рабочую внешнюю память агента. Текущий репозиторий — `alexbotleh-oss/agent-knowledge-base`; все изменения его универсальных инструкций, протоколов, схем, инструментов и общих уроков относятся к этому репозиторию. ORGANISM — отдельный проект, а не другое название репозитория. До работы свериться с `core/repository_scope.md` и не смешивать инфраструктурные изменения базы с проектными событиями. ChatGPT используется как исполнитель и рассуждающая система, а репозиторий — как внешняя, проверяемая память. Само наличие файлов не гарантирует их автоматического подключения: при старте сессии агент обязан получить к ним доступ доступными инструментами или запросить только тот доступ, который действительно отсутствует.
+
+## Обязательный PRE-REPOSITORY GATE
+
+Перед первым чтением репозитория и любым поиском/изменением выполнить gate из `core/universal_instructions.md` (раздел **PRE-REPOSITORY GATE**). Это обязательный порядок, а не рекомендация: восстановить цель и ограничения из запроса/контекста, определить критерии и последовательность проверки, затем читать канонические правила и состояние репозитория, сверить live branch/HEAD/PR/CI, разделить факты и гипотезы и зафиксировать checkpoint до существенных изменений. Не менять прежний вывод без новых доказательств, противоречия, изменения требований или документированной ошибки; любое пересмотренное решение должно объяснять основание и проверку, которая различает варианты. После каждого существенного шага перечитать изменённый артефакт, подтвердить результат и обновить TASK_STATE/HANDOFF. После прерывания продолжать с последнего checkpoint и сверять его с живым состоянием, не повторяя уже доказанные проверки без причины.
+
+## SOURCE-AND-GOAL PREFLIGHT
+
+Перед повторным запросом файла или утверждением о его недоступности выполнить короткий preflight из `core/universal_instructions.md`: сверить активную цель, фактически доступные вложения/файлы, реальный статус обработки источника и уже выполненные шаги. Не смешивать `FOUND`, `READ`, `EXTRACTED`, `ANALYZED` и `VERIFIED`. Повторно запрашивать источник только при конкретном проверенном препятствии и просить минимально необходимое действие. Этот gate дополняет PRE-REPOSITORY GATE и применяется также к работе с файлами до вызова GitHub-инструментов.
+
+## Целевая архитектура
+При разработке и применении механизмов непрерывности сверяться с `core/continuous_agent_architecture.md`. В нём определены роли памяти, реестра навыков, модели окружения, графа планирования, контроля отклонений и доказательной проверки. Не считать описанный компонент реализованным до появления кода/артефакта и прохождения соответствующего теста.
 
 ## Обязательный цикл задачи
 1. **Восстановить состояние.** Прочитать PROJECT_STATE.md, TASK_STATE.md, HANDOFF.md, последние события, решения и релевантные уроки. Сверить их с фактическим состоянием репозитория, веткой, коммитом и рабочим деревом, если доступны.
@@ -26,6 +37,12 @@
 
 Это внутренняя рабочая процедура, а не обязательный длинный отчёт. Детали плана показывать, когда это помогает координации, влияет на риск или требуется пользователем.
 
+## Приём новых источников и проверка полноты
+Перед извлечением опыта из архива, экспорта или пакета файлов применять `core/source_ingestion_protocol.md`: инвентаризировать фактически полученные файлы и внутреннее содержимое архивов, сверить манифест/индекс с доступными байтами, отдельно подсчитать диалоги и сообщения, оценить доступность вложений и зафиксировать необъяснённые расхождения. Не объявлять набор полным по совпадению числа сообщений или по наличию манифеста. В память переносить атомарные события с точной ссылкой на первоисточник и честным статусом доказательства.
+
+## Обработка истории, поступающей не по порядку
+Материалы из старых чатов могут поступать после новых и в произвольной последовательности. Никогда не считать порядок импорта порядком выполнения проекта. Перед объединением материалов применять `core/chronology_reconstruction.md`: различать время события, время исходного сообщения/артефакта и время записи в память; встраивать найденные позже ранние события в правильное место; сохранять источники, версии, связи и конфликты; после каждого значимого дополнения пересматривать актуальное состояние и зависимости. Не переписывать историю и не менять текущий статус только потому, что импортирован старый фрагмент. Если точный порядок не подтверждается, сохранять неопределённость, а не выдумывать последовательность.
+
 ## Управление неопределённостью
 - Не выдавать вывод модели за подтверждённый факт.
 - Если существует безопасный, обратимый путь, соответствующий цели, выбрать его самостоятельно.
@@ -38,3 +55,135 @@
 
 ## Запрет процессуального зацикливания
 Не создавать планы, отчёты и проверки ради самого процесса. Каждая операция должна снижать риск, проверять критерий, восстанавливать контекст или создавать полезное доказательство. После достаточного PASS зафиксировать доказательство и двигаться дальше.
+
+
+## Обязательные контрольные точки
+Для новых чатов и передачи задачи выполнять core/chat_lifecycle_protocol.md. Для каждого существенного изменения выполнять core/stepwise_verification_protocol.md. Для версий и внешних требований выполнять core/external_change_control.md. Повторяемые операции выбирать из core/skill_catalog.md и не считать навыки автоматически исполняемыми без реализации и проверки.
+
+
+## Минимальная непрерывность: восстановить → работать → зафиксировать
+
+В начале продолжения не начинать новый план с нуля. Прочитать актуальные TASK_STATE/HANDOFF, извлечь цель, подтверждённые факты, ограничения, отвергнутые гипотезы и следующий незавершённый шаг. Повторно открывать уже принятые отчёты/источники только при необходимости доказательства или новом противоречии.
+
+Во время работы сохранять не весь разговор, а значимые события, решения, ошибки и изменения состояния вместе с временем и ссылкой на источник. Перед ответом, который закрывает существенный этап, или когда приближается лимит, обновить контрольную точку. Запись должна различать исходное время события и время, когда агент узнал/зафиксировал его.
+
+Контрольная точка должна содержать: цель; выполненное и доказательства; статусы PASS/FAIL/PARTIAL/BLOCKED/SKIP/NOT TESTED; ошибки и запрещённые повторы; неизвестное; один следующий шаг. Не объявлять завершение на основании плана или изменения файла без проверки. После записи перечитать изменённый артефакт, если инструмент позволяет.
+
+Если чат/сеть прерывается, продолжать только с последней фактически сохранённой контрольной точки. Если доступна лишь память чата и нет подтверждённой постоянной записи, честно считать сохранность не гарантированной.
+
+## Resume Gate — явное продолжение после частичного захода
+
+Если предыдущий запуск оставил незавершённую выгрузку/обработку, первым действием восстановления является чтение сохранённого TASK_STATE/HANDOFF и состояния механизма. Агент обязан сформулировать и выполнить явный шаг: **«Продолжить с последней подтверждённой контрольной точки»**.
+
+Перед продолжением проверить совпадение source snapshot SHA-256, стабильного archive/source ID, output/state path, статуса, ordinal/byte offset/locator, числа подтверждённых записей и журнала событий. Продолжать тем же идентификатором и состоянием. Курсор считается подтверждённым только если его сохранение согласовано с сохранёнными данными и подтверждено read-back. Если проверка не сходится — остановить resume, сохранить исходные данные и зафиксировать расхождение; не угадывать курсор и не маскировать сбой новым полным импортом.
+
+Различать два сценария:
+- **Прервалась обработка полного неизменяемого снимка:** resume с сохранённой позиции в том же снимке допустим.
+- **Сама выгрузка неполная/усечена:** отметить PARTIAL; не объявлять её полной и не считать обычный импортный курсор механизмом дозагрузки недостающих данных. При поступлении новой порции зафиксировать отдельный источник и lineage, затем проверить полноту/непрерывность.
+
+Второй заход закрывается только после сверки количества, порядка, стабильных ID/локаторов, хешей и открытых пробелов. В HANDOFF записать подтверждённую точку старта, результат и следующий шаг. Документация и существование checkpoint сами по себе не являются доказательством успешного восстановления; требуются тест и проверка результата.
+
+## Entry Gate — определить режим до проверки контрольной точки
+
+Вход в каждую операцию начинается с определения её идентичности: тип инцидента/материала, стабильный operation/archive ID и конкретный source snapshot SHA-256. Сначала ищется только точная запись этой операции в её хранилище, а не похожие записи во всей базе.
+
+- Если точной записи нет — FIRST_PASS: зарегистрировать первичный заход и начать работу с начала. Не запускать восстановление и не искать несуществующий checkpoint.
+- Если точная запись незавершена и хеш источника совпадает — RESUME при валидной сохранённой позиции; иначе RETRY_FROM_START.
+- Если та же операция и тот же снимок уже RAW_COMPLETE — ALREADY_COMPLETE, вернуть результат без повторной обработки.
+- Если хеш не совпадает — не продолжать старую позицию в новом снимке; зарегистрировать SOURCE_MISMATCH/новый снимок с lineage.
+
+Проверки пропорциональны режиму: первичный заход — проверка входного источника и критериев полноты; возобновление — проверка контрольной точки; повтор завершённой операции — чтение статуса/результата. Не запускать полную историческую сверку на каждом входе без конкретного основания.
+
+## Cross-chat checkpoint gate
+
+When using a checkpoint owned by another chat/task/project, follow `core/cross_chat_checkpoint_agent_instructions.md` before acting. Identify its owner and exact revision; preserve the source history; create a linked child record; assess applicability; avoid repeating work already supported by evidence; record new work in the child branch; return meaningful results to the source owner; and inspect linked results before resuming the source task. A reference is not resolution, a child result is not delivery acknowledgement, and a resolved sub-question is not completion of the parent goal. If the registry/return path is unavailable, record a temporary link in TASK_STATE/HANDOFF and state the gap. Do not claim automatic synchronization unless implemented and tested.
+
+
+## Unified dialogue–memory control loop
+
+Apply `core/unified_memory_control_loop.md` as the integration contract across task control, shared-memory use, source intake, event continuity, side-branch return and handoff. It connects the existing protocols; it does not imply that each transition is automated. At session start restore the active goal from the owning task state, use linked evidence rather than a summary alone, and keep shared knowledge subordinate to the user's active goal. At meaningful boundaries record results and unresolved state. Treat the UMC acceptance matrix as the release gate for end-to-end testing; mark missing capabilities BLOCKED/NOT IMPLEMENTED instead of passing them by documentation alone.
+
+
+## Recoverable paired checkpoint bundle
+
+For a repository workspace that contains `tools/continuity_checkpoint_bundle.py`, use the bundle as the commit point for paired `TASK_STATE.md` and `HANDOFF.md` updates.
+
+1. Before a long or interruption-prone step, and after each material verified milestone, ensure both files and `events.jsonl` contain the latest confirmed state.
+2. Capture a uniquely identified checkpoint, including the source code HEAD and CI run when known:
+   `python tools/continuity_checkpoint_bundle.py capture projects/AGENT_MEMORY_SYSTEM --checkpoint-id CKPT-<unique-id> --summary "<verified milestone>" --source-head <sha> --ci-run-id <run-id>`
+3. Require status `CAPTURED` or `ALREADY_CAPTURED`; any other status is not a successful save. Then run `verify` and read back the current pointer.
+4. On resume, run `verify` first. If it reports `PROJECTION_OR_SOURCE_DRIFT`, inspect the drift. When the current pointer and immutable generation validate, run `recover` to reconstruct both Markdown projections; do not overwrite the generation or event log.
+5. A generation is written before `CURRENT_CHECKPOINT.json`; that pointer is the single commit point. A crash before pointer publication leaves the previous checkpoint current. A crash after pointer publication is recovered by replaying both projections from the pointed generation.
+6. Preserve checkpoint generations. Reuse of a checkpoint ID with changed content is a conflict. A report or answer that was never captured and committed is not recoverable verbatim; save the verified findings first, then deliver the response.
+
+This is a repository-level recovery primitive. It does not automatically capture ChatGPT messages, synchronize remote GitHub with a local workspace, or guarantee that a response survives before the checkpoint command commits.
+
+
+
+## Guarded writer and paired-checkpoint contract
+
+`tools/guarded_task_state_update.py` must report the paired-checkpoint outcome, not imply that an atomic write to TASK_STATE.md also commits HANDOFF.md. After a successful same-project update, it invokes `continuity_checkpoint_bundle.py` and returns `APPLIED` only when the paired bundle is confirmed. If the target project's canonical `events.jsonl` is missing, the supporting event log belongs to another project, or bundle capture fails, the task-state update has already occurred and the result must be `APPLIED_CHECKPOINT_PENDING` with the reason attached. Callers must not treat that status as a fully checkpointed success.
+
+Cross-project evidence must not be copied into the target project's event journal to satisfy the bundle. A target project needs its own canonical event record and journal before a paired checkpoint can be confirmed. Idempotent replay of a previously applied task-state update is reported separately as `ALREADY_APPLIED`; that status alone is not proof that a paired checkpoint is current. The checkpoint bundle remains the recovery commit point for its captured TASK_STATE/HANDOFF pair.
+
+## TURN LIFECYCLE AND BOUNDED EXECUTION
+
+For environments with observed long-session/network interruptions, follow `core/turn_lifecycle_and_interruption_recovery.md`. Use 10–12 minute work slices as a risk target, persist each material verified milestone, and stop before beginning another large phase. On resume, inspect open turn states and correlate suspicious empty/partial artifacts with event history, checkpoint, Git and CI. Never infer “no work happened” merely because no report is visible; never infer delivery without a real acknowledgement. The lifecycle ledger is a callable primitive only: automatic ChatGPT message capture and delivery acknowledgement require a client/platform integration and must not be claimed before verified.
+
+## Client-side turn lifecycle adapter
+
+For client-mediated chat work, follow `core/turn_lifecycle_client_adapter.md`. A trusted host must persist the exact incoming message via `POST /v1/turns` and wait for acknowledgement before starting work; emit durable progress/artifact/report references; distinguish response submission from delivery acknowledgement; and inspect incomplete turns after restart. The local service defaults to loopback and requires a bearer token. This API/SDK is a callable integration boundary, not automatic capture of the ChatGPT web UI. Do not claim the latter until a host-specific integration and end-to-end tests exist. Use 10–12 minute work slices where long-session interruptions have been observed, with checkpoints at each material verified boundary.
+
+
+## Revision evidence in session restore
+
+`tools/restore_session_packet.py` includes `repository_revision_evidence` when the project's `CONTINUITY_CHECKPOINT.json` is present. It keeps the checkpoint's recorded code HEAD and exact CI run separate from any historical repository state. By default the status is `RECORDED_EVIDENCE_ONLY`: stored metadata is not proof of the live remote HEAD or a currently valid CI result.
+
+A caller may pass `--observed-code-head` and `--observed-ci-run-id` only after independently observing those values. The restore tool compares supplied values with the stored pair and reports a match or mismatch; it does not fetch GitHub, infer the current branch, or validate the remote run itself. Missing metadata is `UNAVAILABLE`; malformed revision metadata is `INVALID`. Revision uncertainty is surfaced in the packet and does not block otherwise valid task/event restoration.
+
+A metadata-only Git commit is not the code HEAD. Never replace the recorded code SHA with the metadata commit SHA or attach code-test results to a different SHA. If the current HEAD or exact-head CI has not been independently checked, leave the status as recorded evidence only.
+
+
+## Live remote revision verification in session restore
+
+Use `tools/verified_session_restore.py` as the single entry point when a restore must establish current repository/CI evidence. It composes the existing read-only `restore_session_packet.py`; it does not replace event ancestry resolution or write canonical state.
+
+Example:
+
+```bash
+python3 tools/verified_session_restore.py \
+  projects/AGENT_MEMORY_SYSTEM/TASK_STATE.md \
+  projects/AGENT_MEMORY_SYSTEM/HANDOFF.md \
+  projects/AGENT_MEMORY_SYSTEM/events.jsonl \
+  --repository alexbotleh-oss/agent-knowledge-base
+```
+
+The entry point independently queries the GitHub branch, compares the live branch tip with the checkpoint's recorded code SHA, and fetches the exact recorded Actions run. It accepts either an exact code-head match or a descendant whose complete changed-file list contains only the explicitly allowlisted checkpoint/task/handoff/event metadata files. Any source-code change, divergent history, truncated compare result, wrong CI head, failed/incomplete CI, malformed checkpoint, or unavailable API evidence fails closed. The live branch tip and recorded code SHA are returned as separate fields.
+
+The existing `repository_revision_evidence` remains the code-SHA/CI pair comparison; `remote_repository_evidence` reports the independently observed branch tip and code-vs-metadata comparison. A metadata-only descendant is not mislabeled as the code SHA, and a successful old CI run is never attached to a newer code revision. The command is read-only and returns a non-zero exit code unless the source-backed restore packet and remote revision verification both succeed.
+
+This validates the repository branch and recorded code/CI pair at invocation time; it does not prove that every chat message was captured, that the branch is the user's intended project branch, or that downstream semantic-memory promotion/index refresh is implemented.
+
+
+## Semantic-memory-aware session restore — 2026-10-16
+
+Use `tools/memory_aware_session_restore.py` when a restore must include approved semantic memory as well as task state, handoff and linked events. It composes `tools/verified_session_restore.py`; it does not replace the live branch/CI revision gate.
+
+- The task, handoff and event-log paths must establish one matching project scope. Ambiguous scope blocks semantic retrieval rather than broadening the search across projects.
+- Retrieval reads only the canonical accepted registry and a freshness-checked `registry/memory_index/CURRENT.json` generation. It resolves index references back to canonical registry envelopes and verifies record hashes.
+- By default it returns current revisions only; historical revisions remain in the index and canonical registry. Optional task/context filters are exact identifiers. `--query` is a lexical substring filter, not embedding or semantic ranking.
+- The packet's `semantic_memory` section separately reports status, coverage, index generation, source-registry SHA, freshness, provenance, evidence status and unresolved `contradicts` relations. Read this independently of the base task/event restore status.
+- A stale, invalid or missing index returns an explicit unavailable/stale state with no memory records; it must not be interpreted as proof that no relevant memory exists. No matches in the current partial index likewise do not prove absence.
+- The edge-correction contract and guarded writer now exist in `schemas/edge_correction.schema.json` and `tools/edge_correction_registry.py`. If `registry/edge_corrections.jsonl` is absent, the index reports `NOT_AVAILABLE_NO_CANONICAL_OVERLAY_SOURCE`; if present, accepted corrections are hash-validated and applied only to derived relation views. Coverage remains `PARTIAL` because complete source/archive coverage is not established.
+- The tool is read-only. It does not refresh a stale index, approve candidates, or modify canonical state. Index refresh and session restore are separate operations.
+
+
+## Durable memory-pipeline coordinator — 2026-10-16
+
+`tools/memory_pipeline_coordinator.py` composes the existing stage tools. Supply a persistent private `--run-root`, snapshot path, semantic manifest + approval receipt, repository, and project TASK_STATE/HANDOFF/events. Use `--apply` only when canonical writes are intended; without it the source-ingestion stage may still create staging artifacts and its own ledger, while semantic/correction/index canonical writes remain disabled.
+
+- A deterministic input-bound run ID locates `pipeline_events.jsonl`; the ledger is append-only and hash-chained. `pipeline_state.json` is a rebuildable projection, not the source of truth.
+- The coordinator preflights semantic approval and required restore inputs before canonical pipeline writes. After source registration it validates each memory provenance reference against the canonical SourceRecord schema and resolves it by stable ID/locator with scope/hash checks. Missing or ambiguous references block promotion.
+- Stages are independently idempotent, not one cross-registry transaction. On interruption, rerun the same input fingerprint: completed writes are reconciled through each stage's replay contract. The coordinator does not roll back prior append-only source or memory records.
+- The final result distinguishes source-stage writes, canonical memory/correction/index writes and ledger writes. `PIPELINE_COMPLETE_WITH_PARTIAL_MEMORY` is not a claim of complete archive coverage; read the nested semantic-memory coverage/freshness fields.
+- Tests cover source provenance resolution/ambiguity, ledger-chain integrity and projection rebuild, preflight blocking, deterministic dry-run replay, and mocked stage composition. No production archive has been run through this coordinator as one end-to-end transaction.

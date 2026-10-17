@@ -1,0 +1,26 @@
+{
+  "archive_id": "ARCHIVE-EXAMPLE-001",
+  "source_name": "replace-with-source-name",
+  "source_kind": "chat_export|file_bundle|repository_snapshot|other",
+  "received_at": "ISO-8601-or-unknown",
+  "source_created_at": "ISO-8601-or-unknown",
+  "raw_filename": "original-name.zip",
+  "raw_sha256": "compute-before-import",
+  "byte_size": null,
+  "format": "zip+json",
+  "parser_version": "version-or-commit",
+  "coverage": {
+    "status": "unknown",
+    "first_source_time": null,
+    "last_source_time": null,
+    "conversation_count": null,
+    "message_count": null,
+    "limitations": [
+      "not yet audited"
+    ]
+  },
+  "import_run_id": "IMPORT-EXAMPLE-001",
+  "immutability": "raw-preserved",
+  "reconciliation_status": "staged",
+  "notes": "Manifest template; numbers must come from actual inspection"
+}

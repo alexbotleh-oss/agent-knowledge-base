@@ -1,0 +1,209 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Append-only memory edge correction",
+  "description": "A versioned, source-bound relation correction. Accepted entries require a separate approval receipt; corrections never rewrite the source MemoryRecord.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "correction_id",
+    "action",
+    "status",
+    "source_memory_id",
+    "source_revision_id",
+    "source_record_sha256",
+    "recorded_at",
+    "rationale",
+    "source_refs"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "edge-correction-v1"
+    },
+    "correction_id": {
+      "type": "string",
+      "minLength": 4
+    },
+    "action": {
+      "enum": [
+        "add",
+        "retract",
+        "replace"
+      ]
+    },
+    "status": {
+      "enum": [
+        "candidate",
+        "accepted",
+        "disputed",
+        "rejected",
+        "superseded"
+      ]
+    },
+    "source_memory_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source_revision_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source_record_sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "target_relation_sha256": {
+      "oneOf": [
+        {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "relation": {
+      "$ref": "#/$defs/relation"
+    },
+    "replacement_relation": {
+      "$ref": "#/$defs/relation"
+    },
+    "decision_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "decision_source_ref": {
+      "type": "string",
+      "minLength": 1
+    },
+    "recorded_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "rationale": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source_refs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "action": {
+            "const": "add"
+          }
+        },
+        "required": [
+          "action"
+        ]
+      },
+      "then": {
+        "required": [
+          "relation"
+        ],
+        "properties": {
+          "target_relation_sha256": {
+            "type": "null"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "action": {
+            "const": "retract"
+          }
+        },
+        "required": [
+          "action"
+        ]
+      },
+      "then": {
+        "required": [
+          "target_relation_sha256"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "action": {
+            "const": "replace"
+          }
+        },
+        "required": [
+          "action"
+        ]
+      },
+      "then": {
+        "required": [
+          "target_relation_sha256",
+          "replacement_relation"
+        ]
+      }
+    }
+  ],
+  "$defs": {
+    "relation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "target_id",
+        "basis",
+        "confidence",
+        "status",
+        "source_refs"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "minLength": 1
+        },
+        "target_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "basis": {
+          "type": "string",
+          "minLength": 1
+        },
+        "confidence": {
+          "enum": [
+            "low",
+            "medium",
+            "high",
+            "unknown"
+          ]
+        },
+        "status": {
+          "enum": [
+            "candidate",
+            "accepted",
+            "disputed",
+            "rejected",
+            "superseded"
+          ]
+        },
+        "source_refs": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/alexbotleh-oss/agent-knowledge-base/schemas/temporal_memory_snapshot.schema.json",
+  "title": "Temporal Memory Snapshot v1",
+  "description": "Versioned metadata for an immutable collection snapshot. A count delta is not evidence of corruption without aligned scope and counting semantics.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "snapshot_id",
+    "captured_at",
+    "scope_id",
+    "counting_unit",
+    "inclusion_rules_id",
+    "exclusion_rules_id",
+    "coverage_status",
+    "counts"
+  ],
+  "properties": {
+    "schema_version": { "const": "1.0" },
+    "snapshot_id": { "type": "string", "minLength": 1 },
+    "captured_at": { "type": ["string", "null"], "format": "date-time" },
+    "received_at": { "type": ["string", "null"], "format": "date-time" },
+    "scope_id": { "type": "string", "minLength": 1 },
+    "counting_unit": { "type": "string", "minLength": 1 },
+    "inclusion_rules_id": { "type": "string", "minLength": 1 },
+    "exclusion_rules_id": { "type": "string", "minLength": 1 },
+    "source_hash": { "type": ["string", "null"], "pattern": "^(sha256:[a-fA-F0-9]{64})?$" },
+    "coverage_status": { "enum": ["COMPLETE", "PARTIAL", "UNKNOWN"] },
+    "coverage_start": { "type": ["string", "null"], "format": "date-time" },
+    "coverage_end": { "type": ["string", "null"], "format": "date-time" },
+    "counts": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": { "type": "integer", "minimum": 0 }
+    },
+    "notes": { "type": "string" }
+  }
+}
