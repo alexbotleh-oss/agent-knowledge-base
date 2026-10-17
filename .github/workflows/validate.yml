@@ -23,3 +23,59 @@ jobs:
         run: |
           chmod +x core/*.sh tools/*.sh stacks/*/*.sh
           STRICT_VALIDATION=0 tools/validate_project.sh .
+
+      - name: Exercise verified restore and unified task-start
+        if: github.event_name == 'pull_request' && github.head_ref == 'feature/prewrite-event-relation-validator-20261017'
+        env:
+          REPOSITORY: alexbotleh-oss/agent-knowledge-base
+        run: |
+          CODE_HEAD=$(python3 -c "import json; print(json.load(open('projects/AGENT_MEMORY_SYSTEM/CONTINUITY_CHECKPOINT.json'))['repository_state']['last_verified_code_head'])")
+          export CODE_HEAD
+          python3 tools/verified_session_restore.py \
+            projects/AGENT_MEMORY_SYSTEM/TASK_STATE.md \
+            projects/AGENT_MEMORY_SYSTEM/HANDOFF.md \
+            projects/AGENT_MEMORY_SYSTEM/events.jsonl \
+            --repository "$REPOSITORY" --ref "$CODE_HEAD" > /tmp/verified-session.json
+          python3 - <<'PY'
+          import json, os
+          packet = json.load(open("/tmp/verified-session.json", encoding="utf-8"))
+          evidence = packet.get("remote_repository_evidence", {})
+          assert packet.get("status") == "RESTORED_PACKET", packet.get("reason") or evidence
+          assert evidence.get("recorded_code_head") == os.environ["CODE_HEAD"], evidence
+          assert evidence.get("ci_conclusion") == "success", evidence
+          print("VERIFIED_SESSION_RESTORE_PASS", evidence.get("recorded_code_head"), evidence.get("recorded_ci_run_id"))
+          PY
+          python3 tools/agent_memory_cycle.py \
+            --task-state projects/AGENT_MEMORY_SYSTEM/TASK_STATE.md \
+            --handoff projects/AGENT_MEMORY_SYSTEM/HANDOFF.md \
+            --project-event-log projects/AGENT_MEMORY_SYSTEM/events.jsonl \
+            --attention-log projects/AGENT_MEMORY_SYSTEM/events.jsonl \
+            --request "Restore the current AGENT_MEMORY_SYSTEM task context and review PR #1–#38 integration. Read-only; do not merge or write project events." \
+            --experience-log projects/AGENT_MEMORY_SYSTEM/EVENT_LOG.md \
+            --lesson-log projects/AGENT_MEMORY_SYSTEM/LESSONS.md \
+            --active-task-id AGMS-2026-10-13-01 \
+            --active-checkpoint-id CKPT-AGMS-20261017-PR38-VALIDATOR-CI-PASS-01 \
+            --project-id AGENT_MEMORY_SYSTEM \
+            --repository "$REPOSITORY" \
+            --repository-ref "$CODE_HEAD" \
+            --memory-query "PR integration, memory restore, source discovery, event chronology" > /tmp/task-start-cycle.json
+          python3 - <<'PY'
+          import json
+          result = json.load(open("/tmp/task-start-cycle.json", encoding="utf-8"))
+          task_start = result.get("task_start", {})
+          restore = task_start.get("task_restore", {})
+          readiness = result.get("cluster_readiness", {})
+          assert result.get("status") == "READY", result
+          assert result.get("semantic_memory_integration", {}).get("status") == "CONFIGURED", result
+          assert task_start.get("status") != "CONTEXT_OR_RETRIEVAL_BLOCKED", task_start
+          assert restore.get("task_restore_status") in {"RESTORED_PACKET", "PARTIAL"}, restore
+          assert readiness.get("status") in {"READY_FOR_REVIEW", "PARTIAL"}, readiness
+          assert readiness.get("planning_authorized") is False, readiness
+          assert readiness.get("execution_performed") is False, readiness
+          assert result.get("writes_performed") is False, result
+          print("TASK_START_CLUSTER_PASS",
+                "task_status=", task_start.get("status"),
+                "restore_status=", restore.get("task_restore_status"),
+                "memory_status=", result.get("semantic_memory_integration", {}).get("approved_memory_status"),
+                "readiness=", readiness.get("status"))
+          PY
