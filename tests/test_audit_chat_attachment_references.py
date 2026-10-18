@@ -112,6 +112,18 @@ class AuditChatAttachmentReferencesTests(unittest.TestCase):
             self.assertEqual(result["reason"], "SOURCE_CHANGED_DURING_SCAN")
             self.assertFalse(result["raw_payloads_modified"])
 
+    def test_unreadable_source_returns_structured_failure(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            source = Path(tmp) / "conversations.json"
+            source.write_text('[{"id":"c1"}]', encoding="utf-8")
+            with patch.object(attachment_audit_module, "sha256_file",
+                              side_effect=PermissionError("denied")):
+                result = audit_references(source)
+            self.assertEqual(result["status"], "FAIL")
+            self.assertEqual(result["reason"], "SOURCE_UNREADABLE")
+            self.assertEqual(result["error_type"], "PermissionError")
+            self.assertFalse(result["raw_payloads_modified"])
+
     def test_no_candidate_references_is_not_claimed_as_proof_of_no_attachments(self):
         with tempfile.TemporaryDirectory() as tmp:
             source = Path(tmp) / "conversations.json"
