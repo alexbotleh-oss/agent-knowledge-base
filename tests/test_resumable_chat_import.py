@@ -522,7 +522,7 @@ class ResumableChatImportTests(unittest.TestCase):
             finally:
                 conn.close()
 
-            with self.assertRaisesRegex(RuntimeError, "injected batch event failure"):
+            with self.assertRaisesRegex(sqlite3.IntegrityError, "injected batch event failure"):
                 import_export(source, out, "FAULT-BATCH-ROLLBACK", batch_size=2)
 
             conn = sqlite3.connect(db)
@@ -609,7 +609,7 @@ class ResumableChatImportTests(unittest.TestCase):
             finally:
                 conn.close()
 
-            with self.assertRaisesRegex(RuntimeError, "injected finalization failure"):
+            with self.assertRaisesRegex(sqlite3.IntegrityError, "injected finalization failure"):
                 import_export(source, out, "FAULT-FINALIZE", batch_size=2)
 
             conn = sqlite3.connect(db)
