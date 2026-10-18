@@ -457,3 +457,10 @@ Tests added for first pass, completed replay, and a changed source under the sam
 - **Protocol:** `core/source_ingestion_protocol.md` now states the lock contract and platform boundary.
 - **Checkpoint note:** this section is written after the earlier integrity checkpoint. Re-fetch the branch HEAD and run metadata; CI for the newest code/docs and checkpoint commits must be checked before reporting the current branch as verified.
 - **Remaining:** real source archive bytes could not be materialized through the current Library file service, so actual-export import is untested. Attachment/manifest inventory is a separate step. PR #22 remains Draft/open/unmerged; do not modify `main`.
+
+
+### Event-log self-correction — 2026-10-18
+
+- While appending the single-writer event, the first draft used `followed_by` from the newer event to the older event. A read-through of the relation convention caught the direction error immediately.
+- Preserved `EVT-AGMS-20261018-002` unchanged and appended `EVT-AGMS-20261018-003` with an explicit `edge_corrections` overlay: `followed_by` → `preceded_by` for the reference to EVT-AGMS-20261018-001.
+- This is another confirmed example supporting the existing need for a pre-write temporal-edge validator. Any consumer must apply the correction overlay; the original row alone retains the incorrect relation.
