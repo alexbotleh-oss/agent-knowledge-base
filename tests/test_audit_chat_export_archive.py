@@ -151,6 +151,17 @@ class AuditChatExportArchiveTests(unittest.TestCase):
             self.assertEqual(result["status"], "FAIL")
             self.assertEqual(result["reason"], "SOURCE_CHANGED_DURING_AUDIT")
 
+    def test_unreadable_source_returns_structured_failure(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            source = Path(tmp) / "export.zip"
+            self.make_zip(source, [("conversations.json", b"[]")])
+            with patch.object(archive_audit_module, "sha256_file",
+                              side_effect=PermissionError("denied")):
+                result = audit_archive(source)
+            self.assertEqual(result["status"], "FAIL")
+            self.assertEqual(result["reason"], "SOURCE_UNREADABLE")
+            self.assertEqual(result["error_type"], "PermissionError")
+
     def test_missing_source_is_reported_without_writes(self):
         with tempfile.TemporaryDirectory() as tmp:
             source = Path(tmp) / "missing.zip"
