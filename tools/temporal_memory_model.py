@@ -180,10 +180,14 @@ def validate_temporal_relations(
         order = trusted_order
         precedence_rows = []
 
+    legacy_order = "order" not in trusted_order and "verified_precedence" not in trusted_order
     valid_order: dict[str, int] = {}
     for event_id, value in order.items():
-        if not isinstance(event_id, str) or not isinstance(value, int) or isinstance(value, bool):
-            errors.append(f"trusted chronology for {event_id!r} must be an integer, not a boolean")
+        if isinstance(value, bool):
+            errors.append(f"{event_id}: trusted chronology values must be integers, not booleans")
+            continue
+        if not isinstance(event_id, str) or not isinstance(value, int):
+            errors.append(f"trusted chronology for {event_id!r} must be an integer")
             continue
         valid_order[event_id] = value
 
@@ -283,6 +287,11 @@ def validate_temporal_relations(
                     errors.append(f"{source_id}: preceded_by points to non-earlier event {target_id}")
                 elif relation == "followed_by" and source_id == later:
                     errors.append(f"{source_id}: followed_by points to non-later event {target_id}")
+                continue
+
+            # Preserve the original strict contract for legacy flat maps.
+            if legacy_order and (source_order is None or target_order is None):
+                errors.append(f"{source_id}: trusted chronology missing for temporal edge to {target_id}")
                 continue
 
             # Same-day/equal-rank relations require an explicit evidence-backed path.
