@@ -1,0 +1,68 @@
+{
+  "$schema": "agent-knowledge-base trusted partial order v1",
+  "description": "Calendar dates provide coarse order only across different dates. Same-day order is accepted only through evidence-backed verified_precedence edges.",
+  "order": {
+    "EVT-AGMS-20261013-001": 20261013,
+    "EVT-AGMS-20261013-002": 20261013,
+    "EVT-AGMS-20261013-003": 20261013,
+    "EVT-AGMS-20261013-004": 20261013,
+    "EVT-AGMS-20261013-005": 20261013,
+    "EVT-AGMS-20261013-006": 20261013,
+    "EVT-AGMS-20261014-001": 20261014,
+    "EVT-AGMS-20261014-002": 20261014,
+    "EVT-AGMS-20261014-003": 20261014,
+    "EVT-AGMS-20261014-004": 20261014,
+    "EVT-AGMS-20261018-001": 20261018,
+    "EVT-AGMS-20261018-002": 20261018,
+    "EVT-AGMS-20261018-003": 20261018,
+    "EVT-AGMS-20261018-004": 20261018,
+    "EVT-AGMS-20261018-005": 20261018,
+    "EVT-AGMS-20261018-006": 20261018,
+    "EVT-AGMS-20261018-007": 20261018,
+    "EVT-AGMS-20261018-008": 20261018
+  },
+  "verified_precedence": [
+    {
+      "earlier": "EVT-AGMS-20261018-001",
+      "later": "EVT-AGMS-20261018-002",
+      "evidence": "GitHub Compare confirms event-append commit 9408440 is an ancestor of 869fbd1; relation explicitly claims Git commit ancestry.",
+      "ref": "https://github.com/alexbotleh-oss/agent-knowledge-base/compare/9408440fe0fe40f084a09f93024062ac9f500b23...869fbd14d8478c0f2c25f62dd86e4c2e89bdf689"
+    },
+    {
+      "earlier": "EVT-AGMS-20261018-002",
+      "later": "EVT-AGMS-20261018-003",
+      "evidence": "GitHub Compare confirms event-append commit 869fbd1 is an ancestor of 17defdb; relation explicitly claims Git commit ancestry.",
+      "ref": "https://github.com/alexbotleh-oss/agent-knowledge-base/compare/869fbd14d8478c0f2c25f62dd86e4c2e89bdf689...17defdb08e634d459ab3534b25f8199c9aa2d545"
+    },
+    {
+      "earlier": "EVT-AGMS-20261018-003",
+      "later": "EVT-AGMS-20261018-004",
+      "evidence": "GitHub Compare confirms event-append commit 17defdb is an ancestor of 1252759; relation explicitly claims Git commit ancestry.",
+      "ref": "https://github.com/alexbotleh-oss/agent-knowledge-base/compare/17defdb08e634d459ab3534b25f8199c9aa2d545...12527599707925f8d0618eca509b79e3d5a399d5"
+    },
+    {
+      "earlier": "EVT-AGMS-20261018-004",
+      "later": "EVT-AGMS-20261018-005",
+      "evidence": "GitHub Compare confirms event-append commit 1252759 is an ancestor of b1fdfbf; relation explicitly claims Git commit ancestry.",
+      "ref": "https://github.com/alexbotleh-oss/agent-knowledge-base/compare/12527599707925f8d0618eca509b79e3d5a399d5...b1fdfbf4fdabefb3e54caf9678078ffea04904e1"
+    },
+    {
+      "earlier": "EVT-AGMS-20261018-005",
+      "later": "EVT-AGMS-20261018-006",
+      "evidence": "GitHub Compare confirms event-append commit b1fdfbf is an ancestor of 5df320a; relation explicitly claims Git commit ancestry.",
+      "ref": "https://github.com/alexbotleh-oss/agent-knowledge-base/compare/b1fdfbf4fdabefb3e54caf9678078ffea04904e1...5df320a5197a6c9e0fc481966689ce3b8313329b"
+    },
+    {
+      "earlier": "EVT-AGMS-20261018-006",
+      "later": "EVT-AGMS-20261018-007",
+      "evidence": "GitHub Compare confirms event-append commit 5df320a is an ancestor of 446b952; relation explicitly claims Git commit ancestry.",
+      "ref": "https://github.com/alexbotleh-oss/agent-knowledge-base/compare/5df320a5197a6c9e0fc481966689ce3b8313329b...446b952076081b3bdbcce38cf4acc8344a5cd109"
+    },
+    {
+      "earlier": "EVT-AGMS-20261018-007",
+      "later": "EVT-AGMS-20261018-008",
+      "evidence": "GitHub Compare confirms event-append commit 446b952 is an ancestor of bacdabe; relation explicitly claims Git commit ancestry.",
+      "ref": "https://github.com/alexbotleh-oss/agent-knowledge-base/compare/446b952076081b3bdbcce38cf4acc8344a5cd109...bacdabe1b4e67b00c48aac9f3e208246346cff9b"
+    }
+  ]
+}
