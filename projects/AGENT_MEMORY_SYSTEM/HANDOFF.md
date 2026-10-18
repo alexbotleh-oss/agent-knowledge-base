@@ -20,12 +20,12 @@ Continue building a reliable, resumable raw-history intake and memory-evolution 
 - `tools/temporal_memory_model.py::validate_temporal_relations(records, trusted_order)` validates `preceded_by` / `followed_by` against explicit trusted ordering, applies `edge_corrections` overlays in memory, and refuses to guess when order evidence is missing.
 - `tools/append_memory_event.py::append_event_record()` provides a pre-write append path: read existing JSONL, reject duplicate IDs, validate the full temporal graph against the supplied trusted order, then append under an OS-managed lock and fsync. Validation failures leave the journal unchanged. CLI accepts `--journal`, `--event`, `--trusted-order`.
 - `tools/validate_event_journal.py` is a read-only preflight CLI for existing JSONL. It reports `PASS` or `NEEDS_RECONCILIATION` and explicitly reports `writes_performed: false`.
-- Tests cover wrong edge direction, correction overlay without source mutation, missing/boolean chronology, invalid append rejection without mutation, valid append, duplicate IDs, and correction overlay handling.
+- Tests cover wrong edge direction, correction overlay replacement and null-removal without source mutation, missing/boolean chronology, invalid append rejection without mutation, valid append, duplicate IDs, and read-only preflight.
 - **The writer and preflight have not yet been run against the full live event journal.** A complete trusted-order mapping for every temporal edge is not yet assembled. Do not fabricate ordering values to bypass validation.
 - Append-only events `EVT-AGMS-20261018-001..006` document integrity hardening, writer locking, relation correction, snapshot durability and temporal validation. Do not rewrite historical events or remove overlays.
 
 ## Verification boundary
-- Exact-head CI for the newest strict-order test and later documentation/checkpoint commits is pending in this handoff revision; verify before claiming current HEAD passed.
+- Exact-head CI for the latest null-removal overlay fix and checkpoint commits is pending in this handoff revision; verify before claiming current HEAD passed.
 - A real archive run was not possible in the previous session: the Library file service refused raw-byte materialization of the selected ZIP. Do not claim real-source verification.
 - The importer stages conversation JSON only. Manifest reconciliation, binary attachment inventory, full external chat coverage, SQLite commit-boundary failure injection and automatic live ChatGPT capture remain unverified or unimplemented.
 - PR #22 contains 135 changed paths and unrelated project-history scope; it is not scope-clean or merge-ready.
