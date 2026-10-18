@@ -1,8 +1,10 @@
+import io
 import json
 import sys
 import tempfile
 import unittest
 import zipfile
+from contextlib import redirect_stdout
 from pathlib import Path
 from unittest.mock import patch
 
@@ -90,6 +92,29 @@ class PreflightChatExportTests(unittest.TestCase):
             self.assertEqual(result["status"], "FAIL")
             self.assertEqual(result["reason"], "SOURCE_DIGEST_MISMATCH_BETWEEN_AUDITS")
             self.assertFalse(result["raw_source_modified"])
+
+    def test_cli_returns_review_exit_code_and_json_for_valid_archive(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            source = Path(tmp) / "export.zip"
+            self.make_zip(source, [
+                ("account/conversations.json", b'[{"id":"c1"}]'),
+            ])
+            output = io.StringIO()
+            with patch("sys.argv", ["preflight_chat_export.py", str(source)]), redirect_stdout(output):
+                exit_code = preflight_module.main()
+
+            self.assertEqual(exit_code, 2)
+            self.assertEqual(json.loads(output.getvalue())["status"], "REVIEW_REQUIRED")
+
+    def test_cli_returns_failure_exit_code_for_missing_source(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            source = Path(tmp) / "missing.zip"
+            output = io.StringIO()
+            with patch("sys.argv", ["preflight_chat_export.py", str(source)]), redirect_stdout(output):
+                exit_code = preflight_module.main()
+
+            self.assertEqual(exit_code, 1)
+            self.assertEqual(json.loads(output.getvalue())["status"], "FAIL")
 
     def test_missing_source_fails_combined_preflight(self):
         with tempfile.TemporaryDirectory() as tmp:
