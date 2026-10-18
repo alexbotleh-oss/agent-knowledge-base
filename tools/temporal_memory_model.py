@@ -208,8 +208,11 @@ def validate_temporal_relations(
                 errors.append(f"{source_id}: trusted chronology missing for temporal edge to {target_id}")
                 continue
             source_order, target_order = trusted_order[source_id], trusted_order[target_id]
-            if not isinstance(source_order, int) or not isinstance(target_order, int):
-                errors.append(f"{source_id}: trusted chronology values must be integers")
+            if (
+                not isinstance(source_order, int) or isinstance(source_order, bool)
+                or not isinstance(target_order, int) or isinstance(target_order, bool)
+            ):
+                errors.append(f"{source_id}: trusted chronology values must be integers, not booleans")
                 continue
             if source_order == target_order:
                 errors.append(f"{source_id}: temporal order is ambiguous for edge to {target_id}")
