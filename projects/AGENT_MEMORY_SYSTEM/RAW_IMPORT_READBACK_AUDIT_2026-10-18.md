@@ -107,3 +107,13 @@ No merge was performed and `main` was not changed. Approved semantic-memory regi
 - Both cases fail closed with a structured `FAIL / ARCHIVE_READ_ERROR` result; the inventory does not attempt to extract members.
 - Exact code/test HEAD `1a02387eac1d0861091d761dd9f0e549171449fa` passed CI run [#39093091220](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/39093091220): **513 Python tests, 1 skipped; 4 Node tests; strict write audit 162 mutation sites / 0 unclassified; memory/event-log/project validation passed.**
 - Restore/task-start smoke deferred because this new regression-test file changed after the previously checkpointed HEAD. This run is CI evidence, not a new smoke PASS. Next refresh the report and checkpoint to the complete tested code/test/report revision, then run the metadata-descendant smoke.
+
+
+## Unified hash-bound preflight orchestration — 2026-10-18
+
+- Added `tools/preflight_chat_export.py` to run archive inventory and attachment-reference scanning against the same supplied path, preserve both full audit results, and compare their source SHA-256 values.
+- The combined result fails closed if either sub-audit fails, if a source digest is missing, or if the two audits report different digests.
+- Overall `PASS` is intentionally impossible for now: even when the ZIP inventory passes, candidate attachment detection is heuristic and the combined result remains `REVIEW_REQUIRED` until source-specific attachment semantics can be reviewed.
+- Added five tests covering a valid archive that still requires semantic review, unsafe path propagation, CRC failure, digest disagreement, and missing source.
+- Exact code/test HEAD `b0a712136f99ee92c9e1a07f1a32f31ac7a036f3` passed CI run [#39093252882](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/39093252882): **518 Python tests, 1 skipped; 4 Node tests; strict write audit 162 mutation sites / 0 unclassified; memory/event-log/project validation passed.**
+- Restore/task-start smoke deferred because the new orchestrator source/test files changed after the previous checkpointed code head. Refresh the report and checkpoint to the complete tested revision before accepting a metadata-descendant smoke.
