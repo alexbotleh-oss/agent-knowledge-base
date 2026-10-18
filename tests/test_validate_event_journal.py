@@ -51,13 +51,13 @@ class ValidateEventJournalTests(unittest.TestCase):
             journal = root / "events.jsonl"
             order_file = root / "trusted-order.json"
             journal.write_text(
-                json.dumps({"event_id": "A", "relations": []}) + "\\n" +
+                json.dumps({"event_id": "A", "relations": []}) + "\n" +
                 json.dumps({"event_id": "B", "relations": [
                     {"type": "preceded_by", "event_id": "A"}
-                ]}) + "\\n" +
+                ]}) + "\n" +
                 json.dumps({"event_id": "C", "relations": [
                     {"type": "preceded_by", "event_id": "A"}
-                ]}) + "\\n",
+                ]}) + "\n",
                 encoding="utf-8",
             )
             order_file.write_text(json.dumps({
