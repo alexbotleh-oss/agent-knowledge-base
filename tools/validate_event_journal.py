@@ -37,10 +37,17 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--journal", required=True, type=Path)
     parser.add_argument("--trusted-order", required=True, type=Path)
+    parser.add_argument(
+        "--allow-unresolved",
+        action="store_true",
+        help="Exit successfully after emitting a NEEDS_RECONCILIATION report; for diagnostic CI only.",
+    )
     args = parser.parse_args()
     report = validate_event_journal(args.journal, args.trusted_order)
     print(json.dumps(report, ensure_ascii=False, indent=2))
-    return 0 if report["status"] == "PASS" else 1
+    if report["status"] == "PASS" or args.allow_unresolved:
+        return 0
+    return 1
 
 
 if __name__ == "__main__":
