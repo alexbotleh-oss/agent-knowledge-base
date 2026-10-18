@@ -495,3 +495,12 @@ Tests added for first pass, completed replay, and a changed source under the sam
 - **Verification:** the writer and initial test commit passed CI in run #39125235969; the newest strict-order test, protocol docs and checkpoint records are newer. Exact-head CI remains pending until rechecked.
 - **Live journal not yet validated through the writer:** a complete trusted-order map for every temporal edge in the existing event log has not been assembled. Do not invent order values just to make validation pass.
 - **Next:** verify exact-head CI, then build a dry-run/report path that identifies which legacy edges lack trusted chronology. Resolve those with source evidence before attempting any live append through the new writer.
+
+
+## Read-only temporal journal preflight — 2026-10-18
+
+- Added `tools/validate_event_journal.py`, a read-only CLI taking `--journal` and `--trusted-order`. It reports `PASS` or `NEEDS_RECONCILIATION`, temporal-edge counts, errors, and `writes_performed: false`.
+- Tests cover missing trusted chronology without changing journal bytes and a passing case when explicit order proves direction. The test fixture's JSONL separators were corrected before final verification.
+- Documented the preflight in `core/chronology_reconstruction.md` and appended EVT-AGMS-20261018-007.
+- **Current limitation:** no evidence-backed complete trusted-order map has been assembled for the live event journal. The preflight must not be run with a guessed map; do not try the append writer against the live journal until chronology evidence is reconciled.
+- **Verification:** exact-head CI for the latest test fix, docs and event checkpoint is pending; recheck the current branch HEAD and Actions.
