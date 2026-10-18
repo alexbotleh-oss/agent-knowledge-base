@@ -222,8 +222,8 @@ def validate_temporal_relations(
         return False
 
     # A cycle makes the evidence-backed partial order contradictory.
-    for source in precedence:
-        if reachable(source, source):
+    for source, targets in precedence.items():
+        if any(reachable(target, source) for target in targets):
             errors.append(f"trusted precedence contains a cycle involving {source}")
             break
 
