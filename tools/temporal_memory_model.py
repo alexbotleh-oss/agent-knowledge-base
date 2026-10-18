@@ -184,8 +184,8 @@ def validate_temporal_relations(
                 continue
             old_edge = correction.get("old_relation")
             new_edge = correction.get("corrected_relation")
-            if not isinstance(old_edge, dict) or not isinstance(new_edge, dict):
-                errors.append(f"{correction_id}: correction must contain old_relation and corrected_relation")
+            if not isinstance(old_edge, dict) or (new_edge is not None and not isinstance(new_edge, dict)):
+                errors.append(f"{correction_id}: correction must contain old_relation and a corrected_relation object or null")
                 continue
             edges = effective_edges[target_id]
             try:
@@ -193,7 +193,11 @@ def validate_temporal_relations(
             except ValueError:
                 errors.append(f"{correction_id}: old relation not found in {target_id}")
                 continue
-            edges[edge_index] = dict(new_edge)
+            if new_edge is None:
+                # Null is an explicit append-only correction that removes an unsupported edge.
+                del edges[edge_index]
+            else:
+                edges[edge_index] = dict(new_edge)
 
     for source_id, edges in effective_edges.items():
         for edge in edges:
