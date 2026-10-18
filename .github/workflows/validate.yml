@@ -14,6 +14,28 @@ jobs:
         run: |
           python3 tools/validate_memory.py
           python3 -m unittest discover -s tests
+      - name: Read-only event journal chronology preflight
+        run: |
+          python3 tools/validate_event_journal.py \
+            --journal projects/AGENT_MEMORY_SYSTEM/events.jsonl \
+            --trusted-order projects/AGENT_MEMORY_SYSTEM/trusted_order.json \
+            --allow-unresolved | tee event-journal-preflight.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          report = json.loads(Path("event-journal-preflight.json").read_text(encoding="utf-8"))
+          assert report.get("writes_performed") is False, "preflight must remain read-only"
+          print(f"Event journal preflight: {report['status']}; "
+                f"{report['record_count']} records; "
+                f"{report['temporal_edge_count']} raw temporal edges; "
+                f"{len(report['errors'])} unresolved/invalid findings")
+          PY
+      - name: Upload read-only event journal preflight report
+        uses: actions/upload-artifact@v4
+        with:
+          name: event-journal-preflight-${{ github.sha }}
+          path: event-journal-preflight.json
+          if-no-files-found: error
       - name: Validate knowledge base and detected stacks
         run: |
           chmod +x core/*.sh tools/*.sh stacks/*/*.sh
