@@ -136,3 +136,12 @@ No merge was performed and `main` was not changed. Approved semantic-memory regi
 - Exact code/test HEAD `9e2e4963e407b3c1918d183e172296621abce925` passed CI run [#39093655908](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/39093655908): **522 Python tests, 1 skipped; 4 Node tests; strict write audit 163 mutation sites / 0 unclassified; memory/event-log/project validation passed.**
 - Restore/task-start smoke deferred because the snapshot implementation, its tests, and the write-contract entry changed after the previously checkpointed head. Refresh the report and checkpoint to the full tested revision before accepting the next metadata-descendant smoke.
 - Scope boundary: the private snapshot ensures both sub-audits inspect identical copied bytes. The before/copy/after digest check is still not an OS-level lock on the original source; it fails on detected persistent drift and audits only the verified snapshot.
+
+
+## Truncated and invalid compressed-member error handling — 2026-10-18
+
+- Final review of the ZIP inventory exception boundary found that `EOFError` and `zlib.error` could escape the structured error result if a member stream was truncated or its deflate stream was invalid.
+- `tools/audit_chat_export_archive.py` now maps both to `FAIL / ARCHIVE_READ_ERROR`, alongside the existing malformed ZIP, encryption, unsupported-compression, and I/O failures.
+- Added fault-injection regressions for both exception types. These tests verify the structured failure boundary; they do not replace testing against a real native export.
+- Exact code/test HEAD `6fa04e1b2493696ef4ed5200c7a1caa3615e8e7f` passed CI run [#39109306169](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/39109306169): **523 Python tests, 1 skipped; 4 Node tests; strict write audit 163 mutation sites / 0 unclassified; memory/event-log/project validation passed.**
+- Restore/task-start smoke deferred on this exact HEAD because the archive audit implementation and tests changed after the recorded code head. The checkpoint must be refreshed before accepting a smoke as current evidence.
