@@ -19,8 +19,9 @@ Continue building a reliable, resumable raw-history intake and memory-evolution 
 - `immutable_snapshot()` fsyncs copied file contents before publishing the final content-addressed name, then attempts directory fsync where supported. A failure-injection test checks that file-fsync failure does not publish the final name.
 - `tools/temporal_memory_model.py::validate_temporal_relations(records, trusted_order)` validates `preceded_by` / `followed_by` against explicit trusted ordering, applies `edge_corrections` overlays in memory, and refuses to guess when order evidence is missing.
 - `tools/append_memory_event.py::append_event_record()` provides a pre-write append path: read existing JSONL, reject duplicate IDs, validate the full temporal graph against the supplied trusted order, then append under an OS-managed lock and fsync. Validation failures leave the journal unchanged. CLI accepts `--journal`, `--event`, `--trusted-order`.
+- `tools/validate_event_journal.py` is a read-only preflight CLI for existing JSONL. It reports `PASS` or `NEEDS_RECONCILIATION` and explicitly reports `writes_performed: false`.
 - Tests cover wrong edge direction, correction overlay without source mutation, missing/boolean chronology, invalid append rejection without mutation, valid append, duplicate IDs, and correction overlay handling.
-- **The writer has not yet been run against the full live event journal.** A complete trusted-order mapping for every temporal edge is not yet assembled. Do not fabricate ordering values to bypass validation.
+- **The writer and preflight have not yet been run against the full live event journal.** A complete trusted-order mapping for every temporal edge is not yet assembled. Do not fabricate ordering values to bypass validation.
 - Append-only events `EVT-AGMS-20261018-001..006` document integrity hardening, writer locking, relation correction, snapshot durability and temporal validation. Do not rewrite historical events or remove overlays.
 
 ## Verification boundary
