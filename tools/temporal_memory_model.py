@@ -258,11 +258,18 @@ def validate_temporal_relations(
                 errors.append(f"{correction_id}: correction must contain old_relation and a corrected_relation object or null")
                 continue
             edges = effective_edges[target_id]
-            try:
-                edge_index = edges.index(old_edge)
-            except ValueError:
-                errors.append(f"{correction_id}: old relation not found in {target_id}")
+            # Older correction records may intentionally identify an edge by
+            # only its stable relation type and target ID, omitting later-added
+            # metadata such as basis. Match that selector only when unique.
+            matches = [
+                index for index, edge in enumerate(edges)
+                if all(edge.get(key) == value for key, value in old_edge.items())
+            ]
+            if len(matches) != 1:
+                reason = "not found" if not matches else "ambiguous"
+                errors.append(f"{correction_id}: old relation {reason} in {target_id}")
                 continue
+            edge_index = matches[0]
             if new_edge is None:
                 del edges[edge_index]
             else:
