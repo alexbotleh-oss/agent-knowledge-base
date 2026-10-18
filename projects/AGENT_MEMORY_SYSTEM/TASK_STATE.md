@@ -484,3 +484,14 @@ Tests added for first pass, completed replay, and a changed source under the sam
 - **Event log:** appended EVT-AGMS-20261018-005 with a relation to the immediately preceding implementation checkpoint. Existing events and corrections remain append-only.
 - **Verification:** CI for the final code/docs/event/checkpoint commit is pending; re-fetch exact HEAD and verify before calling this checkpoint passed.
 - **Next:** build a single append-only event-writing entry point that requires trusted ordering for temporal edges and refuses invalid or ungrounded relations before writing. Keep the raw event log immutable and preserve correction overlays.
+
+
+## Validated append-only event writer — 2026-10-18
+
+- **Implementation:** added `tools/append_memory_event.py::append_event_record()`. It reads the current JSONL journal, rejects duplicate event IDs, validates temporal relations against an explicit trusted-order mapping (including append-only correction overlays), then appends under an OS-managed lock and fsyncs the journal.
+- **Fail-closed behavior:** validation errors leave journal bytes unchanged. The writer refuses to guess missing chronology; it also refuses to append if any existing temporal edge cannot be validated with the supplied order map.
+- **Tests:** added `tests/test_append_memory_event.py` for invalid-direction rejection without mutation, valid append, duplicate ID rejection, correction overlay handling, and missing chronology. Added strict rejection of boolean order values to the temporal validator.
+- **Documentation and event trail:** `core/chronology_reconstruction.md` documents the writer contract; appended EVT-AGMS-20261018-006 without rewriting earlier events.
+- **Verification:** the writer and initial test commit passed CI in run #39125235969; the newest strict-order test, protocol docs and checkpoint records are newer. Exact-head CI remains pending until rechecked.
+- **Live journal not yet validated through the writer:** a complete trusted-order map for every temporal edge in the existing event log has not been assembled. Do not invent order values just to make validation pass.
+- **Next:** verify exact-head CI, then build a dry-run/report path that identifies which legacy edges lack trusted chronology. Resolve those with source evidence before attempting any live append through the new writer.
