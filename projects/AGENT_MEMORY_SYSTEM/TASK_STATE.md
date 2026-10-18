@@ -473,3 +473,14 @@ Tests added for first pass, completed replay, and a changed source under the sam
 - **Protocol:** `core/source_ingestion_protocol.md` documents the durability sequence and platform boundary.
 - **Verification status at this checkpoint:** CI for this latest snapshot-durability change is pending; do not infer PASS from earlier successful runs.
 - **Remaining:** directory-`fsync` support differs by platform; Windows and network filesystems are not independently tested. Real archive bytes are still unavailable for an end-to-end import in this session.
+
+
+## Temporal relation direction validator — 2026-10-18
+
+- **Implementation:** `tools/temporal_memory_model.py::validate_temporal_relations(records, trusted_order)` checks `preceded_by` and `followed_by` against an explicit trusted ordering map. It does not infer chronology from JSONL line order, event IDs or ingestion time.
+- **Correction handling:** append-only `edge_corrections` overlays are applied to a temporary in-memory projection; original event rows are not rewritten. The test fixture reproduces the historical direction error in EVT-AGMS-20261018-002 and verifies the EVT-AGMS-20261018-003 correction.
+- **Tests:** added coverage for wrong direction, correction overlay without source mutation, and missing trusted chronology.
+- **Documentation:** `core/chronology_reconstruction.md` states the evidence contract and explicitly marks this as a library validator, not yet a mandatory pre-write hook.
+- **Event log:** appended EVT-AGMS-20261018-005 with a relation to the immediately preceding implementation checkpoint. Existing events and corrections remain append-only.
+- **Verification:** CI for the final code/docs/event/checkpoint commit is pending; re-fetch exact HEAD and verify before calling this checkpoint passed.
+- **Next:** build a single append-only event-writing entry point that requires trusted ordering for temporal edges and refuses invalid or ungrounded relations before writing. Keep the raw event log immutable and preserve correction overlays.
