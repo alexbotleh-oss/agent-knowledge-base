@@ -27,7 +27,7 @@ Reviewed against branch `export/cross-project-experience-rollup-20261012`, HEAD 
 
 ## Executed read-only preflight
 
-GitHub Actions run [#39129738684](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/39129738684) ran `tools/validate_event_journal.py` against the live branch journal with `projects/AGENT_MEMORY_SYSTEM/trusted_order.json`. It reported 18 records, 15 raw temporal edges, status `NEEDS_RECONCILIATION`, and `writes_performed: false`. The report artifact is available [here](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/39129738684/artifacts/12137990330).
+GitHub Actions run [#39130213320](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/39130213320) ran `tools/validate_event_journal.py` against the live branch journal with `projects/AGENT_MEMORY_SYSTEM/trusted_order.json`. It reported 20 records, 15 raw temporal edges, status `NEEDS_RECONCILIATION`, and `writes_performed: false`. The report artifact is available [here](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/39130213320/artifacts/12137229739).
 
 The first preflight exposed a validator compatibility issue: several historical `old_relation` correction selectors omit metadata present on the original relation. The validator was fixed to apply a partial selector only when it uniquely matches. The subsequent preflight reported no correction-application errors; five temporal edges remain unresolved. The append writer has **not** been applied to the live journal.
 
