@@ -504,3 +504,13 @@ Tests added for first pass, completed replay, and a changed source under the sam
 - Documented the preflight in `core/chronology_reconstruction.md` and appended EVT-AGMS-20261018-007.
 - **Current limitation:** no evidence-backed complete trusted-order map has been assembled for the live event journal. The preflight must not be run with a guessed map; do not try the append writer against the live journal until chronology evidence is reconciled.
 - **Verification:** exact-head CI for the latest test fix, docs and event checkpoint is pending; recheck the current branch HEAD and Actions.
+
+
+## Live-journal compatibility fix: null edge corrections — 2026-10-18
+
+- A direct read of the live `events.jsonl` found an existing correction in EVT-AGMS-20261014-004 with `corrected_relation: null`, explicitly removing an unsupported temporal edge from the validation projection.
+- The first validator version accepted replacement objects but rejected null removals. This would have made the new preflight fail on a legitimate existing correction.
+- Fixed `validate_temporal_relations()` to remove that edge only from its in-memory projection; original event rows remain unchanged.
+- Added regression tests both for the validator and for the append writer accepting this correction without rewriting the old row. Updated the chronology protocol.
+- Appended EVT-AGMS-20261018-008. Exact-head CI for this correction is pending.
+- Next: verify CI, then build the trusted-order evidence map carefully. Same-day events whose intra-day order is not independently established must remain unresolved, not ordered by JSONL position.
