@@ -9,7 +9,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
-from resumable_chat_import import _commit_batch, _exclusive_import_lock, connect, import_export, iter_json_array
+from resumable_chat_import import _commit_batch, _exclusive_import_lock, connect, immutable_snapshot, import_export, iter_json_array
 
 
 def sample_conversations(count=5):
@@ -487,6 +487,20 @@ class ResumableChatImportTests(unittest.TestCase):
             # The lock is OS-managed; after the first owner exits it can be acquired again.
             with _exclusive_import_lock(output):
                 pass
+
+
+    def test_snapshot_is_not_published_when_file_fsync_fails(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            source = self.make_source(root, 2)
+            output = root / "state"
+            with patch("resumable_chat_import.os.fsync", side_effect=OSError("simulated fsync failure")):
+                with self.assertRaisesRegex(OSError, "simulated fsync failure"):
+                    immutable_snapshot(source, output)
+
+            snapshots = output / "snapshots"
+            self.assertFalse(any(path.name.endswith(".json") for path in snapshots.iterdir()))
+            self.assertFalse(any(path.name.startswith(".snapshot-") for path in snapshots.iterdir()))
 
 
 if __name__ == "__main__":
