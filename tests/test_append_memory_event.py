@@ -82,5 +82,32 @@ class AppendMemoryEventTests(unittest.TestCase):
         self.assertEqual(self.journal.read_bytes(), before)
 
 
+    def test_writer_accepts_correction_that_removes_unsupported_edge(self):
+        unsupported = {
+            "type": "followed_by",
+            "event_id": "A",
+            "basis": "same-day sequence; exact intra-day order not independently timestamped",
+        }
+        self.write_rows([
+            {"event_id": "A", "relations": []},
+            {"event_id": "B", "relations": [unsupported]},
+        ])
+        correction = {
+            "event_id": "C",
+            "relations": [],
+            "edge_corrections": [{
+                "record_id": "B",
+                "field": "relations",
+                "old_relation": unsupported,
+                "corrected_relation": None,
+            }],
+        }
+        result = append_event_record(self.journal, correction, self.order)
+        self.assertEqual(result["status"], "APPENDED")
+        stored = [json.loads(line) for line in self.journal.read_text().splitlines()]
+        self.assertEqual(stored[1]["relations"], [unsupported])
+        self.assertIsNone(stored[2]["edge_corrections"][0]["corrected_relation"])
+
+
 if __name__ == "__main__":
     unittest.main()
