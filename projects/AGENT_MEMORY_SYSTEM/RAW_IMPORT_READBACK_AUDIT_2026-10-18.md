@@ -117,3 +117,11 @@ No merge was performed and `main` was not changed. Approved semantic-memory regi
 - Added five tests covering a valid archive that still requires semantic review, unsafe path propagation, CRC failure, digest disagreement, and missing source.
 - Exact code/test HEAD `b0a712136f99ee92c9e1a07f1a32f31ac7a036f3` passed CI run [#39093252882](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/39093252882): **518 Python tests, 1 skipped; 4 Node tests; strict write audit 162 mutation sites / 0 unclassified; memory/event-log/project validation passed.**
 - Restore/task-start smoke deferred because the new orchestrator source/test files changed after the previous checkpointed code head. Refresh the report and checkpoint to the complete tested revision before accepting a metadata-descendant smoke.
+
+
+## Combined preflight CLI contract — 2026-10-18
+
+- Added CLI regression tests to ensure `tools/preflight_chat_export.py` returns exit code **2** with JSON status `REVIEW_REQUIRED` for a structurally valid archive whose attachment semantics still need review, and exit code **1** with JSON status `FAIL` for a missing source.
+- This makes the combined preflight's machine-readable output and shell exit status agree: it cannot accidentally look like a successful clean pass when semantic review remains required.
+- Exact code/test HEAD `c7328a378066ce68fecf56bba9ff6e254e22599e` passed CI run [#39093411396](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/39093411396): **520 Python tests, 1 skipped; 4 Node tests; strict write audit 162 mutation sites / 0 unclassified; memory/event-log/project validation passed.**
+- Restore/task-start smoke deferred because the new CLI regression tests changed after the previously checkpointed code/test/report head. Refresh the report and checkpoint to the full tested revision before accepting the next metadata-descendant smoke.
