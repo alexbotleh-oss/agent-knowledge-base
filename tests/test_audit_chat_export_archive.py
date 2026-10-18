@@ -134,8 +134,8 @@ class AuditChatExportArchiveTests(unittest.TestCase):
             source = Path(tmp) / "encrypted-flag.zip"
             self.make_zip(source, [("conversations.json", b"[]")])
             raw = bytearray(source.read_bytes())
-            local = raw.index(b"PK\\x03\\x04")
-            central = raw.index(b"PK\\x01\\x02")
+            local = raw.index(b"PK\x03\x04")
+            central = raw.index(b"PK\x01\x02")
             local_flags = int.from_bytes(raw[local + 6:local + 8], "little") | 0x1
             central_flags = int.from_bytes(raw[central + 8:central + 10], "little") | 0x1
             raw[local + 6:local + 8] = local_flags.to_bytes(2, "little")
@@ -153,8 +153,8 @@ class AuditChatExportArchiveTests(unittest.TestCase):
             source = Path(tmp) / "unsupported-compression.zip"
             self.make_zip(source, [("conversations.json", b"[]")])
             raw = bytearray(source.read_bytes())
-            local = raw.index(b"PK\\x03\\x04")
-            central = raw.index(b"PK\\x01\\x02")
+            local = raw.index(b"PK\x03\x04")
+            central = raw.index(b"PK\x01\x02")
             raw[local + 8:local + 10] = (99).to_bytes(2, "little")
             raw[central + 10:central + 12] = (99).to_bytes(2, "little")
             source.write_bytes(raw)
