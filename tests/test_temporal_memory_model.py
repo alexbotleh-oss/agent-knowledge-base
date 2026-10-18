@@ -209,5 +209,49 @@ class TemporalMemoryModelTests(unittest.TestCase):
         self.assertIsNone(records[2]["edge_corrections"][0]["corrected_relation"])
 
 
+    def test_partial_order_resolves_same_day_relation_with_evidence(self):
+        records = [
+            {"event_id": "A", "event_time": "2026-10-18", "relations": []},
+            {"event_id": "B", "event_time": "2026-10-18", "relations": [
+                {"type": "preceded_by", "event_id": "A"}
+            ]},
+        ]
+        evidence_order = {
+            "order": {"A": 20261018, "B": 20261018},
+            "verified_precedence": [{
+                "earlier": "A",
+                "later": "B",
+                "evidence": "verified commit ancestry",
+                "ref": "https://github.com/example/repo/compare/a...b",
+            }],
+        }
+        self.assertEqual(validate_temporal_relations(records, evidence_order), [])
+
+    def test_partial_order_keeps_same_day_relation_unresolved_without_evidence(self):
+        records = [
+            {"event_id": "A", "relations": []},
+            {"event_id": "B", "relations": [
+                {"type": "preceded_by", "event_id": "A"}
+            ]},
+        ]
+        errors = validate_temporal_relations(records, {"order": {"A": 20261018, "B": 20261018}})
+        self.assertTrue(any("temporal order unresolved" in error for error in errors))
+
+    def test_partial_order_rejects_precedence_that_conflicts_with_calendar_order(self):
+        records = [
+            {"event_id": "A", "relations": []},
+            {"event_id": "B", "relations": []},
+        ]
+        evidence_order = {
+            "order": {"A": 20261019, "B": 20261018},
+            "verified_precedence": [{
+                "earlier": "A", "later": "B",
+                "evidence": "commit ancestry", "ref": "https://example.test/compare",
+            }],
+        }
+        errors = validate_temporal_relations(records, evidence_order)
+        self.assertTrue(any("ancestry conflicts with coarse order" in error for error in errors))
+
+
 if __name__ == "__main__":
     unittest.main()
