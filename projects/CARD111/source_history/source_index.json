@@ -1,0 +1,229 @@
+{
+  "schema": "card111-source-index-v1",
+  "created_at": "2026-10-13",
+  "project_id": "CARD111",
+  "repository_target": "alexbotleh-oss/agent-knowledge-base",
+  "source_archive": {
+    "library_path": "/conversations.zip",
+    "sha256": "df7ffbe9a2ffcad27b5367af90d69c5cb38f17d61bb9f7a5207484e0343db956",
+    "member": "conversations.json",
+    "uncompressed_bytes": 42997976,
+    "archive_member_conversation_objects": 37
+  },
+  "manifest": {
+    "library_path": "/export_manifest.json",
+    "sha256": "2a945f37a3330bafd0f7aad2c6e9bbfbfa0d139107adfcd62811332a98b55e06",
+    "export_files_count": 1374,
+    "logical_files_count": 1374
+  },
+  "asset_name_map": {
+    "library_path": "/conversation_asset_file_names.json",
+    "sha256": "056a3ffab3de1a96d74c0a8f4acdd9247cc026b011a820e9c78aa12d86a38059",
+    "entries": 876
+  },
+  "selection_method": "Conversation objects selected by exact title and/or repeated CARD111 identifiers/repository references found in message text; raw conversation objects are preserved intact. Two mixed-context conversations are explicitly marked and must not be treated as CARD111-only memory.",
+  "conversations": [
+    {
+      "title": "для скидкарт",
+      "conversation_id": "6ac37f12-5b7c-83eb-bcee-b7cc20d48046",
+      "source_file": "raw/conversations/6ac37f12-5b7c-83eb-bcee-b7cc20d48046.json",
+      "created_at": "2026-10-05T10:42:27.363290Z",
+      "updated_at": "2026-10-05T19:31:09.468300Z",
+      "messages_with_message_object": 303,
+      "unique_message_ids": 303,
+      "role_counts": {
+        "user": 66,
+        "assistant": 237
+      },
+      "first_message_at": "2026-10-05T10:42:43.484000Z",
+      "last_message_at": "2026-10-05T19:30:47.573007Z",
+      "scope_classification": "CARD111-focused",
+      "file_bytes": 529179,
+      "file_sha256": "c1658f6e4aa2924a12a78168681ba5b0f9c6e29edb6a721ab598cd45e1bddbb4"
+    },
+    {
+      "title": "Дубль два продолжение",
+      "conversation_id": "6ac3c8f4-c55c-83ed-8f87-61017faf4c9d",
+      "source_file": "raw/conversations/6ac3c8f4-c55c-83ed-8f87-61017faf4c9d.json",
+      "created_at": "2026-10-05T15:57:42.251502Z",
+      "updated_at": "2026-10-06T11:45:58.168679Z",
+      "messages_with_message_object": 863,
+      "unique_message_ids": 863,
+      "role_counts": {
+        "user": 207,
+        "assistant": 656
+      },
+      "first_message_at": "2026-10-05T15:57:45.896000Z",
+      "last_message_at": "2026-10-06T11:45:38.341425Z",
+      "scope_classification": "CARD111-focused",
+      "file_bytes": 1633224,
+      "file_sha256": "0845b92068a09d7c832591faf47c9f7889880a7badd72e50a2fbdbc4dfe26c45"
+    },
+    {
+      "title": "Продолжение работы CARD111",
+      "conversation_id": "6ac4e22f-1174-83ed-921f-467bf4a31b7d",
+      "source_file": "raw/conversations/6ac4e22f-1174-83ed-921f-467bf4a31b7d.json",
+      "created_at": "2026-10-06T11:57:36.872889Z",
+      "updated_at": "2026-10-07T09:52:13.933582Z",
+      "messages_with_message_object": 419,
+      "unique_message_ids": 419,
+      "role_counts": {
+        "user": 120,
+        "assistant": 299
+      },
+      "first_message_at": "2026-10-06T11:57:37.038382Z",
+      "last_message_at": "2026-10-07T09:52:02.063371Z",
+      "scope_classification": "CARD111-focused",
+      "file_bytes": 678299,
+      "file_sha256": "4296bd96a8099662a722bad96fcee6863573180d1f4bd1d69a640ace0dc16706"
+    },
+    {
+      "title": "Оценка T8 и STOP",
+      "conversation_id": "6ac51760-2c30-83eb-9311-3f229c67f3ee",
+      "source_file": "raw/conversations/6ac51760-2c30-83eb-9311-3f229c67f3ee.json",
+      "created_at": "2026-10-06T15:44:32.555832Z",
+      "updated_at": "2026-10-06T15:55:39.759182Z",
+      "messages_with_message_object": 6,
+      "unique_message_ids": 6,
+      "role_counts": {
+        "user": 3,
+        "assistant": 3
+      },
+      "first_message_at": "2026-10-06T15:44:54.066000Z",
+      "last_message_at": "2026-10-06T15:55:36.161518Z",
+      "scope_classification": "mixed-context; preserve as source but do not import unrelated project facts into CARD111 memory",
+      "file_bytes": 32983,
+      "file_sha256": "6a48b11a5b0487e4a5623448ae9f88edeb0cb5b4225a3260849a32d8999f8640"
+    },
+    {
+      "title": "Приветствие unerquicklich",
+      "conversation_id": "6ac51c82-4b70-83eb-a16b-b7085d95daeb",
+      "source_file": "raw/conversations/6ac51c82-4b70-83eb-a16b-b7085d95daeb.json",
+      "created_at": "2026-10-06T16:06:31.981902Z",
+      "updated_at": "2026-10-07T14:25:03.049154Z",
+      "messages_with_message_object": 457,
+      "unique_message_ids": 457,
+      "role_counts": {
+        "user": 179,
+        "assistant": 278
+      },
+      "first_message_at": "2026-10-06T16:06:30.610645Z",
+      "last_message_at": "2026-10-07T14:24:53.051577Z",
+      "scope_classification": "mixed-context; preserve as source but do not import unrelated project facts into CARD111 memory",
+      "file_bytes": 1771248,
+      "file_sha256": "ee35118b70cd76a2e8d70079e7414a52ea3c7185ed17c3e5ec1c1747dbec0cfc"
+    },
+    {
+      "title": "Зафиксирован контекст CARD111",
+      "conversation_id": "6ac613a6-d118-83ed-a2ea-b85f766a18ee",
+      "source_file": "raw/conversations/6ac613a6-d118-83ed-a2ea-b85f766a18ee.json",
+      "created_at": "2026-10-07T09:40:55.325426Z",
+      "updated_at": "2026-10-07T10:04:06.527121Z",
+      "messages_with_message_object": 12,
+      "unique_message_ids": 12,
+      "role_counts": {
+        "user": 3,
+        "assistant": 9
+      },
+      "first_message_at": "2026-10-07T09:40:59.886185Z",
+      "last_message_at": "2026-10-07T10:03:57.730795Z",
+      "scope_classification": "CARD111-focused",
+      "file_bytes": 55746,
+      "file_sha256": "ed79e415bfdbefd363b8637c139cc1210e47fe7bb317e81ef53a5afead7ea94d"
+    }
+  ],
+  "aggregate": {
+    "conversations": 6,
+    "messages": 2060,
+    "unique_message_ids": 2060,
+    "roles": {
+      "user": 578,
+      "assistant": 1482
+    },
+    "first_message_at": "2026-10-05T10:42:43.484000Z",
+    "last_message_at": "2026-10-07T14:24:53.051577Z",
+    "attachment_occurrences": 152,
+    "unique_attachment_ids": 150,
+    "unique_asset_names_in_map": 128
+  },
+  "lookup_instructions": {
+    "by_message_id": "Search message_index.jsonl for exact message_id; then open source_file and find mapping node_id / message.id.",
+    "by_time": "Sort/filter message_index.jsonl by timestamp (UTC).",
+    "by_attachment": "Search attachment_index.jsonl by attachment_id or export_name, then use conversation_id + message_id to find the message in raw conversation JSON."
+  },
+  "coverage_limits": [
+    "The original conversations.zip contains 37 conversation objects; this repository subset includes six CARD111-related objects selected by title and repeated project identifiers. It is not proof of complete CARD111 history across all chats/exports.",
+    "The six raw conversation objects preserve the original exported JSON structures and message IDs/timestamps/order/graph links. Their JSON formatting was normalized to pretty-printed UTF-8; semantic message fields and mappings were not edited.",
+    "Two selected source conversations contain mixed project context; only CARD111-linked material should be used to update CARD111 memory. Do not import unrelated RecipeManager or AGENT_MEMORY_SYSTEM content into CARD111 project facts.",
+    "Attachment binary payloads are not embedded in conversations.zip. The 150 attachment IDs all match entries in the current Library inventory, but only five source attachments are copied into this repository in this pass.",
+    "The full 6.56 MB conversations.zip and account-wide manifest were not copied into the public repository because they contain unrelated project histories. Their SHA-256 and member/count metadata are recorded here."
+  ],
+  "supplementary_sources": [
+    {
+      "path": "projects/CARD111/source_history/reports/CARD111_FULL_REPORT_2026-10-06.md",
+      "kind": "contemporaneous secondary report",
+      "source_library_path": "/CARD111/CARD111_FULL_REPORT_2026-10-06.md",
+      "copied_to_repo": true
+    },
+    {
+      "path": "projects/CARD111/source_history/supplementary/initial_project_proposal.md",
+      "kind": "initial project proposal attachment",
+      "source_library_path": "/CARD111/предложение_проекта_кошелёк_карт.md",
+      "copied_to_repo": true
+    },
+    {
+      "path": "projects/CARD111/source_history/supplementary/CARD_TRANSFER_STATE_2026-10-05.txt",
+      "kind": "handoff/state attachment",
+      "source_library_path": "/CARD111/CARD_TRANSFER_STATE_2026-10-05(1).txt",
+      "copied_to_repo": true
+    },
+    {
+      "path": "projects/CARD111/source_history/supplementary/EXPERIMENT_3_REQUEST_FULL_CHAT_EXTRACTION.md",
+      "kind": "chat extraction request attachment",
+      "source_library_path": "/CARD111/EXPERIMENT_3_REQUEST_FULL_CHAT_EXTRACTION.md",
+      "copied_to_repo": true
+    },
+    {
+      "path": "projects/CARD111/source_history/supplementary/EXPERIMENT_4_TASK_MEMORY_TRANSFER.txt",
+      "kind": "memory transfer request attachment",
+      "source_library_path": "/CARD111/EXPERIMENT_4_TASK_MEMORY_TRANSFER.txt",
+      "copied_to_repo": true
+    },
+    {
+      "path": "projects/CARD111/source_history/supplementary/CARD111_диалог_2026-10-08.md",
+      "kind": "secondary dialogue excerpt",
+      "source_library_path": "/CARD111/CARD111_диалог_2026-10-08.md",
+      "copied_to_repo": true,
+      "limitation": "short excerpt; not a full transcript"
+    },
+    {
+      "path": "projects/CARD111/source_history/supplementary/CARD111_чат_экспорт_2026-10-08.md",
+      "kind": "secondary chat export/excerpt",
+      "source_library_path": "/CARD111/CARD111_чат_экспорт_2026-10-08.md",
+      "copied_to_repo": true,
+      "limitation": "explicitly states it is not a byte-for-byte copy of hidden full chat"
+    },
+    {
+      "path": "projects/CARD111/source_history/supplementary/CARD111_визуальные_требования_редактор_и_кошелёк.md",
+      "kind": "derived visual requirements",
+      "source_library_path": "/CARD111/CARD111_визуальные_требования_редактор_и_кошелёк.md",
+      "copied_to_repo": true,
+      "limitation": "requirements summary, not primary history"
+    }
+  ],
+  "attachment_payload_summary": {
+    "attachment_occurrences": 152,
+    "unique_attachment_ids": 150,
+    "exact_id_matches_in_library": 150,
+    "name_only_matches": 0,
+    "not_found_in_library_inventory": 0,
+    "copied_to_repository": 5,
+    "not_copied_to_repository": 145,
+    "notes": [
+      "The original conversations.zip contains message objects and attachment metadata but not attachment binary payloads.",
+      "Five source attachment payloads are copied to source_history (one report plus four source documents).",
+      "Other 145 attachment payloads remain in the user's Library; exact file IDs are recorded in attachment_availability.json. The count is based on unique attachment IDs, so duplicate/alias file names are not counted twice.",
+      "No binary image/PDF/HTML payload is claimed to be copied unless a repository path is listed explicitly."
+    ]
+  }
+}

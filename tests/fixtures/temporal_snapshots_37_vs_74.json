@@ -1,0 +1,74 @@
+{
+  "fixture_id": "37-vs-74-different-snapshots-v1",
+  "purpose": "Demonstrate that counts belong to source snapshots and cannot be interpreted as a defect from numeric difference alone.",
+  "asserted_facts": [
+    {
+      "claim": "The inspected archive contains 37 conversation objects.",
+      "evidence_status": "observed",
+      "source_ref": "PR-22/source-audit/2026-10-13"
+    },
+    {
+      "claim": "The archive was submitted for archiving on 2026-10-05 and returned on 2026-10-07; development continued afterward.",
+      "evidence_status": "reported",
+      "source_ref": "user-statement/2026-10-13"
+    },
+    {
+      "claim": "A separate historical reference mentions 74 conversations.",
+      "evidence_status": "reported",
+      "source_ref": "historical-report/unresolved-snapshot"
+    }
+  ],
+  "snapshots": [
+    {
+      "schema_version": "1.0",
+      "snapshot_id": "archive-returned-2026-10-07",
+      "captured_at": "2026-10-07T14:24:53Z",
+      "received_at": "2026-10-07T14:24:53Z",
+      "scope_id": "available-chat-export-conversation-objects",
+      "counting_unit": "conversation_object",
+      "inclusion_rules_id": "archive-members-that-parse-as-conversations-v1",
+      "exclusion_rules_id": "exclude-separate-manifest-assets-not-present-in-zip-v1",
+      "source_hash": null,
+      "coverage_status": "PARTIAL",
+      "coverage_start": "2026-09-21T11:06:33Z",
+      "coverage_end": "2026-10-07T14:24:53Z",
+      "counts": {
+        "conversations": 37,
+        "distinct_message_ids": 10034
+      },
+      "notes": "Directly inspected archive snapshot; does not establish completeness of later development or all manifest-listed assets."
+    },
+    {
+      "schema_version": "1.0",
+      "snapshot_id": "historical-reference-74-unresolved",
+      "captured_at": null,
+      "received_at": null,
+      "scope_id": "historical-memory-scope-not-yet-established",
+      "counting_unit": "conversation_claim",
+      "inclusion_rules_id": "unknown",
+      "exclusion_rules_id": "unknown",
+      "source_hash": null,
+      "coverage_status": "UNKNOWN",
+      "coverage_start": null,
+      "coverage_end": null,
+      "counts": {
+        "conversations": 74
+      },
+      "notes": "Historical claim only. Capture time, scope and counting method of the original source remain unknown; do not substitute the date this claim was reviewed."
+    }
+  ],
+  "expected_interpretation": {
+    "status": "not_comparable",
+    "reason": "The snapshot scope and counting unit are not aligned.",
+    "must_not_conclude": [
+      "the 37-object archive is corrupt",
+      "the 74 count is false",
+      "the difference proves 37 missing conversations"
+    ],
+    "next_evidence_needed": [
+      "identity and creation/capture time of the source behind the 74 claim",
+      "counting unit and inclusion/exclusion rules for that source",
+      "membership IDs or source locators that permit overlap and delta analysis"
+    ]
+  }
+}
