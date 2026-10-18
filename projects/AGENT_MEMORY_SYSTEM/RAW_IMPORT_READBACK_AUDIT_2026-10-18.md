@@ -99,3 +99,11 @@ No merge was performed and `main` was not changed. Approved semantic-memory regi
 - Exact code/test HEAD `1bf53dce7a9dc7a149a01f624911e2548beddf69` passed CI run [#39092911318](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/39092911318): **511 Python tests, 1 skipped; 4 Node tests; strict write audit 162 mutation sites / 0 unclassified; memory/event-log/project validation passed.**
 - Restore/task-start smoke deferred on this code/test HEAD because the checkpoint still records the prior verified code SHA. Refresh the checkpoint to this exact HEAD and CI run before accepting a metadata-descendant smoke result.
 - Scope boundary: this is a preflight flag, not proof that every downstream extractor is safe. The inventory itself does not extract any member.
+
+
+## Encrypted and unsupported ZIP member handling — 2026-10-18
+
+- Added malformed-archive regression tests that set the ZIP encryption flag and inject an unsupported compression method into otherwise valid synthetic ZIPs.
+- Both cases fail closed with a structured `FAIL / ARCHIVE_READ_ERROR` result; the inventory does not attempt to extract members.
+- Exact code/test HEAD `1a02387eac1d0861091d761dd9f0e549171449fa` passed CI run [#39093091220](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/39093091220): **513 Python tests, 1 skipped; 4 Node tests; strict write audit 162 mutation sites / 0 unclassified; memory/event-log/project validation passed.**
+- Restore/task-start smoke deferred because this new regression-test file changed after the previously checkpointed HEAD. This run is CI evidence, not a new smoke PASS. Next refresh the report and checkpoint to the complete tested code/test/report revision, then run the metadata-descendant smoke.
