@@ -24,7 +24,7 @@ def _is_unsafe_member_path(name: str) -> bool:
     Backslashes are normalized for detection only; the recorded member name
     remains byte-for-byte as reported by the ZIP directory.
     """
-    normalized = name.replace("\\\\", "/")
+    normalized = name.replace("\\", "/")
     drive_qualified = len(normalized) >= 2 and normalized[0].isalpha() and normalized[1] == ":"
     return normalized.startswith("/") or drive_qualified or ".." in normalized.split("/")
 
