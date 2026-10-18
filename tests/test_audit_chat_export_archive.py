@@ -77,6 +77,36 @@ class AuditChatExportArchiveTests(unittest.TestCase):
             self.assertEqual(result["conversations_json_candidate_count"], 0)
             self.assertIn("EXPECTED_EXACTLY_ONE_CONVERSATIONS_JSON", result["review_reasons"])
 
+    def test_unsafe_member_paths_require_review_without_extracting(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            source = Path(tmp) / "unsafe-paths.zip"
+            names = [
+                ("account/conversations.json", b"[]"),
+                ("../escape.txt", b"parent traversal"),
+                ("/rooted.txt", b"absolute path"),
+                ("C:\\windows.txt", b"drive-qualified path"),
+                ("nested\\..\\escape.txt", b"backslash traversal"),
+            ]
+            self.make_zip(source, names)
+
+            result = audit_archive(source)
+
+            self.assertEqual(result["status"], "REVIEW_REQUIRED")
+            self.assertIn("UNSAFE_MEMBER_PATHS", result["review_reasons"])
+            self.assertEqual(set(result["unsafe_member_paths"]), {
+                "../escape.txt",
+                "/rooted.txt",
+                "C:\\windows.txt",
+                "nested\\..\\escape.txt",
+            })
+            self.assertTrue(all(
+                member["unsafe_path"] for member in result["members"]
+                if member["path"] in result["unsafe_member_paths"]
+            ))
+            self.assertEqual([p for p in result["conversations_json_candidates"]],
+                             ["account/conversations.json"])
+            self.assertTrue(result["read_only"])
+
     def test_crc_error_is_reported_as_failure(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
