@@ -551,5 +551,62 @@ class AgentMemoryCycleTests(unittest.TestCase):
         )
         self.assertFalse(result["cluster_readiness"]["planning_authorized"])
 
+    def test_adaptive_route_inputs_are_forwarded_to_task_start_not_memory_restore(self):
+        session_packet = {
+            "status": "RESTORED_PACKET",
+            "semantic_memory": {"status": "UNAVAILABLE", "records": []},
+        }
+        task_start = {
+            "status": "READY_FOR_REVIEW",
+            "task_restore": {
+                "status": "RESTORED_PACKET",
+                "task_restore_status": "RESTORED_PACKET",
+                "semantic_memory": {"status": "UNAVAILABLE", "records": []},
+            },
+            "experience_map": {},
+        }
+        with (
+            patch.object(cycle_module, "build_memory_aware_packet", return_value=session_packet) as memory_restore,
+            patch.object(cycle_module, "build_task_start_experience_map", return_value=task_start) as task_start_builder,
+            patch.object(cycle_module, "inspect_attention", return_value={"status": "OK", "return_stack": []}),
+            patch.object(cycle_module, "build_branch_return_report", return_value={"status": "CONSISTENT", "issues": []}),
+        ):
+            result = run_cycle(
+                self.task, self.handoff, self.project_events, self.attention,
+                "restore task context", experience_logs=[self.project_events, self.experience],
+                lesson_logs=[], current_project_id="TEST",
+                repository="example/agent-memory", repository_ref="feature/test",
+                prior_failed_attempts=2, risk_level="high",
+            )
+
+        self.assertNotIn("prior_failed_attempts", memory_restore.call_args.kwargs)
+        self.assertNotIn("risk_level", memory_restore.call_args.kwargs)
+        self.assertEqual(task_start_builder.call_args.kwargs["prior_failed_attempts"], 2)
+        self.assertEqual(task_start_builder.call_args.kwargs["risk_level"], "high")
+        self.assertFalse(result["cluster_readiness"]["planning_authorized"])
+        self.assertFalse(result["cluster_readiness"]["execution_performed"])
+
+    def test_attempt_failure_routes_unified_cycle_to_deep_analysis_without_writes(self):
+        result = run_cycle(
+            self.task, self.handoff, self.project_events, self.attention,
+            "restore task context", experience_logs=[self.project_events, self.experience],
+            lesson_logs=[], current_project_id="TEST", attempt_result_status="FAIL",
+        )
+        route = result["attempt_outcome_route"]
+        self.assertEqual(route["mode"], "DEEP_ANALYSIS_EXTERNAL_SEARCH")
+        self.assertTrue(route["external_search_required_now"])
+        self.assertFalse(route["execution_performed"])
+        self.assertFalse(result["writes_performed"])
+
+    def test_verified_attempt_routes_unified_cycle_to_experience_capture(self):
+        result = run_cycle(
+            self.task, self.handoff, self.project_events, self.attention,
+            "restore task context", experience_logs=[self.project_events, self.experience],
+            lesson_logs=[], current_project_id="TEST", attempt_result_status="VERIFIED_SUCCESS",
+        )
+        self.assertEqual(result["attempt_outcome_route"]["mode"], "CAPTURE_CONFIRMED_EXPERIENCE")
+        self.assertFalse(result["attempt_outcome_route"]["writes_performed"])
+        self.assertFalse(result["writes_performed"])
+
 if __name__ == "__main__":
     unittest.main()

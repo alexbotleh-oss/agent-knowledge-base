@@ -20,7 +20,7 @@ jobs:
           node --check clients/chatgpt-web-extension/content_script.js
           node --check clients/chatgpt-web-extension/popup.js
       - name: Audit canonical event-log temporal relations
-        if: github.event_name == 'pull_request' && github.head_ref == 'feature/prewrite-event-relation-validator-20261017'
+        if: github.event_name == 'pull_request' && (github.head_ref == 'feature/prewrite-event-relation-validator-20261017' || github.head_ref == 'feature/experience-first-adaptive-analysis-20261017')
         run: |
           python3 tools/event_relation_validator.py --event-log projects/AGENT_MEMORY_SYSTEM/events.jsonl
 
@@ -30,10 +30,10 @@ jobs:
           STRICT_VALIDATION=0 tools/validate_project.sh .
 
       - name: Exercise verified restore and unified task-start
-        if: github.event_name == 'pull_request' && github.head_ref == 'feature/prewrite-event-relation-validator-20261017'
+        if: github.event_name == 'pull_request' && (github.head_ref == 'feature/prewrite-event-relation-validator-20261017' || github.head_ref == 'feature/experience-first-adaptive-analysis-20261017')
         env:
           REPOSITORY: alexbotleh-oss/agent-knowledge-base
-          BRANCH_REF: feature/prewrite-event-relation-validator-20261017
+          BRANCH_REF: ${{ github.head_ref }}
         run: |
           python3 - <<'PY'
           import json
@@ -46,6 +46,15 @@ jobs:
           task = "projects/AGENT_MEMORY_SYSTEM/TASK_STATE.md"
           handoff = "projects/AGENT_MEMORY_SYSTEM/HANDOFF.md"
           events = "projects/AGENT_MEMORY_SYSTEM/events.jsonl"
+          checkpoint_path = "projects/AGENT_MEMORY_SYSTEM/CONTINUITY_CHECKPOINT.json"
+          with open(checkpoint_path, encoding="utf-8") as checkpoint_stream:
+              checkpoint = json.load(checkpoint_stream)
+          active_task_id = checkpoint.get("task_id")
+          active_checkpoint_id = checkpoint.get("checkpoint_id")
+          if not isinstance(active_task_id, str) or not active_task_id.strip():
+              raise SystemExit("CONTINUITY_CHECKPOINT.json has no valid task_id")
+          if not isinstance(active_checkpoint_id, str) or not active_checkpoint_id.strip():
+              raise SystemExit("CONTINUITY_CHECKPOINT.json has no valid checkpoint_id")
 
           restore_cmd = [
               sys.executable, "tools/verified_session_restore.py",
@@ -84,10 +93,10 @@ jobs:
               "--handoff", handoff,
               "--project-event-log", events,
               "--attention-log", events,
-              "--request", "Restore the current AGENT_MEMORY_SYSTEM task context and review PR #1–#38 integration. Read-only; do not merge or write project events.",
+              "--request", "Restore the current AGENT_MEMORY_SYSTEM task context and review PR #1–#39 integration. Read-only; do not merge or write project events.",
               "--lesson-log", "lessons/global/records.jsonl",
-              "--active-task-id", "AGMS-2026-10-13-01",
-              "--active-checkpoint-id", "CKPT-AGMS-20261017-PR38-VALIDATOR-CI-PASS-01",
+              "--active-task-id", active_task_id,
+              "--active-checkpoint-id", active_checkpoint_id,
               "--project-id", "AGENT_MEMORY_SYSTEM",
               "--repository", repo,
               "--repository-ref", branch,

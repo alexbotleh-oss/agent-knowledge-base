@@ -20,6 +20,8 @@ from task_start_experience_map import build_task_start_experience_map
 from memory_aware_session_restore import build_memory_aware_packet
 from canonical_memory_index import DEFAULT_INDEX_ROOT, DEFAULT_REGISTRY
 from trusted_receipt_verifier import verify_signed_receipt
+from adaptive_task_flow import route_after_attempt
+from experience_outcome_capture import capture_verified_experience_candidate
 
 
 def _current_branch_result_ready(
@@ -135,6 +137,19 @@ def run_cycle(
     memory_registry_path: Path = DEFAULT_REGISTRY,
     memory_index_root: Path = DEFAULT_INDEX_ROOT,
     source_catalog_path: Path | None = None,
+    prior_failed_attempts: int = 0,
+    risk_level: str = "normal",
+    attempt_result_status: str | None = None,
+    capture_outcome_candidate: bool = False,
+    capture_evidence_root: Path | None = None,
+    capture_task_id: str | None = None,
+    capture_request_summary: str | None = None,
+    capture_action_taken: str | None = None,
+    capture_acceptance_criterion: str | None = None,
+    capture_expected_evidence_marker: str | None = None,
+    capture_evidence_file: Path | None = None,
+    capture_observed_outcome: str | None = None,
+    capture_related_event_ids: list[str] | None = None,
 ) -> dict[str, Any]:
     """Build one composed cycle; optionally perform a guarded explicit parent return.
 
@@ -165,6 +180,8 @@ def run_cycle(
             attention_log=attention_log, active_task_id=task_id,
             active_checkpoint_id=checkpoint_id, current_project_id=current_project_id,
             limit=limit, session_packet=session_packet,
+            prior_failed_attempts=prior_failed_attempts,
+            risk_level=risk_level,
         )
 
     task_start = build_start(active_task_id, active_checkpoint_id)
@@ -262,8 +279,73 @@ def run_cycle(
                         attention = inspect_attention(attention_log)
                         task_start = build_start(parent_task_id, parent.get("checkpoint_id"))
 
+    attempt_outcome_route = (
+        route_after_attempt(
+            attempt_result_status,
+            prior_failed_attempts=prior_failed_attempts,
+            risk_level=risk_level,
+        )
+        if isinstance(attempt_result_status, str) and attempt_result_status.strip()
+        else None
+    )
+    experience_capture: dict[str, Any] = {
+        "status": "NOT_REQUESTED", "writes_performed": False,
+        "semantic_memory_promoted": False,
+    }
+    if capture_outcome_candidate:
+        if not isinstance(attempt_outcome_route, dict) or attempt_outcome_route.get("mode") != "CAPTURE_CONFIRMED_EXPERIENCE":
+            experience_capture = {
+                "status": "BLOCKED_ROUTE_NOT_CAPTURE_READY",
+                "reason": "An explicit verified-success route is required before capture.",
+                "writes_performed": False,
+            }
+        else:
+            capture_required = {
+                "capture_evidence_root": capture_evidence_root,
+                "capture_task_id": capture_task_id or active_task_id,
+                "capture_request_summary": capture_request_summary,
+                "capture_action_taken": capture_action_taken,
+                "capture_acceptance_criterion": capture_acceptance_criterion,
+                "capture_expected_evidence_marker": capture_expected_evidence_marker,
+                "capture_evidence_file": capture_evidence_file,
+                "capture_observed_outcome": capture_observed_outcome,
+            }
+            missing_capture_fields = [
+                name for name, value in capture_required.items()
+                if value is None or (isinstance(value, str) and not value.strip())
+            ]
+            project_for_capture = current_project_id
+            if not project_for_capture:
+                project_for_capture = (
+                    task_state.parent.name
+                    if task_state.name == "TASK_STATE.md" and task_state.parent.parent.name == "projects"
+                    else None
+                )
+            if missing_capture_fields or not project_for_capture:
+                experience_capture = {
+                    "status": "BLOCKED_CAPTURE_ARGUMENTS_MISSING",
+                    "missing_fields": missing_capture_fields + (["project_id"] if not project_for_capture else []),
+                    "writes_performed": False,
+                }
+            else:
+                experience_capture = capture_verified_experience_candidate(
+                    project_event_log,
+                    evidence_root=Path(capture_evidence_root),
+                    project_id=str(project_for_capture),
+                    task_id=str(capture_task_id or active_task_id),
+                    request_summary=str(capture_request_summary),
+                    action_taken=str(capture_action_taken),
+                    acceptance_criterion=str(capture_acceptance_criterion),
+                    expected_evidence_marker=str(capture_expected_evidence_marker),
+                    evidence_file=Path(capture_evidence_file),
+                    observed_outcome=str(capture_observed_outcome),
+                    related_event_ids=capture_related_event_ids,
+                )
     blocked_return = return_result is not None and return_result.get("status") not in {
         "RETURNED", "ALREADY_RETURNED"
+    }
+    capture_blocked = capture_outcome_candidate and experience_capture.get("status") not in {
+        "CAPTURED_CANDIDATE", "ALREADY_CAPTURED"
     }
     memory_section = task_start.get("task_restore", {}).get("semantic_memory", {})
     task_start_status = task_start.get("status", "UNKNOWN")
@@ -290,7 +372,7 @@ def run_cycle(
     )
     return {
         "schema_version": "1.0",
-        "status": "BLOCKED" if blocked_return else "READY",
+        "status": "BLOCKED" if blocked_return or capture_blocked else "READY",
         "task_start": task_start,
         "semantic_memory_integration": {
             "status": "CONFIGURED" if isinstance(repository, str) and repository.strip() else "NOT_CONFIGURED",
@@ -311,8 +393,10 @@ def run_cycle(
         "attention": attention,
         "branch_reconciliation": reconciliation,
         "parent_return": return_result,
+        "attempt_outcome_route": attempt_outcome_route,
+        "experience_capture": experience_capture,
         "check_reuse": task_start.get("experience_map", {}).get("check_reuse_policy"),
-        "writes_performed": bool(return_result and return_result.get("writes_performed")),
+        "writes_performed": bool((return_result and return_result.get("writes_performed")) or experience_capture.get("writes_performed")),
         "capability_boundary": {
             "local_explicit_invocation_only": True,
             "automatic_chatgpt_capture": False,
@@ -336,6 +420,19 @@ def main(argv=None) -> int:
     parser.add_argument("--active-checkpoint-id")
     parser.add_argument("--project-id")
     parser.add_argument("--limit", type=int, default=10)
+    parser.add_argument("--prior-failed-attempts", type=int, default=0)
+    parser.add_argument("--risk-level", choices=("low", "normal", "high", "critical"), default="normal")
+    parser.add_argument("--attempt-result-status", choices=("FAIL", "FAILED", "ERROR", "REGRESSION", "NOT_SOLVED", "SUCCESS", "SOLVED", "VERIFIED_SUCCESS", "VERIFIED_SOLVED", "PASS", "BLOCKED", "UNAVAILABLE", "CANNOT_PROCEED", "UNKNOWN"), help="explicit observed outcome of the last attempt; routes the next step without executing it")
+    parser.add_argument("--capture-outcome-candidate", action="store_true", help="explicitly persist a provenance-bound outcome candidate only after a verified-success route")
+    parser.add_argument("--capture-evidence-root", type=Path)
+    parser.add_argument("--capture-task-id")
+    parser.add_argument("--capture-request-summary")
+    parser.add_argument("--capture-action-taken")
+    parser.add_argument("--capture-acceptance-criterion")
+    parser.add_argument("--capture-expected-evidence-marker")
+    parser.add_argument("--capture-evidence-file", type=Path)
+    parser.add_argument("--capture-observed-outcome")
+    parser.add_argument("--capture-related-event-id", action="append", default=[])
     parser.add_argument("--return-turn-id")
     parser.add_argument("--parent-task-id")
     parser.add_argument("--repository", help="GitHub owner/repository; enables live revision verification and approved-memory retrieval")
@@ -356,6 +453,19 @@ def main(argv=None) -> int:
         semantic_memory_query=args.memory_query,
         memory_registry_path=args.memory_registry, memory_index_root=args.memory_index_root,
         source_catalog_path=args.source_catalog,
+        prior_failed_attempts=args.prior_failed_attempts,
+        risk_level=args.risk_level,
+        attempt_result_status=args.attempt_result_status,
+        capture_outcome_candidate=args.capture_outcome_candidate,
+        capture_evidence_root=args.capture_evidence_root,
+        capture_task_id=args.capture_task_id,
+        capture_request_summary=args.capture_request_summary,
+        capture_action_taken=args.capture_action_taken,
+        capture_acceptance_criterion=args.capture_acceptance_criterion,
+        capture_expected_evidence_marker=args.capture_expected_evidence_marker,
+        capture_evidence_file=args.capture_evidence_file,
+        capture_observed_outcome=args.capture_observed_outcome,
+        capture_related_event_ids=args.capture_related_event_id,
     )
     print(json.dumps(result, ensure_ascii=False, indent=2))
     return 0 if result.get("status") == "READY" else 2

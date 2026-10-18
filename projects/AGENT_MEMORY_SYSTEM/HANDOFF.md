@@ -855,3 +855,36 @@ Important remaining gap: real ingestion + promotion is tested, but the same test
 - PR #39 adds verified-outcome and observed-failure append paths. Both call the same temporal validator, but they use `.capture.lock` with advisory locking, unlike the existing writers' exclusive `events.jsonl.lock`; these mechanisms do not coordinate and can race. This is the next concrete defect, not a reason to redo the full audit.
 - Next: change PR #39 capture to acquire the same exclusive `events.jsonl.lock` protocol; add a test proving it blocks when that canonical journal lock already exists; rerun exact-head CI; then stack #39 on #38 using a merge commit (no force push), retarget PR #39 to #38, and run the integrated workflow. Preserve both PRs open/unmerged and keep `main` untouched.
 - Known system boundary: repository CLI restore/task-start is verified in GitHub Actions; automatic ChatGPT host invocation/writeback is still not implemented or verified. Approved semantic memory is UNAVAILABLE, so cluster readiness remains PARTIAL.
+
+
+## Current return point — integrated PR #38/#39 branch (2026-10-17)
+
+- PR #39 branch `feature/experience-first-adaptive-analysis-20261017` now has PR #38 branch `feature/prewrite-event-relation-validator-20261017` as a parent; PR #39 base is PR #38. Merge commit `9d924ba172a306cc7f221f065367582daf9fe91e` is a branch merge commit only. Both PRs remain Draft/open/unmerged; `main` is untouched.
+- Integrated exact-head CI run `39069110273` PASS on `9d924ba172a306cc7f221f065367582daf9fe91e`: 478 Python tests (1 skipped), 4 Node tests, strict write audit 158/0, whole-log temporal relation audit PASS, memory validation PASS and project/stack validation PASS.
+- The outcome-capture lock mismatch is fixed: both success and failure event appends now use the same exclusive `events.jsonl.lock` as the other canonical event writers. Regression test `test_capture_paths_share_exclusive_canonical_journal_lock` passes.
+- The workflow now runs the temporal-log audit and task-start smoke for either integration branch, reads task/checkpoint IDs from `CONTINUITY_CHECKPOINT.json`, and resolves the branch from `github.head_ref` rather than a hardcoded PR #38 ref.
+- The exact-head CI correctly deferred smoke until this integrated code SHA is recorded in the checkpoint. Next: verify the metadata-only descendant restore/task-start smoke. Readiness remains PARTIAL because approved semantic memory is unavailable; automatic ChatGPT-host invocation and production archive completeness remain unverified.
+
+
+## Current return point — integrated adaptive task-start contract repaired (2026-10-17)
+
+- Integrated branch remains PR #39 stacked on PR #38; both PRs are Draft/open/unmerged and `main` is unchanged.
+- First integrated smoke found a real TypeError: `build_memory_aware_packet()` was passed adaptive routing parameters that belong to `build_task_start_experience_map()`. Corrected the call boundary and added a regression test.
+- Exact code HEAD `5ffedd908c1fdda2ed32d83c5ba316b94ccea86e` passed CI run `39069265060`: 479 Python tests (1 skipped), 4 Node tests, write audit 158 mutation sites / 0 unclassified, whole-log temporal audit PASS, memory validation PASS and project/stack validation PASS.
+- This exact-head run deferred smoke until the checkpoint is refreshed to the new SHA/run. Next: refresh and verify `VERIFIED_SESSION_RESTORE_PASS` plus `TASK_START_CLUSTER_PASS`; expected readiness remains PARTIAL while approved semantic memory is unavailable.
+
+
+## Current return point — integrated memory cycle verified (2026-10-17)
+
+- Exact code HEAD `5ffedd908c1fdda2ed32d83c5ba316b94ccea86e` passed CI run `39069265060`: 479 Python tests (1 skipped), 4 Node tests, write audit 158/0, whole-log temporal audit PASS, memory validation PASS and project/stack validation PASS.
+- Metadata-only branch tip `9a3ee7c113b08dc3fe2c627a59095e02bc4a488d` passed smoke run `39069332907`: verified restore `RESTORED_PACKET`; task-start `READY_FOR_REVIEW`; `VERIFIED_SESSION_RESTORE_PASS` and `TASK_START_CLUSTER_PASS` emitted.
+- Readiness remains PARTIAL because approved semantic memory is unavailable. The real ChatGPT host bridge and production native-archive import remain unverified; do not describe them as implemented.
+- Next work is substantive acceptance: approved-memory registry availability, native archive staged import/read-back, and host invocation/writeback with a fresh-session interruption/resume scenario.
+
+
+## Additional integration dependency — bootstrap/identity contract (2026-10-17)
+
+- `core/agent_bootstrap.md` is not present on `main` or the integrated PR #38/#39 branch. It is available on the separate PR #33 branch `fix/identity-continuity-contract-20261017` at `1ffd67002d42957910175a089d5233bdbbdc0739`.
+- The bootstrap and its six referenced core documents were read from that branch. Treat them as proposed, branch-scoped sources until integrated; do not claim they are current canonical files.
+- Selective integration of PR #33 remains deferred by the existing audit requirement to reconcile journal ownership and global/project instruction boundaries.
+- Verified current state remains: code CI PASS, restore/task-start smoke PASS, readiness PARTIAL because approved semantic memory is unavailable.

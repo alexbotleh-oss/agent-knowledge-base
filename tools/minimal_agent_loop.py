@@ -25,6 +25,7 @@ from context_extractor import extract_semantic_context
 from context_trust_gate import authorize_next_step
 from restore_session_packet import build_session_packet
 from trusted_receipt_verifier import make_applicability_verifier_from_env
+from adaptive_task_flow import count_related_corrections, select_initial_route
 
 TOKEN_RE = re.compile(r"[^\W_]+", re.UNICODE)
 STOP_WORDS = {
@@ -815,6 +816,8 @@ def run_minimal_agent_loop(
     judgments: list[dict[str, Any]] | None = None,
     judgment_verifier: Callable[[dict[str, Any], dict[str, Any]], Any] | None = None,
     session_packet: dict[str, Any] | None = None,
+    prior_failed_attempts: int = 0,
+    risk_level: str = "normal",
 ) -> dict[str, Any]:
     """Restore once, then search supplied logs and assess candidates conservatively.
 
@@ -971,6 +974,35 @@ def run_minimal_agent_loop(
             "still matches the live user goal or current repository/PR state."
         ),
     }
+    applicable_count = sum(
+        1 for item in applicability.get("assessments", [])
+        if isinstance(item, dict) and item.get("outcome") in {
+            "APPLICABLE", "APPLICABLE_WITH_ADAPTATION"
+        }
+    )
+    unresolved_count = sum(
+        1 for item in applicability.get("assessments", [])
+        if isinstance(item, dict) and item.get("outcome") in {
+            "INSUFFICIENT_DATA", "CONFLICT"
+        }
+    )
+    prior_correction_count = count_related_corrections(
+        retrieval.get("candidates", []), current_project_id=effective_project_id
+    )
+    adaptive_task_flow = select_initial_route(
+        experience_status=retrieval.get("status", "UNKNOWN"),
+        lesson_status=lesson_retrieval.get("status", "UNKNOWN"),
+        applicable_experience_count=applicable_count,
+        unresolved_candidate_count=unresolved_count,
+        candidate_count=len(all_candidates),
+        prior_failed_attempts=prior_failed_attempts,
+        prior_correction_count=prior_correction_count,
+        risk_level=risk_level,
+        semantic_memory_status=(
+            packet.get("semantic_memory", {}).get("status", "NOT_REQUESTED")
+            if isinstance(packet.get("semantic_memory"), dict) else "UNKNOWN"
+        ),
+    )
     return {
         "loop_version": "0.1",
         "status": "READY_FOR_REVIEW" if candidates_reviewable else "CONTEXT_OR_RETRIEVAL_BLOCKED",
@@ -989,6 +1021,7 @@ def run_minimal_agent_loop(
         "current_project_id": effective_project_id or "UNKNOWN",
         "current_project_id_source": project_id_source,
         "next_action_policy": next_action_policy,
+        "adaptive_task_flow": adaptive_task_flow,
         "writes_performed": False,
         "execution_performed": False,
         "limitations": [
@@ -1006,6 +1039,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("handoff", type=Path)
     parser.add_argument("event_log", type=Path)
     parser.add_argument("--request", required=True, help="current user request")
+    parser.add_argument("--prior-failed-attempts", type=int, default=0, help="known prior failed attempts for this task/problem")
+    parser.add_argument("--risk-level", choices=("low", "normal", "high", "critical"), default="normal")
     parser.add_argument(
         "--experience-log", action="append", default=[],
         help="additional canonical JSONL event log to search; may be repeated",
@@ -1060,6 +1095,8 @@ def main(argv: list[str] | None = None) -> int:
         lesson_logs=args.lesson_log,
         current_markers=current_markers,
         judgments=judgments,
+        prior_failed_attempts=args.prior_failed_attempts,
+        risk_level=args.risk_level,
     )
     print(json.dumps(result, ensure_ascii=False, indent=2))
     return 0 if result["status"] == "READY_FOR_REVIEW" else 2

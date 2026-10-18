@@ -1,4 +1,6 @@
-# TASK_STATE — AGMS-2026-10-13-01
+# TASK_STATE — AGMS-2026-10-15-MEMORY-PIPELINE-CONTINUITY
+
+- **Historical task identifier:** older sections still reference `AGMS-2026-10-13-01`; the active continuity checkpoint uses `AGMS-2026-10-15-MEMORY-PIPELINE-CONTINUITY`. The workflow now reads the active IDs from the checkpoint rather than hardcoding them.
 
 - **Project:** AGENT_MEMORY_SYSTEM / `alexbotleh-oss/agent-knowledge-base`.
 - **User task:** continue developing the memory system and transfer verified experience from «Настройка Агента»; inspect the live repository and PR #22 before changing canonical memory.
@@ -852,3 +854,37 @@ P2 is not yet declared ready: this test mocks the final verified restore packet,
 - Sibling PR #39 adds `experience_outcome_capture.py` with two append paths, both validating relations, but uses a distinct advisory `.capture.lock`. That lock is not mutually exclusive with the existing writers' O_EXCL `events.jsonl.lock`; parallel append/validation can race. Treat this as an integration defect to fix before declaring the combined writer set safe.
 - Separate journals are not interchangeable with the project event log: `turn_lifecycle_ledger.py` writes a local turn ledger; `source_ingestion_runner.py` writes per-run events; `memory_pipeline_coordinator.py` writes pipeline-run events; correction and semantic-memory registries have their own append-only contracts.
 - Remaining immediate work: fix the shared-lock contract in the existing PR #39 writer, combine #38/#39 without force-push or PR merge, run the full integrated workflow including temporal-log audit and task-start smoke, then update the handoff. Do not change `main`, merge/close PRs, promote unapproved memory, or claim automatic ChatGPT-host invocation.
+
+
+## Integrated PR #38/#39 checkpoint — 2026-10-17
+
+- **Branch integration:** PR #39 now contains PR #38 as a second parent in merge commit `9d924ba172a306cc7f221f065367582daf9fe91e`; PR #39 is retargeted to PR #38. This is branch ancestry reconciliation only; neither PR was merged and `main` was not changed.
+- **Exact integrated code HEAD:** `9d924ba172a306cc7f221f065367582daf9fe91e`; GitHub Actions run `39069110273` PASS. Results: 478 Python tests (1 skipped), 4 Node tests, write audit 158 mutation sites / 0 unclassified, whole-log temporal relation audit PASS, memory validation PASS, project/stack validation PASS.
+- **Canonical project event writers now share one lock contract:** branch result/acknowledgement, check reuse, dialogue attention, and verified-outcome/failure capture all use the same exclusive `events.jsonl.lock` protocol. PR #39 added a regression test that proves outcome capture refuses writes while that lock exists.
+- **Runtime smoke status:** intentionally deferred in this exact-head run because the checkpoint still referenced pre-integration code. A metadata-only checkpoint refresh is the next step; do not report integrated restore/task-start PASS until the subsequent run emits `VERIFIED_SESSION_RESTORE_PASS` and `TASK_START_CLUSTER_PASS`.
+- **Still partial:** approved semantic-memory registry/records are unavailable; cluster readiness cannot exceed PARTIAL. Native archive completeness and actual ChatGPT host invocation/writeback remain unverified.
+
+
+## Integrated smoke defect fixed — exact-head CI (2026-10-17)
+
+- The first integrated smoke on `f5acba6dfcf7a39c2e36d516cde3e9a45d71c4a9` exposed a real contract mismatch: `agent_memory_cycle.py` forwarded `prior_failed_attempts` and `risk_level` to `build_memory_aware_packet()`, whose API does not accept adaptive routing parameters.
+- Fixed in `tools/agent_memory_cycle.py`: memory restore receives only memory-retrieval arguments; adaptive route inputs are passed to `build_task_start_experience_map()`, which owns that contract.
+- Added regression test `test_adaptive_route_inputs_are_forwarded_to_task_start_not_memory_restore`.
+- Integrated exact code HEAD `5ffedd908c1fdda2ed32d83c5ba316b94ccea86e` passed CI run `39069265060`: 479 Python tests (1 skipped), 4 Node tests, write audit 158/0, whole-log temporal audit PASS, memory validation PASS, project/stack validation PASS.
+- Smoke was deferred in this run because the checkpoint still referenced pre-fix code. Next step is checkpoint refresh and a fresh restore/task-start smoke. Approved semantic memory remains unavailable, so readiness cannot exceed PARTIAL.
+
+
+## Integrated acceptance result — restore/task-start smoke PASS (2026-10-17)
+
+- Code HEAD `5ffedd908c1fdda2ed32d83c5ba316b94ccea86e` passed exact-head CI run `39069265060`: 479 Python tests (1 skipped), 4 Node tests, write audit 158/0, whole-log temporal audit PASS, memory validation PASS and project/stack validation PASS.
+- Metadata-only descendant `9a3ee7c113b08dc3fe2c627a59095e02bc4a488d` passed live restore/task-start smoke run `39069332907`: `VERIFIED_SESSION_RESTORE_PASS`, `TASK_START_CLUSTER_PASS`, task `READY_FOR_REVIEW`, restore `RESTORED_PACKET`.
+- Cluster readiness remains `PARTIAL` because approved semantic memory is `UNAVAILABLE`. No writes, planning authorization or execution occurred. The CLI path is verified in GitHub Actions; automatic ChatGPT-host invocation is not.
+- PR #39 is stacked on PR #38 through a non-force merge commit; both PRs remain Draft/open/unmerged and `main` is untouched.
+
+
+## Source-map dependency found — PR #33 remains separate (2026-10-17)
+
+- The required `core/agent_bootstrap.md` is absent from `main` and the integrated PR #38/#39 branch. It is present at `fix/identity-continuity-contract-20261017`, HEAD `1ffd67002d42957910175a089d5233bdbbdc0739`, in open Draft PR #33.
+- Read the bootstrap and its referenced guardrails, identity/continuity contract, universal instructions, context interpretation, session handoff, and runtime protocol on that branch. These are source-retrieved proposed contracts, not proof they are integrated or automatically executed.
+- Existing integration audit explicitly defers selective PR #32/#33 integration until journal ownership and global/project instruction/bootstrap alignment are resolved. Do not copy the bootstrap alone and imply the source map is complete.
+- This does not invalidate the verified PR #38/#39 repository CLI path; it identifies a separate integration dependency for the wider agent.

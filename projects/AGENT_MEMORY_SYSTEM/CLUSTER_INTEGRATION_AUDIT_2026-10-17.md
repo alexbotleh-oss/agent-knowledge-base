@@ -333,3 +333,40 @@ Scope is the canonical project journal `projects/AGENT_MEMORY_SYSTEM/events.json
 - Code HEAD `4a2ee4499e11b8ff8fb02292d1320ad8b20e2160`: CI run `39068720335` PASS — 448 Python tests (1 skipped), 4 Node tests, strict write audit 143 mutation sites / 0 unclassified, memory validation and project/stack validation PASS.
 - Metadata-only branch tip `460ba6ab859d1aae906e716b8173c618486edafe`: run `39068855181` PASS — verified restore and task-start smoke both pass; `READY_FOR_REVIEW`, `RESTORED_PACKET`, readiness `PARTIAL` because approved semantic memory is unavailable.
 - This proves the repository CLI path under GitHub Actions only. Automatic ChatGPT-host invocation/writeback remains unverified. Do not merge either PR or modify `main`.
+
+
+## Integrated PR #38/#39 verification update — 2026-10-17
+
+- PR #39 is now stacked on PR #38 via merge commit `9d924ba172a306cc7f221f065367582daf9fe91e`; PR #39 base is PR #38. This preserves both histories without force-push or PR merge.
+- Integrated exact-head CI run `39069110273` passed: 478 Python tests (1 skipped), 4 Node tests, strict write audit 158 mutation sites / 0 unclassified, canonical event-log temporal audit PASS, memory validation PASS, project/stack validation PASS.
+- The PR #39 outcome-capture writer lock defect is fixed. Both capture methods use the same exclusive `events.jsonl.lock` path/protocol as the other canonical project-event writers; `test_capture_paths_share_exclusive_canonical_journal_lock` passes.
+- Workflow conditions now cover both branch names, the restore target ref comes from `github.head_ref`, and task/checkpoint IDs are read from the checkpoint file. This removes the hardcoded PR #38 ref and stale checkpoint ID.
+- Smoke was explicitly deferred in run `39069110273` until the integrated SHA/run is recorded. Do not mark integrated restore/task-start PASS until the subsequent metadata-only run passes.
+- The earlier writer table's lock mismatch row is historical and superseded by this correction. Approved semantic memory remains UNAVAILABLE; archive completeness and actual ChatGPT-host invocation remain open.
+
+
+## Integrated task-start API mismatch correction — 2026-10-17
+
+- Integrated smoke run `39069186619` exposed `TypeError: build_memory_aware_packet() got an unexpected keyword argument 'prior_failed_attempts'`.
+- Root cause: adaptive routing controls were sent to the memory-retrieval/restore function instead of the task-start function that owns them.
+- Correction: `agent_memory_cycle.py` now passes `prior_failed_attempts` and `risk_level` to `build_task_start_experience_map`; the memory restore call no longer receives those fields.
+- Regression test `test_adaptive_route_inputs_are_forwarded_to_task_start_not_memory_restore` passes in exact-head CI run `39069265060`.
+- Exact integrated code HEAD `5ffedd908c1fdda2ed32d83c5ba316b94ccea86e`: 479 Python tests (1 skipped), 4 Node tests, write audit 158/0, whole-log temporal audit PASS, memory validation PASS and project/stack validation PASS.
+- Restore/task-start smoke was deferred because checkpoint evidence still pointed to the pre-fix SHA. Update checkpoint and run the metadata-only smoke before marking the integrated path PASS.
+
+
+## Final verification for integrated PR #38/#39 task-start path — 2026-10-17
+
+- Exact code HEAD `5ffedd908c1fdda2ed32d83c5ba316b94ccea86e` passed CI run `39069265060`: 479 Python tests (1 skipped), 4 Node tests, strict write audit 158 mutation sites / 0 unclassified, canonical event-log temporal audit PASS, memory validation PASS and project/stack validation PASS.
+- Metadata-only descendant `9a3ee7c113b08dc3fe2c627a59095e02bc4a488d` passed run `39069332907`: `VERIFIED_SESSION_RESTORE_PASS` and `TASK_START_CLUSTER_PASS`; restore `RESTORED_PACKET`, task `READY_FOR_REVIEW`.
+- The adaptive-parameter API mismatch found in the first integrated smoke was fixed; the new call-contract regression test passes.
+- Outcome capture and the other canonical project-event writers now share the exclusive journal lock contract.
+- **Remaining readiness:** PARTIAL, because approved semantic memory is unavailable. This is a verified repository CLI path in GitHub Actions, not automatic ChatGPT-host invocation. Native archive import/completeness and host writeback remain open acceptance tasks.
+
+
+## Bootstrap/source-map status — 2026-10-17
+
+- The source map `core/agent_bootstrap.md` is absent from `main` and integrated PR #38/#39; it exists on separate open Draft PR #33 branch `fix/identity-continuity-contract-20261017` at `1ffd67002d42957910175a089d5233bdbbdc0739`.
+- Read the bootstrap plus `guardrails.md`, `identity_and_continuity_contract.md`, `universal_instructions.md`, `context_interpretation.md`, `session_handoff.md`, and `agent_runtime_protocol.md` from that branch. Their presence does not prove integration or automatic runtime loading.
+- Do not cherry-pick the bootstrap alone. Existing audit requires selective #32/#33 integration after journal ownership and global/project instruction/bootstrap alignment are reconciled.
+- This is a separate integration dependency; PR #38/#39 exact-head CI and task-start smoke remain verified. Readiness remains PARTIAL because approved semantic memory is unavailable.
