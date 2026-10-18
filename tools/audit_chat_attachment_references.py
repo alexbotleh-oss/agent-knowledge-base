@@ -45,7 +45,17 @@ def audit_references(source: Path) -> dict[str, Any]:
     if not source.is_file():
         return {"status": "FAIL", "reason": "SOURCE_FILE_NOT_FOUND", "source_path": str(source)}
 
-    digest = sha256_file(source)
+    try:
+        digest = sha256_file(source)
+    except OSError as exc:
+        return {
+            "status": "FAIL",
+            "reason": "SOURCE_UNREADABLE",
+            "source_path": str(source),
+            "error_type": type(exc).__name__,
+            "error": str(exc),
+            "raw_payloads_modified": False,
+        }
     member_paths: list[str] = []
     archive = None
     stream = None
