@@ -18,6 +18,17 @@ from typing import Any
 NESTED_ARCHIVE_SUFFIX_HINTS = {".zip", ".7z", ".rar", ".tar", ".gz", ".bz2", ".xz", ".tgz"}
 
 
+def _is_unsafe_member_path(name: str) -> bool:
+    """Flag absolute, drive-qualified, or parent-traversal ZIP member paths.
+
+    Backslashes are normalized for detection only; the recorded member name
+    remains byte-for-byte as reported by the ZIP directory.
+    """
+    normalized = name.replace("\\\\", "/")
+    drive_qualified = len(normalized) >= 2 and normalized[0].isalpha() and normalized[1] == ":"
+    return normalized.startswith("/") or drive_qualified or ".." in normalized.split("/")
+
+
 def sha256_file(path: Path) -> str:
     digest = hashlib.sha256()
     with path.open("rb") as stream:
@@ -47,6 +58,7 @@ def audit_archive(path: Path) -> dict[str, Any]:
             names = [info.filename for info in infos]
             name_counts = Counter(names)
             duplicate_paths = sorted(name for name, count in name_counts.items() if count > 1)
+            unsafe_paths = sorted({info.filename for info in infos if _is_unsafe_member_path(info.filename)})
             conversation_members = [
                 info.filename for info in infos
                 if not info.is_dir() and Path(info.filename).name == "conversations.json"
@@ -65,6 +77,7 @@ def audit_archive(path: Path) -> dict[str, Any]:
                     "crc32": f"{info.CRC:08x}",
                     "is_directory": info.is_dir(),
                     "duplicate_path": name_counts[info.filename] > 1,
+                    "unsafe_path": _is_unsafe_member_path(info.filename),
                     "is_conversations_json_candidate": (
                         not info.is_dir() and Path(info.filename).name == "conversations.json"
                     ),
@@ -80,6 +93,7 @@ def audit_archive(path: Path) -> dict[str, Any]:
                 "file_member_count": sum(not info.is_dir() for info in infos),
                 "directory_member_count": sum(info.is_dir() for info in infos),
                 "duplicate_member_paths": duplicate_paths,
+                "unsafe_member_paths": unsafe_paths,
                 "conversations_json_candidates": conversation_members,
                 "conversations_json_candidate_count": len(conversation_members),
                 "nested_archive_name_hints": nested_name_hints,
@@ -119,6 +133,8 @@ def audit_archive(path: Path) -> dict[str, Any]:
     review_reasons = []
     if result["duplicate_member_paths"]:
         review_reasons.append("DUPLICATE_MEMBER_PATHS")
+    if result["unsafe_member_paths"]:
+        review_reasons.append("UNSAFE_MEMBER_PATHS")
     if result["conversations_json_candidate_count"] != 1:
         review_reasons.append("EXPECTED_EXACTLY_ONE_CONVERSATIONS_JSON")
     if result["crc_error_member"] is not None:
