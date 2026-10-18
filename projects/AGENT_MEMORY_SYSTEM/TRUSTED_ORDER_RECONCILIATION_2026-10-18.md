@@ -1,6 +1,6 @@
 # Trusted-order reconciliation for AGENT_MEMORY_SYSTEM event journal
 
-Status: **PARTIAL — read-only evidence review; no trusted-order file has been applied to the live journal.**
+Status: **PARTIAL — read-only evidence review; ancestry verified for the explicitly commit-based 18 October chain, but no trusted-order file has been applied to the live journal.**
 
 Reviewed against branch `export/cross-project-experience-rollup-20261012`, HEAD `da9af8316de43ed0b0480f87d7fe079846488be5`, on 2026-10-18. The event source is `projects/AGENT_MEMORY_SYSTEM/events.jsonl`. This note does not modify that source.
 
@@ -8,7 +8,7 @@ Reviewed against branch `export/cross-project-experience-rollup-20261012`, HEAD 
 
 - `event_time` with day precision can establish ordering between different dates, but cannot order two events on the same date.
 - `recorded_at`, JSONL row position, event ID numbering, and commit timestamp alone are not treated as proof of event chronology.
-- A relation explicitly described as Git commit ancestry may be validated against actual ancestry, not merely the order in which commits appear in a list.
+- A relation explicitly described as Git commit ancestry is validated using GitHub compare results (ancestor/descendant), not merely commit timestamps or list position.
 - An append-only `edge_corrections` overlay changes the effective projection only. It does not rewrite the original event row.
 - A missing or ambiguous order remains unresolved; no synthetic rank is assigned to force a PASS.
 
@@ -31,7 +31,7 @@ A complete, evidence-backed `trusted_order` map is **not yet available**. The li
 
 Next safe actions:
 
-1. Verify actual Git ancestry for each same-day relation that explicitly claims commit ancestry.
+1. Use the verified 18 October commit-ancestry chain as evidence for those explicitly ancestry-based relations; do not generalize it to unrelated edges.
 2. Obtain source-level timestamps or explicit ordering evidence for the unresolved 13 and 14 October relations; otherwise leave them unresolved and decide whether the model should support partial-order validation instead of forcing a total order.
 3. Run `tools/validate_event_journal.py` read-only using only grounded evidence; preserve its complete report.
 4. Do not append to the live journal unless every effective temporal edge is validated or explicitly removed by an existing correction overlay.
