@@ -172,4 +172,4 @@ No merge was performed and `main` was not changed. Approved semantic-memory regi
 - Automatic invocation/writeback from the live ChatGPT host remains unverified; CI smoke proves the repository CLI restore/task-start path only.
 - PR #39 remains Draft/open/unmerged and based on the PR #38 branch. `main` has not been changed or merged.
 
-**Decision:** do not request the native export yet only if additional local testable gates are still being implemented. The current preflight mechanics above are now covered; the next evidence-gathering step, once the user is ready, is to supply the native export for source-specific completeness and attachment reconciliation. This does not imply the import or semantic memory is already complete.
+**Decision:** the locally testable preflight gates in this stage are closed against synthetic fixtures and repository evidence. The next source-specific verification step is the native export, whenever the user chooses to provide it, for completeness, attachment mapping, chronology, and end-to-end import/read-back. This does not imply the import or semantic memory is already complete.
