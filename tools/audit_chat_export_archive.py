@@ -43,10 +43,22 @@ def audit_archive(path: Path) -> dict[str, Any]:
     if not path.is_file():
         return {"status": "FAIL", "reason": "SOURCE_FILE_NOT_FOUND", "source_path": str(path)}
 
+    try:
+        source_bytes = path.stat().st_size
+        source_digest = sha256_file(path)
+    except OSError as exc:
+        return {
+            "status": "FAIL",
+            "reason": "SOURCE_UNREADABLE",
+            "source_path": str(path),
+            "error_type": type(exc).__name__,
+            "error": str(exc),
+            "read_only": True,
+        }
     result: dict[str, Any] = {
         "source_path": str(path),
-        "source_bytes": path.stat().st_size,
-        "source_sha256": sha256_file(path),
+        "source_bytes": source_bytes,
+        "source_sha256": source_digest,
         "read_only": True,
     }
     if not zipfile.is_zipfile(path):
