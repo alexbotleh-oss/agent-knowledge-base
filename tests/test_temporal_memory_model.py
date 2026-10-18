@@ -253,5 +253,51 @@ class TemporalMemoryModelTests(unittest.TestCase):
         self.assertTrue(any("ancestry conflicts with coarse order" in error for error in errors))
 
 
+    def test_temporal_correction_matches_unique_partial_edge_selector(self):
+        original = {
+            "type": "followed_by",
+            "event_id": "A",
+            "basis": "historical evidence",
+        }
+        records = [
+            {"event_id": "A", "relations": []},
+            {"event_id": "B", "relations": [original]},
+            {
+                "event_id": "C",
+                "relations": [],
+                "edge_corrections": [{
+                    "record_id": "B",
+                    "field": "relations",
+                    "old_relation": {"type": "followed_by", "event_id": "A"},
+                    "corrected_relation": {
+                        "type": "preceded_by",
+                        "event_id": "A",
+                        "basis": "historical evidence",
+                    },
+                }],
+            },
+        ]
+        errors = validate_temporal_relations(records, {"A": 1, "B": 2, "C": 3})
+        self.assertEqual(errors, [])
+        self.assertEqual(records[1]["relations"], [original])
+
+    def test_temporal_correction_rejects_ambiguous_partial_selector(self):
+        selector = {"type": "followed_by", "event_id": "A"}
+        records = [
+            {"event_id": "A", "relations": []},
+            {"event_id": "B", "relations": [
+                {**selector, "basis": "one"},
+                {**selector, "basis": "two"},
+            ]},
+            {"event_id": "C", "relations": [], "edge_corrections": [{
+                "record_id": "B", "field": "relations",
+                "old_relation": selector, "corrected_relation": None,
+            }]},
+        ]
+        errors = validate_temporal_relations(records, {"A": 1, "B": 2, "C": 3})
+        self.assertTrue(any("old relation ambiguous in B" in error for error in errors))
+        self.assertEqual(len(records[1]["relations"]), 2)
+
+
 if __name__ == "__main__":
     unittest.main()
