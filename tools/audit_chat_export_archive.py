@@ -13,6 +13,7 @@ import hashlib
 import json
 from pathlib import Path
 import zipfile
+import zlib
 from typing import Any
 
 NESTED_ARCHIVE_SUFFIX_HINTS = {".zip", ".7z", ".rar", ".tar", ".gz", ".bz2", ".xz", ".tgz"}
@@ -112,7 +113,7 @@ def audit_archive(path: Path) -> dict[str, Any]:
                 "crc_error_member": crc_error_member,
                 "members": members,
             })
-    except (OSError, zipfile.BadZipFile, RuntimeError, NotImplementedError) as exc:
+    except (OSError, EOFError, zipfile.BadZipFile, RuntimeError, NotImplementedError, zlib.error) as exc:
         return {
             **result,
             "status": "FAIL",
