@@ -9,7 +9,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
-from resumable_chat_import import _commit_batch, connect, import_export, iter_json_array
+from resumable_chat_import import _commit_batch, _exclusive_import_lock, connect, import_export, iter_json_array
 
 
 def sample_conversations(count=5):
@@ -474,6 +474,19 @@ class ResumableChatImportTests(unittest.TestCase):
                 self.assertIn("payload hash mismatch", state[1])
             finally:
                 conn.close()
+
+
+    def test_output_directory_rejects_a_second_concurrent_writer(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            output = Path(tmp) / "state"
+            output.mkdir()
+            with _exclusive_import_lock(output):
+                with self.assertRaisesRegex(RuntimeError, "Another import process"):
+                    with _exclusive_import_lock(output):
+                        self.fail("second writer unexpectedly acquired the lock")
+            # The lock is OS-managed; after the first owner exits it can be acquired again.
+            with _exclusive_import_lock(output):
+                pass
 
 
 if __name__ == "__main__":
