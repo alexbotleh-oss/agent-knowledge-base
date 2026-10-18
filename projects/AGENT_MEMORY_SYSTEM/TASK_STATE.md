@@ -447,3 +447,13 @@ Tests added for first pass, completed replay, and a changed source under the sam
 - **Real-source limitation:** attempted to materialize the Library archive `Выгрузка чата настройка Агента.zip` for local testing, but the file service returned that no authorized raw-byte materialization path exists. The actual archive has therefore **not** been run through this importer in this session.
 - **Remaining gaps:** concurrent importer processes are not protected by an explicit single-writer lock; power-loss/SQLite commit failure injection is incomplete; manifest/asset inventory is not integrated into this raw-conversation importer; full archive completeness is not proven. PR #22 still has unrelated project-history scope drift and remains not merge-ready.
 - **Next:** verify CI for the final checkpoint commit; then pursue a real-source test only when the archive bytes are available in an authorized local environment, and add a concurrency guard/failure-injection tests before describing the importer as production-ready. Keep PR #22 Draft/open/unmerged and do not modify `main`.
+
+
+## Resumable importer single-writer guard — 2026-10-18
+
+- **Implementation:** wrapped `import_export()` in an OS-managed exclusive lock on the output directory. A second writer using the same local state directory now receives an explicit error instead of running concurrently. The lock is released by the OS when the process exits/crashes; the lock file itself may remain harmlessly on disk.
+- **Regression test:** verifies that a second lock acquisition fails while the first is held and that acquisition succeeds again after release.
+- **Platform boundary:** Linux/Unix `fcntl.flock` is exercised by the Ubuntu CI workflow. The Windows `msvcrt.locking` path and network filesystems are not separately verified. This is a single-writer guard, not distributed locking.
+- **Protocol:** `core/source_ingestion_protocol.md` now states the lock contract and platform boundary.
+- **Checkpoint note:** this section is written after the earlier integrity checkpoint. Re-fetch the branch HEAD and run metadata; CI for the newest code/docs and checkpoint commits must be checked before reporting the current branch as verified.
+- **Remaining:** real source archive bytes could not be materialized through the current Library file service, so actual-export import is untested. Attachment/manifest inventory is a separate step. PR #22 remains Draft/open/unmerged; do not modify `main`.
