@@ -397,5 +397,49 @@ class ResumableChatImportTests(unittest.TestCase):
                 conn.close()
 
 
+    def test_completed_import_detects_tampered_payload_on_rerun(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            source = self.make_source(root, 3)
+            out = root / "state"
+            first = import_export(source, out, "INTEGRITY-CHECK-001", batch_size=1)
+            self.assertEqual(first["status"], "RAW_COMPLETE")
+
+            conn = sqlite3.connect(out / "import.sqlite3")
+            try:
+                conn.execute(
+                    """UPDATE raw_conversations SET payload_json=?
+                       WHERE archive_id=? AND source_sha256=? AND source_ordinal=1""",
+                    ('{"id":"tampered"}', "INTEGRITY-CHECK-001", first["source_sha256"]),
+                )
+                conn.commit()
+            finally:
+                conn.close()
+
+            with self.assertRaisesRegex(RuntimeError, "payload hash mismatch"):
+                import_export(source, out, "INTEGRITY-CHECK-001", batch_size=1)
+
+            conn = sqlite3.connect(out / "import.sqlite3")
+            try:
+                status, error = conn.execute(
+                    """SELECT status,last_error FROM imports
+                       WHERE archive_id=? AND source_sha256=?""",
+                    ("INTEGRITY-CHECK-001", first["source_sha256"]),
+                ).fetchone()
+                events = [
+                    row[0] for row in conn.execute(
+                        """SELECT event_type FROM import_events
+                           WHERE archive_id=? AND source_sha256=? ORDER BY event_id""",
+                        ("INTEGRITY-CHECK-001", first["source_sha256"]),
+                    )
+                ]
+                self.assertEqual(status, "FAILED")
+                self.assertIn("payload hash mismatch", error)
+                self.assertIn("INTEGRITY_FAILED", events)
+                self.assertNotEqual(status, "RAW_COMPLETE")
+            finally:
+                conn.close()
+
+
 if __name__ == "__main__":
     unittest.main()
