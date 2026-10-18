@@ -125,3 +125,14 @@ No merge was performed and `main` was not changed. Approved semantic-memory regi
 - This makes the combined preflight's machine-readable output and shell exit status agree: it cannot accidentally look like a successful clean pass when semantic review remains required.
 - Exact code/test HEAD `c7328a378066ce68fecf56bba9ff6e254e22599e` passed CI run [#39093411396](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/39093411396): **520 Python tests, 1 skipped; 4 Node tests; strict write audit 162 mutation sites / 0 unclassified; memory/event-log/project validation passed.**
 - Restore/task-start smoke deferred because the new CLI regression tests changed after the previously checkpointed code/test/report head. Refresh the report and checkpoint to the full tested revision before accepting the next metadata-descendant smoke.
+
+
+## Single immutable snapshot for combined preflight — 2026-10-18
+
+- `tools/preflight_chat_export.py` now creates a private temporary `.zip` snapshot and runs both archive inventory and attachment-reference scanning against that exact same snapshot. The snapshot's digest must match the source digest before and after copying; otherwise the combined preflight fails with `SOURCE_CHANGED_DURING_SNAPSHOT`.
+- The combined result also verifies that each sub-audit's digest equals the snapshot digest. This closes the gap where two individually hash-consistent audits could otherwise read different versions of the source path between their separate invocations.
+- Added regressions proving both sub-audits receive the same private snapshot and that source-digest drift during snapshot creation fails closed.
+- First CI attempt after adding the snapshot correctly failed the strict write audit: the new temporary-file write was detected as one unclassified mutation site (163 total / 1 unclassified). Added a specific contract to `tools/audit_write_contracts.py` describing the private snapshot, source/snapshot hash checks, shared sub-audit input, and scoped temporary cleanup. The next exact-head CI passed with **163 mutation sites / 0 unclassified**.
+- Exact code/test HEAD `9e2e4963e407b3c1918d183e172296621abce925` passed CI run [#39093655908](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/39093655908): **522 Python tests, 1 skipped; 4 Node tests; strict write audit 163 mutation sites / 0 unclassified; memory/event-log/project validation passed.**
+- Restore/task-start smoke deferred because the snapshot implementation, its tests, and the write-contract entry changed after the previously checkpointed head. Refresh the report and checkpoint to the full tested revision before accepting the next metadata-descendant smoke.
+- Scope boundary: the private snapshot ensures both sub-audits inspect identical copied bytes. The before/copy/after digest check is still not an OS-level lock on the original source; it fails on detected persistent drift and audits only the verified snapshot.
