@@ -243,6 +243,41 @@ def add_event(conn: sqlite3.Connection, archive_id: str, digest: str,
     )
 
 
+def _verify_staged_integrity(
+    conn: sqlite3.Connection,
+    archive_id: str,
+    digest: str,
+    expected_count: int | None = None,
+) -> int:
+    """Verify staged payload hashes and contiguous source ordinals before trusting a cursor."""
+    rows = conn.execute(
+        """SELECT source_ordinal,payload_json,payload_sha256
+           FROM raw_conversations
+           WHERE archive_id=? AND source_sha256=?
+           ORDER BY source_ordinal""",
+        (archive_id, digest),
+    ).fetchall()
+    if expected_count is not None and len(rows) != expected_count:
+        raise RuntimeError(
+            f"Staged count mismatch during integrity check: expected={expected_count}, actual={len(rows)}"
+        )
+    for expected_ordinal, (ordinal, payload, recorded_hash) in enumerate(rows):
+        if ordinal != expected_ordinal:
+            raise RuntimeError(
+                f"Staged source ordinals are not contiguous: expected={expected_ordinal}, actual={ordinal}"
+            )
+        try:
+            decoded = json.loads(payload)
+        except (json.JSONDecodeError, TypeError) as exc:
+            raise RuntimeError(f"Staged payload JSON is invalid at ordinal {ordinal}") from exc
+        if not isinstance(decoded, dict):
+            raise RuntimeError(f"Staged payload is not a conversation object at ordinal {ordinal}")
+        actual_hash = hashlib.sha256(payload.encode("utf-8")).hexdigest()
+        if actual_hash != recorded_hash:
+            raise RuntimeError(f"Staged payload hash mismatch at ordinal {ordinal}")
+    return len(rows)
+
+
 def import_export(source: Path, output: Path, archive_id: str, batch_size: int = 100,
                   stop_after_batches: int | None = None) -> dict[str, Any]:
     if batch_size < 1:
@@ -280,7 +315,22 @@ def import_export(source: Path, output: Path, archive_id: str, batch_size: int =
             prior_status = str(row[0])
             next_ordinal, committed, next_byte_offset = int(row[1]), int(row[2]), int(row[4])
             if prior_status == "RAW_COMPLETE":
-                # Exact same archive ID + immutable source hash: nothing to ingest again.
+                # Do not trust a completion flag without rechecking the staged payloads.
+                try:
+                    _verify_staged_integrity(
+                        conn, archive_id, digest, expected_count=committed
+                    )
+                except Exception as exc:
+                    message = "Completed import integrity verification failed: " + str(exc)
+                    with conn:
+                        conn.execute(
+                            "UPDATE imports SET status='FAILED',last_error=?,updated_at=? WHERE archive_id=? AND source_sha256=?",
+                            (message, utc_now(), archive_id, digest),
+                        )
+                        add_event(conn, archive_id, digest, "INTEGRITY_FAILED", next_ordinal, {
+                            "error": message, "previous_status": prior_status,
+                        })
+                    raise RuntimeError(message) from exc
                 return _status(conn, archive_id, digest, db_path, run_mode="ALREADY_COMPLETE")
             run_mode = "RESUME" if next_ordinal > 0 and next_byte_offset > 0 else "RETRY_FROM_START"
 
@@ -305,6 +355,14 @@ def import_export(source: Path, output: Path, archive_id: str, batch_size: int =
         try:
             archive, stream = open_conversation_stream(snapshot)
             with stream:
+                if row is not None:
+                    staged_count = _verify_staged_integrity(
+                        conn, archive_id, digest, expected_count=committed
+                    )
+                    if next_ordinal != staged_count:
+                        raise RuntimeError(
+                            f"Checkpoint mismatch: next_ordinal={next_ordinal}, staged_count={staged_count}"
+                        )
                 parser_offset = next_byte_offset
                 parser_ordinal = next_ordinal if next_byte_offset else 0
                 for ordinal, conversation, end_byte_offset in iter_json_array(
@@ -340,6 +398,7 @@ def import_export(source: Path, output: Path, archive_id: str, batch_size: int =
                                  (archive_id, digest)).fetchone()[0]
             if total != seen_count:
                 raise RuntimeError(f"Staging count mismatch: staged={total}, source={seen_count}")
+            _verify_staged_integrity(conn, archive_id, digest, expected_count=seen_count)
             with conn:
                 conn.execute("UPDATE imports SET status='RAW_COMPLETE',next_ordinal=?,next_byte_offset=?,committed_conversations=?,updated_at=? WHERE archive_id=? AND source_sha256=?",
                              (seen_count, next_byte_offset, total, utc_now(), archive_id, digest))
