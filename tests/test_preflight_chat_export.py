@@ -1,3 +1,4 @@
+import hashlib
 import io
 import json
 import sys
@@ -41,6 +42,37 @@ class PreflightChatExportTests(unittest.TestCase):
                              "SCAN_COMPLETE_REVIEW_REQUIRED")
             self.assertFalse(result["raw_source_modified"])
             self.assertEqual(source.read_bytes(), original)
+
+    def test_both_subaudits_use_the_same_private_snapshot(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            source = Path(tmp) / "export.zip"
+            self.make_zip(source, [("account/conversations.json", b'[{"id":"c1"}]')])
+            with patch.object(preflight_module, "audit_archive",
+                              wraps=preflight_module.audit_archive) as inventory_mock, \
+                 patch.object(preflight_module, "audit_references",
+                              wraps=preflight_module.audit_references) as references_mock:
+                result = preflight_chat_export(source)
+
+            inventory_path = inventory_mock.call_args.args[0]
+            references_path = references_mock.call_args.args[0]
+            self.assertEqual(inventory_path, references_path)
+            self.assertNotEqual(inventory_path, source.resolve())
+            self.assertEqual(inventory_path.suffix, ".zip")
+            self.assertEqual(result["status"], "REVIEW_REQUIRED")
+            self.assertTrue(result["source_hashes_match"])
+
+    def test_source_digest_drift_during_snapshot_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            source = Path(tmp) / "export.zip"
+            self.make_zip(source, [("account/conversations.json", b"[]")])
+            initial_digest = hashlib.sha256(source.read_bytes()).hexdigest()
+            with patch.object(preflight_module, "sha256_file",
+                              side_effect=[initial_digest, "f" * 64]):
+                result = preflight_chat_export(source)
+
+            self.assertEqual(result["status"], "FAIL")
+            self.assertEqual(result["reason"], "SOURCE_CHANGED_DURING_SNAPSHOT")
+            self.assertFalse(result["raw_source_modified"])
 
     def test_unsafe_member_path_propagates_review_requirement(self):
         with tempfile.TemporaryDirectory() as tmp:
