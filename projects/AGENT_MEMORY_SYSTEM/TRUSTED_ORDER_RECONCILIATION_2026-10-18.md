@@ -1,6 +1,6 @@
 # Trusted-order reconciliation for AGENT_MEMORY_SYSTEM event journal
 
-Status: **PARTIAL — read-only evidence review; ancestry verified for the explicitly commit-based 18 October chain, but no trusted-order file has been applied to the live journal.**
+Status: **PARTIAL — the evidence-backed partial-order map is applied in a read-only CI preflight. Five same-day edges remain unresolved; no live-journal writes were performed.**
 
 Reviewed against branch `export/cross-project-experience-rollup-20261012`, HEAD `da9af8316de43ed0b0480f87d7fe079846488be5`, on 2026-10-18. The event source is `projects/AGENT_MEMORY_SYSTEM/events.jsonl`. This note does not modify that source.
 
@@ -25,9 +25,11 @@ Reviewed against branch `export/cross-project-experience-rollup-20261012`, HEAD 
 | `EVT-AGMS-20261018-001 preceded_by EVT-AGMS-20261014-004` | Source dates differ: 18 October vs 14 October. | **DATE-ORDER SUPPORTED**. |
 | Relations among `EVT-AGMS-20261018-001..008` | Their records explicitly cite Git commit ancestry. GitHub compare was run for each adjacent pair of event-append commits listed here: `9408440fe0fe40f084a09f93024062ac9f500b23`, `869fbd14d8478c0f2c25f62dd86e4c2e89bdf689`, `17defdb08e634d459ab3534b25f8199c9aa2d545`, `12527599707925f8d0618eca509b79e3d5a399d5`, `b1fdfbf4fdabefb3e54caf9678078ffea04904e1`, `5df320a5197a6c9e0fc481966689ce3b8313329b`, `446b952076081b3bdbcce38cf4acc8344a5cd109`, `bacdabe1b4e67b00c48aac9f3e208246346cff9b`. Every comparison returned `status=ahead`, `behind_by=0`, confirming the listed direction of commit ancestry. | **COMMIT ANCESTRY VERIFIED** for this adjacent chain. This validates the specifically claimed commit-order relations, not any unrelated same-day event-time ordering. |
 
-## What this means for the preflight
+## Executed read-only preflight
 
-A complete, evidence-backed `trusted_order` map is **not yet available**. The live journal preflight has therefore **not been run** with fabricated ranks, and the append writer has **not** been applied to the journal.
+GitHub Actions run [#39129738684](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/39129738684) ran `tools/validate_event_journal.py` against the live branch journal with `projects/AGENT_MEMORY_SYSTEM/trusted_order.json`. It reported 18 records, 15 raw temporal edges, status `NEEDS_RECONCILIATION`, and `writes_performed: false`. The report artifact is available [here](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/39129738684/artifacts/12137990330).
+
+The first preflight exposed a validator compatibility issue: several historical `old_relation` correction selectors omit metadata present on the original relation. The validator was fixed to apply a partial selector only when it uniquely matches. The subsequent preflight reported no correction-application errors; five temporal edges remain unresolved. The append writer has **not** been applied to the live journal.
 
 Next safe actions:
 
