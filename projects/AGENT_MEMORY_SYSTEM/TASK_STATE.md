@@ -514,3 +514,21 @@ Tests added for first pass, completed replay, and a changed source under the sam
 - Added regression tests both for the validator and for the append writer accepting this correction without rewriting the old row. Updated the chronology protocol.
 - Appended EVT-AGMS-20261018-008. Exact-head CI for this correction is pending.
 - Next: verify CI, then build the trusted-order evidence map carefully. Same-day events whose intra-day order is not independently established must remain unresolved, not ordered by JSONL position.
+
+
+## Checkpoint 2026-10-18 — partial-order journal preflight
+
+- **Goal in this checkpoint:** run the chronology preflight against the real append-only event journal without inventing intra-day order.
+- **Implementation:** `tools/temporal_memory_model.py::validate_temporal_relations` now accepts coarse calendar ranks plus evidence-backed `verified_precedence` paths. Same-day edges require an independently evidenced path; otherwise they remain unresolved. Legacy flat order maps remain supported for compatibility.
+- **Correction overlay fix:** live preflight exposed that historical `old_relation` selectors can omit metadata (such as `basis`) present on the source edge. Matching now uses the supplied selector only if it uniquely matches one edge; missing or ambiguous matches are errors. Original rows are not mutated.
+- **Evidence map:** added `projects/AGENT_MEMORY_SYSTEM/trusted_order.json`. Different calendar dates establish coarse date order; the 18 October same-day chain is supported by GitHub Compare ancestry links. No ordering was inferred from JSONL row position, event IDs or ingestion timestamps.
+- **Executed preflight:** GitHub Actions run [#39129738684](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/39129738684) passed on code/test HEAD `2b9f6096483d6a18f5eb24f3b50f8aa1af9893c1`; it ran 98 unittest tests successfully, passed memory validation and project validation, and uploaded the read-only report artifact [#12137990330](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/39129738684/artifacts/12137990330).
+- **Actual preflight result:** `NEEDS_RECONCILIATION`; 18 records, 15 raw temporal edges, five unresolved same-day relations; `writes_performed: false`. The five remaining edges are:
+  1. `EVT-AGMS-20261013-002` precedes/follows `EVT-AGMS-20261013-001` — exact same-day order unknown.
+  2. `EVT-AGMS-20261013-003` ↔ `EVT-AGMS-20261013-002` — exact same-day order unknown.
+  3. `EVT-AGMS-20261013-004` ↔ `EVT-AGMS-20261013-003` — exact same-day order unknown.
+  4. `EVT-AGMS-20261013-006` ↔ `EVT-AGMS-20261013-005` — exact same-day order unknown.
+  5. `EVT-AGMS-20261014-002` ↔ `EVT-AGMS-20261014-001` — exact same-day order unknown.
+- **State:** the diagnostic preflight is now implemented and has been run against the live journal. This is not a chronology PASS. The append writer has not been run against the live journal; do not append until all effective edges are validated or explicitly removed by a supported correction overlay.
+- **Append-only event:** `EVT-AGMS-20261018-009` records the implementation and preflight result. Earlier events and correction overlays remain unchanged.
+- **Next:** inspect original source evidence for those five relations. If precise chronology cannot be established, retain the uncertainty instead of forcing a total order. Then re-fetch live HEAD/CI and continue SQLite batch/checkpoint failure injection. Real archive import and attachment reconciliation remain outstanding.
