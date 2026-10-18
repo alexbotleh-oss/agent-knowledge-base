@@ -503,5 +503,141 @@ class ResumableChatImportTests(unittest.TestCase):
             self.assertFalse(any(path.name.startswith(".snapshot-") for path in snapshots.iterdir()))
 
 
+    def test_batch_transaction_rolls_back_rows_and_checkpoint_when_event_insert_fails(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            source = self.make_source(root, 5)
+            out = root / "state"
+            paused = import_export(source, out, "FAULT-BATCH-ROLLBACK", batch_size=2, stop_after_batches=1)
+            db = out / "import.sqlite3"
+            conn = sqlite3.connect(db)
+            try:
+                conn.execute("""
+                    CREATE TRIGGER fail_second_batch_event
+                    BEFORE INSERT ON import_events
+                    WHEN NEW.event_type='BATCH_COMMITTED' AND NEW.ordinal=3
+                    BEGIN SELECT RAISE(ABORT, 'injected batch event failure'); END
+                """)
+                conn.commit()
+            finally:
+                conn.close()
+
+            with self.assertRaisesRegex(RuntimeError, "injected batch event failure"):
+                import_export(source, out, "FAULT-BATCH-ROLLBACK", batch_size=2)
+
+            conn = sqlite3.connect(db)
+            try:
+                state = conn.execute(
+                    "SELECT status,next_ordinal,committed_conversations FROM imports WHERE archive_id=?",
+                    ("FAULT-BATCH-ROLLBACK",),
+                ).fetchone()
+                count = conn.execute(
+                    "SELECT COUNT(*) FROM raw_conversations WHERE archive_id=?",
+                    ("FAULT-BATCH-ROLLBACK",),
+                ).fetchone()[0]
+                self.assertEqual(state, ("FAILED", 2, 2))
+                self.assertEqual(count, 2)
+                conn.execute("DROP TRIGGER fail_second_batch_event")
+                conn.commit()
+            finally:
+                conn.close()
+
+            resumed = import_export(source, out, "FAULT-BATCH-ROLLBACK", batch_size=2)
+            self.assertEqual(resumed["status"], "RAW_COMPLETE")
+            self.assertEqual(resumed["committed_conversations"], 5)
+
+    def test_commit_succeeded_but_acknowledgement_was_lost_resumes_from_persisted_cursor(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            source = self.make_source(root, 5)
+            out = root / "state"
+            paused = import_export(source, out, "FAULT-LOST-ACK", batch_size=2, stop_after_batches=1)
+            db = out / "import.sqlite3"
+            real_commit = _commit_batch
+
+            def commit_then_lose_ack(*args, **kwargs):
+                result = real_commit(*args, **kwargs)
+                raise RuntimeError("injected lost acknowledgement after commit")
+
+            with patch("resumable_chat_import._commit_batch", side_effect=commit_then_lose_ack):
+                with self.assertRaisesRegex(RuntimeError, "injected lost acknowledgement"):
+                    import_export(source, out, "FAULT-LOST-ACK", batch_size=2)
+
+            conn = sqlite3.connect(db)
+            try:
+                state = conn.execute(
+                    "SELECT status,next_ordinal,committed_conversations FROM imports WHERE archive_id=?",
+                    ("FAULT-LOST-ACK",),
+                ).fetchone()
+                count = conn.execute(
+                    "SELECT COUNT(*) FROM raw_conversations WHERE archive_id=?",
+                    ("FAULT-LOST-ACK",),
+                ).fetchone()[0]
+                self.assertEqual(state, ("FAILED", 4, 4))
+                self.assertEqual(count, 4)
+            finally:
+                conn.close()
+
+            resumed = import_export(source, out, "FAULT-LOST-ACK", batch_size=2)
+            self.assertEqual(resumed["status"], "RAW_COMPLETE")
+            self.assertEqual(resumed["committed_conversations"], 5)
+            conn = sqlite3.connect(db)
+            try:
+                ordinals = [row[0] for row in conn.execute(
+                    "SELECT source_ordinal FROM raw_conversations WHERE archive_id=? ORDER BY source_ordinal",
+                    ("FAULT-LOST-ACK",),
+                )]
+                self.assertEqual(ordinals, [0, 1, 2, 3, 4])
+            finally:
+                conn.close()
+
+    def test_raw_complete_finalization_rolls_back_and_can_be_retried(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            source = self.make_source(root, 5)
+            out = root / "state"
+            db = out / "import.sqlite3"
+            conn = connect(db)
+            try:
+                conn.execute("""
+                    CREATE TRIGGER fail_raw_complete_event
+                    BEFORE INSERT ON import_events
+                    WHEN NEW.event_type='RAW_COMPLETE'
+                    BEGIN SELECT RAISE(ABORT, 'injected finalization failure'); END
+                """)
+                conn.commit()
+            finally:
+                conn.close()
+
+            with self.assertRaisesRegex(RuntimeError, "injected finalization failure"):
+                import_export(source, out, "FAULT-FINALIZE", batch_size=2)
+
+            conn = sqlite3.connect(db)
+            try:
+                state = conn.execute(
+                    "SELECT status,next_ordinal,committed_conversations FROM imports WHERE archive_id=?",
+                    ("FAULT-FINALIZE",),
+                ).fetchone()
+                count = conn.execute(
+                    "SELECT COUNT(*) FROM raw_conversations WHERE archive_id=?",
+                    ("FAULT-FINALIZE",),
+                ).fetchone()[0]
+                event_types = [row[0] for row in conn.execute(
+                    "SELECT event_type FROM import_events WHERE archive_id=? ORDER BY event_id",
+                    ("FAULT-FINALIZE",),
+                )]
+                self.assertEqual(state, ("FAILED", 5, 5))
+                self.assertEqual(count, 5)
+                self.assertNotIn("RAW_COMPLETE", event_types)
+                conn.execute("DROP TRIGGER fail_raw_complete_event")
+                conn.commit()
+            finally:
+                conn.close()
+
+            retried = import_export(source, out, "FAULT-FINALIZE", batch_size=2)
+            self.assertEqual(retried["status"], "RAW_COMPLETE")
+            self.assertEqual(retried["committed_conversations"], 5)
+
+
 if __name__ == "__main__":
     unittest.main()
