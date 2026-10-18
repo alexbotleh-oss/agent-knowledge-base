@@ -441,5 +441,40 @@ class ResumableChatImportTests(unittest.TestCase):
                 conn.close()
 
 
+    def test_resume_refuses_corrupted_checkpoint_payload(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            source = self.make_source(root, 4)
+            out = root / "state"
+            paused = import_export(source, out, "INTEGRITY-RESUME-001", batch_size=1, stop_after_batches=1)
+            self.assertEqual(paused["status"], "PAUSED")
+
+            conn = sqlite3.connect(out / "import.sqlite3")
+            try:
+                conn.execute(
+                    """UPDATE raw_conversations SET payload_json=?
+                       WHERE archive_id=? AND source_sha256=? AND source_ordinal=0""",
+                    ('{"id":"damaged-checkpoint"}', "INTEGRITY-RESUME-001", paused["source_sha256"]),
+                )
+                conn.commit()
+            finally:
+                conn.close()
+
+            with self.assertRaisesRegex(RuntimeError, "payload hash mismatch"):
+                import_export(source, out, "INTEGRITY-RESUME-001", batch_size=1)
+
+            conn = sqlite3.connect(out / "import.sqlite3")
+            try:
+                state = conn.execute(
+                    """SELECT status,last_error FROM imports
+                       WHERE archive_id=? AND source_sha256=?""",
+                    ("INTEGRITY-RESUME-001", paused["source_sha256"]),
+                ).fetchone()
+                self.assertEqual(state[0], "FAILED")
+                self.assertIn("payload hash mismatch", state[1])
+            finally:
+                conn.close()
+
+
 if __name__ == "__main__":
     unittest.main()
