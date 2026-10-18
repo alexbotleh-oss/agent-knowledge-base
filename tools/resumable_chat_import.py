@@ -16,6 +16,7 @@ import sqlite3
 import tempfile
 import zipfile
 from datetime import datetime, timezone
+from contextlib import contextmanager
 from pathlib import Path
 from typing import BinaryIO, Iterator, Any
 
@@ -278,8 +279,60 @@ def _verify_staged_integrity(
     return len(rows)
 
 
+@contextmanager
+def _exclusive_import_lock(output: Path):
+    """Hold an OS-released single-writer lock for one import output directory."""
+    lock_path = output / ".resumable-chat-import.lock"
+    with lock_path.open("a+b") as stream:
+        if os.name == "nt":
+            import msvcrt
+
+            stream.seek(0, os.SEEK_END)
+            if stream.tell() == 0:
+                stream.write(b"\\0")
+                stream.flush()
+            stream.seek(0)
+            try:
+                msvcrt.locking(stream.fileno(), msvcrt.LK_NBLCK, 1)
+            except OSError as exc:
+                raise RuntimeError(
+                    "Another import process is active for this output directory"
+                ) from exc
+            try:
+                yield
+            finally:
+                stream.seek(0)
+                msvcrt.locking(stream.fileno(), msvcrt.LK_UNLCK, 1)
+        else:
+            import fcntl
+
+            try:
+                fcntl.flock(stream.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+            except OSError as exc:
+                raise RuntimeError(
+                    "Another import process is active for this output directory"
+                ) from exc
+            try:
+                yield
+            finally:
+                fcntl.flock(stream.fileno(), fcntl.LOCK_UN)
+
+
 def import_export(source: Path, output: Path, archive_id: str, batch_size: int = 100,
                   stop_after_batches: int | None = None) -> dict[str, Any]:
+    """Serialize writers sharing one local output directory; OS releases lock after a crash."""
+    if batch_size < 1:
+        raise ValueError("batch_size must be at least 1")
+    output = Path(output).resolve()
+    output.mkdir(parents=True, exist_ok=True)
+    with _exclusive_import_lock(output):
+        return _import_export_locked(
+            Path(source), output, archive_id, batch_size, stop_after_batches
+        )
+
+
+def _import_export_locked(source: Path, output: Path, archive_id: str, batch_size: int = 100,
+                          stop_after_batches: int | None = None) -> dict[str, Any]:
     if batch_size < 1:
         raise ValueError("batch_size must be at least 1")
     source = source.resolve()
