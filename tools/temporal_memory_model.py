@@ -133,6 +133,92 @@ def assertions_as_of(
     return sorted(result, key=lambda row: (_parse_time(row["recorded_at"], "recorded_at"), row["assertion_id"]))
 
 
+
+TEMPORAL_RELATIONS = {"preceded_by", "followed_by"}
+
+
+def validate_temporal_relations(
+    records: Iterable[dict[str, Any]],
+    trusted_order: dict[str, int],
+) -> list[str]:
+    """Validate temporal edge direction against caller-supplied, trusted ordering.
+
+    The order map must come from evidence such as verified commit ancestry or
+    explicit source chronology. This function never derives ordering from JSONL
+    row position, event IDs, or ingestion time. Append-only edge_corrections
+    overlays are applied in memory; source records are not mutated.
+    """
+    rows = list(records)
+    by_id: dict[str, dict[str, Any]] = {}
+    errors: list[str] = []
+    for index, row in enumerate(rows):
+        event_id = row.get("event_id")
+        if not isinstance(event_id, str) or not event_id:
+            errors.append(f"record[{index}]: missing event_id")
+            continue
+        if event_id in by_id:
+            errors.append(f"{event_id}: duplicate event_id")
+            continue
+        by_id[event_id] = row
+
+    effective_edges: dict[str, list[dict[str, Any]]] = {
+        event_id: [dict(edge) for edge in row.get("relations", []) if isinstance(edge, dict)]
+        for event_id, row in by_id.items()
+    }
+
+    for correction_record in rows:
+        correction_id = correction_record.get("event_id", "<unknown>")
+        corrections = correction_record.get("edge_corrections", [])
+        if not isinstance(corrections, list):
+            errors.append(f"{correction_id}: edge_corrections must be a list")
+            continue
+        for correction in corrections:
+            if not isinstance(correction, dict):
+                errors.append(f"{correction_id}: invalid edge correction")
+                continue
+            target_id = correction.get("record_id")
+            if target_id not in by_id:
+                errors.append(f"{correction_id}: correction target not found: {target_id}")
+                continue
+            if correction.get("field") != "relations":
+                continue
+            old_edge = correction.get("old_relation")
+            new_edge = correction.get("corrected_relation")
+            if not isinstance(old_edge, dict) or not isinstance(new_edge, dict):
+                errors.append(f"{correction_id}: correction must contain old_relation and corrected_relation")
+                continue
+            edges = effective_edges[target_id]
+            try:
+                edge_index = edges.index(old_edge)
+            except ValueError:
+                errors.append(f"{correction_id}: old relation not found in {target_id}")
+                continue
+            edges[edge_index] = dict(new_edge)
+
+    for source_id, edges in effective_edges.items():
+        for edge in edges:
+            relation = edge.get("type")
+            target_id = edge.get("event_id")
+            if relation not in TEMPORAL_RELATIONS:
+                continue
+            if target_id not in by_id:
+                errors.append(f"{source_id}: {relation} target not found: {target_id}")
+                continue
+            if source_id not in trusted_order or target_id not in trusted_order:
+                errors.append(f"{source_id}: trusted chronology missing for temporal edge to {target_id}")
+                continue
+            source_order, target_order = trusted_order[source_id], trusted_order[target_id]
+            if not isinstance(source_order, int) or not isinstance(target_order, int):
+                errors.append(f"{source_id}: trusted chronology values must be integers")
+                continue
+            if source_order == target_order:
+                errors.append(f"{source_id}: temporal order is ambiguous for edge to {target_id}")
+            elif relation == "preceded_by" and not target_order < source_order:
+                errors.append(f"{source_id}: preceded_by points to non-earlier event {target_id}")
+            elif relation == "followed_by" and not target_order > source_order:
+                errors.append(f"{source_id}: followed_by points to non-later event {target_id}")
+    return errors
+
 def downstream_impact(
     changed_id: str, relations: Iterable[dict[str, Any]]
 ) -> list[str]:
