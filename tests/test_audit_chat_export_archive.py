@@ -4,6 +4,7 @@ import sys
 import tempfile
 import unittest
 import warnings
+import zlib
 import zipfile
 from unittest.mock import patch
 from pathlib import Path
@@ -164,6 +165,18 @@ class AuditChatExportArchiveTests(unittest.TestCase):
             self.assertEqual(result["status"], "FAIL")
             self.assertEqual(result["reason"], "ARCHIVE_READ_ERROR")
             self.assertEqual(result["error_type"], "NotImplementedError")
+
+    def test_truncated_or_invalid_compression_errors_fail_closed(self):
+        for error in (EOFError("truncated member"), zlib.error("invalid deflate stream")):
+            with self.subTest(error=type(error).__name__), tempfile.TemporaryDirectory() as tmp:
+                source = Path(tmp) / "malformed-compression.zip"
+                self.make_zip(source, [("conversations.json", b"[]")])
+                with patch.object(zipfile.ZipFile, "testzip", side_effect=error):
+                    result = audit_archive(source)
+
+                self.assertEqual(result["status"], "FAIL")
+                self.assertEqual(result["reason"], "ARCHIVE_READ_ERROR")
+                self.assertEqual(result["error_type"], type(error).__name__)
 
     def test_non_zip_input_fails_closed(self):
         with tempfile.TemporaryDirectory() as tmp:
