@@ -173,5 +173,14 @@ class TemporalMemoryModelTests(unittest.TestCase):
         self.assertTrue(any("trusted chronology missing" in error for error in errors))
 
 
+    def test_temporal_relation_validator_rejects_boolean_order_values(self):
+        records = [
+            {"event_id": "A", "relations": []},
+            {"event_id": "B", "relations": [{"type": "preceded_by", "event_id": "A"}]},
+        ]
+        errors = validate_temporal_relations(records, {"A": False, "B": 2})
+        self.assertTrue(any("must be integers, not booleans" in error for error in errors))
+
+
 if __name__ == "__main__":
     unittest.main()
