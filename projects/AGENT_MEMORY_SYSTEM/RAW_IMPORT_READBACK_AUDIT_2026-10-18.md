@@ -145,3 +145,31 @@ No merge was performed and `main` was not changed. Approved semantic-memory regi
 - Added fault-injection regressions for both exception types. These tests verify the structured failure boundary; they do not replace testing against a real native export.
 - Exact code/test HEAD `6fa04e1b2493696ef4ed5200c7a1caa3615e8e7f` passed CI run [#39109306169](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/39109306169): **523 Python tests, 1 skipped; 4 Node tests; strict write audit 163 mutation sites / 0 unclassified; memory/event-log/project validation passed.**
 - Restore/task-start smoke deferred on this exact HEAD because the archive audit implementation and tests changed after the recorded code head. The checkpoint must be refreshed before accepting a smoke as current evidence.
+
+
+## Pre-native-export gate matrix — 2026-10-18
+
+### Closed with current synthetic fixtures and repository evidence
+
+- **Raw import mechanics:** immutable SHA-256 snapshot, resumable SQLite staging/checkpoints, replay/idempotency and interruption recovery are covered by existing importer tests. The read-back verifier independently compares the staged prefix or complete staged data against the immutable source snapshot and records PASS/PARTIAL/FAIL without promoting semantic memory.
+- **Archive structure and byte integrity:** ZIP member inventory, exactly-one `conversations.json` candidate rule, duplicate paths, unsafe paths, CRC failures, encrypted entries, unsupported compression, truncated/invalid compressed streams, unreadable source, and source mutation during scan have explicit checks or regression tests.
+- **Attachment-reference preflight:** candidate references retain source conversation identity/ordinal, JSON Pointer, key and original value. Only exact archive-member path equality is reported as a path-level match; ambiguous/unresolved references are not guessed from IDs, basenames, or URI appearance.
+- **Shared-input consistency:** the combined preflight creates one private temporary snapshot, verifies source/snapshot digests around the copy, passes the same snapshot to both audits, and compares each sub-audit digest with the snapshot digest. It does not extract archive members or rewrite the source.
+- **Honest terminal status:** the combined tool cannot claim clean PASS while attachment candidate detection remains heuristic. It emits `REVIEW_REQUIRED` (exit 2) for reviewable archives and `FAIL` (exit 1) for failed gates. Synthetic tests cover hash disagreement, source drift, sub-audit failures, and CLI exit codes.
+- **Current verification:** report-bearing revision `6a193ba74125fc4f9a95338afb90dcae6ca86c8e` passed CI run [#39109364352](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/39109364352): **523 Python tests, 1 skipped; 4 Node tests; strict write audit 163 mutation sites / 0 unclassified; memory/event-log/project validation passed.** Metadata-descendant smoke [#39109467151](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/39109467151) passed restore/task-start. The current checkpoint-only PR head also passed CI [#39109522005](https://github.com/alexbotleh-oss/agent-knowledge-base/actions/runs/39109522005).
+
+### Gates that cannot be closed without the native export bytes
+
+1. Confirm the real archive's member inventory, CRC/readability, exact conversation JSON candidate, duplicate/unsafe member names, and any nested archive contents that actually exist.
+2. Verify the real `conversations.json` encoding, top-level shape, conversation/message fields, malformed or unusual payloads, ordering, timestamps, and source identifiers against the importer and read-back verifier.
+3. Resolve actual attachment references against actual archive member names and any available manifests; distinguish embedded payloads, external links, opaque files, missing assets, and ambiguous matches without guessing.
+4. Reconcile the archive's real conversation/message counts, IDs, time range, omissions, duplicates, and manifest inventory. A synthetic test pass cannot prove source completeness.
+5. Run an end-to-end import/read-back against the real immutable source snapshot, retain its hash and reports, and investigate every mismatch before any later semantic promotion.
+
+### Separate blockers that are not solved merely by receiving the archive
+
+- Approved semantic memory remains `UNAVAILABLE`; the approved registry/receipt mechanism must be implemented or restored before records can be promoted.
+- Automatic invocation/writeback from the live ChatGPT host remains unverified; CI smoke proves the repository CLI restore/task-start path only.
+- PR #39 remains Draft/open/unmerged and based on the PR #38 branch. `main` has not been changed or merged.
+
+**Decision:** do not request the native export yet only if additional local testable gates are still being implemented. The current preflight mechanics above are now covered; the next evidence-gathering step, once the user is ready, is to supply the native export for source-specific completeness and attachment reconciliation. This does not imply the import or semantic memory is already complete.
