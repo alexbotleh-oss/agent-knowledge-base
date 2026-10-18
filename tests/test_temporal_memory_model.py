@@ -11,6 +11,7 @@ from temporal_memory_model import (
     downstream_impact,
     validate_assertion,
     validate_snapshot,
+    validate_temporal_relations,
 )
 
 
@@ -100,6 +101,76 @@ class TemporalMemoryModelTests(unittest.TestCase):
         errors = validate_assertion(row)
         self.assertTrue(any("must include a timezone" in error for error in errors))
         self.assertIn("source_refs must be a non-empty list", validate_assertion({**row, "recorded_at": "2026-10-07T16:00:00Z", "source_refs": []}))
+
+
+    def test_temporal_relation_validator_flags_wrong_direction_from_trusted_order(self):
+        records = [
+            {"event_id": "EVT-AGMS-20261018-001", "relations": []},
+            {
+                "event_id": "EVT-AGMS-20261018-002",
+                "relations": [{
+                    "type": "followed_by",
+                    "event_id": "EVT-AGMS-20261018-001",
+                    "basis": "commit ancestry",
+                }],
+            },
+        ]
+        errors = validate_temporal_relations(
+            records,
+            {"EVT-AGMS-20261018-001": 1, "EVT-AGMS-20261018-002": 2},
+        )
+        self.assertEqual(len(errors), 1)
+        self.assertIn("followed_by points to non-later event EVT-AGMS-20261018-001", errors[0])
+
+    def test_temporal_relation_correction_overlay_repairs_direction_without_mutating_source(self):
+        old_edge = {
+            "type": "followed_by",
+            "event_id": "EVT-AGMS-20261018-001",
+            "basis": "git commit ancestry; earlier date",
+        }
+        corrected_edge = {
+            "type": "preceded_by",
+            "event_id": "EVT-AGMS-20261018-001",
+            "basis": "git commit ancestry; earlier date",
+        }
+        records = [
+            {"event_id": "EVT-AGMS-20261018-001", "relations": []},
+            {"event_id": "EVT-AGMS-20261018-002", "relations": [old_edge]},
+            {
+                "event_id": "EVT-AGMS-20261018-003",
+                "relations": [{
+                    "type": "preceded_by",
+                    "event_id": "EVT-AGMS-20261018-002",
+                    "basis": "git commit ancestry",
+                }],
+                "edge_corrections": [{
+                    "record_id": "EVT-AGMS-20261018-002",
+                    "field": "relations",
+                    "old_relation": old_edge,
+                    "corrected_relation": corrected_edge,
+                }],
+            },
+        ]
+        errors = validate_temporal_relations(
+            records,
+            {
+                "EVT-AGMS-20261018-001": 1,
+                "EVT-AGMS-20261018-002": 2,
+                "EVT-AGMS-20261018-003": 3,
+            },
+        )
+        self.assertEqual(errors, [])
+        # Validation applies overlays to an in-memory projection only.
+        self.assertEqual(records[1]["relations"], [old_edge])
+        self.assertEqual(records[2]["edge_corrections"][0]["corrected_relation"], corrected_edge)
+
+    def test_temporal_relation_validator_does_not_guess_missing_order(self):
+        records = [
+            {"event_id": "A", "relations": []},
+            {"event_id": "B", "relations": [{"type": "preceded_by", "event_id": "A"}]},
+        ]
+        errors = validate_temporal_relations(records, {"B": 2})
+        self.assertTrue(any("trusted chronology missing" in error for error in errors))
 
 
 if __name__ == "__main__":
