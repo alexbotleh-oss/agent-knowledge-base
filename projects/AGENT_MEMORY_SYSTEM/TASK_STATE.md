@@ -464,3 +464,12 @@ Tests added for first pass, completed replay, and a changed source under the sam
 - While appending the single-writer event, the first draft used `followed_by` from the newer event to the older event. A read-through of the relation convention caught the direction error immediately.
 - Preserved `EVT-AGMS-20261018-002` unchanged and appended `EVT-AGMS-20261018-003` with an explicit `edge_corrections` overlay: `followed_by` → `preceded_by` for the reference to EVT-AGMS-20261018-001.
 - This is another confirmed example supporting the existing need for a pre-write temporal-edge validator. Any consumer must apply the correction overlay; the original row alone retains the incorrect relation.
+
+
+## Immutable snapshot durability boundary — 2026-10-18
+
+- **Change:** `immutable_snapshot()` now flushes the copied snapshot file with `fsync` before publishing the content-addressed final name via `os.replace`, then attempts to sync the containing directory where supported.
+- **Failure test:** added a regression test that injects a file-`fsync` error and verifies that no final snapshot name or leftover temporary snapshot is published.
+- **Protocol:** `core/source_ingestion_protocol.md` documents the durability sequence and platform boundary.
+- **Verification status at this checkpoint:** CI for this latest snapshot-durability change is pending; do not infer PASS from earlier successful runs.
+- **Remaining:** directory-`fsync` support differs by platform; Windows and network filesystems are not independently tested. Real archive bytes are still unavailable for an end-to-end import in this session.
