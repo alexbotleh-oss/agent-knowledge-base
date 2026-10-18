@@ -182,5 +182,32 @@ class TemporalMemoryModelTests(unittest.TestCase):
         self.assertTrue(any("must be integers, not booleans" in error for error in errors))
 
 
+    def test_temporal_relation_correction_overlay_can_remove_unsupported_edge(self):
+        unsupported = {
+            "type": "followed_by",
+            "event_id": "A",
+            "basis": "same-day sequence; exact intra-day order not independently timestamped",
+        }
+        records = [
+            {"event_id": "A", "relations": []},
+            {"event_id": "B", "relations": [unsupported]},
+            {
+                "event_id": "C",
+                "relations": [],
+                "edge_corrections": [{
+                    "record_id": "B",
+                    "field": "relations",
+                    "old_relation": unsupported,
+                    "corrected_relation": None,
+                }],
+            },
+        ]
+        errors = validate_temporal_relations(records, {"A": 1, "B": 2, "C": 3})
+        self.assertEqual(errors, [])
+        # The correction affects only the projected graph, not the archived event.
+        self.assertEqual(records[1]["relations"], [unsupported])
+        self.assertIsNone(records[2]["edge_corrections"][0]["corrected_relation"])
+
+
 if __name__ == "__main__":
     unittest.main()
