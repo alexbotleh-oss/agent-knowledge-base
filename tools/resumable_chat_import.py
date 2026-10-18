@@ -36,6 +36,23 @@ def sha256_file(path: Path) -> str:
     return digest.hexdigest()
 
 
+def _fsync_directory(directory: Path) -> None:
+    """Persist directory-entry changes where the platform supports directory fsync."""
+    try:
+        directory_fd = os.open(str(directory), os.O_RDONLY)
+    except OSError:
+        # Some platforms (notably Windows) do not expose directory descriptors this way.
+        return
+    try:
+        try:
+            os.fsync(directory_fd)
+        except OSError:
+            if os.name != "nt":
+                raise
+    finally:
+        os.close(directory_fd)
+
+
 def immutable_snapshot(source: Path, output: Path) -> tuple[Path, str, int]:
     digest = sha256_file(source)
     size = source.stat().st_size
@@ -54,9 +71,15 @@ def immutable_snapshot(source: Path, output: Path) -> tuple[Path, str, int]:
             shutil.copyfile(source, temporary)
             if temporary.stat().st_size != size or sha256_file(temporary) != digest:
                 raise RuntimeError("Source changed while snapshot was being copied")
+            # Flush snapshot bytes before publishing the final content-addressed name.
+            with temporary.open("rb+") as copied:
+                copied.flush()
+                os.fsync(copied.fileno())
             os.replace(temporary, target)
         finally:
             temporary.unlink(missing_ok=True)
+    # Also retry this on an existing target after a prior directory-fsync failure.
+    _fsync_directory(snapshots)
     return target, digest, size
 
 
